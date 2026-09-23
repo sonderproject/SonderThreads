@@ -3,16 +3,26 @@ import { Pool, type QueryResultRow } from "pg";
 /**
  * Vercel's native "Postgres" storage (powered by Neon) injects the
  * connection string under one of several names depending on how it was
- * provisioned. Check the common ones instead of hard-coding a single name —
- * we already got burned once by an integration using a non-obvious name.
+ * provisioned. Check the common ones first, then fall back to scanning
+ * every env var for something shaped like a Postgres connection string —
+ * a different integration already surprised us once by injecting a
+ * variable under a name nothing would have guessed.
  */
 function resolveConnectionString(): string | undefined {
-  return (
+  const known =
     process.env.POSTGRES_URL ||
     process.env.DATABASE_URL ||
     process.env.POSTGRES_PRISMA_URL ||
-    process.env.POSTGRES_URL_NON_POOLING
-  );
+    process.env.POSTGRES_URL_NON_POOLING;
+  if (known) return known;
+
+  for (const [key, value] of Object.entries(process.env)) {
+    if (value && /url/i.test(key) && /^postgres(ql)?:\/\//i.test(value)) {
+      return value;
+    }
+  }
+
+  return undefined;
 }
 
 let pool: Pool | undefined;
