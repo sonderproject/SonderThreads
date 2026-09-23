@@ -1,6 +1,7 @@
 import { listTasks } from "@/lib/actions/tasks";
 import { listClients } from "@/lib/actions/clients";
 import { TaskRow } from "@/components/tasks/TaskRow";
+import { NewTaskButton } from "@/components/tasks/NewTaskButton";
 import { EmptyState } from "@/components/ui/EmptyState";
 import type { Task } from "@/lib/types";
 
@@ -31,7 +32,10 @@ export default async function TasksPage() {
 
   return (
     <div className="space-y-8">
-      <h1 className="font-mono text-xs uppercase tracking-wide text-text-faint">Tasks</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="font-mono text-xs uppercase tracking-wide text-text-faint">Tasks</h1>
+        <NewTaskButton clients={clients.map((c) => ({ id: c.id, display_name: c.display_name }))} />
+      </div>
 
       <TaskSection title="Today" tasks={today} clientsById={clientsById} empty="Nothing due today." />
       <TaskSection title="Upcoming" tasks={upcoming} clientsById={clientsById} empty="Nothing upcoming." />
