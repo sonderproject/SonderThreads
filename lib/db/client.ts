@@ -78,6 +78,22 @@ export async function checkDatabaseConnection(): Promise<{ ok: true } | { ok: fa
       };
     }
     await query("select 1");
+
+    try {
+      await query("select 1 from clients limit 1");
+    } catch (schemaErr) {
+      const message = schemaErr instanceof Error ? schemaErr.message : String(schemaErr);
+      if (/relation .* does not exist/i.test(message)) {
+        return {
+          ok: false,
+          detail:
+            "Connected to the database, but the tables don't exist yet. Run db/schema.sql " +
+            "against it once (Vercel's Query tab, or `psql \"$POSTGRES_URL\" -f db/schema.sql`).",
+        };
+      }
+      throw schemaErr;
+    }
+
     return { ok: true };
   } catch (err) {
     return { ok: false, detail: err instanceof Error ? err.message : String(err) };
