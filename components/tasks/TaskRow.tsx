@@ -1,6 +1,6 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { setTaskCompleted } from "@/lib/actions/tasks";
@@ -13,12 +13,15 @@ export function TaskRow({
   task: Task;
   clientName?: string | null;
 }) {
+  const [completed, setCompleted] = useState(task.completed);
   const [pending, startTransition] = useTransition();
   const router = useRouter();
 
   function toggle() {
+    const next = !completed;
+    setCompleted(next);
     startTransition(async () => {
-      await setTaskCompleted(task.id, !task.completed);
+      await setTaskCompleted(task.id, next);
       router.refresh();
     });
   }
@@ -30,13 +33,13 @@ export function TaskRow({
     >
       <input
         type="checkbox"
-        checked={task.completed}
+        checked={completed}
         onChange={toggle}
         disabled={pending}
         className="mt-0.5 h-4 w-4 shrink-0 accent-accent"
       />
       <div className="min-w-0 flex-1">
-        <p className={`text-sm ${task.completed ? "text-text-faint line-through" : "text-text"}`}>
+        <p className={`text-sm ${completed ? "text-text-faint line-through" : "text-text"}`}>
           {task.title}
         </p>
         <div className="mt-0.5 flex flex-wrap gap-2 text-xs text-text-muted">

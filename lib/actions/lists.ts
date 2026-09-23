@@ -1,64 +1,38 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
-import { requireUserId } from "./helpers";
+import { query, queryOne } from "@/lib/db/client";
+import { OWNER_ID } from "@/lib/db/constants";
 import { logActivity } from "./activity";
 import { findClientByName, findOrCreateClientByName, touchClientActivity } from "./clients";
 import type { List, ListItem } from "@/lib/types";
 
 export async function listLists(): Promise<List[]> {
-  const userId = await requireUserId();
-  const supabase = await createClient();
-
-  const { data, error } = await supabase
-    .from("lists")
-    .select("*")
-    .eq("user_id", userId)
-    .order("updated_at", { ascending: false });
-
-  if (error) throw error;
-  return data ?? [];
+  return query<List>(`select * from lists where user_id = $1 order by updated_at desc`, [OWNER_ID]);
 }
 
 export async function getListByName(name: string): Promise<List | null> {
-  const userId = await requireUserId();
-  const supabase = await createClient();
-
-  const { data, error } = await supabase
-    .from("lists")
-    .select("*")
-    .eq("user_id", userId)
-    .ilike("name", name.trim());
-
-  if (error) throw error;
-  return data?.[0] ?? null;
+  const trimmed = name.trim();
+  if (!trimmed) return null;
+  return queryOne<List>(`select * from lists where user_id = $1 and lower(name) = lower($2)`, [
+    OWNER_ID,
+    trimmed,
+  ]);
 }
 
 export async function getListWithItems(id: string): Promise<{ list: List; items: ListItem[] } | null> {
-  const userId = await requireUserId();
-  const supabase = await createClient();
-
-  const { data: list, error: listError } = await supabase
-    .from("lists")
-    .select("*")
-    .eq("user_id", userId)
-    .eq("id", id)
-    .maybeSingle();
-
-  if (listError) throw listError;
+  const list = await queryOne<List>(`select * from lists where user_id = $1 and id = $2`, [
+    OWNER_ID,
+    id,
+  ]);
   if (!list) return null;
 
-  const { data: items, error: itemsError } = await supabase
-    .from("list_items")
-    .select("*")
-    .eq("user_id", userId)
-    .eq("list_id", id)
-    .order("position", { ascending: true });
+  const items = await query<ListItem>(
+    `select * from list_items where user_id = $1 and list_id = $2 order by position asc`,
+    [OWNER_ID, id],
+  );
 
-  if (itemsError) throw itemsError;
-
-  return { list, items: items ?? [] };
+  return { list, items };
 }
 
 export async function createList(params: {
@@ -66,31 +40,22 @@ export async function createList(params: {
   description?: string | null;
   isCohort?: boolean;
 }): Promise<List> {
-  const userId = await requireUserId();
-  const supabase = await createClient();
+  const list = await queryOne<List>(
+    `insert into lists (user_id, name, description, is_cohort) values ($1, $2, $3, $4) returning *`,
+    [OWNER_ID, params.name.trim(), params.description ?? null, params.isCohort ?? false],
+  );
 
-  const { data, error } = await supabase
-    .from("lists")
-    .insert({
-      user_id: userId,
-      name: params.name.trim(),
-      description: params.description ?? null,
-      is_cohort: params.isCohort ?? false,
-    })
-    .select("*")
-    .single();
-
-  if (error) throw error;
+  if (!list) throw new Error("Failed to create list");
 
   await logActivity({
     type: "list_created",
-    description: `List "${data.name}" created`,
-    listId: data.id,
+    description: `List "${list.name}" created`,
+    listId: list.id,
   });
 
   revalidatePath("/lists");
   revalidatePath("/");
-  return data;
+  return list;
 }
 
 export async function findOrCreateListByName(
@@ -104,35 +69,31 @@ export async function findOrCreateListByName(
 }
 
 export async function renameList(id: string, name: string): Promise<void> {
-  const userId = await requireUserId();
-  const supabase = await createClient();
-
-  await supabase.from("lists").update({ name: name.trim() }).eq("user_id", userId).eq("id", id);
+  await query(`update lists set name = $1 where user_id = $2 and id = $3`, [
+    name.trim(),
+    OWNER_ID,
+    id,
+  ]);
   revalidatePath(`/lists/${id}`);
   revalidatePath("/lists");
 }
 
 export async function updateListDescription(id: string, description: string): Promise<void> {
-  const userId = await requireUserId();
-  const supabase = await createClient();
-
-  await supabase.from("lists").update({ description }).eq("user_id", userId).eq("id", id);
+  await query(`update lists set description = $1 where user_id = $2 and id = $3`, [
+    description,
+    OWNER_ID,
+    id,
+  ]);
   revalidatePath(`/lists/${id}`);
 }
 
 export async function deleteList(id: string): Promise<void> {
-  const userId = await requireUserId();
-  const supabase = await createClient();
-
-  await supabase.from("lists").delete().eq("user_id", userId).eq("id", id);
+  await query(`delete from lists where user_id = $1 and id = $2`, [OWNER_ID, id]);
   revalidatePath("/lists");
   revalidatePath("/");
 }
 
 export async function duplicateList(id: string): Promise<List> {
-  const userId = await requireUserId();
-  const supabase = await createClient();
-
   const existing = await getListWithItems(id);
   if (!existing) throw new Error("List not found");
 
@@ -142,16 +103,11 @@ export async function duplicateList(id: string): Promise<List> {
     isCohort: existing.list.is_cohort,
   });
 
-  if (existing.items.length > 0) {
-    await supabase.from("list_items").insert(
-      existing.items.map((item, index) => ({
-        user_id: userId,
-        list_id: copy.id,
-        client_id: item.client_id,
-        label: item.label,
-        checked: false,
-        position: index,
-      })),
+  for (const [index, item] of existing.items.entries()) {
+    await query(
+      `insert into list_items (user_id, list_id, client_id, label, checked, position)
+       values ($1, $2, $3, $4, false, $5)`,
+      [OWNER_ID, copy.id, item.client_id, item.label, index],
     );
   }
 
@@ -164,35 +120,23 @@ export async function addListItem(params: {
   label: string;
   clientId?: string | null;
 }): Promise<ListItem> {
-  const userId = await requireUserId();
-  const supabase = await createClient();
+  const last = await queryOne<{ position: number }>(
+    `select position from list_items where user_id = $1 and list_id = $2 order by position desc limit 1`,
+    [OWNER_ID, params.listId],
+  );
+  const nextPosition = (last?.position ?? -1) + 1;
 
-  const { data: existingItems } = await supabase
-    .from("list_items")
-    .select("position")
-    .eq("user_id", userId)
-    .eq("list_id", params.listId)
-    .order("position", { ascending: false })
-    .limit(1);
+  const item = await queryOne<ListItem>(
+    `insert into list_items (user_id, list_id, client_id, label, position)
+     values ($1, $2, $3, $4, $5)
+     returning *`,
+    [OWNER_ID, params.listId, params.clientId ?? null, params.label.trim(), nextPosition],
+  );
 
-  const nextPosition = (existingItems?.[0]?.position ?? -1) + 1;
-
-  const { data, error } = await supabase
-    .from("list_items")
-    .insert({
-      user_id: userId,
-      list_id: params.listId,
-      label: params.label.trim(),
-      client_id: params.clientId ?? null,
-      position: nextPosition,
-    })
-    .select("*")
-    .single();
-
-  if (error) throw error;
+  if (!item) throw new Error("Failed to add list item");
 
   revalidatePath(`/lists/${params.listId}`);
-  return data;
+  return item;
 }
 
 /** Adds a single free-text item, auto-linking it if the label matches an existing client. */
@@ -214,7 +158,10 @@ export async function addNamesToList(
 ): Promise<{ createdClients: string[]; linkedClients: string[] }> {
   const createdClients: string[] = [];
   const linkedClients: string[] = [];
-  const { list } = (await getListWithItems(listId)) ?? {};
+  const list = await queryOne<List>(`select * from lists where user_id = $1 and id = $2`, [
+    OWNER_ID,
+    listId,
+  ]);
 
   for (const name of names) {
     if (!name.trim()) continue;
@@ -232,17 +179,7 @@ export async function addNamesToList(
       if (created) createdClients.push(client.display_name);
       else linkedClients.push(client.display_name);
     } else {
-      const supabase = await createClient();
-      const userId = await requireUserId();
-      const { data: clients } = await supabase
-        .from("clients")
-        .select("*")
-        .eq("user_id", userId);
-      const norm = name.trim().toLowerCase();
-      const match = (clients ?? []).find(
-        (c) => c.display_name.toLowerCase() === norm || c.first_name.toLowerCase() === norm,
-      );
-
+      const match = await findClientByName(name);
       await addListItem({ listId, label: match?.display_name ?? name.trim(), clientId: match?.id ?? null });
 
       if (match) {
@@ -263,102 +200,60 @@ export async function addNamesToList(
 }
 
 export async function toggleListItem(id: string, checked: boolean): Promise<void> {
-  const userId = await requireUserId();
-  const supabase = await createClient();
-
-  const { data } = await supabase
-    .from("list_items")
-    .update({ checked })
-    .eq("user_id", userId)
-    .eq("id", id)
-    .select("list_id")
-    .single();
-
-  if (data) revalidatePath(`/lists/${data.list_id}`);
+  const item = await queryOne<{ list_id: string }>(
+    `update list_items set checked = $1 where user_id = $2 and id = $3 returning list_id`,
+    [checked, OWNER_ID, id],
+  );
+  if (item) revalidatePath(`/lists/${item.list_id}`);
 }
 
 export async function removeListItem(id: string): Promise<void> {
-  const userId = await requireUserId();
-  const supabase = await createClient();
-
-  const { data } = await supabase
-    .from("list_items")
-    .delete()
-    .eq("user_id", userId)
-    .eq("id", id)
-    .select("list_id")
-    .single();
-
-  if (data) revalidatePath(`/lists/${data.list_id}`);
+  const item = await queryOne<{ list_id: string }>(
+    `delete from list_items where user_id = $1 and id = $2 returning list_id`,
+    [OWNER_ID, id],
+  );
+  if (item) revalidatePath(`/lists/${item.list_id}`);
 }
 
 export async function reorderListItems(listId: string, orderedIds: string[]): Promise<void> {
-  const userId = await requireUserId();
-  const supabase = await createClient();
-
   await Promise.all(
     orderedIds.map((id, index) =>
-      supabase
-        .from("list_items")
-        .update({ position: index })
-        .eq("user_id", userId)
-        .eq("id", id),
+      query(`update list_items set position = $1 where user_id = $2 and id = $3`, [
+        index,
+        OWNER_ID,
+        id,
+      ]),
     ),
   );
-
   revalidatePath(`/lists/${listId}`);
 }
 
 export async function getListItemCounts(): Promise<Record<string, number>> {
-  const userId = await requireUserId();
-  const supabase = await createClient();
-
-  const { data, error } = await supabase.from("list_items").select("list_id").eq("user_id", userId);
-  if (error) throw error;
+  const rows = await query<{ list_id: string; count: string }>(
+    `select list_id, count(*)::text as count from list_items where user_id = $1 group by list_id`,
+    [OWNER_ID],
+  );
 
   const counts: Record<string, number> = {};
-  for (const row of data ?? []) {
-    counts[row.list_id] = (counts[row.list_id] ?? 0) + 1;
-  }
+  for (const row of rows) counts[row.list_id] = parseInt(row.count, 10);
   return counts;
 }
 
 export async function listListsForClient(clientId: string): Promise<List[]> {
-  const userId = await requireUserId();
-  const supabase = await createClient();
-
-  const { data: items, error: itemsError } = await supabase
-    .from("list_items")
-    .select("list_id")
-    .eq("user_id", userId)
-    .eq("client_id", clientId);
-
-  if (itemsError) throw itemsError;
-  const listIds = Array.from(new Set((items ?? []).map((i) => i.list_id)));
-  if (listIds.length === 0) return [];
-
-  const { data: lists, error } = await supabase
-    .from("lists")
-    .select("*")
-    .eq("user_id", userId)
-    .in("id", listIds);
-
-  if (error) throw error;
-  return lists ?? [];
+  return query<List>(
+    `select distinct l.* from lists l
+     join list_items li on li.list_id = l.id
+     where l.user_id = $1 and li.client_id = $2`,
+    [OWNER_ID, clientId],
+  );
 }
 
-export async function searchLists(query: string): Promise<List[]> {
-  const userId = await requireUserId();
-  const supabase = await createClient();
-
-  const { data, error } = await supabase
-    .from("lists")
-    .select("*")
-    .eq("user_id", userId)
-    .or(`name.ilike.%${query}%,description.ilike.%${query}%`)
-    .order("updated_at", { ascending: false })
-    .limit(20);
-
-  if (error) throw error;
-  return data ?? [];
+export async function searchLists(searchQuery: string): Promise<List[]> {
+  return query<List>(
+    `select * from lists
+     where user_id = $1 and (name ilike $2 or description ilike $2)
+     order by updated_at desc
+     limit 20`,
+    [OWNER_ID, `%${searchQuery}%`],
+  );
 }

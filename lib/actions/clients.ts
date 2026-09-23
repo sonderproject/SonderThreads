@@ -1,8 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
-import { requireUserId } from "./helpers";
+import { query, queryOne } from "@/lib/db/client";
+import { OWNER_ID } from "@/lib/db/constants";
 import { logActivity } from "./activity";
 import type { Client } from "@/lib/types";
 
@@ -14,32 +14,13 @@ function splitName(fullName: string): { firstName: string; lastName: string | nu
 }
 
 export async function listClients(): Promise<Client[]> {
-  const userId = await requireUserId();
-  const supabase = await createClient();
-
-  const { data, error } = await supabase
-    .from("clients")
-    .select("*")
-    .eq("user_id", userId)
-    .order("last_activity_at", { ascending: false });
-
-  if (error) throw error;
-  return data ?? [];
+  return query<Client>(`select * from clients where user_id = $1 order by last_activity_at desc`, [
+    OWNER_ID,
+  ]);
 }
 
 export async function getClient(id: string): Promise<Client | null> {
-  const userId = await requireUserId();
-  const supabase = await createClient();
-
-  const { data, error } = await supabase
-    .from("clients")
-    .select("*")
-    .eq("user_id", userId)
-    .eq("id", id)
-    .maybeSingle();
-
-  if (error) throw error;
-  return data;
+  return queryOne<Client>(`select * from clients where user_id = $1 and id = $2`, [OWNER_ID, id]);
 }
 
 export async function createClientRecord(params: {
@@ -47,58 +28,40 @@ export async function createClientRecord(params: {
   currentStatus?: string | null;
   nextAction?: string | null;
 }): Promise<Client> {
-  const userId = await requireUserId();
-  const supabase = await createClient();
   const { firstName, lastName } = splitName(params.fullName);
 
-  const { data, error } = await supabase
-    .from("clients")
-    .insert({
-      user_id: userId,
-      first_name: firstName,
-      last_name: lastName,
-      display_name: params.fullName.trim(),
-      current_status: params.currentStatus ?? null,
-      next_action: params.nextAction ?? null,
-    })
-    .select("*")
-    .single();
+  const client = await queryOne<Client>(
+    `insert into clients (user_id, first_name, last_name, display_name, current_status, next_action)
+     values ($1, $2, $3, $4, $5, $6)
+     returning *`,
+    [
+      OWNER_ID,
+      firstName,
+      lastName,
+      params.fullName.trim(),
+      params.currentStatus ?? null,
+      params.nextAction ?? null,
+    ],
+  );
 
-  if (error) throw error;
+  if (!client) throw new Error("Failed to create client");
 
   await logActivity({
     type: "client_created",
-    description: `${data.display_name} added`,
-    clientId: data.id,
+    description: `${client.display_name} added`,
+    clientId: client.id,
   });
 
   revalidatePath("/clients");
   revalidatePath("/");
-  return data;
+  return client;
 }
 
 /** Finds a client by loose name match, or creates one if none exists. */
 export async function findOrCreateClientByName(
   fullName: string,
 ): Promise<{ client: Client; created: boolean }> {
-  const userId = await requireUserId();
-  const supabase = await createClient();
-  const norm = fullName.trim().toLowerCase();
-
-  const { data: existing, error } = await supabase
-    .from("clients")
-    .select("*")
-    .eq("user_id", userId);
-
-  if (error) throw error;
-
-  const match = (existing ?? []).find(
-    (c) =>
-      c.display_name.toLowerCase() === norm ||
-      c.first_name.toLowerCase() === norm ||
-      c.display_name.toLowerCase().startsWith(norm),
-  );
-
+  const match = await findClientByName(fullName);
   if (match) return { client: match, created: false };
 
   const created = await createClientRecord({ fullName });
@@ -107,45 +70,39 @@ export async function findOrCreateClientByName(
 
 /** Finds a client by loose name match without creating one. */
 export async function findClientByName(fullName: string): Promise<Client | null> {
-  const userId = await requireUserId();
-  const supabase = await createClient();
   const norm = fullName.trim().toLowerCase();
+  if (!norm) return null;
 
-  const { data: existing, error } = await supabase
-    .from("clients")
-    .select("*")
-    .eq("user_id", userId);
-
-  if (error) throw error;
-
-  return (
-    (existing ?? []).find(
-      (c) =>
-        c.display_name.toLowerCase() === norm ||
-        c.first_name.toLowerCase() === norm ||
-        c.display_name.toLowerCase().startsWith(norm),
-    ) ?? null
+  return queryOne<Client>(
+    `select * from clients
+     where user_id = $1
+       and (lower(display_name) = $2 or lower(first_name) = $2 or lower(display_name) like $2 || '%')
+     order by (lower(display_name) = $2) desc
+     limit 1`,
+    [OWNER_ID, norm],
   );
 }
 
 export async function updateClient(
   id: string,
-  patch: Partial<Pick<Client, "current_status" | "next_action" | "status" | "phone" | "email" | "birthday" | "display_name">>,
+  patch: Partial<
+    Pick<Client, "current_status" | "next_action" | "status" | "phone" | "email" | "birthday" | "display_name">
+  >,
 ): Promise<Client> {
-  const userId = await requireUserId();
-  const supabase = await createClient();
-
   const before = await getClient(id);
 
-  const { data, error } = await supabase
-    .from("clients")
-    .update({ ...patch, last_activity_at: new Date().toISOString() })
-    .eq("user_id", userId)
-    .eq("id", id)
-    .select("*")
-    .single();
+  const fields = Object.keys(patch) as (keyof typeof patch)[];
+  const setClauses = fields.map((field, i) => `${field} = $${i + 3}`);
+  const values = fields.map((field) => patch[field]);
 
-  if (error) throw error;
+  const client = await queryOne<Client>(
+    `update clients set ${[...setClauses, "last_activity_at = now()"].join(", ")}
+     where user_id = $1 and id = $2
+     returning *`,
+    [OWNER_ID, id, ...values],
+  );
+
+  if (!client) throw new Error("Client not found");
 
   if (before && patch.current_status !== undefined && before.current_status !== patch.current_status) {
     await logActivity({
@@ -166,78 +123,44 @@ export async function updateClient(
   revalidatePath(`/clients/${id}`);
   revalidatePath("/clients");
   revalidatePath("/");
-  return data;
+  return client;
 }
 
 export async function touchClientActivity(id: string): Promise<void> {
-  const userId = await requireUserId();
-  const supabase = await createClient();
-
-  await supabase
-    .from("clients")
-    .update({ last_activity_at: new Date().toISOString() })
-    .eq("user_id", userId)
-    .eq("id", id);
+  await query(`update clients set last_activity_at = now() where user_id = $1 and id = $2`, [
+    OWNER_ID,
+    id,
+  ]);
 }
 
-export async function searchClients(query: string): Promise<Client[]> {
-  const userId = await requireUserId();
-  const supabase = await createClient();
-
-  const { data, error } = await supabase
-    .from("clients")
-    .select("*")
-    .eq("user_id", userId)
-    .or(
-      `display_name.ilike.%${query}%,current_status.ilike.%${query}%,next_action.ilike.%${query}%,summary.ilike.%${query}%`,
-    )
-    .order("last_activity_at", { ascending: false })
-    .limit(20);
-
-  if (error) throw error;
-  return data ?? [];
+export async function searchClients(searchQuery: string): Promise<Client[]> {
+  const like = `%${searchQuery}%`;
+  return query<Client>(
+    `select * from clients
+     where user_id = $1
+       and (display_name ilike $2 or current_status ilike $2 or next_action ilike $2 or summary ilike $2)
+     order by last_activity_at desc
+     limit 20`,
+    [OWNER_ID, like],
+  );
 }
 
 /** Clients needing attention: overdue tasks, no recent activity, or flagged for follow-up. */
 export async function getClientsNeedingAttention(): Promise<Client[]> {
-  const userId = await requireUserId();
-  const supabase = await createClient();
-
   const staleThreshold = new Date();
   staleThreshold.setDate(staleThreshold.getDate() - 7);
 
-  const { data: overdueTasks } = await supabase
-    .from("tasks")
-    .select("client_id")
-    .eq("user_id", userId)
-    .eq("completed", false)
-    .not("client_id", "is", null)
-    .lt("due_at", new Date().toISOString());
-
-  const { data: clients, error } = await supabase
-    .from("clients")
-    .select("*")
-    .eq("user_id", userId)
-    .or(`needs_followup.eq.true,last_activity_at.lt.${staleThreshold.toISOString()}`)
-    .order("last_activity_at", { ascending: true })
-    .limit(10);
-
-  if (error) throw error;
-
-  const overdueIds = new Set((overdueTasks ?? []).map((t) => t.client_id));
-  const byId = new Map((clients ?? []).map((c) => [c.id, c]));
-
-  for (const id of overdueIds) {
-    if (id && !byId.has(id)) {
-      const { data: c } = await supabase
-        .from("clients")
-        .select("*")
-        .eq("user_id", userId)
-        .eq("id", id)
-        .maybeSingle();
-      if (c) byId.set(c.id, c);
-    }
-  }
-
-  return Array.from(byId.values()).slice(0, 10);
+  return query<Client>(
+    `select distinct c.* from clients c
+     left join tasks t on t.client_id = c.id
+       and t.user_id = $1
+       and t.completed = false
+       and t.due_at is not null
+       and t.due_at < now()
+     where c.user_id = $1
+       and (c.needs_followup = true or c.last_activity_at < $2 or t.id is not null)
+     order by c.last_activity_at asc
+     limit 10`,
+    [OWNER_ID, staleThreshold.toISOString()],
+  );
 }

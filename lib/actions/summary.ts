@@ -1,40 +1,35 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
-import { requireUserId } from "./helpers";
+import { query, queryOne } from "@/lib/db/client";
+import { OWNER_ID } from "@/lib/db/constants";
 import { generateClientSummary } from "@/lib/ai/client-summary";
+import type { Client } from "@/lib/types";
 
 /** Regenerates a client's short summary + current/next fields from their recent notes and open tasks. */
 export async function regenerateClientSummary(clientId: string): Promise<void> {
-  const userId = await requireUserId();
-  const supabase = await createClient();
-
-  const { data: client } = await supabase
-    .from("clients")
-    .select("*")
-    .eq("user_id", userId)
-    .eq("id", clientId)
-    .maybeSingle();
+  const client = await queryOne<Client>(`select * from clients where user_id = $1 and id = $2`, [
+    OWNER_ID,
+    clientId,
+  ]);
 
   if (!client) return;
 
-  const { data: notes } = await supabase
-    .from("notes")
-    .select("content, created_at")
-    .eq("user_id", userId)
-    .eq("client_id", clientId)
-    .order("created_at", { ascending: false })
-    .limit(5);
+  const notes = await query<{ content: string; created_at: string }>(
+    `select content, created_at from notes
+     where user_id = $1 and client_id = $2
+     order by created_at desc
+     limit 5`,
+    [OWNER_ID, clientId],
+  );
 
-  const { data: tasks } = await supabase
-    .from("tasks")
-    .select("title, due_at")
-    .eq("user_id", userId)
-    .eq("client_id", clientId)
-    .eq("completed", false)
-    .order("due_at", { ascending: true, nullsFirst: false })
-    .limit(5);
+  const tasks = await query<{ title: string; due_at: string | null }>(
+    `select title, due_at from tasks
+     where user_id = $1 and client_id = $2 and completed = false
+     order by due_at asc nulls last
+     limit 5`,
+    [OWNER_ID, clientId],
+  );
 
   const result = await generateClientSummary({
     client: {
@@ -42,27 +37,26 @@ export async function regenerateClientSummary(clientId: string): Promise<void> {
       currentStatus: client.current_status,
       nextAction: client.next_action,
     },
-    recentNotes: (notes ?? []).map((n) => ({ content: n.content, createdAt: n.created_at })),
-    openTasks: (tasks ?? []).map((t) => ({ title: t.title, dueAt: t.due_at })),
+    recentNotes: notes.map((n) => ({ content: n.content, createdAt: n.created_at })),
+    openTasks: tasks.map((t) => ({ title: t.title, dueAt: t.due_at })),
   });
 
-  await supabase
-    .from("clients")
-    .update({
-      summary: result.summary || client.summary,
-      current_status: result.currentStatus ?? client.current_status,
-      next_action: result.nextAction ?? client.next_action,
-    })
-    .eq("user_id", userId)
-    .eq("id", clientId);
+  await query(
+    `update clients set summary = $1, current_status = $2, next_action = $3 where user_id = $4 and id = $5`,
+    [
+      result.summary || client.summary,
+      result.currentStatus ?? client.current_status,
+      result.nextAction ?? client.next_action,
+      OWNER_ID,
+      clientId,
+    ],
+  );
 
   if (result.summary) {
-    await supabase.from("client_summaries").insert({
-      user_id: userId,
-      client_id: clientId,
-      summary: result.summary,
-      generated_by: result.generatedBy,
-    });
+    await query(
+      `insert into client_summaries (user_id, client_id, summary, generated_by) values ($1, $2, $3, $4)`,
+      [OWNER_ID, clientId, result.summary, result.generatedBy],
+    );
   }
 
   revalidatePath(`/clients/${clientId}`);

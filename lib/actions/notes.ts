@@ -1,8 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
-import { requireUserId, truncate } from "./helpers";
+import { query, queryOne } from "@/lib/db/client";
+import { OWNER_ID } from "@/lib/db/constants";
+import { truncate } from "./helpers";
 import { logActivity } from "./activity";
 import { touchClientActivity } from "./clients";
 import { regenerateClientSummary } from "./summary";
@@ -14,28 +15,26 @@ export async function createNote(params: {
   category?: string | null;
   aiMetadata?: Record<string, unknown> | null;
 }): Promise<Note> {
-  const userId = await requireUserId();
-  const supabase = await createClient();
+  const note = await queryOne<Note>(
+    `insert into notes (user_id, content, client_id, category, ai_metadata)
+     values ($1, $2, $3, $4, $5)
+     returning *`,
+    [
+      OWNER_ID,
+      params.content,
+      params.clientId ?? null,
+      params.category ?? null,
+      params.aiMetadata ? JSON.stringify(params.aiMetadata) : null,
+    ],
+  );
 
-  const { data, error } = await supabase
-    .from("notes")
-    .insert({
-      user_id: userId,
-      content: params.content,
-      client_id: params.clientId ?? null,
-      category: params.category ?? null,
-      ai_metadata: params.aiMetadata ?? null,
-    })
-    .select("*")
-    .single();
-
-  if (error) throw error;
+  if (!note) throw new Error("Failed to create note");
 
   await logActivity({
     type: "note_added",
-    description: params.clientId ? `Note: ${truncate(params.content)}` : `Note: ${truncate(params.content)}`,
+    description: `Note: ${truncate(params.content)}`,
     clientId: params.clientId ?? null,
-    noteId: data.id,
+    noteId: note.id,
   });
 
   if (params.clientId) {
@@ -47,90 +46,45 @@ export async function createNote(params: {
   revalidatePath("/notes");
   if (params.clientId) revalidatePath(`/clients/${params.clientId}`);
 
-  return data;
+  return note;
 }
 
 export async function listRecentNotes(limit = 10): Promise<Note[]> {
-  const userId = await requireUserId();
-  const supabase = await createClient();
-
-  const { data, error } = await supabase
-    .from("notes")
-    .select("*")
-    .eq("user_id", userId)
-    .order("created_at", { ascending: false })
-    .limit(limit);
-
-  if (error) throw error;
-  return data ?? [];
+  return query<Note>(`select * from notes where user_id = $1 order by created_at desc limit $2`, [
+    OWNER_ID,
+    limit,
+  ]);
 }
 
 export async function listAllNotes(): Promise<Note[]> {
-  const userId = await requireUserId();
-  const supabase = await createClient();
-
-  const { data, error } = await supabase
-    .from("notes")
-    .select("*")
-    .eq("user_id", userId)
-    .order("created_at", { ascending: false })
-    .limit(200);
-
-  if (error) throw error;
-  return data ?? [];
+  return query<Note>(`select * from notes where user_id = $1 order by created_at desc limit 200`, [
+    OWNER_ID,
+  ]);
 }
 
 export async function listStandaloneNotes(): Promise<Note[]> {
-  const userId = await requireUserId();
-  const supabase = await createClient();
-
-  const { data, error } = await supabase
-    .from("notes")
-    .select("*")
-    .eq("user_id", userId)
-    .is("client_id", null)
-    .order("created_at", { ascending: false });
-
-  if (error) throw error;
-  return data ?? [];
+  return query<Note>(
+    `select * from notes where user_id = $1 and client_id is null order by created_at desc`,
+    [OWNER_ID],
+  );
 }
 
 export async function listNotesForClient(clientId: string): Promise<Note[]> {
-  const userId = await requireUserId();
-  const supabase = await createClient();
-
-  const { data, error } = await supabase
-    .from("notes")
-    .select("*")
-    .eq("user_id", userId)
-    .eq("client_id", clientId)
-    .order("created_at", { ascending: false });
-
-  if (error) throw error;
-  return data ?? [];
+  return query<Note>(
+    `select * from notes where user_id = $1 and client_id = $2 order by created_at desc`,
+    [OWNER_ID, clientId],
+  );
 }
 
 export async function deleteNote(id: string): Promise<void> {
-  const userId = await requireUserId();
-  const supabase = await createClient();
-
-  await supabase.from("notes").delete().eq("user_id", userId).eq("id", id);
+  await query(`delete from notes where user_id = $1 and id = $2`, [OWNER_ID, id]);
   revalidatePath("/notes");
   revalidatePath("/");
 }
 
-export async function searchNotes(query: string): Promise<Note[]> {
-  const userId = await requireUserId();
-  const supabase = await createClient();
-
-  const { data, error } = await supabase
-    .from("notes")
-    .select("*")
-    .eq("user_id", userId)
-    .ilike("content", `%${query}%`)
-    .order("created_at", { ascending: false })
-    .limit(20);
-
-  if (error) throw error;
-  return data ?? [];
+export async function searchNotes(searchQuery: string): Promise<Note[]> {
+  return query<Note>(
+    `select * from notes where user_id = $1 and content ilike $2 order by created_at desc limit 20`,
+    [OWNER_ID, `%${searchQuery}%`],
+  );
 }

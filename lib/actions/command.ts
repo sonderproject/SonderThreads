@@ -1,7 +1,7 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
-import { requireUserId } from "./helpers";
+import { query } from "@/lib/db/client";
+import { OWNER_ID } from "@/lib/db/constants";
 import { parseCommand } from "@/lib/ai/command-parser";
 import { findClientByName, findOrCreateClientByName, updateClient } from "./clients";
 import { createNote } from "./notes";
@@ -26,23 +26,23 @@ export async function executeCommand(input: string): Promise<CommandResult> {
     return { kind: "error", message: "Type something first." };
   }
 
-  const userId = await requireUserId();
-  const supabase = await createClient();
-
-  const [{ data: clients }, { data: lists }] = await Promise.all([
-    supabase.from("clients").select("id, display_name, first_name, last_name").eq("user_id", userId),
-    supabase.from("lists").select("id, name").eq("user_id", userId),
+  const [clients, lists] = await Promise.all([
+    query<{ id: string; display_name: string; first_name: string; last_name: string | null }>(
+      `select id, display_name, first_name, last_name from clients where user_id = $1`,
+      [OWNER_ID],
+    ),
+    query<{ id: string; name: string }>(`select id, name from lists where user_id = $1`, [OWNER_ID]),
   ]);
 
   const parsed = await parseCommand(trimmed, {
     now: new Date(),
-    clients: (clients ?? []).map((c) => ({
+    clients: clients.map((c) => ({
       id: c.id,
       displayName: c.display_name,
       firstName: c.first_name,
       lastName: c.last_name,
     })),
-    lists: (lists ?? []).map((l) => ({ id: l.id, name: l.name })),
+    lists: lists.map((l) => ({ id: l.id, name: l.name })),
   });
 
   try {
