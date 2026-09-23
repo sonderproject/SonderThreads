@@ -75,6 +75,16 @@ supabase/seed.sql       Optional manual seed script
 
 `lib/ai/command-parser.ts` classifies free text into one of: `create_client`, `add_client_note`, `add_note`, `create_task`, `create_list`, `add_to_list`, `update_client_status`, `search`, or `unknown`, then `lib/actions/command.ts` executes it (creating/linking clients, notes, tasks, or lists) and returns a short confirmation. A cohort list (`is_cohort: true`) auto-creates client records for unmatched names, since a cohort is a roster of clients; a plain list just links to an existing client when the name matches.
 
+## Troubleshooting: "Setup issue: Missing environment variables" on the deployed site
+
+This means the deployed app genuinely doesn't have `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` at build time. It is a Vercel configuration problem, not a code problem — the two things that most commonly cause it even after "adding" the variables:
+
+1. **Environment scope.** In Vercel's Environment Variables screen, each variable has checkboxes for **Production / Preview / Development**. If "Production" isn't checked, the variable will not exist on your live (production) deployment, even though it's saved. Make sure both variables have **Production** checked.
+2. **Redeploy after adding.** `NEXT_PUBLIC_*` variables are baked into the JavaScript bundle at build time — adding/changing them does **not** retroactively update a deployment that already ran. You must trigger a new build afterward (push a commit, or Deployments → "..." → Redeploy).
+3. **Exact spelling.** The names must be exactly `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` — case-sensitive, no leading/trailing spaces.
+
+To verify: Vercel project → **Settings → Environment Variables** should list both names with **Production** checked, and the **Deployments** tab's latest entry should be timestamped *after* you saved them.
+
 ## Known limitation (this build environment)
 
 This build was verified with `npm run build` (TypeScript + Next.js compile cleanly) and a local `npm run dev` smoke test of the static `/login` route. The authenticated routes (dashboard, clients, lists, tasks, notes) require a live, reachable Supabase project — they weren't exercised end-to-end here because no real Supabase project was available in this sandbox. Once you've completed steps 1–4 above, every one of the pages/actions above should work; if anything doesn't, let us know the exact page/action and the error message.
