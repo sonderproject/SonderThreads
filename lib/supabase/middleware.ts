@@ -49,7 +49,14 @@ export async function updateSession(request: NextRequest) {
     } = await supabase.auth.getUser();
 
     if (!user) {
-      await supabase.auth.signInAnonymously();
+      const { error: anonError } = await supabase.auth.signInAnonymously();
+      if (anonError) {
+        console.error(
+          "[middleware] signInAnonymously failed — is Anonymous Sign-ins enabled in " +
+            "Supabase (Authentication → Providers → Anonymous Sign-ins)?",
+          anonError,
+        );
+      }
     }
   } catch (err) {
     console.error("[middleware] Supabase session setup failed", err);

@@ -7,7 +7,12 @@ export async function requireUserId(): Promise<string> {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    throw new Error("Not authenticated");
+    throw new Error(
+      "No Supabase session found. This usually means Anonymous Sign-ins " +
+        "aren't enabled yet: Supabase dashboard → Authentication → Providers → " +
+        "Anonymous Sign-ins → Enable. Also double-check NEXT_PUBLIC_SUPABASE_URL " +
+        "and NEXT_PUBLIC_SUPABASE_ANON_KEY are set correctly.",
+    );
   }
 
   return user.id;
