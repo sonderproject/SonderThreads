@@ -42,8 +42,28 @@ function getPool(): Pool {
 
   const isLocal = /localhost|127\.0\.0\.1/.test(connectionString);
 
+  // node-postgres has a sharp edge here: when both `connectionString` and an
+  // explicit `ssl` option are passed to Pool, it internally does
+  // `Object.assign({}, config, parse(connectionString))` — the *parsed*
+  // connection string is applied LAST, so if the URL has `sslmode=require`,
+  // pg-connection-string sets `ssl: {}` (full certificate verification) and
+  // that silently overwrites our explicit `ssl: { rejectUnauthorized: false }`
+  // below. Neon's pooler cert then fails full verification with exactly
+  // "self-signed certificate in certificate chain". Stripping `sslmode` (and
+  // `channel_binding`, which node-postgres doesn't use) keeps the parser from
+  // touching `ssl` at all, so our explicit option is the only one applied.
+  let cleanedConnectionString = connectionString;
+  try {
+    const url = new URL(connectionString);
+    url.searchParams.delete("sslmode");
+    url.searchParams.delete("channel_binding");
+    cleanedConnectionString = url.toString();
+  } catch {
+    // Not a parseable URL (e.g. a keyword/value DSN) — use as-is.
+  }
+
   pool = new Pool({
-    connectionString,
+    connectionString: cleanedConnectionString,
     ssl: isLocal ? undefined : { rejectUnauthorized: false },
     max: 10,
   });
