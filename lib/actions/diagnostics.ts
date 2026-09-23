@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { getSupabaseAnonKey, getSupabaseUrl } from "@/lib/supabase/env";
 
 export type SupabaseDiagnostic =
   | { ok: true }
@@ -12,7 +13,7 @@ export type SupabaseDiagnostic =
  * of error.tsx, so this is the only way to surface the actual reason.
  */
 export async function checkSupabaseConnection(): Promise<SupabaseDiagnostic> {
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+  if (!getSupabaseUrl() || !getSupabaseAnonKey()) {
     return {
       ok: false,
       reason: "Missing environment variables",
