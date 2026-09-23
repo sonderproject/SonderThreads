@@ -1,4 +1,5 @@
 import { Pool, type QueryResultRow } from "pg";
+import { SCHEMA_SQL } from "./schema";
 
 /**
  * Vercel's native "Postgres" storage (powered by Neon) injects the
@@ -50,10 +51,34 @@ function getPool(): Pool {
   return pool;
 }
 
+/**
+ * Creates the schema (tables/indexes) if it doesn't exist yet. Runs once
+ * per warm server instance — every statement is `if not exists`, so it's
+ * a cheap no-op once the schema is already there. This is what lets the
+ * app self-provision on first request with zero manual setup: whoever
+ * deploys it only has to point POSTGRES_URL/DATABASE_URL at an empty
+ * database, nothing else.
+ */
+let schemaReady: Promise<void> | null = null;
+
+function ensureSchema(): Promise<void> {
+  if (!schemaReady) {
+    schemaReady = getPool()
+      .query(SCHEMA_SQL)
+      .then(() => undefined)
+      .catch((err) => {
+        schemaReady = null; // allow retry on the next call instead of caching a failure forever
+        throw err;
+      });
+  }
+  return schemaReady;
+}
+
 export async function query<T extends QueryResultRow = QueryResultRow>(
   text: string,
   params: unknown[] = [],
 ): Promise<T[]> {
+  await ensureSchema();
   const result = await getPool().query<T>(text, params);
   return result.rows;
 }
@@ -73,27 +98,10 @@ export async function checkDatabaseConnection(): Promise<{ ok: true } | { ok: fa
         ok: false,
         detail:
           "No Postgres connection string is set. Add the Postgres storage integration " +
-          "in Vercel (Storage tab → Create Database → Postgres), or set POSTGRES_URL / " +
-          "DATABASE_URL locally.",
+          "in Vercel (Storage tab → Create Database → Postgres).",
       };
     }
-    await query("select 1");
-
-    try {
-      await query("select 1 from clients limit 1");
-    } catch (schemaErr) {
-      const message = schemaErr instanceof Error ? schemaErr.message : String(schemaErr);
-      if (/relation .* does not exist/i.test(message)) {
-        return {
-          ok: false,
-          detail:
-            "Connected to the database, but the tables don't exist yet. Run db/schema.sql " +
-            "against it once (Vercel's Query tab, or `psql \"$POSTGRES_URL\" -f db/schema.sql`).",
-        };
-      }
-      throw schemaErr;
-    }
-
+    await query("select 1 from clients limit 1");
     return { ok: true };
   } catch (err) {
     return { ok: false, detail: err instanceof Error ? err.message : String(err) };

@@ -21,9 +21,8 @@ export default function RootError({
         </p>
         <p className="mb-4 text-sm text-text-muted whitespace-pre-wrap">{error.message}</p>
         <p className="mb-4 text-xs text-text-faint">
-          Most often this means the database isn&apos;t fully set up yet: check that
-          POSTGRES_URL (or DATABASE_URL) is set, and that db/schema.sql has been run
-          against it.
+          Most often this means POSTGRES_URL (or DATABASE_URL) isn&apos;t set for this
+          deployment yet — the app creates its own tables automatically once it can connect.
         </p>
         <button
           onClick={reset}

@@ -9,8 +9,8 @@ export function SetupIssuePanel({ diagnostic }: { diagnostic: Extract<Diagnostic
         </p>
         <p className="mb-4 text-sm text-text-muted whitespace-pre-wrap">{diagnostic.detail}</p>
         <p className="text-xs text-text-faint">
-          Checklist: in Vercel, Storage tab → Create Database → Postgres (this injects POSTGRES_URL
-          automatically) → run db/schema.sql against it once (Vercel&apos;s Query tab, or psql).
+          In Vercel: Storage tab → Create Database → Postgres. That&apos;s the only step — the app
+          creates its own tables automatically on first connection.
         </p>
       </div>
     </div>
