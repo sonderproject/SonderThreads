@@ -19,8 +19,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen bg-bg">
       <header className="sticky top-0 z-20 border-b border-border bg-bg/95 backdrop-blur">
         <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3 sm:px-6">
-          <Link href="/" className="font-mono text-sm text-accent">
-            &gt; ccc
+          <Link href="/" className="font-mono text-lg text-accent">
+            &gt; sonderthreads
           </Link>
           <div className="flex items-center gap-1 sm:gap-2">
             <nav className="flex gap-1 overflow-x-auto sm:gap-2">

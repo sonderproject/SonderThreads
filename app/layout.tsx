@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, JetBrains_Mono } from "next/font/google";
+import { Inter, VT323 } from "next/font/google";
 import "./globals.css";
 
 const sans = Inter({
@@ -8,8 +8,9 @@ const sans = Inter({
   display: "swap",
 });
 
-const mono = JetBrains_Mono({
+const mono = VT323({
   subsets: ["latin"],
+  weight: "400",
   variable: "--font-mono",
   display: "swap",
 });
