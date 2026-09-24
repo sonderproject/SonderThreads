@@ -28,10 +28,13 @@ export async function executeCommand(input: string): Promise<CommandResult> {
 
   const [clients, lists] = await Promise.all([
     query<{ id: string; display_name: string; first_name: string; last_name: string | null }>(
-      `select id, display_name, first_name, last_name from clients where user_id = $1`,
+      `select id, display_name, first_name, last_name from clients where user_id = $1 and deleted_at is null`,
       [OWNER_ID],
     ),
-    query<{ id: string; name: string }>(`select id, name from lists where user_id = $1`, [OWNER_ID]),
+    query<{ id: string; name: string }>(
+      `select id, name from lists where user_id = $1 and deleted_at is null`,
+      [OWNER_ID],
+    ),
   ]);
 
   const parsed = await parseCommand(trimmed, {
@@ -158,6 +161,7 @@ export async function executeCommand(input: string): Promise<CommandResult> {
     }
   } catch (err) {
     console.error("[command] execution failed", err);
-    return { kind: "error", message: "Something went wrong running that command." };
+    const message = err instanceof Error ? err.message : "Something went wrong running that command.";
+    return { kind: "error", message };
   }
 }

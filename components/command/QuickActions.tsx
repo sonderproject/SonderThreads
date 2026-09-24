@@ -4,10 +4,10 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
-import { createClientRecord } from "@/lib/actions/clients";
-import { createNote } from "@/lib/actions/notes";
-import { createList } from "@/lib/actions/lists";
-import { createTask } from "@/lib/actions/tasks";
+import { createClientRecordSafe } from "@/lib/actions/clients";
+import { createNoteSafe } from "@/lib/actions/notes";
+import { createListSafe } from "@/lib/actions/lists";
+import { createTaskSafe } from "@/lib/actions/tasks";
 import type { Client } from "@/lib/types";
 
 type ActiveModal = "client" | "note" | "list" | "task" | null;
@@ -56,22 +56,26 @@ function ClientForm({ onDone }: { onDone: () => void }) {
   const [currentStatus, setCurrentStatus] = useState("");
   const [nextAction, setNextAction] = useState("");
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!fullName.trim()) return;
     setSaving(true);
-    await createClientRecord({
+    setError(null);
+    const result = await createClientRecordSafe({
       fullName,
       currentStatus: currentStatus || null,
       nextAction: nextAction || null,
     });
     setSaving(false);
-    onDone();
+    if (result.ok) onDone();
+    else setError(result.error);
   }
 
   return (
     <form onSubmit={submit} className="space-y-3">
+      {error && <p className="text-xs text-red-400">{error}</p>}
       <Field label="Name">
         <input
           autoFocus
@@ -114,18 +118,22 @@ function NoteForm({
   const [content, setContent] = useState("");
   const [clientId, setClientId] = useState("");
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!content.trim()) return;
     setSaving(true);
-    await createNote({ content, clientId: clientId || null });
+    setError(null);
+    const result = await createNoteSafe({ content, clientId: clientId || null });
     setSaving(false);
-    onDone();
+    if (result.ok) onDone();
+    else setError(result.error);
   }
 
   return (
     <form onSubmit={submit} className="space-y-3">
+      {error && <p className="text-xs text-red-400">{error}</p>}
       <Field label="Note">
         <textarea
           autoFocus
@@ -157,18 +165,22 @@ function ListForm({ onDone }: { onDone: () => void }) {
   const [isCohort, setIsCohort] = useState(false);
   const [description, setDescription] = useState("");
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!name.trim()) return;
     setSaving(true);
-    await createList({ name, isCohort, description: description || null });
+    setError(null);
+    const result = await createListSafe({ name, isCohort, description: description || null });
     setSaving(false);
-    onDone();
+    if (result.ok) onDone();
+    else setError(result.error);
   }
 
   return (
     <form onSubmit={submit} className="space-y-3">
+      {error && <p className="text-xs text-red-400">{error}</p>}
       <Field label="Name">
         <input
           autoFocus
@@ -207,22 +219,26 @@ function TaskForm({
   const [clientId, setClientId] = useState("");
   const [dueAt, setDueAt] = useState("");
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!title.trim()) return;
     setSaving(true);
-    await createTask({
+    setError(null);
+    const result = await createTaskSafe({
       title,
       clientId: clientId || null,
       dueAt: dueAt ? new Date(dueAt).toISOString() : null,
     });
     setSaving(false);
-    onDone();
+    if (result.ok) onDone();
+    else setError(result.error);
   }
 
   return (
     <form onSubmit={submit} className="space-y-3">
+      {error && <p className="text-xs text-red-400">{error}</p>}
       <Field label="Task">
         <input
           autoFocus

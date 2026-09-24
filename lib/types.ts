@@ -17,6 +17,7 @@ export type Client = {
   created_at: string;
   updated_at: string;
   last_activity_at: string;
+  deleted_at: string | null;
 };
 
 export type Note = {
@@ -28,6 +29,7 @@ export type Note = {
   ai_metadata: Record<string, unknown> | null;
   created_at: string;
   updated_at: string;
+  deleted_at: string | null;
 };
 
 export type List = {
@@ -38,6 +40,7 @@ export type List = {
   is_cohort: boolean;
   created_at: string;
   updated_at: string;
+  deleted_at: string | null;
 };
 
 export type ListItem = {
@@ -64,6 +67,7 @@ export type Task = {
   completed_at: string | null;
   created_at: string;
   updated_at: string;
+  deleted_at: string | null;
 };
 
 export type ClientSummaryRecord = {

@@ -8,16 +8,16 @@ import type { Client } from "@/lib/types";
 
 /** Regenerates a client's short summary + current/next fields from their recent notes and open tasks. */
 export async function regenerateClientSummary(clientId: string): Promise<void> {
-  const client = await queryOne<Client>(`select * from clients where user_id = $1 and id = $2`, [
-    OWNER_ID,
-    clientId,
-  ]);
+  const client = await queryOne<Client>(
+    `select * from clients where user_id = $1 and id = $2 and deleted_at is null`,
+    [OWNER_ID, clientId],
+  );
 
   if (!client) return;
 
   const notes = await query<{ content: string; created_at: string }>(
     `select content, created_at from notes
-     where user_id = $1 and client_id = $2
+     where user_id = $1 and client_id = $2 and deleted_at is null
      order by created_at desc
      limit 5`,
     [OWNER_ID, clientId],
@@ -25,7 +25,7 @@ export async function regenerateClientSummary(clientId: string): Promise<void> {
 
   const tasks = await query<{ title: string; due_at: string | null }>(
     `select title, due_at from tasks
-     where user_id = $1 and client_id = $2 and completed = false
+     where user_id = $1 and client_id = $2 and completed = false and deleted_at is null
      order by due_at asc nulls last
      limit 5`,
     [OWNER_ID, clientId],
@@ -42,7 +42,8 @@ export async function regenerateClientSummary(clientId: string): Promise<void> {
   });
 
   await query(
-    `update clients set summary = $1, current_status = $2, next_action = $3 where user_id = $4 and id = $5`,
+    `update clients set summary = $1, current_status = $2, next_action = $3
+     where user_id = $4 and id = $5 and deleted_at is null`,
     [
       result.summary || client.summary,
       result.currentStatus ?? client.current_status,

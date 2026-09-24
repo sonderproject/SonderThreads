@@ -4,18 +4,20 @@ import { revalidatePath } from "next/cache";
 import { query, queryOne } from "@/lib/db/client";
 import { OWNER_ID } from "@/lib/db/constants";
 import { logActivity } from "./activity";
+import { createTaskSchema, validate, toActionResult, type ActionResult } from "@/lib/validation";
 import type { Task } from "@/lib/types";
 
 export async function listTasks(): Promise<Task[]> {
-  return query<Task>(`select * from tasks where user_id = $1 order by due_at asc nulls last`, [
-    OWNER_ID,
-  ]);
+  return query<Task>(
+    `select * from tasks where user_id = $1 and deleted_at is null order by due_at asc nulls last`,
+    [OWNER_ID],
+  );
 }
 
 export async function listTasksForClient(clientId: string): Promise<Task[]> {
   return query<Task>(
     `select * from tasks
-     where user_id = $1 and client_id = $2
+     where user_id = $1 and client_id = $2 and deleted_at is null
      order by completed asc, due_at asc nulls last`,
     [OWNER_ID, clientId],
   );
@@ -28,6 +30,7 @@ export async function createTask(params: {
   dueAt?: string | null;
   notes?: string | null;
 }): Promise<Task> {
+  params = validate(createTaskSchema, params);
   const task = await queryOne<Task>(
     `insert into tasks (user_id, title, client_id, list_id, due_at, notes)
      values ($1, $2, $3, $4, $5, $6)
@@ -58,9 +61,16 @@ export async function createTask(params: {
   return task;
 }
 
+/** Client-form-safe wrapper: returns a result instead of throwing, since Next.js redacts thrown Server Action errors before they reach the client in production. */
+export async function createTaskSafe(params: Parameters<typeof createTask>[0]): Promise<ActionResult<Task>> {
+  return toActionResult(() => createTask(params));
+}
+
 export async function setTaskCompleted(id: string, completed: boolean): Promise<void> {
   const task = await queryOne<Task>(
-    `update tasks set completed = $1, completed_at = $2 where user_id = $3 and id = $4 returning *`,
+    `update tasks set completed = $1, completed_at = $2
+     where user_id = $3 and id = $4 and deleted_at is null
+     returning *`,
     [completed, completed ? new Date().toISOString() : null, OWNER_ID, id],
   );
 
@@ -80,8 +90,12 @@ export async function setTaskCompleted(id: string, completed: boolean): Promise<
   if (task.client_id) revalidatePath(`/clients/${task.client_id}`);
 }
 
+/** Soft-deletes a task — the row stays in the database (recoverable) but disappears from every view. */
 export async function deleteTask(id: string): Promise<void> {
-  await query(`delete from tasks where user_id = $1 and id = $2`, [OWNER_ID, id]);
+  await query(
+    `update tasks set deleted_at = now() where user_id = $1 and id = $2 and deleted_at is null`,
+    [OWNER_ID, id],
+  );
   revalidatePath("/tasks");
   revalidatePath("/");
 }
@@ -96,11 +110,10 @@ export async function updateTask(
   const setClauses = fields.map((field, i) => `${field} = $${i + 3}`);
   const values = fields.map((field) => patch[field]);
 
-  await query(`update tasks set ${setClauses.join(", ")} where user_id = $1 and id = $2`, [
-    OWNER_ID,
-    id,
-    ...values,
-  ]);
+  await query(
+    `update tasks set ${setClauses.join(", ")} where user_id = $1 and id = $2 and deleted_at is null`,
+    [OWNER_ID, id, ...values],
+  );
   revalidatePath("/tasks");
   revalidatePath("/");
 }
@@ -108,9 +121,11 @@ export async function updateTask(
 export async function searchTasks(searchQuery: string): Promise<Task[]> {
   return query<Task>(
     `select * from tasks
-     where user_id = $1 and (title ilike $2 or notes ilike $2)
-     order by due_at asc nulls last
+     where user_id = $1
+       and deleted_at is null
+       and search_vector @@ plainto_tsquery('english', $2)
+     order by ts_rank(search_vector, plainto_tsquery('english', $2)) desc
      limit 20`,
-    [OWNER_ID, `%${searchQuery}%`],
+    [OWNER_ID, searchQuery],
   );
 }

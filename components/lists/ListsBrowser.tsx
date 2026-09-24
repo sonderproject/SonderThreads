@@ -6,7 +6,7 @@ import { ListCard } from "@/components/lists/ListCard";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
-import { createList } from "@/lib/actions/lists";
+import { createListSafe } from "@/lib/actions/lists";
 import type { List } from "@/lib/types";
 
 export function ListsBrowser({
@@ -62,6 +62,7 @@ function NewListForm({ onDone }: { onDone: () => void }) {
   const [name, setName] = useState("");
   const [isCohort, setIsCohort] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const router = useRouter();
 
@@ -69,16 +70,22 @@ function NewListForm({ onDone }: { onDone: () => void }) {
     e.preventDefault();
     if (!name.trim()) return;
     setSaving(true);
+    setError(null);
     startTransition(async () => {
-      const list = await createList({ name, isCohort });
+      const result = await createListSafe({ name, isCohort });
       setSaving(false);
-      onDone();
-      router.push(`/lists/${list.id}`);
+      if (result.ok) {
+        onDone();
+        router.push(`/lists/${result.data.id}`);
+      } else {
+        setError(result.error);
+      }
     });
   }
 
   return (
     <form onSubmit={submit} className="space-y-3">
+      {error && <p className="text-xs text-red-400">{error}</p>}
       <input
         autoFocus
         value={name}

@@ -4,6 +4,11 @@
  * itself at runtime — see ensureSchema() in client.ts. A .sql file isn't
  * guaranteed to be included in Vercel's serverless function bundle, so the
  * source of truth the app actually runs lives in code.
+ *
+ * Every statement is additive (`if not exists` / `add column if not exists`)
+ * so this can run against a database that already has the tables from an
+ * earlier version of this file — it's a self-migrating schema, not just an
+ * initial-setup script.
  */
 export const SCHEMA_SQL = `
 create extension if not exists "pgcrypto";
@@ -27,9 +32,21 @@ create table if not exists clients (
   last_activity_at timestamptz not null default now()
 );
 
+alter table clients add column if not exists deleted_at timestamptz;
+
 create index if not exists clients_user_id_idx on clients(user_id);
 create index if not exists clients_last_activity_idx on clients(user_id, last_activity_at desc);
 create index if not exists clients_display_name_idx on clients(user_id, display_name);
+
+alter table clients add column if not exists search_vector tsvector
+  generated always as (
+    setweight(to_tsvector('english', coalesce(display_name, '')), 'A') ||
+    setweight(to_tsvector('english', coalesce(current_status, '')), 'B') ||
+    setweight(to_tsvector('english', coalesce(next_action, '')), 'B') ||
+    setweight(to_tsvector('english', coalesce(summary, '')), 'C')
+  ) stored;
+
+create index if not exists clients_search_vector_idx on clients using gin(search_vector);
 
 create table if not exists notes (
   id uuid primary key default gen_random_uuid(),
@@ -42,9 +59,16 @@ create table if not exists notes (
   updated_at timestamptz not null default now()
 );
 
+alter table notes add column if not exists deleted_at timestamptz;
+
 create index if not exists notes_user_id_idx on notes(user_id);
 create index if not exists notes_client_id_idx on notes(client_id);
 create index if not exists notes_created_at_idx on notes(user_id, created_at desc);
+
+alter table notes add column if not exists search_vector tsvector
+  generated always as (to_tsvector('english', coalesce(content, ''))) stored;
+
+create index if not exists notes_search_vector_idx on notes using gin(search_vector);
 
 create table if not exists lists (
   id uuid primary key default gen_random_uuid(),
@@ -56,8 +80,24 @@ create table if not exists lists (
   updated_at timestamptz not null default now()
 );
 
+alter table lists add column if not exists deleted_at timestamptz;
+
 create index if not exists lists_user_id_idx on lists(user_id);
-create unique index if not exists lists_user_name_idx on lists(user_id, lower(name));
+
+-- Partial (excludes soft-deleted rows) so a name can be reused after its
+-- list is deleted. Dropped and recreated every run rather than
+-- "if not exists" since an older, non-partial version of this index may
+-- already exist from before soft deletes were added — cheap at this scale.
+drop index if exists lists_user_name_idx;
+create unique index lists_user_name_idx on lists(user_id, lower(name)) where deleted_at is null;
+
+alter table lists add column if not exists search_vector tsvector
+  generated always as (
+    setweight(to_tsvector('english', coalesce(name, '')), 'A') ||
+    setweight(to_tsvector('english', coalesce(description, '')), 'B')
+  ) stored;
+
+create index if not exists lists_search_vector_idx on lists using gin(search_vector);
 
 create table if not exists list_items (
   id uuid primary key default gen_random_uuid(),
@@ -88,10 +128,20 @@ create table if not exists tasks (
   updated_at timestamptz not null default now()
 );
 
+alter table tasks add column if not exists deleted_at timestamptz;
+
 create index if not exists tasks_user_id_idx on tasks(user_id);
 create index if not exists tasks_due_at_idx on tasks(user_id, due_at);
 create index if not exists tasks_client_id_idx on tasks(client_id);
 create index if not exists tasks_completed_idx on tasks(user_id, completed);
+
+alter table tasks add column if not exists search_vector tsvector
+  generated always as (
+    setweight(to_tsvector('english', coalesce(title, '')), 'A') ||
+    setweight(to_tsvector('english', coalesce(notes, '')), 'B')
+  ) stored;
+
+create index if not exists tasks_search_vector_idx on tasks using gin(search_vector);
 
 create table if not exists client_summaries (
   id uuid primary key default gen_random_uuid(),

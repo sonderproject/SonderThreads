@@ -42,6 +42,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 );
               })}
             </nav>
+            <a
+              href="/api/export"
+              title="Download a full backup of your data (JSON)"
+              className="rounded px-2 py-1.5 text-sm text-text-muted transition-colors hover:bg-bg-hover hover:text-text"
+            >
+              ⭳
+            </a>
             <ThemeToggle />
           </div>
         </div>

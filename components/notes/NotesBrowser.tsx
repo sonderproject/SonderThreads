@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { NoteCard } from "@/components/notes/NoteCard";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Button } from "@/components/ui/Button";
-import { createNote } from "@/lib/actions/notes";
+import { createNoteSafe } from "@/lib/actions/notes";
 import type { Client, Note } from "@/lib/types";
 
 export function NotesBrowser({
@@ -19,6 +19,7 @@ export function NotesBrowser({
   const [content, setContent] = useState("");
   const [clientId, setClientId] = useState("");
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const router = useRouter();
   const clientsById = new Map(clients.map((c) => [c.id, c]));
@@ -33,18 +34,24 @@ export function NotesBrowser({
     e.preventDefault();
     if (!content.trim()) return;
     setSaving(true);
+    setError(null);
     startTransition(async () => {
-      await createNote({ content, clientId: clientId || null });
-      setContent("");
-      setClientId("");
+      const result = await createNoteSafe({ content, clientId: clientId || null });
       setSaving(false);
-      router.refresh();
+      if (result.ok) {
+        setContent("");
+        setClientId("");
+        router.refresh();
+      } else {
+        setError(result.error);
+      }
     });
   }
 
   return (
     <div className="space-y-4">
       <form onSubmit={handleAdd} className="space-y-2 rounded border border-border bg-bg-raised p-3">
+        {error && <p className="text-xs text-red-400">{error}</p>}
         <textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}

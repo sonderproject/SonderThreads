@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
-  addListItemSmart,
+  addListItemSmartSafe,
   deleteList,
   duplicateList,
   removeListItem,
@@ -27,6 +27,7 @@ export function ListDetail({ list, items }: { list: List; items: ListItem[] }) {
   const [description, setDescription] = useState(list.description ?? "");
   const [editingDescription, setEditingDescription] = useState(false);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [addError, setAddError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
   function refresh() {
@@ -37,10 +38,15 @@ export function ListDetail({ list, items }: { list: List; items: ListItem[] }) {
     e.preventDefault();
     if (!newLabel.trim()) return;
     const label = newLabel.trim();
-    setNewLabel("");
-    const item = await addListItemSmart(list.id, label);
-    setLocalItems((prev) => [...prev, item]);
-    refresh();
+    setAddError(null);
+    const result = await addListItemSmartSafe(list.id, label);
+    if (result.ok) {
+      setNewLabel("");
+      setLocalItems((prev) => [...prev, result.data]);
+      refresh();
+    } else {
+      setAddError(result.error);
+    }
   }
 
   async function handleToggle(item: ListItem) {
@@ -160,6 +166,7 @@ export function ListDetail({ list, items }: { list: List; items: ListItem[] }) {
           Add
         </Button>
       </form>
+      {addError && <p className="text-xs text-red-400">{addError}</p>}
 
       {localItems.length === 0 ? (
         <EmptyState message="No items yet." />

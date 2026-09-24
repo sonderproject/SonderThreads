@@ -5,26 +5,30 @@ import { query, queryOne } from "@/lib/db/client";
 import { OWNER_ID } from "@/lib/db/constants";
 import { logActivity } from "./activity";
 import { findClientByName, findOrCreateClientByName, touchClientActivity } from "./clients";
+import { addListItemSchema, createListSchema, validate, toActionResult, type ActionResult } from "@/lib/validation";
 import type { List, ListItem } from "@/lib/types";
 
 export async function listLists(): Promise<List[]> {
-  return query<List>(`select * from lists where user_id = $1 order by updated_at desc`, [OWNER_ID]);
+  return query<List>(
+    `select * from lists where user_id = $1 and deleted_at is null order by updated_at desc`,
+    [OWNER_ID],
+  );
 }
 
 export async function getListByName(name: string): Promise<List | null> {
   const trimmed = name.trim();
   if (!trimmed) return null;
-  return queryOne<List>(`select * from lists where user_id = $1 and lower(name) = lower($2)`, [
-    OWNER_ID,
-    trimmed,
-  ]);
+  return queryOne<List>(
+    `select * from lists where user_id = $1 and deleted_at is null and lower(name) = lower($2)`,
+    [OWNER_ID, trimmed],
+  );
 }
 
 export async function getListWithItems(id: string): Promise<{ list: List; items: ListItem[] } | null> {
-  const list = await queryOne<List>(`select * from lists where user_id = $1 and id = $2`, [
-    OWNER_ID,
-    id,
-  ]);
+  const list = await queryOne<List>(
+    `select * from lists where user_id = $1 and id = $2 and deleted_at is null`,
+    [OWNER_ID, id],
+  );
   if (!list) return null;
 
   const items = await query<ListItem>(
@@ -40,6 +44,7 @@ export async function createList(params: {
   description?: string | null;
   isCohort?: boolean;
 }): Promise<List> {
+  params = validate(createListSchema, params);
   const list = await queryOne<List>(
     `insert into lists (user_id, name, description, is_cohort) values ($1, $2, $3, $4) returning *`,
     [OWNER_ID, params.name.trim(), params.description ?? null, params.isCohort ?? false],
@@ -58,6 +63,11 @@ export async function createList(params: {
   return list;
 }
 
+/** Client-form-safe wrapper: returns a result instead of throwing, since Next.js redacts thrown Server Action errors before they reach the client in production. */
+export async function createListSafe(params: Parameters<typeof createList>[0]): Promise<ActionResult<List>> {
+  return toActionResult(() => createList(params));
+}
+
 export async function findOrCreateListByName(
   name: string,
   isCohort: boolean,
@@ -69,7 +79,7 @@ export async function findOrCreateListByName(
 }
 
 export async function renameList(id: string, name: string): Promise<void> {
-  await query(`update lists set name = $1 where user_id = $2 and id = $3`, [
+  await query(`update lists set name = $1 where user_id = $2 and id = $3 and deleted_at is null`, [
     name.trim(),
     OWNER_ID,
     id,
@@ -79,16 +89,19 @@ export async function renameList(id: string, name: string): Promise<void> {
 }
 
 export async function updateListDescription(id: string, description: string): Promise<void> {
-  await query(`update lists set description = $1 where user_id = $2 and id = $3`, [
-    description,
-    OWNER_ID,
-    id,
-  ]);
+  await query(
+    `update lists set description = $1 where user_id = $2 and id = $3 and deleted_at is null`,
+    [description, OWNER_ID, id],
+  );
   revalidatePath(`/lists/${id}`);
 }
 
+/** Soft-deletes a list — the row (and its items) stay in the database (recoverable) but disappear from every view. */
 export async function deleteList(id: string): Promise<void> {
-  await query(`delete from lists where user_id = $1 and id = $2`, [OWNER_ID, id]);
+  await query(
+    `update lists set deleted_at = now() where user_id = $1 and id = $2 and deleted_at is null`,
+    [OWNER_ID, id],
+  );
   revalidatePath("/lists");
   revalidatePath("/");
 }
@@ -120,6 +133,7 @@ export async function addListItem(params: {
   label: string;
   clientId?: string | null;
 }): Promise<ListItem> {
+  params = validate(addListItemSchema, params);
   const last = await queryOne<{ position: number }>(
     `select position from list_items where user_id = $1 and list_id = $2 order by position desc limit 1`,
     [OWNER_ID, params.listId],
@@ -145,6 +159,11 @@ export async function addListItemSmart(listId: string, label: string): Promise<L
   return addListItem({ listId, label: match?.display_name ?? label, clientId: match?.id ?? null });
 }
 
+/** Client-form-safe wrapper: returns a result instead of throwing, since Next.js redacts thrown Server Action errors before they reach the client in production. */
+export async function addListItemSmartSafe(listId: string, label: string): Promise<ActionResult<ListItem>> {
+  return toActionResult(() => addListItemSmart(listId, label));
+}
+
 /**
  * Adds a set of names to a list. For cohort lists, unmatched names become new
  * client records (a cohort is a roster of clients); for plain lists, items
@@ -158,10 +177,10 @@ export async function addNamesToList(
 ): Promise<{ createdClients: string[]; linkedClients: string[] }> {
   const createdClients: string[] = [];
   const linkedClients: string[] = [];
-  const list = await queryOne<List>(`select * from lists where user_id = $1 and id = $2`, [
-    OWNER_ID,
-    listId,
-  ]);
+  const list = await queryOne<List>(
+    `select * from lists where user_id = $1 and id = $2 and deleted_at is null`,
+    [OWNER_ID, listId],
+  );
 
   for (const name of names) {
     if (!name.trim()) continue;
@@ -230,7 +249,11 @@ export async function reorderListItems(listId: string, orderedIds: string[]): Pr
 
 export async function getListItemCounts(): Promise<Record<string, number>> {
   const rows = await query<{ list_id: string; count: string }>(
-    `select list_id, count(*)::text as count from list_items where user_id = $1 group by list_id`,
+    `select li.list_id, count(*)::text as count
+     from list_items li
+     join lists l on l.id = li.list_id
+     where li.user_id = $1 and l.deleted_at is null
+     group by li.list_id`,
     [OWNER_ID],
   );
 
@@ -243,7 +266,7 @@ export async function listListsForClient(clientId: string): Promise<List[]> {
   return query<List>(
     `select distinct l.* from lists l
      join list_items li on li.list_id = l.id
-     where l.user_id = $1 and li.client_id = $2`,
+     where l.user_id = $1 and l.deleted_at is null and li.client_id = $2`,
     [OWNER_ID, clientId],
   );
 }
@@ -251,9 +274,11 @@ export async function listListsForClient(clientId: string): Promise<List[]> {
 export async function searchLists(searchQuery: string): Promise<List[]> {
   return query<List>(
     `select * from lists
-     where user_id = $1 and (name ilike $2 or description ilike $2)
-     order by updated_at desc
+     where user_id = $1
+       and deleted_at is null
+       and search_vector @@ plainto_tsquery('english', $2)
+     order by ts_rank(search_vector, plainto_tsquery('english', $2)) desc
      limit 20`,
-    [OWNER_ID, `%${searchQuery}%`],
+    [OWNER_ID, searchQuery],
   );
 }

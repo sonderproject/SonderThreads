@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
-import { createTask } from "@/lib/actions/tasks";
+import { createTaskSafe } from "@/lib/actions/tasks";
 import type { Client } from "@/lib/types";
 
 export function NewTaskButton({ clients }: { clients: Pick<Client, "id" | "display_name">[] }) {
@@ -31,6 +31,7 @@ function NewTaskForm({
   const [clientId, setClientId] = useState("");
   const [dueAt, setDueAt] = useState("");
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const router = useRouter();
 
@@ -38,20 +39,26 @@ function NewTaskForm({
     e.preventDefault();
     if (!title.trim()) return;
     setSaving(true);
+    setError(null);
     startTransition(async () => {
-      await createTask({
+      const result = await createTaskSafe({
         title,
         clientId: clientId || null,
         dueAt: dueAt ? new Date(dueAt).toISOString() : null,
       });
       setSaving(false);
-      onDone();
-      router.refresh();
+      if (result.ok) {
+        onDone();
+        router.refresh();
+      } else {
+        setError(result.error);
+      }
     });
   }
 
   return (
     <form onSubmit={submit} className="space-y-3">
+      {error && <p className="text-xs text-red-400">{error}</p>}
       <div>
         <label className="mb-1 block text-xs text-text-muted">Task</label>
         <input

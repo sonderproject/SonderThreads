@@ -15,7 +15,8 @@
     "next": "15.5.26",
     "pg": "^8.13.1",
     "react": "^18",
-    "react-dom": "^18"
+    "react-dom": "^18",
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@types/node": "^20",

@@ -6,7 +6,7 @@ import { ClientCard } from "@/components/clients/ClientCard";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
-import { createClientRecord } from "@/lib/actions/clients";
+import { createClientRecordSafe } from "@/lib/actions/clients";
 import type { Client } from "@/lib/types";
 
 export function ClientsBrowser({ clients }: { clients: Client[] }) {
@@ -37,6 +37,13 @@ export function ClientsBrowser({ clients }: { clients: Client[] }) {
         </Button>
       </div>
 
+      <a
+        href="/api/export?format=csv"
+        className="inline-block text-xs text-text-faint hover:text-accent"
+      >
+        Export roster as CSV
+      </a>
+
       {filtered.length === 0 ? (
         <EmptyState message={clients.length === 0 ? "No clients yet." : "No matches."} />
       ) : (
@@ -59,6 +66,7 @@ function NewClientForm({ onDone }: { onDone: () => void }) {
   const [currentStatus, setCurrentStatus] = useState("");
   const [nextAction, setNextAction] = useState("");
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const router = useRouter();
 
@@ -66,20 +74,26 @@ function NewClientForm({ onDone }: { onDone: () => void }) {
     e.preventDefault();
     if (!fullName.trim()) return;
     setSaving(true);
+    setError(null);
     startTransition(async () => {
-      const client = await createClientRecord({
+      const result = await createClientRecordSafe({
         fullName,
         currentStatus: currentStatus || null,
         nextAction: nextAction || null,
       });
       setSaving(false);
-      onDone();
-      router.push(`/clients/${client.id}`);
+      if (result.ok) {
+        onDone();
+        router.push(`/clients/${result.data.id}`);
+      } else {
+        setError(result.error);
+      }
     });
   }
 
   return (
     <form onSubmit={submit} className="space-y-3">
+      {error && <p className="text-xs text-red-400">{error}</p>}
       <div>
         <label className="mb-1 block text-xs text-text-muted">Name</label>
         <input
