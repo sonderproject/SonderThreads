@@ -11,25 +11,25 @@ const config: Config = {
     extend: {
       colors: {
         bg: {
-          DEFAULT: "#0a0a0a",
-          raised: "#121212",
-          hover: "#1a1a1a",
+          DEFAULT: "var(--color-bg)",
+          raised: "var(--color-bg-raised)",
+          hover: "var(--color-bg-hover)",
         },
         border: {
-          DEFAULT: "#262626",
-          subtle: "#1c1c1c",
+          DEFAULT: "var(--color-border)",
+          subtle: "var(--color-border-subtle)",
         },
         text: {
-          DEFAULT: "#e8e8e6",
-          muted: "#8a8a86",
-          faint: "#5c5c58",
+          DEFAULT: "var(--color-text)",
+          muted: "var(--color-text-muted)",
+          faint: "var(--color-text-faint)",
         },
         accent: {
-          DEFAULT: "#5eead4",
-          dim: "#2dd4bf",
+          DEFAULT: "var(--color-accent)",
+          dim: "var(--color-accent-dim)",
         },
-        danger: "#f87171",
-        warn: "#fbbf24",
+        danger: "var(--color-danger)",
+        warn: "var(--color-warn)",
       },
       fontFamily: {
         mono: [

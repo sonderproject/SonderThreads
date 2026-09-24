@@ -19,6 +19,14 @@ export const metadata: Metadata = {
   description: "Capture information quickly. Organize it automatically. See what matters.",
 };
 
+const THEME_INIT_SCRIPT = `
+try {
+  if (localStorage.getItem('theme') === 'light') {
+    document.documentElement.classList.add('light');
+  }
+} catch (e) {}
+`;
+
 export default function RootLayout({
   children,
 }: {
@@ -26,6 +34,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${sans.variable} ${mono.variable}`}>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+      </head>
       <body className="font-sans antialiased">{children}</body>
     </html>
   );
