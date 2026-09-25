@@ -20,6 +20,9 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  // Everything except the login page itself and static assets.
-  matcher: ["/((?!login|_next/static|_next/image|favicon.ico|robots.txt).*)"],
+  // Everything except the login page itself and static assets (icons and the
+  // manifest must load before sign-in so "Add to Home Screen" works).
+  matcher: [
+    "/((?!login|_next/static|_next/image|favicon.ico|robots.txt|manifest.webmanifest|icon-.*\\.png|apple-touch-icon.*\\.png).*)",
+  ],
 };

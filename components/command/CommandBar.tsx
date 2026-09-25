@@ -6,7 +6,7 @@ import Link from "next/link";
 import { executeCommand, type CommandResult } from "@/lib/actions/command";
 import { SearchResultsPanel } from "@/components/search/SearchResultsPanel";
 
-export function CommandBar() {
+export function CommandBar({ autoFocus = false }: { autoFocus?: boolean }) {
   const [value, setValue] = useState("");
   const [result, setResult] = useState<CommandResult | null>(null);
   const [pending, startTransition] = useTransition();
@@ -41,6 +41,8 @@ export function CommandBar() {
         <span className="font-mono text-accent">&gt;</span>
         <input
           value={value}
+          autoFocus={autoFocus}
+          enterKeyHint="send"
           onChange={(e) => setValue(e.target.value)}
           placeholder="Type a command, note, task, reminder, or person update..."
           className="flex-1 bg-transparent font-mono text-sm text-text placeholder:text-text-faint outline-none"

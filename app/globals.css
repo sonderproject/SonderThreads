@@ -88,7 +88,57 @@ button:focus {
 }
 
 @layer components {
+  /* 16px on phones — iOS Safari zooms the page when focusing any smaller input. */
   .input {
-    @apply w-full rounded border border-border bg-bg px-3 py-2 text-sm text-text placeholder:text-text-faint focus:border-accent;
+    @apply w-full rounded border border-border bg-bg px-3 py-2.5 text-base text-text placeholder:text-text-faint focus:border-accent sm:py-2 sm:text-sm;
   }
+}
+
+@layer utilities {
+  /* Keep content clear of the iPhone home indicator / notch. */
+  .pb-safe-5 {
+    padding-bottom: calc(1.25rem + env(safe-area-inset-bottom));
+  }
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+  .bottom-above-tabbar {
+    bottom: calc(4.75rem + env(safe-area-inset-bottom));
+  }
+  .pb-tabbar {
+    padding-bottom: calc(7rem + env(safe-area-inset-bottom));
+  }
+}
+
+@keyframes sheet-in {
+  from {
+    transform: translateY(24px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.sheet-in {
+  animation: sheet-in 160ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sheet-in {
+    animation: none;
+  }
+}
+
+/* No grey flash on tap in mobile Safari/Chrome. */
+a,
+button,
+input,
+label,
+select {
+  -webkit-tap-highlight-color: transparent;
 }

@@ -4,6 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ThemeToggle } from "@/components/nav/ThemeToggle";
 import { logout } from "@/app/login/actions";
+import { MobileNav } from "@/components/nav/MobileNav";
+import type { Person } from "@/lib/types";
 
 const NAV_ITEMS = [
   { href: "/", label: "Command" },
@@ -14,18 +16,24 @@ const NAV_ITEMS = [
   { href: "/calendar", label: "Calendar" },
 ];
 
-export function AppShell({ children }: { children: React.ReactNode }) {
+export function AppShell({
+  children,
+  people = [],
+}: {
+  children: React.ReactNode;
+  people?: Pick<Person, "id" | "display_name">[];
+}) {
   const pathname = usePathname();
 
   return (
     <div className="min-h-screen bg-bg">
-      <header className="sticky top-0 z-20 border-b border-border bg-bg/95 backdrop-blur">
+      <header className="pt-safe sticky top-0 z-20 border-b border-border bg-bg/95 backdrop-blur">
         <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3 sm:px-6">
           <Link href="/" className="font-mono text-lg text-accent">
             &gt; sonderthreads
           </Link>
-          <div className="flex items-center gap-1 sm:gap-2">
-            <nav className="flex gap-1 overflow-x-auto sm:gap-2">
+          <div className="hidden items-center gap-2 sm:flex">
+            <nav className="flex gap-2">
               {NAV_ITEMS.map((item) => {
                 const isActive =
                   item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
@@ -65,7 +73,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </div>
       </header>
-      <main className="mx-auto max-w-4xl px-4 py-6 sm:px-6">{children}</main>
+      <main className="pb-tabbar mx-auto max-w-4xl px-4 pt-5 sm:px-6 sm:py-6">{children}</main>
+      <MobileNav people={people} />
     </div>
   );
 }

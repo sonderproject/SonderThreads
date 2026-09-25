@@ -212,7 +212,7 @@ export function ListDetail({ list, items }: { list: List; items: ListItem[] }) {
                 type="checkbox"
                 checked={item.checked}
                 onChange={() => handleToggle(item)}
-                className="h-4 w-4 accent-accent"
+                className="h-5 w-5 accent-accent sm:h-4 sm:w-4"
               />
               {editingItemId === item.id ? (
                 <input
@@ -241,7 +241,7 @@ export function ListDetail({ list, items }: { list: List; items: ListItem[] }) {
               {editingItemId !== item.id && (
                 <button
                   onClick={() => startEditItem(item)}
-                  className="text-text-faint hover:text-accent"
+                  className="flex h-9 w-9 items-center justify-center rounded text-text-faint hover:text-accent"
                   aria-label="Edit item"
                 >
                   ✎
@@ -249,7 +249,7 @@ export function ListDetail({ list, items }: { list: List; items: ListItem[] }) {
               )}
               <button
                 onClick={() => handleRemove(item)}
-                className="text-text-faint hover:text-danger"
+                className="flex h-9 w-9 items-center justify-center rounded text-text-faint hover:text-danger"
                 aria-label="Remove"
               >
                 ✕

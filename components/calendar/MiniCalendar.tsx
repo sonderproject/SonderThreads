@@ -28,7 +28,7 @@ export function MiniCalendar({
           <Link
             key={i}
             href={`/calendar?year=${year}&month=${month}`}
-            className={`flex h-9 flex-col items-center justify-center rounded text-sm hover:bg-bg-hover ${
+            className={`flex h-9 flex-col items-center justify-center rounded text-sm [@media(hover:hover)]:hover:bg-bg-hover ${
               cell.isToday ? "bg-accent/10 font-bold text-accent" : "text-text-muted"
             } ${!cell.dayNum ? "pointer-events-none" : ""}`}
           >

@@ -85,12 +85,12 @@ export function NoteCard({
             <button
               onClick={() => setEditing(true)}
               aria-label="Edit note"
-              className="absolute right-0 top-0 text-xs text-text-faint opacity-0 hover:text-accent group-hover:opacity-100"
+              className="absolute -right-2 -top-2 flex h-9 w-9 items-center justify-center text-xs text-text-faint hover:text-accent [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100"
             >
               ✎
             </button>
           )}
-          <p className="pr-4 text-sm text-text">{note.content}</p>
+          <p className="pr-6 text-sm text-text">{note.content}</p>
         </div>
       )}
       <div className="mt-1.5 flex items-center justify-between gap-2">

@@ -100,14 +100,14 @@ export function TaskRow({
   return (
     <div
       id={task.id}
-      className="group flex items-start gap-3 rounded px-2 py-2 hover:bg-bg-hover"
+      className="group flex items-start gap-3 rounded px-3 py-3 hover:bg-bg-hover sm:px-2 sm:py-2"
     >
       <input
         type="checkbox"
         checked={completed}
         onChange={toggle}
         disabled={pending}
-        className="mt-0.5 h-4 w-4 shrink-0 accent-accent"
+        className="mt-0.5 h-5 w-5 shrink-0 accent-accent sm:h-4 sm:w-4"
       />
       <div className="min-w-0 flex-1">
         <p className={`text-sm ${completed ? "text-text-faint line-through" : "text-text"}`}>
@@ -134,7 +134,7 @@ export function TaskRow({
       <button
         onClick={() => setEditing(true)}
         aria-label="Edit task"
-        className="text-text-faint opacity-0 hover:text-accent group-hover:opacity-100"
+        className="-my-1 -mr-1 flex h-9 w-9 shrink-0 items-center justify-center rounded text-text-faint hover:text-accent [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100"
       >
         ✎
       </button>

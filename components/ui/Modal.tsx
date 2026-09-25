@@ -9,6 +9,11 @@ interface ModalProps {
   children: ReactNode;
 }
 
+/**
+ * Dialog on desktop, bottom sheet on phones: it slides up from the bottom
+ * edge so its buttons sit within thumb reach, and pads past the iPhone
+ * home indicator.
+ */
 export function Modal({ open, onClose, title, children }: ModalProps) {
   useEffect(() => {
     if (!open) return;
@@ -16,23 +21,33 @@ export function Modal({ open, onClose, title, children }: ModalProps) {
       if (e.key === "Escape") onClose();
     }
     window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = prevOverflow;
+    };
   }, [open, onClose]);
 
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 px-4 pt-24 sm:pt-32">
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 sm:items-start sm:px-4 sm:pt-32"
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
       <div
-        className="w-full max-w-md rounded border border-border bg-bg-raised p-5 shadow-xl"
+        className="sheet-in max-h-[88dvh] w-full overflow-y-auto rounded-t-2xl border border-border bg-bg-raised p-5 pb-safe-5 shadow-xl sm:max-w-md sm:rounded sm:pb-5"
         role="dialog"
         aria-modal="true"
+        aria-label={title}
       >
+        <div className="mx-auto -mt-2 mb-3 h-1 w-10 rounded-full bg-border sm:hidden" aria-hidden />
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-sm font-medium text-text">{title}</h2>
+          <h2 className="font-mono text-sm uppercase tracking-wide text-text">{title}</h2>
           <button
             onClick={onClose}
-            className="text-text-muted hover:text-text"
+            className="-mr-2 flex h-10 w-10 items-center justify-center rounded text-text-muted hover:bg-bg-hover hover:text-text"
             aria-label="Close"
           >
             ✕

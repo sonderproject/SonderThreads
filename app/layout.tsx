@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, VT323 } from "next/font/google";
 import "./globals.css";
 
@@ -18,6 +18,20 @@ const mono = VT323({
 export const metadata: Metadata = {
   title: "sonderthreads",
   description: "Capture information quickly. Organize it automatically. See what matters.",
+  applicationName: "sonderthreads",
+  appleWebApp: { capable: true, title: "sonderthreads", statusBarStyle: "black-translucent" },
+  icons: {
+    icon: [{ url: "/icon-192.png", sizes: "192x192", type: "image/png" }],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
+  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  // Lets the app draw under the notch/home bar; safe-area padding keeps content clear of them.
+  viewportFit: "cover",
+  themeColor: "#0a0a0a",
 };
 
 const THEME_INIT_SCRIPT = `
