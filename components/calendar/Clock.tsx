@@ -22,7 +22,7 @@ export function Clock() {
 
   return (
     <div
-      className="relative flex min-w-[13rem] flex-col justify-center overflow-hidden rounded border bg-black px-5 py-4"
+      className="relative flex flex-col items-center justify-center overflow-hidden rounded border bg-black px-5 py-4"
       style={{ borderColor: "rgba(0, 255, 65, 0.35)", boxShadow: "inset 0 0 24px rgba(0, 255, 65, 0.08)" }}
     >
       {/* CRT scanlines */}
@@ -34,7 +34,7 @@ export function Clock() {
         }}
       />
       {now && (
-        <div className="relative font-mono" style={{ color: MATRIX_GREEN }}>
+        <div className="relative text-center font-mono" style={{ color: MATRIX_GREEN }}>
           <p className="text-[11px] uppercase tracking-widest opacity-60">&gt; system.time</p>
           <p className="mt-1 text-6xl leading-none tabular-nums" style={{ textShadow: GLOW }}>
             {pad(hours12)}:{pad(now.getMinutes())}

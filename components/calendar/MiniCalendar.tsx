@@ -15,10 +15,10 @@ export function MiniCalendar({
   eventDays: Set<number>;
 }) {
   return (
-    <div className="max-w-xs rounded border border-border p-2">
+    <div className="rounded border border-border p-3">
       <div className="grid grid-cols-7">
         {WEEKDAY_LABELS.map((label, i) => (
-          <div key={i} className="py-1 text-center font-mono text-[10px] text-text-faint">
+          <div key={i} className="py-1 text-center font-mono text-xs text-text-faint">
             {label}
           </div>
         ))}
@@ -28,7 +28,7 @@ export function MiniCalendar({
           <Link
             key={i}
             href={`/calendar?year=${year}&month=${month}`}
-            className={`flex h-8 flex-col items-center justify-center rounded text-[11px] hover:bg-bg-hover ${
+            className={`flex h-9 flex-col items-center justify-center rounded text-sm hover:bg-bg-hover ${
               cell.isToday ? "bg-accent/10 font-bold text-accent" : "text-text-muted"
             } ${!cell.dayNum ? "pointer-events-none" : ""}`}
           >

@@ -63,7 +63,7 @@ export default async function DashboardPage() {
       </section>
 
       <Section title="Calendar" href="/calendar">
-        <div className="flex flex-wrap items-stretch gap-3">
+        <div className="grid gap-3 sm:grid-cols-2">
           <MiniCalendar year={year} month={month} weeks={weeks} eventDays={eventDays} />
           <Clock />
         </div>
