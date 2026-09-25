@@ -113,6 +113,23 @@ export async function deleteList(id: string): Promise<void> {
   revalidatePath("/");
 }
 
+/** Undoes deleteList(). Fails quietly if another list has since taken the same name. */
+export async function restoreList(id: string): Promise<void> {
+  await query(
+    `update lists set deleted_at = null
+     where user_id = $1 and id = $2 and deleted_at is not null
+       and not exists (
+         select 1 from lists other
+         where other.user_id = $1 and other.deleted_at is null
+           and lower(other.name) = lower(lists.name)
+       )`,
+    [OWNER_ID, id],
+  );
+  revalidatePath("/lists");
+  revalidatePath(`/lists/${id}`);
+  revalidatePath("/");
+}
+
 export async function duplicateList(id: string): Promise<List> {
   const existing = await getListWithItems(id);
   if (!existing) throw new Error("List not found");
@@ -251,12 +268,24 @@ export async function toggleListItem(id: string, checked: boolean): Promise<void
   if (item) revalidatePath(`/lists/${item.list_id}`);
 }
 
-export async function removeListItem(id: string): Promise<void> {
-  const item = await queryOne<{ list_id: string }>(
-    `delete from list_items where user_id = $1 and id = $2 returning list_id`,
+export async function removeListItem(id: string): Promise<ListItem | null> {
+  const item = await queryOne<ListItem>(
+    `delete from list_items where user_id = $1 and id = $2 returning *`,
     [OWNER_ID, id],
   );
   if (item) revalidatePath(`/lists/${item.list_id}`);
+  return item;
+}
+
+/** Undoes removeListItem() by putting the same row (same id and position) back. */
+export async function restoreListItem(item: ListItem): Promise<void> {
+  await query(
+    `insert into list_items (id, user_id, list_id, person_id, label, checked, position, created_at)
+     values ($1, $2, $3, $4, $5, $6, $7, $8)
+     on conflict (id) do nothing`,
+    [item.id, OWNER_ID, item.list_id, item.person_id, item.label, item.checked, item.position, item.created_at],
+  );
+  revalidatePath(`/lists/${item.list_id}`);
 }
 
 export async function reorderListItems(listId: string, orderedIds: string[]): Promise<void> {

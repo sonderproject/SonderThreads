@@ -8,6 +8,7 @@ import { CommandBar } from "@/components/command/CommandBar";
 import { QuickActions } from "@/components/command/QuickActions";
 import { ThemeToggle } from "@/components/nav/ThemeToggle";
 import { logout } from "@/app/login/actions";
+import { OPEN_SEARCH_EVENT } from "@/components/search/SearchPalette";
 import { CalendarIcon, HomeIcon, MoreIcon, PeopleIcon, PlusIcon, TasksIcon } from "@/components/ui/icons";
 import type { Person } from "@/lib/types";
 
@@ -90,6 +91,15 @@ export function MobileNav({ people }: { people: Pick<Person, "id" | "display_nam
 
       <Modal open={sheet === "more"} onClose={() => setSheet(null)} title="More">
         <div className="divide-y divide-border-subtle rounded border border-border">
+          <button
+            onClick={() => {
+              setSheet(null);
+              window.dispatchEvent(new Event(OPEN_SEARCH_EVENT));
+            }}
+            className="flex h-12 w-full items-center px-4 text-left text-base text-text"
+          >
+            Search
+          </button>
           {MORE_LINKS.map((l) => (
             <Link key={l.href} href={l.href} className="flex h-12 items-center px-4 text-base text-text">
               {l.label}

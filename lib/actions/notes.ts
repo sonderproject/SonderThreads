@@ -113,12 +113,24 @@ export async function updateNoteSafe(id: string, content: string): Promise<Actio
 
 /** Soft-deletes a note — the row stays in the database (recoverable) but disappears from every view. */
 export async function deleteNote(id: string): Promise<void> {
-  await query(
-    `update notes set deleted_at = now() where user_id = $1 and id = $2 and deleted_at is null`,
+  await setNoteDeleted(id, true);
+}
+
+/** Undoes deleteNote(). */
+export async function restoreNote(id: string): Promise<void> {
+  await setNoteDeleted(id, false);
+}
+
+async function setNoteDeleted(id: string, deleted: boolean): Promise<void> {
+  const note = await queryOne<Note>(
+    `update notes set deleted_at = ${deleted ? "now()" : "null"}
+     where user_id = $1 and id = $2 and deleted_at is ${deleted ? "null" : "not null"}
+     returning *`,
     [OWNER_ID, id],
   );
   revalidatePath("/notes");
   revalidatePath("/");
+  if (note?.person_id) revalidatePath(`/people/${note.person_id}`);
 }
 
 export async function searchNotes(searchQuery: string): Promise<Note[]> {

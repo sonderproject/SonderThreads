@@ -2,7 +2,8 @@
 
 import { query } from "@/lib/db/client";
 import { OWNER_ID } from "@/lib/db/constants";
-import { parseCommand } from "@/lib/ai/command-parser";
+import { parseCommand, type ParserContext } from "@/lib/ai/command-parser";
+import { fallbackProvider } from "@/lib/ai/providers/fallback";
 import { findPersonByName, findOrCreatePersonByName, updatePerson } from "./people";
 import { createNote } from "./notes";
 import { createTask } from "./tasks";
@@ -20,12 +21,7 @@ function formatDateShort(iso: string | null): string {
   return date.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
 }
 
-export async function executeCommand(input: string): Promise<CommandResult> {
-  const trimmed = input.trim();
-  if (!trimmed) {
-    return { kind: "error", message: "Type something first." };
-  }
-
+async function loadParserContext(): Promise<ParserContext> {
   const [people, lists] = await Promise.all([
     query<{ id: string; display_name: string; first_name: string; last_name: string | null }>(
       `select id, display_name, first_name, last_name from people where user_id = $1 and deleted_at is null`,
@@ -37,7 +33,7 @@ export async function executeCommand(input: string): Promise<CommandResult> {
     ),
   ]);
 
-  const parsed = await parseCommand(trimmed, {
+  return {
     now: new Date(),
     people: people.map((c) => ({
       id: c.id,
@@ -46,7 +42,73 @@ export async function executeCommand(input: string): Promise<CommandResult> {
       lastName: c.last_name,
     })),
     lists: lists.map((l) => ({ id: l.id, name: l.name, isGroup: l.is_group })),
-  });
+  };
+}
+
+export type CommandPreview = {
+  /** What will happen, e.g. "task", "note on", "new group". */
+  action: string;
+  /** Short facts to show after the action: the title, person, list, repeat. */
+  details: string[];
+  /** ISO due date; formatted in the browser so it's in the user's time zone. */
+  dueDate: string | null;
+};
+
+/**
+ * A best-guess preview of what executeCommand() would do, shown live under
+ * the command bar as you type. Always uses the built-in parser (instant, no
+ * AI cost), so with an AI provider configured the real result can differ
+ * slightly on ambiguous input.
+ */
+export async function previewCommand(input: string): Promise<CommandPreview | null> {
+  const trimmed = input.trim();
+  if (trimmed.length < 3) return null;
+
+  const context = await loadParserContext();
+  const p = await fallbackProvider.parse(trimmed, context);
+  const quote = (s: string | null) => (s ? `"${s.length > 40 ? `${s.slice(0, 39)}…` : s}"` : null);
+  const listKnown = p.listName ? context.lists.some((l) => l.name.toLowerCase() === p.listName!.toLowerCase()) : false;
+  const compact = (xs: (string | null | false | undefined)[]) => xs.filter(Boolean) as string[];
+
+  switch (p.intent) {
+    case "create_person":
+      return { action: p.names.length > 1 ? "new people" : "new person", details: p.names, dueDate: null };
+    case "add_person_note":
+      return { action: "note on", details: compact([p.names[0], p.category && `#${p.category}`]), dueDate: null };
+    case "create_task":
+      return {
+        action: p.dueDate ? "reminder" : "task",
+        details: compact([quote(p.content), p.names[0], p.recurrence && `↻ ${p.recurrence}`]),
+        dueDate: p.dueDate,
+      };
+    case "create_list":
+      return { action: p.isGroup ? "new group" : "new list", details: compact([p.listName]), dueDate: null };
+    case "add_to_list":
+      return {
+        action: `add to ${p.listName}`,
+        details: compact([p.names.join(", "), !listKnown && (p.isGroup ? "new group" : "new list")]),
+        dueDate: null,
+      };
+    case "update_person_status":
+      return {
+        action: `update ${p.statusField === "next_action" ? "next action" : "status"}`,
+        details: compact([p.names[0], quote(p.content)]),
+        dueDate: null,
+      };
+    case "search":
+      return { action: "search", details: compact([quote(p.content)]), dueDate: null };
+    default:
+      return { action: "note", details: compact([p.category && `#${p.category}`]), dueDate: null };
+  }
+}
+
+export async function executeCommand(input: string): Promise<CommandResult> {
+  const trimmed = input.trim();
+  if (!trimmed) {
+    return { kind: "error", message: "Type something first." };
+  }
+
+  const parsed = await parseCommand(trimmed, await loadParserContext());
 
   try {
     switch (parsed.intent) {

@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
-import { updateNoteSafe } from "@/lib/actions/notes";
+import { deleteNote, restoreNote, updateNoteSafe } from "@/lib/actions/notes";
+import { useUndo } from "@/components/ui/UndoToast";
 import type { Note } from "@/lib/types";
 
 export function NoteCard({
@@ -22,6 +23,17 @@ export function NoteCard({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const undo = useUndo();
+
+  async function remove() {
+    await deleteNote(note.id);
+    setEditing(false);
+    router.refresh();
+    undo.show("Note deleted", async () => {
+      await restoreNote(note.id);
+      router.refresh();
+    });
+  }
 
   async function save() {
     if (!content.trim() || content === note.content) {
@@ -76,6 +88,9 @@ export function NoteCard({
               className="text-xs text-text-muted hover:text-text"
             >
               Cancel
+            </button>
+            <button onClick={remove} className="ml-auto text-xs text-danger hover:underline">
+              Delete
             </button>
           </div>
         </div>

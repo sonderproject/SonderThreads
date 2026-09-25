@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -8,6 +8,8 @@ import {
   deleteList,
   duplicateList,
   removeListItem,
+  restoreList,
+  restoreListItem,
   renameList,
   reorderListItems,
   toggleListItem,
@@ -17,6 +19,7 @@ import {
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { useUndo } from "@/components/ui/UndoToast";
 import type { List, ListItem } from "@/lib/types";
 
 export function ListDetail({ list, items }: { list: List; items: ListItem[] }) {
@@ -27,7 +30,10 @@ export function ListDetail({ list, items }: { list: List; items: ListItem[] }) {
   const [name, setName] = useState(list.name);
   const [description, setDescription] = useState(list.description ?? "");
   const [editingDescription, setEditingDescription] = useState(false);
-  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [dragId, setDragId] = useState<string | null>(null);
+  const dragStartOrder = useRef<ListItem[] | null>(null);
+  const rowRefs = useRef(new Map<string, HTMLDivElement>());
+  const undo = useUndo();
   const [addError, setAddError] = useState<string | null>(null);
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [editLabel, setEditLabel] = useState("");
@@ -63,8 +69,15 @@ export function ListDetail({ list, items }: { list: List; items: ListItem[] }) {
 
   async function handleRemove(item: ListItem) {
     setLocalItems((prev) => prev.filter((i) => i.id !== item.id));
-    await removeListItem(item.id);
+    const removed = await removeListItem(item.id);
     refresh();
+    if (removed) {
+      undo.show(`Removed "${removed.label}"`, async () => {
+        await restoreListItem(removed);
+        setLocalItems((prev) => [...prev, removed].sort((a, b) => a.position - b.position));
+        refresh();
+      });
+    }
   }
 
   function startEditItem(item: ListItem) {
@@ -111,20 +124,55 @@ export function ListDetail({ list, items }: { list: List; items: ListItem[] }) {
   }
 
   async function handleDelete() {
-    if (!confirm(`Delete "${list.name}"? This can't be undone.`)) return;
     await deleteList(list.id);
     router.push("/lists");
+    undo.show(`Deleted "${list.name}"`, async () => {
+      await restoreList(list.id);
+      router.push(`/lists/${list.id}`);
+    });
   }
 
-  function onDrop(targetIndex: number) {
-    if (dragIndex === null || dragIndex === targetIndex) return;
-    const next = [...localItems];
-    const [moved] = next.splice(dragIndex, 1);
-    next.splice(targetIndex, 0, moved);
-    setLocalItems(next);
-    setDragIndex(null);
+  // Pointer-based reordering (works with mouse, finger and pen — HTML5
+  // drag-and-drop doesn't fire on touch screens). The grip captures the
+  // pointer; moving it past another row's midpoint swaps them live.
+  function onGripDown(e: React.PointerEvent, item: ListItem) {
+    e.preventDefault();
+    e.currentTarget.setPointerCapture(e.pointerId);
+    dragStartOrder.current = localItems;
+    setDragId(item.id);
+  }
+
+  function onGripMove(e: React.PointerEvent) {
+    if (!dragId) return;
+    const y = e.clientY;
+    setLocalItems((items) => {
+      const from = items.findIndex((i) => i.id === dragId);
+      let to = 0;
+      items.forEach((i) => {
+        if (i.id === dragId) return;
+        const rect = rowRefs.current.get(i.id)?.getBoundingClientRect();
+        if (rect && y > rect.top + rect.height / 2) to++;
+      });
+      if (from === to || from < 0) return items;
+      const next = [...items];
+      const [moved] = next.splice(from, 1);
+      next.splice(to, 0, moved);
+      return next;
+    });
+  }
+
+  function onGripUp() {
+    const before = dragStartOrder.current;
+    setDragId(null);
+    dragStartOrder.current = null;
+    if (!before || before.map((i) => i.id).join() === localItems.map((i) => i.id).join()) return;
+    const after = localItems;
     startTransition(async () => {
-      await reorderListItems(list.id, next.map((i) => i.id));
+      await reorderListItems(list.id, after.map((i) => i.id));
+    });
+    undo.show("Moved item", async () => {
+      setLocalItems(before);
+      await reorderListItems(list.id, before.map((i) => i.id));
     });
   }
 
@@ -198,16 +246,28 @@ export function ListDetail({ list, items }: { list: List; items: ListItem[] }) {
         <EmptyState message="No items yet." />
       ) : (
         <div className="divide-y divide-border-subtle rounded border border-border">
-          {localItems.map((item, index) => (
+          {localItems.map((item) => (
             <div
               key={item.id}
-              draggable
-              onDragStart={() => setDragIndex(index)}
-              onDragOver={(e) => e.preventDefault()}
-              onDrop={() => onDrop(index)}
-              className="flex items-center gap-3 px-3 py-2 hover:bg-bg-hover"
+              ref={(el) => {
+                if (el) rowRefs.current.set(item.id, el);
+                else rowRefs.current.delete(item.id);
+              }}
+              className={`flex items-center gap-2 px-2 py-1.5 sm:gap-3 sm:py-1 ${
+                dragId === item.id ? "relative z-10 bg-bg-hover shadow-lg shadow-black/30" : "hover:bg-bg-hover"
+              }`}
             >
-              <span className="cursor-grab select-none text-text-faint">⠿</span>
+              <span
+                onPointerDown={(e) => onGripDown(e, item)}
+                onPointerMove={onGripMove}
+                onPointerUp={onGripUp}
+                onPointerCancel={onGripUp}
+                role="button"
+                aria-label="Drag to reorder"
+                className="flex h-10 w-8 shrink-0 cursor-grab touch-none select-none items-center justify-center text-text-faint active:cursor-grabbing"
+              >
+                ⠿
+              </span>
               <input
                 type="checkbox"
                 checked={item.checked}

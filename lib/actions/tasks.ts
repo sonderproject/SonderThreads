@@ -98,6 +98,14 @@ export async function setTaskCompleted(id: string, completed: boolean): Promise<
     });
     if (task.person_id) await touchPersonActivity(task.person_id);
     if (task.recurrence) await spawnNextOccurrence(task);
+  } else if (task.recurrence) {
+    // Un-completing means the next occurrence isn't due after all — drop it
+    // unless it's already been worked on.
+    await query(
+      `update tasks set deleted_at = now()
+       where user_id = $1 and recurs_from = $2 and completed = false and deleted_at is null`,
+      [OWNER_ID, task.id],
+    );
   }
 
   revalidatePath("/tasks");
@@ -137,13 +145,25 @@ async function spawnNextOccurrence(task: Task): Promise<void> {
 
 /** Soft-deletes a task — the row stays in the database (recoverable) but disappears from every view. */
 export async function deleteTask(id: string): Promise<void> {
-  await query(
-    `update tasks set deleted_at = now() where user_id = $1 and id = $2 and deleted_at is null`,
+  await setTaskDeleted(id, true);
+}
+
+/** Undoes deleteTask(). */
+export async function restoreTask(id: string): Promise<void> {
+  await setTaskDeleted(id, false);
+}
+
+async function setTaskDeleted(id: string, deleted: boolean): Promise<void> {
+  const task = await queryOne<Task>(
+    `update tasks set deleted_at = ${deleted ? "now()" : "null"}
+     where user_id = $1 and id = $2 and deleted_at is ${deleted ? "null" : "not null"}
+     returning *`,
     [OWNER_ID, id],
   );
   revalidatePath("/tasks");
   revalidatePath("/");
   revalidatePath("/calendar");
+  if (task?.person_id) revalidatePath(`/people/${task.person_id}`);
 }
 
 export async function updateTask(

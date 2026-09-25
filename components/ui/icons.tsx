@@ -52,3 +52,10 @@ export const PlusIcon = ({ className = "h-6 w-6" }: IconProps) => (
     <path d="M12 5v14M5 12h14" />
   </svg>
 );
+
+export const SnoozeIcon = ({ className = "h-4 w-4" }: IconProps) => (
+  <svg {...base} className={className} aria-hidden>
+    <circle cx="12" cy="13" r="7.5" />
+    <path d="M12 9.5V13l2.5 1.5M4.5 4.5l2.5-2M19.5 4.5l-2.5-2" />
+  </svg>
+);

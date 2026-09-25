@@ -1,22 +1,44 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { executeCommand, type CommandResult } from "@/lib/actions/command";
+import { executeCommand, previewCommand, type CommandPreview, type CommandResult } from "@/lib/actions/command";
 import { SearchResultsPanel } from "@/components/search/SearchResultsPanel";
 
 export function CommandBar({ autoFocus = false }: { autoFocus?: boolean }) {
   const [value, setValue] = useState("");
   const [result, setResult] = useState<CommandResult | null>(null);
   const [pending, startTransition] = useTransition();
+  const [preview, setPreview] = useState<CommandPreview | null>(null);
+  const previewSeq = useRef(0);
   const router = useRouter();
+
+  // Live "here's what this will do" line, debounced so it doesn't fire per keystroke.
+  useEffect(() => {
+    const input = value.trim();
+    const seq = ++previewSeq.current;
+    if (input.length < 3) {
+      setPreview(null);
+      return;
+    }
+    const id = setTimeout(async () => {
+      try {
+        const next = await previewCommand(input);
+        if (seq === previewSeq.current) setPreview(next);
+      } catch {
+        // A preview is a nicety; never surface its errors.
+      }
+    }, 200);
+    return () => clearTimeout(id);
+  }, [value]);
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
     const input = value.trim();
     if (!input) return;
     setValue("");
+    setPreview(null);
     setResult(null);
 
     startTransition(async () => {
@@ -50,6 +72,26 @@ export function CommandBar({ autoFocus = false }: { autoFocus?: boolean }) {
         />
         <span className="hidden shrink-0 font-mono text-xs text-text-faint sm:inline">Enter ↵</span>
       </form>
+
+      {preview && value.trim() && !pending && (
+        <p className="mt-2 truncate font-mono text-sm text-text-muted" aria-live="polite">
+          <span className="text-accent">→ {preview.action}</span>
+          {[
+            ...preview.details,
+            ...(preview.dueDate
+              ? [
+                  new Date(preview.dueDate).toLocaleDateString(undefined, {
+                    weekday: "short",
+                    month: "short",
+                    day: "numeric",
+                  }),
+                ]
+              : []),
+          ].map((d, i) => (
+            <span key={i}> · {d}</span>
+          ))}
+        </p>
+      )}
 
       {pending && <p className="mt-2 font-mono text-xs text-text-faint">Working...</p>}
 
