@@ -1,6 +1,7 @@
 import { getCalendarMonth } from "@/lib/actions/calendar";
 import { listClients } from "@/lib/actions/clients";
 import { CalendarGrid, type CalendarDay } from "@/components/calendar/CalendarGrid";
+import { NewCalendarEventButton } from "@/components/calendar/NewCalendarEventButton";
 import type { Task } from "@/lib/types";
 
 const MONTH_NAMES = [
@@ -69,22 +70,27 @@ export default async function CalendarPage({
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="font-mono text-xs uppercase tracking-wide text-text-faint">Calendar</h1>
-        <div className="flex items-center gap-3 font-mono text-sm">
-          <a
-            href={`/calendar?year=${prevMonth.year}&month=${prevMonth.month}`}
-            className="text-text-muted hover:text-accent"
-          >
-            ‹
-          </a>
-          <span className="text-text">
-            {MONTH_NAMES[month - 1]} {year}
-          </span>
-          <a
-            href={`/calendar?year=${nextMonth.year}&month=${nextMonth.month}`}
-            className="text-text-muted hover:text-accent"
-          >
-            ›
-          </a>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 font-mono text-sm">
+            <a
+              href={`/calendar?year=${prevMonth.year}&month=${prevMonth.month}`}
+              className="text-text-muted hover:text-accent"
+            >
+              ‹
+            </a>
+            <span className="text-text">
+              {MONTH_NAMES[month - 1]} {year}
+            </span>
+            <a
+              href={`/calendar?year=${nextMonth.year}&month=${nextMonth.month}`}
+              className="text-text-muted hover:text-accent"
+            >
+              ›
+            </a>
+          </div>
+          <NewCalendarEventButton
+            clients={clients.map((c) => ({ id: c.id, display_name: c.display_name }))}
+          />
         </div>
       </div>
 
