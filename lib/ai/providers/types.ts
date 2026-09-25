@@ -26,6 +26,8 @@ export interface KnownList {
 
 export interface ParserContext {
   now: Date;
+  /** The user's getTimezoneOffset() in minutes, so dates resolve in their local time. */
+  tzOffset: number;
   people: KnownPerson[];
   lists: KnownList[];
 }

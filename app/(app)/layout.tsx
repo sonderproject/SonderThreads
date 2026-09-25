@@ -2,6 +2,7 @@ import { AppShell } from "@/components/nav/AppShell";
 import { checkSetup } from "@/lib/actions/diagnostics";
 import { SetupIssuePanel } from "@/components/diagnostics/SetupIssuePanel";
 import { listPeople } from "@/lib/actions/people";
+import { listLists } from "@/lib/actions/lists";
 
 // This whole route group is a live, personal dashboard — never prerender it.
 // Without this, Next.js can attempt to statically generate "/" at build
@@ -20,6 +21,13 @@ export default async function AppGroupLayout({ children }: { children: React.Rea
     );
   }
 
-  const people = await listPeople();
-  return <AppShell people={people.map((p) => ({ id: p.id, display_name: p.display_name }))}>{children}</AppShell>;
+  const [people, lists] = await Promise.all([listPeople(), listLists()]);
+  return (
+    <AppShell
+      people={people.map((p) => ({ id: p.id, display_name: p.display_name }))}
+      lists={lists.map((l) => ({ id: l.id, name: l.name }))}
+    >
+      {children}
+    </AppShell>
+  );
 }

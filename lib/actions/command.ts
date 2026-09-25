@@ -4,6 +4,7 @@ import { query } from "@/lib/db/client";
 import { OWNER_ID } from "@/lib/db/constants";
 import { parseCommand, type ParserContext } from "@/lib/ai/command-parser";
 import { fallbackProvider } from "@/lib/ai/providers/fallback";
+import { splitCommands } from "@/lib/ai/split";
 import { findPersonByName, findOrCreatePersonByName, updatePerson } from "./people";
 import { createNote } from "./notes";
 import { createTask } from "./tasks";
@@ -11,7 +12,8 @@ import { createList, findOrCreateListByName, addNamesToList } from "./lists";
 import { searchAll, type SearchResults } from "./search";
 
 export type CommandResult =
-  | { kind: "confirmation"; message: string; href?: string }
+  | { kind: "confirmation"; message: string; href?: string; listName?: string }
+  | { kind: "batch"; results: CommandResult[] }
   | { kind: "search_results"; query: string; results: SearchResults }
   | { kind: "error"; message: string };
 
@@ -21,7 +23,7 @@ function formatDateShort(iso: string | null): string {
   return date.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
 }
 
-async function loadParserContext(): Promise<ParserContext> {
+async function loadParserContext(tzOffset: number): Promise<ParserContext> {
   const [people, lists] = await Promise.all([
     query<{ id: string; display_name: string; first_name: string; last_name: string | null }>(
       `select id, display_name, first_name, last_name from people where user_id = $1 and deleted_at is null`,
@@ -35,6 +37,7 @@ async function loadParserContext(): Promise<ParserContext> {
 
   return {
     now: new Date(),
+    tzOffset: Number.isFinite(tzOffset) ? Math.max(-840, Math.min(840, tzOffset)) : 0,
     people: people.map((c) => ({
       id: c.id,
       displayName: c.display_name,
@@ -60,12 +63,18 @@ export type CommandPreview = {
  * AI cost), so with an AI provider configured the real result can differ
  * slightly on ambiguous input.
  */
-export async function previewCommand(input: string): Promise<CommandPreview | null> {
+export async function previewCommand(input: string, tzOffset = 0): Promise<CommandPreview[] | null> {
   const trimmed = input.trim();
   if (trimmed.length < 3) return null;
 
-  const context = await loadParserContext();
-  const p = await fallbackProvider.parse(trimmed, context);
+  const context = await loadParserContext(tzOffset);
+  const segments = splitCommands(trimmed);
+  const previews = await Promise.all(segments.map((segment) => previewOne(segment, context)));
+  return previews.length ? previews : null;
+}
+
+async function previewOne(input: string, context: ParserContext): Promise<CommandPreview> {
+  const p = await fallbackProvider.parse(input, context);
   const quote = (s: string | null) => (s ? `"${s.length > 40 ? `${s.slice(0, 39)}…` : s}"` : null);
   const listKnown = p.listName ? context.lists.some((l) => l.name.toLowerCase() === p.listName!.toLowerCase()) : false;
   const compact = (xs: (string | null | false | undefined)[]) => xs.filter(Boolean) as string[];
@@ -102,13 +111,27 @@ export async function previewCommand(input: string): Promise<CommandPreview | nu
   }
 }
 
-export async function executeCommand(input: string): Promise<CommandResult> {
+/**
+ * Runs a command from the command bar. Input with several lines or
+ * sentences ("Call Marcus Friday. Buy printer ink.") runs as one command
+ * per piece and returns a batch result.
+ */
+export async function executeCommand(input: string, tzOffset = 0): Promise<CommandResult> {
   const trimmed = input.trim();
   if (!trimmed) {
     return { kind: "error", message: "Type something first." };
   }
 
-  const parsed = await parseCommand(trimmed, await loadParserContext());
+  const segments = splitCommands(trimmed);
+  if (segments.length <= 1) return executeOne(segments[0] ?? trimmed, tzOffset);
+
+  const results: CommandResult[] = [];
+  for (const segment of segments) results.push(await executeOne(segment, tzOffset));
+  return { kind: "batch", results };
+}
+
+async function executeOne(trimmed: string, tzOffset: number): Promise<CommandResult> {
+  const parsed = await parseCommand(trimmed, await loadParserContext(tzOffset));
 
   try {
     switch (parsed.intent) {
@@ -177,6 +200,7 @@ export async function executeCommand(input: string): Promise<CommandResult> {
             kind: "confirmation",
             message: `✓ ${parsed.isGroup ? "Group" : "List"} "${list.name}" created`,
             href: `/lists/${list.id}`,
+            listName: list.name,
           };
         } catch {
           return { kind: "confirmation", message: `"${name}" already exists` };

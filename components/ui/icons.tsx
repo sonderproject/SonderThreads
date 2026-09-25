@@ -59,3 +59,16 @@ export const SnoozeIcon = ({ className = "h-4 w-4" }: IconProps) => (
     <path d="M12 9.5V13l2.5 1.5M4.5 4.5l2.5-2M19.5 4.5l-2.5-2" />
   </svg>
 );
+
+export const MicIcon = ({ className = "h-5 w-5" }: IconProps) => (
+  <svg {...base} className={className} aria-hidden>
+    <rect x="9" y="3" width="6" height="11" rx="3" />
+    <path d="M5.5 11a6.5 6.5 0 0013 0M12 17.5V21" />
+  </svg>
+);
+
+export const SendIcon = ({ className = "h-5 w-5" }: IconProps) => (
+  <svg {...base} strokeWidth={2} className={className} aria-hidden>
+    <path d="M5 12h13M13 6l6 6-6 6" />
+  </svg>
+);

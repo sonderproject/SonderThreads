@@ -11,11 +11,13 @@ function escapeRegex(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-function startOfToday(now: Date): string {
-  const d = new Date(now);
-  d.setHours(0, 0, 0, 0);
-  return d.toISOString();
+function startOfToday(now: Date, tzOffset: number): string {
+  return extractDate("today", now, tzOffset).date!;
 }
+
+/** Sentences that start like a to-do ("call…", "buy…", "email…") become tasks. */
+const ACTION_VERB =
+  /^(call|phone|text|email|e-mail|message|buy|get|grab|pick up|drop off|pay|send|schedule|book|check|follow up|meet|visit|finish|submit|renew|clean|fix|bring|order|review|prepare|prep|write|apply|sign|return|cancel|confirm|ask|tell|water|take|mail|print|reach out|reply|respond|register|study|practice|clean up|wash|cook|make an appointment)\b/i;
 
 function splitNames(text: string): string[] {
   return text
@@ -84,7 +86,7 @@ export const fallbackProvider: CommandProvider = {
 
     // --- create_list: "Create a list called Groceries" / "Make a group called Spring 2026" / "New group 8" ---
     const explicitListMatch = text.match(
-      /^(create|make|start|add|new)\s+(?:a\s+|an\s+|new\s+)*(list|group)\b\s*(called|named)?\s*[:\-]?\s*(.+)$/i,
+      /^(create|make|start|add|new)\s+(?:a\s+|an\s+|new\s+)*(?:(?:task|to-?do|shopping|grocery)\s+)?(list|group)\b\s*(called|named)?\s*[:\-]?\s*(.+)$/i,
     );
     if (explicitListMatch) {
       const kind = explicitListMatch[2].toLowerCase();
@@ -141,11 +143,11 @@ export const fallbackProvider: CommandProvider = {
     if (taskMatch) {
       const recurring = extractRecurrence(taskMatch[3].trim());
       const rawContent = recurring.remaining;
-      const { date, remaining } = extractDate(rawContent, context.now);
+      const { date, remaining } = extractDate(rawContent, context.now, context.tzOffset);
       const mentioned = findMentionedPerson(remaining, context.people);
       result.intent = "create_task";
       result.content = remaining.trim() || rawContent;
-      result.dueDate = date ?? (recurring.recurrence ? startOfToday(context.now) : null);
+      result.dueDate = date ?? (recurring.recurrence ? startOfToday(context.now, context.tzOffset) : null);
       result.recurrence = recurring.recurrence;
       result.personId = mentioned?.id ?? null;
       if (mentioned) result.names = [mentioned.displayName];
@@ -158,11 +160,11 @@ export const fallbackProvider: CommandProvider = {
     if (reminderMatch) {
       const recurring = extractRecurrence(reminderMatch[2].trim());
       const rawContent = recurring.remaining;
-      const { date, remaining } = extractDate(rawContent, context.now);
+      const { date, remaining } = extractDate(rawContent, context.now, context.tzOffset);
       const mentioned = findMentionedPerson(remaining, context.people);
       result.intent = "create_task";
       result.content = remaining.trim() || rawContent;
-      result.dueDate = date ?? (recurring.recurrence ? startOfToday(context.now) : null);
+      result.dueDate = date ?? (recurring.recurrence ? startOfToday(context.now, context.tzOffset) : null);
       result.recurrence = recurring.recurrence;
       result.personId = mentioned?.id ?? null;
       if (mentioned) result.names = [mentioned.displayName];
@@ -184,6 +186,21 @@ export const fallbackProvider: CommandProvider = {
       result.statusField = field;
       result.content = statusMatch[6].trim();
       result.confidence = mentioned ? 0.9 : 0.5;
+      return result;
+    }
+
+    // --- create_task from an action phrase: "Call Marcus Friday at 3", "Buy printer ink" ---
+    if (ACTION_VERB.test(text)) {
+      const recurring = extractRecurrence(text);
+      const { date, remaining } = extractDate(recurring.remaining, context.now, context.tzOffset);
+      const mentioned = findMentionedPerson(remaining, context.people);
+      result.intent = "create_task";
+      result.content = remaining.trim() || text;
+      result.dueDate = date ?? (recurring.recurrence ? startOfToday(context.now, context.tzOffset) : null);
+      result.recurrence = recurring.recurrence;
+      result.personId = mentioned?.id ?? null;
+      if (mentioned) result.names = [mentioned.displayName];
+      result.confidence = 0.7;
       return result;
     }
 

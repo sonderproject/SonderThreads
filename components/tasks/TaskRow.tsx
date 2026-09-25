@@ -10,6 +10,7 @@ import { useUndo } from "@/components/ui/UndoToast";
 import { snoozeOptions } from "@/components/tasks/snooze";
 import { SnoozeIcon } from "@/components/ui/icons";
 import type { Task, TaskRecurrence } from "@/lib/types";
+import { formatDue } from "@/lib/format-due";
 
 function toDateInputValue(iso: string | null): string {
   if (!iso) return "";
@@ -227,15 +228,7 @@ export function TaskRow({
                 {personName}
               </Link>
             )}
-            {task.due_at && (
-              <span>
-                {new Date(task.due_at).toLocaleDateString(undefined, {
-                  weekday: "short",
-                  month: "short",
-                  day: "numeric",
-                })}
-              </span>
-            )}
+            {task.due_at && <span>{formatDue(task.due_at)}</span>}
             {task.recurrence && <span title={`Repeats ${task.recurrence}`}>↻ {task.recurrence}</span>}
           </div>
         </div>

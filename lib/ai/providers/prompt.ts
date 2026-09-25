@@ -31,7 +31,7 @@ intent, names (array of strings), personId (string|null), content (string|null),
 listName (string|null), listId (string|null), isGroup (boolean), category (string|null),
 dueDate (ISO 8601 string|null), recurrence ("daily"|"weekly"|"monthly"|null), statusField ("current_status"|"next_action"|null), confidence (0-1 number).
 Resolve personId/listId ONLY if a name clearly matches one of the known people/lists given below; otherwise leave null.
-Today's date is ${context.now.toISOString()}.
+The user's current local time is ${new Date(context.now.getTime() - context.tzOffset * 60_000).toISOString().replace("Z", "")} (UTC offset ${-context.tzOffset / 60}h); return dueDate as a full ISO 8601 timestamp with that offset.
 Known people: ${personNames}
 Known lists: ${listNames}`;
 
