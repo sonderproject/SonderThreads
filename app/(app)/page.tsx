@@ -5,6 +5,7 @@ import { PersonCard } from "@/components/people/PersonCard";
 import { NoteCard } from "@/components/notes/NoteCard";
 import { TaskRow } from "@/components/tasks/TaskRow";
 import { MiniCalendar } from "@/components/calendar/MiniCalendar";
+import { Clock } from "@/components/calendar/Clock";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { listPeople, getPeopleNeedingAttention } from "@/lib/actions/people";
 import { listTasks } from "@/lib/actions/tasks";
@@ -62,7 +63,10 @@ export default async function DashboardPage() {
       </section>
 
       <Section title="Calendar" href="/calendar">
-        <MiniCalendar year={year} month={month} weeks={weeks} eventDays={eventDays} />
+        <div className="flex flex-wrap items-stretch gap-3">
+          <MiniCalendar year={year} month={month} weeks={weeks} eventDays={eventDays} />
+          <Clock />
+        </div>
       </Section>
 
       <Section title="Today">
