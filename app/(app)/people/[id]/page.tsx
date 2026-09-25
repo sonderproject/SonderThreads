@@ -12,6 +12,19 @@ import { Badge } from "@/components/ui/Badge";
 import { isStale, STALE_DAYS } from "@/lib/stale";
 import type { Activity } from "@/lib/types";
 
+/** node-postgres returns `date` columns as a local-midnight Date; the date input wants YYYY-MM-DD. */
+function toDateString(value: string | Date | null): string | null {
+  if (!value) return null;
+  if (typeof value === "string") return value.slice(0, 10);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${value.getFullYear()}-${pad(value.getMonth() + 1)}-${pad(value.getDate())}`;
+}
+
+function formatBirthday(iso: string): string {
+  const [y, m, d] = iso.split("-").map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" });
+}
+
 export default async function PersonProfilePage({
   params,
 }: {
@@ -28,13 +41,21 @@ export default async function PersonProfilePage({
   ]);
 
   const openTasks = tasks.filter((t) => !t.completed);
+  const birthday = toDateString(person.birthday as string | Date | null);
 
   return (
     <div className="space-y-8">
       <div>
         <div className="flex items-center gap-2">
-          <h1 className="font-mono text-lg uppercase tracking-wide text-text">
-            {person.display_name}
+          <h1>
+            <EditableField
+              personId={person.id}
+              field="display_name"
+              value={person.display_name}
+              placeholder="Name"
+              textClassName="font-mono text-lg uppercase tracking-wide text-text"
+              required
+            />
           </h1>
           {person.needs_followup && <Badge>follow up</Badge>}
           {isStale(person) && (
@@ -44,6 +65,42 @@ export default async function PersonProfilePage({
           )}
         </div>
       </div>
+
+      <Section title="Details">
+        <div className="grid gap-2 sm:grid-cols-3">
+          <Detail label="Birthday">
+            <EditableField
+              personId={person.id}
+              field="birthday"
+              value={birthday}
+              placeholder="Add birthday..."
+              textClassName="text-sm text-text"
+              inputType="date"
+              displayValue={birthday ? formatBirthday(birthday) : null}
+            />
+          </Detail>
+          <Detail label="Phone">
+            <EditableField
+              personId={person.id}
+              field="phone"
+              value={person.phone}
+              placeholder="Add phone..."
+              textClassName="text-sm text-text"
+              inputType="tel"
+            />
+          </Detail>
+          <Detail label="Email">
+            <EditableField
+              personId={person.id}
+              field="email"
+              value={person.email}
+              placeholder="Add email..."
+              textClassName="break-all text-sm text-text"
+              inputType="email"
+            />
+          </Detail>
+        </div>
+      </Section>
 
       <Section title="Current">
         <EditableField
@@ -102,6 +159,15 @@ export default async function PersonProfilePage({
           </div>
         )}
       </Section>
+    </div>
+  );
+}
+
+function Detail({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="rounded border border-border px-3 py-2">
+      <p className="mb-0.5 font-mono text-[11px] uppercase text-text-faint">{label}</p>
+      {children}
     </div>
   );
 }

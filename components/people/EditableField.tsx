@@ -5,18 +5,28 @@ import { useRouter } from "next/navigation";
 import { updatePersonSafe } from "@/lib/actions/people";
 import type { Person } from "@/lib/types";
 
+type EditablePersonField = "current_status" | "next_action" | "display_name" | "phone" | "email" | "birthday";
+
 export function EditableField({
   personId,
   field,
   value,
   placeholder,
   textClassName,
+  inputType = "text",
+  required = false,
+  displayValue,
 }: {
   personId: string;
-  field: "current_status" | "next_action";
+  field: EditablePersonField;
   value: string | null;
   placeholder: string;
   textClassName: string;
+  inputType?: "text" | "email" | "tel" | "date";
+  /** Blank input is discarded instead of saved (e.g. a name can't be cleared). */
+  required?: boolean;
+  /** What to show instead of the raw value when not editing (e.g. a formatted date). */
+  displayValue?: string | null;
 }) {
   const [editing, setEditing] = useState(false);
   const [text, setText] = useState(value ?? "");
@@ -25,13 +35,14 @@ export function EditableField({
   const router = useRouter();
 
   async function save() {
-    if (text === (value ?? "")) {
+    if (text === (value ?? "") || (required && !text.trim())) {
       setEditing(false);
+      setText(value ?? "");
       return;
     }
     setSaving(true);
     setError(null);
-    const patch: Partial<Pick<Person, "current_status" | "next_action">> = {
+    const patch: Partial<Pick<Person, EditablePersonField>> = {
       [field]: text.trim() || null,
     };
     const result = await updatePersonSafe(personId, patch);
@@ -50,6 +61,7 @@ export function EditableField({
         {error && <p className="text-xs text-red-400">{error}</p>}
         <input
           autoFocus
+          type={inputType}
           value={text}
           onChange={(e) => setText(e.target.value)}
           onBlur={save}
@@ -74,7 +86,7 @@ export function EditableField({
       className={`cursor-text ${textClassName}`}
       title="Click to edit"
     >
-      {value || placeholder}
+      {value ? (displayValue ?? value) : placeholder}
     </p>
   );
 }

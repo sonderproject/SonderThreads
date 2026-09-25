@@ -106,9 +106,21 @@ export async function updatePerson(
   patch = validate(updatePersonSchema, patch);
   const before = await getPerson(id);
 
-  const fields = Object.keys(patch) as (keyof typeof patch)[];
+  // A cleared contact field is stored as null, not "".
+  for (const key of ["phone", "email", "birthday"] as const) {
+    if (patch[key] === "") patch[key] = null;
+  }
+
+  const columns: Record<string, unknown> = { ...patch };
+  if (patch.display_name) {
+    const { firstName, lastName } = splitName(patch.display_name);
+    columns.first_name = firstName;
+    columns.last_name = lastName;
+  }
+
+  const fields = Object.keys(columns);
   const setClauses = fields.map((field, i) => `${field} = $${i + 3}`);
-  const values = fields.map((field) => patch[field]);
+  const values = fields.map((field) => columns[field]);
 
   const person = await queryOne<Person>(
     `update people set ${[...setClauses, "last_activity_at = now()"].join(", ")}
@@ -118,6 +130,21 @@ export async function updatePerson(
   );
 
   if (!person) throw new Error("Person not found");
+
+  if (before && patch.display_name && before.display_name !== patch.display_name) {
+    // List items keep a copy of the name as their label — keep linked ones in sync.
+    await query(`update list_items set label = $1 where user_id = $2 and person_id = $3`, [
+      person.display_name,
+      OWNER_ID,
+      id,
+    ]);
+    await logActivity({
+      type: "status_changed",
+      description: `Renamed from ${before.display_name} to ${person.display_name}`,
+      personId: id,
+    });
+    revalidatePath("/lists");
+  }
 
   if (before && patch.current_status !== undefined && before.current_status !== patch.current_status) {
     await logActivity({

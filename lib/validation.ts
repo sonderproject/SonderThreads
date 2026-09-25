@@ -17,7 +17,10 @@ export const updatePersonSchema = z
     status: z.enum(["active", "inactive", "alumni"]).nullable().optional(),
     phone: optionalText(50),
     email: z.union([z.string().trim().email("Not a valid email"), z.literal("")]).nullable().optional(),
-    birthday: optionalText(20),
+    birthday: z
+      .union([z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Birthday must be a valid date"), z.literal("")])
+      .nullable()
+      .optional(),
     display_name: z.string().trim().min(1).max(200).optional(),
   })
   .partial();
