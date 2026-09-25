@@ -21,6 +21,7 @@ import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useUndo } from "@/components/ui/UndoToast";
 import type { List, ListItem } from "@/lib/types";
+import { Dictate } from "@/components/voice/Dictate";
 
 export function ListDetail({ list, items }: { list: List; items: ListItem[] }) {
   const router = useRouter();
@@ -181,14 +182,16 @@ export function ListDetail({ list, items }: { list: List; items: ListItem[] }) {
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           {renaming ? (
-            <input
-              autoFocus
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              onBlur={handleRename}
-              onKeyDown={(e) => e.key === "Enter" && handleRename()}
-              className="input font-mono text-lg uppercase"
-            />
+            <Dictate value={name} onChange={setName}>
+              <input
+                autoFocus
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                onBlur={handleRename}
+                onKeyDown={(e) => e.key === "Enter" && handleRename()}
+                className="input font-mono text-lg uppercase"
+              />
+            </Dictate>
           ) : (
             <h1
               onClick={() => setRenaming(true)}
@@ -211,15 +214,17 @@ export function ListDetail({ list, items }: { list: List; items: ListItem[] }) {
       </div>
 
       {editingDescription ? (
-        <input
-          autoFocus
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          onBlur={handleDescriptionSave}
-          onKeyDown={(e) => e.key === "Enter" && handleDescriptionSave()}
-          className="input"
-          placeholder="Description..."
-        />
+        <Dictate value={description} onChange={setDescription}>
+          <input
+            autoFocus
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            onBlur={handleDescriptionSave}
+            onKeyDown={(e) => e.key === "Enter" && handleDescriptionSave()}
+            className="input"
+            placeholder="Description..."
+          />
+        </Dictate>
       ) : (
         <p
           onClick={() => setEditingDescription(true)}
@@ -230,12 +235,14 @@ export function ListDetail({ list, items }: { list: List; items: ListItem[] }) {
       )}
 
       <form onSubmit={handleAddItem} className="flex gap-2">
-        <input
-          value={newLabel}
-          onChange={(e) => setNewLabel(e.target.value)}
-          placeholder="Add item..."
-          className="input font-mono"
-        />
+        <Dictate value={newLabel} onChange={setNewLabel}>
+          <input
+            value={newLabel}
+            onChange={(e) => setNewLabel(e.target.value)}
+            placeholder="Add item..."
+            className="input font-mono"
+          />
+        </Dictate>
         <Button type="submit" disabled={!newLabel.trim() || pending}>
           Add
         </Button>
@@ -275,17 +282,19 @@ export function ListDetail({ list, items }: { list: List; items: ListItem[] }) {
                 className="h-5 w-5 accent-accent sm:h-4 sm:w-4"
               />
               {editingItemId === item.id ? (
-                <input
-                  autoFocus
-                  value={editLabel}
-                  onChange={(e) => setEditLabel(e.target.value)}
-                  onBlur={() => saveItemLabel(item)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") saveItemLabel(item);
-                    if (e.key === "Escape") setEditingItemId(null);
-                  }}
-                  className="input flex-1 text-sm"
-                />
+                <Dictate value={editLabel} onChange={setEditLabel}>
+                  <input
+                    autoFocus
+                    value={editLabel}
+                    onChange={(e) => setEditLabel(e.target.value)}
+                    onBlur={() => saveItemLabel(item)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") saveItemLabel(item);
+                      if (e.key === "Escape") setEditingItemId(null);
+                    }}
+                    className="input flex-1 text-sm"
+                  />
+                </Dictate>
               ) : item.person_id ? (
                 <Link
                   href={`/people/${item.person_id}`}

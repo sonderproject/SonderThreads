@@ -10,6 +10,7 @@ import { createListSafe } from "@/lib/actions/lists";
 import { createTaskSafe } from "@/lib/actions/tasks";
 import { RecurrenceSelect } from "@/components/tasks/RecurrenceSelect";
 import type { Person, TaskRecurrence } from "@/lib/types";
+import { Dictate } from "@/components/voice/Dictate";
 
 type ActiveModal = "person" | "note" | "list" | "task" | null;
 
@@ -78,29 +79,35 @@ function PersonForm({ onDone }: { onDone: () => void }) {
     <form onSubmit={submit} className="space-y-3">
       {error && <p className="text-xs text-red-400">{error}</p>}
       <Field label="Name">
-        <input
-          autoFocus
-          value={fullName}
-          onChange={(e) => setFullName(e.target.value)}
-          className="input"
-          placeholder="Marcus Johnson"
-        />
+        <Dictate value={fullName} onChange={setFullName}>
+          <input
+            autoFocus
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+            className="input"
+            placeholder="Marcus Johnson"
+          />
+        </Dictate>
       </Field>
       <Field label="Current (optional)">
-        <input
-          value={currentStatus}
-          onChange={(e) => setCurrentStatus(e.target.value)}
-          className="input"
-          placeholder="Starting Amazon Monday"
-        />
+        <Dictate value={currentStatus} onChange={setCurrentStatus}>
+          <input
+            value={currentStatus}
+            onChange={(e) => setCurrentStatus(e.target.value)}
+            className="input"
+            placeholder="Starting Amazon Monday"
+          />
+        </Dictate>
       </Field>
       <Field label="Next (optional)">
-        <input
-          value={nextAction}
-          onChange={(e) => setNextAction(e.target.value)}
-          className="input"
-          placeholder="Follow up after first week"
-        />
+        <Dictate value={nextAction} onChange={setNextAction}>
+          <input
+            value={nextAction}
+            onChange={(e) => setNextAction(e.target.value)}
+            className="input"
+            placeholder="Follow up after first week"
+          />
+        </Dictate>
       </Field>
       <Button type="submit" disabled={saving || !fullName.trim()} className="w-full">
         {saving ? "Saving..." : "Add person"}
@@ -136,13 +143,15 @@ function NoteForm({
     <form onSubmit={submit} className="space-y-3">
       {error && <p className="text-xs text-red-400">{error}</p>}
       <Field label="Note">
-        <textarea
-          autoFocus
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          className="input min-h-[80px] resize-none"
-          placeholder="What's happening?"
-        />
+        <Dictate value={content} onChange={setContent}>
+          <textarea
+            autoFocus
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            className="input min-h-[80px] resize-none"
+            placeholder="What's happening?"
+          />
+        </Dictate>
       </Field>
       <Field label="Person (optional)">
         <select value={personId} onChange={(e) => setPersonId(e.target.value)} className="input">
@@ -183,20 +192,24 @@ function ListForm({ onDone }: { onDone: () => void }) {
     <form onSubmit={submit} className="space-y-3">
       {error && <p className="text-xs text-red-400">{error}</p>}
       <Field label="Name">
-        <input
-          autoFocus
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className="input"
-          placeholder="Group 8"
-        />
+        <Dictate value={name} onChange={setName}>
+          <input
+            autoFocus
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="input"
+            placeholder="Group 8"
+          />
+        </Dictate>
       </Field>
       <Field label="Description (optional)">
-        <input
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          className="input"
-        />
+        <Dictate value={description} onChange={setDescription}>
+          <input
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            className="input"
+          />
+        </Dictate>
       </Field>
       <label className="flex items-center gap-2 text-sm text-text-muted">
         <input type="checkbox" checked={isGroup} onChange={(e) => setIsGroup(e.target.checked)} />
@@ -243,13 +256,15 @@ function TaskForm({
     <form onSubmit={submit} className="space-y-3">
       {error && <p className="text-xs text-red-400">{error}</p>}
       <Field label="Task">
-        <input
-          autoFocus
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          className="input"
-          placeholder="Call Marcus about interview"
-        />
+        <Dictate value={title} onChange={setTitle}>
+          <input
+            autoFocus
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            className="input"
+            placeholder="Call Marcus about interview"
+          />
+        </Dictate>
       </Field>
       <Field label="Person (optional)">
         <select value={personId} onChange={(e) => setPersonId(e.target.value)} className="input">

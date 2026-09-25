@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { updatePersonSafe } from "@/lib/actions/people";
+import { Dictate } from "@/components/voice/Dictate";
 import type { Person } from "@/lib/types";
 
 type EditablePersonField = "current_status" | "next_action" | "display_name" | "phone" | "email" | "birthday";
@@ -56,26 +57,35 @@ export function EditableField({
   }
 
   if (editing) {
+    const field = (
+      <input
+        autoFocus
+        type={inputType}
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        onBlur={save}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") save();
+          if (e.key === "Escape") {
+            setEditing(false);
+            setText(value ?? "");
+            setError(null);
+          }
+        }}
+        disabled={saving}
+        className="input text-sm"
+      />
+    );
     return (
       <div className="space-y-1">
         {error && <p className="text-xs text-red-400">{error}</p>}
-        <input
-          autoFocus
-          type={inputType}
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          onBlur={save}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") save();
-            if (e.key === "Escape") {
-              setEditing(false);
-              setText(value ?? "");
-              setError(null);
-            }
-          }}
-          disabled={saving}
-          className="input text-sm"
-        />
+        {inputType === "text" ? (
+          <Dictate value={text} onChange={setText}>
+            {field}
+          </Dictate>
+        ) : (
+          field
+        )}
       </div>
     );
   }

@@ -11,6 +11,7 @@ import { snoozeOptions } from "@/components/tasks/snooze";
 import { SnoozeIcon } from "@/components/ui/icons";
 import type { Task, TaskRecurrence } from "@/lib/types";
 import { formatDue } from "@/lib/format-due";
+import { Dictate } from "@/components/voice/Dictate";
 
 function toDateInputValue(iso: string | null): string {
   if (!iso) return "";
@@ -143,12 +144,14 @@ export function TaskRow({
     return (
       <div id={task.id} className="space-y-2 rounded px-3 py-3 sm:px-2 sm:py-2">
         {error && <p className="text-xs text-red-400">{error}</p>}
-        <input
-          autoFocus
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          className="input text-sm"
-        />
+        <Dictate value={title} onChange={setTitle}>
+          <input
+            autoFocus
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            className="input text-sm"
+          />
+        </Dictate>
         <div className="flex flex-wrap items-center gap-2">
           <input
             type="date"

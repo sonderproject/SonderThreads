@@ -6,6 +6,7 @@ import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { parseCsv, rowsToPeople, type ImportRow } from "@/lib/csv";
 import { importPeopleToListSafe } from "@/lib/actions/import";
+import { Dictate } from "@/components/voice/Dictate";
 
 export function ImportPeopleButton() {
   const [open, setOpen] = useState(false);
@@ -77,12 +78,14 @@ function ImportForm({ onDone }: { onDone: () => void }) {
           {people.length} {people.length === 1 ? "person" : "people"} found · columns: {columns.join(", ")}
         </p>
       )}
-      <input
-        value={listName}
-        onChange={(e) => setListName(e.target.value)}
-        className="input"
-        placeholder="List name"
-      />
+      <Dictate value={listName} onChange={setListName}>
+        <input
+          value={listName}
+          onChange={(e) => setListName(e.target.value)}
+          className="input"
+          placeholder="List name"
+        />
+      </Dictate>
       <label className="flex items-center gap-2 text-sm text-text-muted">
         <input type="checkbox" checked={isGroup} onChange={(e) => setIsGroup(e.target.checked)} />
         This is a group (roster of people)

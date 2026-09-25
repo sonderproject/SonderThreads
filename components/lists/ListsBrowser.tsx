@@ -9,6 +9,7 @@ import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { createListSafe } from "@/lib/actions/lists";
 import type { List } from "@/lib/types";
+import { Dictate } from "@/components/voice/Dictate";
 
 export function ListsBrowser({
   lists,
@@ -31,12 +32,14 @@ export function ListsBrowser({
   return (
     <div className="space-y-4">
       <div className="flex gap-2">
-        <input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search lists..."
-          className="input font-mono"
-        />
+        <Dictate value={query} onChange={setQuery}>
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search lists..."
+            className="input font-mono"
+          />
+        </Dictate>
         <ImportPeopleButton />
         <Button onClick={() => setModalOpen(true)} className="shrink-0">
           + New
@@ -88,13 +91,15 @@ function NewListForm({ onDone }: { onDone: () => void }) {
   return (
     <form onSubmit={submit} className="space-y-3">
       {error && <p className="text-xs text-red-400">{error}</p>}
-      <input
-        autoFocus
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        className="input"
-        placeholder="Group 8"
-      />
+      <Dictate value={name} onChange={setName}>
+        <input
+          autoFocus
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          className="input"
+          placeholder="Group 8"
+        />
+      </Dictate>
       <label className="flex items-center gap-2 text-sm text-text-muted">
         <input type="checkbox" checked={isGroup} onChange={(e) => setIsGroup(e.target.checked)} />
         This is a group (roster of people)

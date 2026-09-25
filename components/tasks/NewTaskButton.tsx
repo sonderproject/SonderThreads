@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { createTaskSafe } from "@/lib/actions/tasks";
 import { RecurrenceSelect } from "@/components/tasks/RecurrenceSelect";
 import type { Person, TaskRecurrence } from "@/lib/types";
+import { Dictate } from "@/components/voice/Dictate";
 
 export function NewTaskButton({ people }: { people: Pick<Person, "id" | "display_name">[] }) {
   const [open, setOpen] = useState(false);
@@ -64,13 +65,15 @@ function NewTaskForm({
       {error && <p className="text-xs text-red-400">{error}</p>}
       <div>
         <label className="mb-1 block text-xs text-text-muted">Task</label>
-        <input
-          autoFocus
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          className="input"
-          placeholder="Call Marcus about interview"
-        />
+        <Dictate value={title} onChange={setTitle}>
+          <input
+            autoFocus
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            className="input"
+            placeholder="Call Marcus about interview"
+          />
+        </Dictate>
       </div>
       <div>
         <label className="mb-1 block text-xs text-text-muted">Person (optional)</label>

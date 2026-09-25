@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { createTaskSafe } from "@/lib/actions/tasks";
 import { RecurrenceSelect } from "@/components/tasks/RecurrenceSelect";
 import type { Person, TaskRecurrence } from "@/lib/types";
+import { Dictate } from "@/components/voice/Dictate";
 
 function toDateInputValue(year: number, month: number, day: number): string {
   return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
@@ -52,13 +53,15 @@ export function QuickAddTaskForm({
   return (
     <form onSubmit={submit} className="space-y-3">
       {error && <p className="text-xs text-red-400">{error}</p>}
-      <input
-        autoFocus
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        className="input"
-        placeholder="Call Marcus about interview"
-      />
+      <Dictate value={title} onChange={setTitle}>
+        <input
+          autoFocus
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          className="input"
+          placeholder="Call Marcus about interview"
+        />
+      </Dictate>
       <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="input" />
       <select value={personId} onChange={(e) => setPersonId(e.target.value)} className="input">
         <option value="">No person</option>

@@ -9,6 +9,7 @@ import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { createPersonRecordSafe } from "@/lib/actions/people";
 import type { Person } from "@/lib/types";
+import { Dictate } from "@/components/voice/Dictate";
 
 export function PeopleBrowser({ people }: { people: Person[] }) {
   const [query, setQuery] = useState("");
@@ -27,12 +28,14 @@ export function PeopleBrowser({ people }: { people: Person[] }) {
   return (
     <div className="space-y-4">
       <div className="flex gap-2">
-        <input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search people..."
-          className="input font-mono"
-        />
+        <Dictate value={query} onChange={setQuery}>
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search people..."
+            className="input font-mono"
+          />
+        </Dictate>
         <ImportPeopleButton />
         <Button onClick={() => setModalOpen(true)} className="shrink-0">
           + New
@@ -98,31 +101,37 @@ function NewPersonForm({ onDone }: { onDone: () => void }) {
       {error && <p className="text-xs text-red-400">{error}</p>}
       <div>
         <label className="mb-1 block text-xs text-text-muted">Name</label>
-        <input
-          autoFocus
-          value={fullName}
-          onChange={(e) => setFullName(e.target.value)}
-          className="input"
-          placeholder="Marcus Johnson"
-        />
+        <Dictate value={fullName} onChange={setFullName}>
+          <input
+            autoFocus
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+            className="input"
+            placeholder="Marcus Johnson"
+          />
+        </Dictate>
       </div>
       <div>
         <label className="mb-1 block text-xs text-text-muted">Current (optional)</label>
-        <input
-          value={currentStatus}
-          onChange={(e) => setCurrentStatus(e.target.value)}
-          className="input"
-          placeholder="Starting Amazon Monday"
-        />
+        <Dictate value={currentStatus} onChange={setCurrentStatus}>
+          <input
+            value={currentStatus}
+            onChange={(e) => setCurrentStatus(e.target.value)}
+            className="input"
+            placeholder="Starting Amazon Monday"
+          />
+        </Dictate>
       </div>
       <div>
         <label className="mb-1 block text-xs text-text-muted">Next (optional)</label>
-        <input
-          value={nextAction}
-          onChange={(e) => setNextAction(e.target.value)}
-          className="input"
-          placeholder="Follow up after first week"
-        />
+        <Dictate value={nextAction} onChange={setNextAction}>
+          <input
+            value={nextAction}
+            onChange={(e) => setNextAction(e.target.value)}
+            className="input"
+            placeholder="Follow up after first week"
+          />
+        </Dictate>
       </div>
       <Button type="submit" disabled={saving || pending || !fullName.trim()} className="w-full">
         {saving || pending ? "Saving..." : "Add person"}

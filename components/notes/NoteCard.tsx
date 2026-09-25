@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/Badge";
 import { deleteNote, restoreNote, updateNoteSafe } from "@/lib/actions/notes";
 import { useUndo } from "@/components/ui/UndoToast";
 import type { Note } from "@/lib/types";
+import { Dictate } from "@/components/voice/Dictate";
 
 export function NoteCard({
   note,
@@ -58,19 +59,21 @@ export function NoteCard({
       {editing ? (
         <div className="space-y-1.5">
           {error && <p className="text-xs text-red-400">{error}</p>}
-          <textarea
-            autoFocus
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Escape") {
-                setEditing(false);
-                setContent(note.content);
-              }
-            }}
-            className="input min-h-[60px] w-full resize-none text-sm"
-            disabled={saving}
-          />
+          <Dictate value={content} onChange={setContent}>
+            <textarea
+              autoFocus
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Escape") {
+                  setEditing(false);
+                  setContent(note.content);
+                }
+              }}
+              className="input min-h-[60px] w-full resize-none text-sm"
+              disabled={saving}
+            />
+          </Dictate>
           <div className="flex gap-2">
             <button
               onClick={save}

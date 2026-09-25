@@ -7,6 +7,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { Button } from "@/components/ui/Button";
 import { createNoteSafe } from "@/lib/actions/notes";
 import type { Person, Note } from "@/lib/types";
+import { Dictate } from "@/components/voice/Dictate";
 
 export function NotesBrowser({
   notes,
@@ -52,12 +53,14 @@ export function NotesBrowser({
     <div className="space-y-4">
       <form onSubmit={handleAdd} className="space-y-2 rounded border border-border bg-bg-raised p-3">
         {error && <p className="text-xs text-red-400">{error}</p>}
-        <textarea
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          placeholder="Quick note..."
-          className="input min-h-[60px] resize-none font-mono"
-        />
+        <Dictate value={content} onChange={setContent}>
+          <textarea
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            placeholder="Quick note..."
+            className="input min-h-[60px] resize-none font-mono"
+          />
+        </Dictate>
         <div className="flex gap-2">
           <select value={personId} onChange={(e) => setPersonId(e.target.value)} className="input flex-1">
             <option value="">Standalone</option>
@@ -73,12 +76,14 @@ export function NotesBrowser({
         </div>
       </form>
 
-      <input
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        placeholder="Search notes..."
-        className="input font-mono"
-      />
+      <Dictate value={query} onChange={setQuery}>
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search notes..."
+          className="input font-mono"
+        />
+      </Dictate>
 
       {filtered.length === 0 ? (
         <EmptyState message={notes.length === 0 ? "No notes yet." : "No matches."} />

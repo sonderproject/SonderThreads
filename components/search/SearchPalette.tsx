@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { Modal } from "@/components/ui/Modal";
 import { SearchResultsPanel } from "@/components/search/SearchResultsPanel";
 import { searchAll, type SearchResults } from "@/lib/actions/search";
+import { Dictate } from "@/components/voice/Dictate";
 
 /** Fire this to open the palette from anywhere (e.g. the mobile More menu). */
 export const OPEN_SEARCH_EVENT = "sonderthreads:open-search";
@@ -59,14 +60,16 @@ export function SearchPalette() {
 
   return (
     <Modal open={open} onClose={() => setOpen(false)} title="> search">
-      <input
-        autoFocus
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        placeholder="People, notes, lists, tasks..."
-        enterKeyHint="search"
-        className="input font-mono"
-      />
+      <Dictate value={query} onChange={setQuery}>
+        <input
+          autoFocus
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="People, notes, lists, tasks..."
+          enterKeyHint="search"
+          className="input font-mono"
+        />
+      </Dictate>
       {results && <SearchResultsPanel query={query.trim()} results={results} />}
     </Modal>
   );
