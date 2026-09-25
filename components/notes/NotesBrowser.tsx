@@ -89,6 +89,7 @@ export function NotesBrowser({
               key={note.id}
               note={note}
               clientName={note.client_id ? clientsById.get(note.client_id)?.display_name : null}
+              editable
             />
           ))}
         </div>

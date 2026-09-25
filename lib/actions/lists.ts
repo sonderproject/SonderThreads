@@ -5,7 +5,14 @@ import { query, queryOne } from "@/lib/db/client";
 import { OWNER_ID } from "@/lib/db/constants";
 import { logActivity } from "./activity";
 import { findClientByName, findOrCreateClientByName, touchClientActivity } from "./clients";
-import { addListItemSchema, createListSchema, validate, toActionResult, type ActionResult } from "@/lib/validation";
+import {
+  addListItemSchema,
+  createListSchema,
+  updateListItemSchema,
+  validate,
+  toActionResult,
+  type ActionResult,
+} from "@/lib/validation";
 import type { List, ListItem } from "@/lib/types";
 
 export async function listLists(): Promise<List[]> {
@@ -216,6 +223,24 @@ export async function addNamesToList(
   revalidatePath(`/lists/${listId}`);
   revalidatePath("/clients");
   return { createdClients, linkedClients };
+}
+
+export async function updateListItem(id: string, label: string): Promise<ListItem> {
+  const params = validate(updateListItemSchema, { label });
+  const item = await queryOne<ListItem>(
+    `update list_items set label = $1 where user_id = $2 and id = $3 returning *`,
+    [params.label, OWNER_ID, id],
+  );
+
+  if (!item) throw new Error("Item not found");
+
+  revalidatePath(`/lists/${item.list_id}`);
+  return item;
+}
+
+/** Client-form-safe wrapper: returns a result instead of throwing, since Next.js redacts thrown Server Action errors before they reach the client in production. */
+export async function updateListItemSafe(id: string, label: string): Promise<ActionResult<ListItem>> {
+  return toActionResult(() => updateListItem(id, label));
 }
 
 export async function toggleListItem(id: string, checked: boolean): Promise<void> {

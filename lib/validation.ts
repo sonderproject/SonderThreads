@@ -48,6 +48,24 @@ export const addListItemSchema = z.object({
   clientId: uuid.nullable().optional(),
 });
 
+export const updateListItemSchema = z.object({
+  label: z.string().trim().min(1, "Item can't be empty").max(500, "Item is too long"),
+});
+
+export const updateNoteSchema = z.object({
+  content: z.string().trim().min(1, "Note can't be empty").max(5000, "Note is too long"),
+});
+
+export const updateTaskSchema = z
+  .object({
+    title: z.string().trim().min(1, "Task title is required").max(500, "Title is too long"),
+    due_at: z.string().nullable().optional(),
+    notes: optionalText(2000),
+    client_id: uuid.nullable().optional(),
+    list_id: uuid.nullable().optional(),
+  })
+  .partial();
+
 /**
  * Validates input against a schema, throwing a plain Error with just the
  * first issue's message rather than a raw ZodError — clean enough to show

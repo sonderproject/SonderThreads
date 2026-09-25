@@ -10,6 +10,7 @@ const NAV_ITEMS = [
   { href: "/lists", label: "Lists" },
   { href: "/tasks", label: "Tasks" },
   { href: "/notes", label: "Notes" },
+  { href: "/calendar", label: "Calendar" },
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {

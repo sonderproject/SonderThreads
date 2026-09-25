@@ -138,7 +138,16 @@ export async function updateClient(
   revalidatePath(`/clients/${id}`);
   revalidatePath("/clients");
   revalidatePath("/");
+  revalidatePath("/calendar");
   return client;
+}
+
+/** Client-form-safe wrapper: returns a result instead of throwing, since Next.js redacts thrown Server Action errors before they reach the client in production. */
+export async function updateClientSafe(
+  id: string,
+  patch: Parameters<typeof updateClient>[1],
+): Promise<ActionResult<Client>> {
+  return toActionResult(() => updateClient(id, patch));
 }
 
 /** Soft-deletes a client — the row stays in the database (recoverable) but disappears from every view. */

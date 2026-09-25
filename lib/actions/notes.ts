@@ -7,7 +7,13 @@ import { truncate } from "./helpers";
 import { logActivity } from "./activity";
 import { touchClientActivity } from "./clients";
 import { regenerateClientSummary } from "./summary";
-import { createNoteSchema, validate, toActionResult, type ActionResult } from "@/lib/validation";
+import {
+  createNoteSchema,
+  updateNoteSchema,
+  validate,
+  toActionResult,
+  type ActionResult,
+} from "@/lib/validation";
 import type { Note } from "@/lib/types";
 
 export async function createNote(params: {
@@ -82,6 +88,27 @@ export async function listNotesForClient(clientId: string): Promise<Note[]> {
     `select * from notes where user_id = $1 and client_id = $2 and deleted_at is null order by created_at desc`,
     [OWNER_ID, clientId],
   );
+}
+
+export async function updateNote(id: string, content: string): Promise<Note> {
+  const params = validate(updateNoteSchema, { content });
+  const note = await queryOne<Note>(
+    `update notes set content = $1 where user_id = $2 and id = $3 and deleted_at is null returning *`,
+    [params.content, OWNER_ID, id],
+  );
+
+  if (!note) throw new Error("Note not found");
+
+  revalidatePath("/notes");
+  revalidatePath("/");
+  if (note.client_id) revalidatePath(`/clients/${note.client_id}`);
+
+  return note;
+}
+
+/** Client-form-safe wrapper: returns a result instead of throwing, since Next.js redacts thrown Server Action errors before they reach the client in production. */
+export async function updateNoteSafe(id: string, content: string): Promise<ActionResult<Note>> {
+  return toActionResult(() => updateNote(id, content));
 }
 
 /** Soft-deletes a note — the row stays in the database (recoverable) but disappears from every view. */

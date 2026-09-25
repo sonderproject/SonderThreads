@@ -5,6 +5,7 @@ import { getClientTimeline } from "@/lib/actions/activity";
 import { listTasksForClient } from "@/lib/actions/tasks";
 import { listListsForClient } from "@/lib/actions/lists";
 import { ClientTimeline } from "@/components/clients/ClientTimeline";
+import { EditableField } from "@/components/clients/EditableField";
 import { TaskRow } from "@/components/tasks/TaskRow";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Badge } from "@/components/ui/Badge";
@@ -39,11 +40,23 @@ export default async function ClientProfilePage({
       </div>
 
       <Section title="Current">
-        <p className="text-sm text-text">{client.current_status ?? "—"}</p>
+        <EditableField
+          clientId={client.id}
+          field="current_status"
+          value={client.current_status}
+          placeholder="Click to add current status..."
+          textClassName="text-sm text-text"
+        />
       </Section>
 
       <Section title="Next">
-        <p className="text-sm text-accent">{client.next_action ?? "—"}</p>
+        <EditableField
+          clientId={client.id}
+          field="next_action"
+          value={client.next_action}
+          placeholder="Click to add next action..."
+          textClassName="text-sm text-accent"
+        />
       </Section>
 
       <Section title="Summary">

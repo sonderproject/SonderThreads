@@ -4,7 +4,13 @@ import { revalidatePath } from "next/cache";
 import { query, queryOne } from "@/lib/db/client";
 import { OWNER_ID } from "@/lib/db/constants";
 import { logActivity } from "./activity";
-import { createTaskSchema, validate, toActionResult, type ActionResult } from "@/lib/validation";
+import {
+  createTaskSchema,
+  updateTaskSchema,
+  validate,
+  toActionResult,
+  type ActionResult,
+} from "@/lib/validation";
 import type { Task } from "@/lib/types";
 
 export async function listTasks(): Promise<Task[]> {
@@ -56,6 +62,7 @@ export async function createTask(params: {
 
   revalidatePath("/tasks");
   revalidatePath("/");
+  revalidatePath("/calendar");
   if (params.clientId) revalidatePath(`/clients/${params.clientId}`);
 
   return task;
@@ -87,6 +94,7 @@ export async function setTaskCompleted(id: string, completed: boolean): Promise<
 
   revalidatePath("/tasks");
   revalidatePath("/");
+  revalidatePath("/calendar");
   if (task.client_id) revalidatePath(`/clients/${task.client_id}`);
 }
 
@@ -98,24 +106,50 @@ export async function deleteTask(id: string): Promise<void> {
   );
   revalidatePath("/tasks");
   revalidatePath("/");
+  revalidatePath("/calendar");
 }
 
 export async function updateTask(
   id: string,
   patch: Partial<Pick<Task, "title" | "due_at" | "notes" | "client_id" | "list_id">>,
-): Promise<void> {
+): Promise<Task> {
+  patch = validate(updateTaskSchema, patch);
   const fields = Object.keys(patch) as (keyof typeof patch)[];
-  if (fields.length === 0) return;
+  if (fields.length === 0) {
+    const task = await queryOne<Task>(`select * from tasks where user_id = $1 and id = $2`, [
+      OWNER_ID,
+      id,
+    ]);
+    if (!task) throw new Error("Task not found");
+    return task;
+  }
 
   const setClauses = fields.map((field, i) => `${field} = $${i + 3}`);
   const values = fields.map((field) => patch[field]);
 
-  await query(
-    `update tasks set ${setClauses.join(", ")} where user_id = $1 and id = $2 and deleted_at is null`,
+  const task = await queryOne<Task>(
+    `update tasks set ${setClauses.join(", ")}
+     where user_id = $1 and id = $2 and deleted_at is null
+     returning *`,
     [OWNER_ID, id, ...values],
   );
+
+  if (!task) throw new Error("Task not found");
+
   revalidatePath("/tasks");
   revalidatePath("/");
+  revalidatePath("/calendar");
+  if (task.client_id) revalidatePath(`/clients/${task.client_id}`);
+
+  return task;
+}
+
+/** Client-form-safe wrapper: returns a result instead of throwing, since Next.js redacts thrown Server Action errors before they reach the client in production. */
+export async function updateTaskSafe(
+  id: string,
+  patch: Parameters<typeof updateTask>[1],
+): Promise<ActionResult<Task>> {
+  return toActionResult(() => updateTask(id, patch));
 }
 
 export async function searchTasks(searchQuery: string): Promise<Task[]> {

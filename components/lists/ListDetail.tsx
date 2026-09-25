@@ -12,6 +12,7 @@ import {
   reorderListItems,
   toggleListItem,
   updateListDescription,
+  updateListItemSafe,
 } from "@/lib/actions/lists";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
@@ -28,6 +29,9 @@ export function ListDetail({ list, items }: { list: List; items: ListItem[] }) {
   const [editingDescription, setEditingDescription] = useState(false);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [addError, setAddError] = useState<string | null>(null);
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  const [editLabel, setEditLabel] = useState("");
+  const [itemError, setItemError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
   function refresh() {
@@ -61,6 +65,28 @@ export function ListDetail({ list, items }: { list: List; items: ListItem[] }) {
     setLocalItems((prev) => prev.filter((i) => i.id !== item.id));
     await removeListItem(item.id);
     refresh();
+  }
+
+  function startEditItem(item: ListItem) {
+    setEditingItemId(item.id);
+    setEditLabel(item.label);
+    setItemError(null);
+  }
+
+  async function saveItemLabel(item: ListItem) {
+    const trimmed = editLabel.trim();
+    if (!trimmed || trimmed === item.label) {
+      setEditingItemId(null);
+      return;
+    }
+    const result = await updateListItemSafe(item.id, trimmed);
+    if (result.ok) {
+      setLocalItems((prev) => prev.map((i) => (i.id === item.id ? result.data : i)));
+      setEditingItemId(null);
+      refresh();
+    } else {
+      setItemError(result.error);
+    }
   }
 
   async function handleRename() {
@@ -188,7 +214,19 @@ export function ListDetail({ list, items }: { list: List; items: ListItem[] }) {
                 onChange={() => handleToggle(item)}
                 className="h-4 w-4 accent-accent"
               />
-              {item.client_id ? (
+              {editingItemId === item.id ? (
+                <input
+                  autoFocus
+                  value={editLabel}
+                  onChange={(e) => setEditLabel(e.target.value)}
+                  onBlur={() => saveItemLabel(item)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") saveItemLabel(item);
+                    if (e.key === "Escape") setEditingItemId(null);
+                  }}
+                  className="input flex-1 text-sm"
+                />
+              ) : item.client_id ? (
                 <Link
                   href={`/clients/${item.client_id}`}
                   className={`flex-1 text-sm hover:underline ${item.checked ? "text-text-faint line-through" : "text-accent"}`}
@@ -199,6 +237,15 @@ export function ListDetail({ list, items }: { list: List; items: ListItem[] }) {
                 <span className={`flex-1 text-sm ${item.checked ? "text-text-faint line-through" : "text-text"}`}>
                   {item.label}
                 </span>
+              )}
+              {editingItemId !== item.id && (
+                <button
+                  onClick={() => startEditItem(item)}
+                  className="text-text-faint hover:text-accent"
+                  aria-label="Edit item"
+                >
+                  ✎
+                </button>
               )}
               <button
                 onClick={() => handleRemove(item)}
@@ -211,6 +258,7 @@ export function ListDetail({ list, items }: { list: List; items: ListItem[] }) {
           ))}
         </div>
       )}
+      {itemError && <p className="text-xs text-red-400">{itemError}</p>}
     </div>
   );
 }
