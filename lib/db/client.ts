@@ -121,7 +121,7 @@ export async function checkDatabaseConnection(): Promise<{ ok: true } | { ok: fa
           "in Vercel (Storage tab → Create Database → Postgres).",
       };
     }
-    await query("select 1 from clients limit 1");
+    await query("select 1 from people limit 1");
     return { ok: true };
   } catch (err) {
     return { ok: false, detail: err instanceof Error ? err.message : String(err) };

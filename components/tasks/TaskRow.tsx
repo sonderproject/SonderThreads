@@ -4,7 +4,8 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { setTaskCompleted, updateTaskSafe } from "@/lib/actions/tasks";
-import type { Task } from "@/lib/types";
+import { RecurrenceSelect } from "@/components/tasks/RecurrenceSelect";
+import type { Task, TaskRecurrence } from "@/lib/types";
 
 function toDateInputValue(iso: string | null): string {
   if (!iso) return "";
@@ -13,15 +14,16 @@ function toDateInputValue(iso: string | null): string {
 
 export function TaskRow({
   task,
-  clientName,
+  personName,
 }: {
   task: Task;
-  clientName?: string | null;
+  personName?: string | null;
 }) {
   const [completed, setCompleted] = useState(task.completed);
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState(task.title);
   const [dueAt, setDueAt] = useState(toDateInputValue(task.due_at));
+  const [recurrence, setRecurrence] = useState<TaskRecurrence | "">(task.recurrence ?? "");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -43,6 +45,7 @@ export function TaskRow({
     const result = await updateTaskSafe(task.id, {
       title: title.trim(),
       due_at: dueAt ? new Date(dueAt).toISOString() : null,
+      recurrence: recurrence || null,
     });
     setSaving(false);
     if (result.ok) {
@@ -57,6 +60,7 @@ export function TaskRow({
     setEditing(false);
     setTitle(task.title);
     setDueAt(toDateInputValue(task.due_at));
+    setRecurrence(task.recurrence ?? "");
     setError(null);
   }
 
@@ -77,6 +81,7 @@ export function TaskRow({
             onChange={(e) => setDueAt(e.target.value)}
             className="input text-sm"
           />
+          <RecurrenceSelect value={recurrence} onChange={setRecurrence} className="input text-sm" />
           <button
             onClick={save}
             disabled={saving || !title.trim()}
@@ -109,9 +114,9 @@ export function TaskRow({
           {task.title}
         </p>
         <div className="mt-0.5 flex flex-wrap gap-2 text-xs text-text-muted">
-          {clientName && task.client_id && (
-            <Link href={`/clients/${task.client_id}`} className="hover:text-accent">
-              {clientName}
+          {personName && task.person_id && (
+            <Link href={`/people/${task.person_id}`} className="hover:text-accent">
+              {personName}
             </Link>
           )}
           {task.due_at && (
@@ -123,6 +128,7 @@ export function TaskRow({
               })}
             </span>
           )}
+          {task.recurrence && <span title={`Repeats ${task.recurrence}`}>↻ {task.recurrence}</span>}
         </div>
       </div>
       <button

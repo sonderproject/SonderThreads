@@ -1,16 +1,16 @@
 import { NextResponse } from "next/server";
 import { query } from "@/lib/db/client";
 import { OWNER_ID } from "@/lib/db/constants";
-import type { Activity, Client, List, ListItem, Note, Task } from "@/lib/types";
+import type { Activity, Person, List, ListItem, Note, Task } from "@/lib/types";
 
 const COLUMNS = {
-  clients:
+  people:
     "id, first_name, last_name, display_name, phone, email, birthday, status, current_status, next_action, summary, needs_followup, created_at, updated_at, last_activity_at",
-  notes: "id, client_id, content, category, created_at, updated_at",
-  lists: "id, name, description, is_cohort, created_at, updated_at",
-  list_items: "id, list_id, client_id, label, checked, position, created_at, updated_at",
-  tasks: "id, title, notes, client_id, list_id, due_at, completed, completed_at, created_at, updated_at",
-  activity: "id, client_id, list_id, task_id, note_id, type, description, created_at",
+  notes: "id, person_id, content, category, created_at, updated_at",
+  lists: "id, name, description, is_group, created_at, updated_at",
+  list_items: "id, list_id, person_id, label, checked, position, created_at, updated_at",
+  tasks: "id, title, notes, person_id, list_id, due_at, recurrence, completed, completed_at, created_at, updated_at",
+  activity: "id, person_id, list_id, task_id, note_id, type, description, created_at",
 };
 
 function toCsvValue(value: unknown): string {
@@ -42,8 +42,8 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const format = searchParams.get("format") === "csv" ? "csv" : "json";
 
-  const [clients, notes, lists, listItems, tasks, activity] = await Promise.all([
-    query<Client>(`select ${COLUMNS.clients} from clients where user_id = $1 and deleted_at is null order by display_name`, [OWNER_ID]),
+  const [people, notes, lists, listItems, tasks, activity] = await Promise.all([
+    query<Person>(`select ${COLUMNS.people} from people where user_id = $1 and deleted_at is null order by display_name`, [OWNER_ID]),
     query<Note>(`select ${COLUMNS.notes} from notes where user_id = $1 and deleted_at is null order by created_at`, [OWNER_ID]),
     query<List>(`select ${COLUMNS.lists} from lists where user_id = $1 and deleted_at is null order by name`, [OWNER_ID]),
     query<ListItem>(`select ${COLUMNS.list_items} from list_items where user_id = $1 order by list_id, position`, [OWNER_ID]),
@@ -56,19 +56,19 @@ export async function GET(request: Request) {
   if (format === "csv") {
     // A .zip would let us ship all six tables, but that's a real dependency
     // for a "download your data" button — CSV export covers the one people
-    // actually ask for (a client roster to open in a spreadsheet).
-    const csv = toCsv(clients as unknown as Record<string, unknown>[]);
+    // actually ask for (a person roster to open in a spreadsheet).
+    const csv = toCsv(people as unknown as Record<string, unknown>[]);
     return new NextResponse(csv, {
       headers: {
         "Content-Type": "text/csv",
-        "Content-Disposition": `attachment; filename="clients-${timestamp}.csv"`,
+        "Content-Disposition": `attachment; filename="people-${timestamp}.csv"`,
       },
     });
   }
 
   const payload = {
     exported_at: new Date().toISOString(),
-    clients,
+    people,
     notes,
     lists,
     list_items: listItems,
@@ -79,7 +79,7 @@ export async function GET(request: Request) {
   return new NextResponse(JSON.stringify(payload, null, 2), {
     headers: {
       "Content-Type": "application/json",
-      "Content-Disposition": `attachment; filename="client-command-center-export-${timestamp}.json"`,
+      "Content-Disposition": `attachment; filename="sonderthreads-export-${timestamp}.json"`,
     },
   });
 }

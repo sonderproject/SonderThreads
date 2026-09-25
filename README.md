@@ -1,6 +1,6 @@
-# Client Command Center
+# sonderthreads
 
-A minimal, command-first personal tracker for staying on top of clients, notes, lists, cohorts, and tasks. Terminal-inspired, dark, and fast — not a CRM.
+A minimal, command-first personal tracker for staying on top of people, notes, lists, groups, and tasks. Terminal-inspired, dark, and fast — not a CRM.
 
 ## Stack
 
@@ -11,10 +11,11 @@ A minimal, command-first personal tracker for staying on top of clients, notes, 
 
 ## How it works
 
-- **One command bar.** Type natural language ("Add Marcus Johnson to Cohort 7", "Remind me to call Marcus Friday") and the app figures out what you meant.
-- **No AI key required.** `lib/ai/command-parser.ts` and `lib/ai/client-summary.ts` are provider-agnostic. Out of the box they use a deterministic, regex-based fallback parser (`lib/ai/providers/fallback.ts`) so the app is fully functional with zero API keys. Set `AI_PROVIDER=openai` or `AI_PROVIDER=anthropic` plus the matching API key to upgrade to model-based parsing/summaries.
+- **One command bar.** Type natural language ("Add Marcus Johnson to Group 7", "Remind me to call Marcus Friday") and the app figures out what you meant.
+- **No AI key required.** `lib/ai/command-parser.ts` and `lib/ai/person-summary.ts` are provider-agnostic. Out of the box they use a deterministic, regex-based fallback parser (`lib/ai/providers/fallback.ts`) so the app is fully functional with zero API keys. Set `AI_PROVIDER=openai` or `AI_PROVIDER=anthropic` plus the matching API key to upgrade to model-based parsing/summaries.
 - **Single-user, no login.** There's exactly one owner (a fixed id in `lib/db/constants.ts`) and no authentication layer at all — the app talks directly to Postgres with a plain connection string. Every table still has a `user_id` column, so real per-user accounts can be added later without a schema change.
-- **Self-provisioning.** The app creates its own tables on first connection (`lib/db/client.ts` → `ensureSchema()`) and seeds demo data on first empty load. Point it at a brand-new, completely empty Postgres database and there is nothing else to run anywhere — no migration step, no SQL editor, no CLI command.
+- **Groups, import, recurring tasks, stale flag.** Import a CSV (or a plain one-name-per-line file) from the People or Lists page to create a list of people — name/first+last, email, phone and birthday columns are recognized. Tasks can repeat daily/weekly/monthly (from the task forms, or "Remind me to call Marcus every Monday"); checking one off schedules the next. Anyone with no activity for 14+ days gets a **stale** badge.
+- **Self-provisioning.** The app creates its own tables on first connection (`lib/db/client.ts` → `ensureSchema()`) and seeds demo data on first empty load. Point it at a brand-new, completely empty Postgres database and there is nothing else to run anywhere — no migration step, no SQL editor, no CLI command. Databases from before the People/Group rename (`clients`, `client_id`, `is_cohort`) are renamed in place on the next start — no data is dropped.
 
 ## Setup
 
@@ -27,7 +28,7 @@ Easiest path — Vercel's own Storage tab:
 
 Any other Postgres works too (Neon, Railway, a local install) — just put its connection string in `POSTGRES_URL`.
 
-That's the entire setup. The first request the app handles creates all its tables automatically (`clients`, `notes`, `lists`, `list_items`, `tasks`, `client_summaries`, `activity`) and seeds demo data — `db/schema.sql` is kept only as a human-readable reference of what gets created; nothing needs to be run against the database by hand.
+That's the entire setup. The first request the app handles creates all its tables automatically (`people`, `notes`, `lists`, `list_items`, `tasks`, `person_summaries`, `activity`) and seeds demo data — `db/schema.sql` is kept only as a human-readable reference of what gets created; nothing needs to be run against the database by hand.
 
 ### 2. Configure environment variables
 
@@ -46,7 +47,7 @@ npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000). The dashboard creates its tables and seeds demo clients (Marcus Johnson, James Smith, Wes Carter), a "Cohort 7" list, and a few notes/tasks the first time you load it.
+Open [http://localhost:3000](http://localhost:3000). The dashboard creates its tables and seeds demo people (Marcus Johnson, James Smith, Wes Carter), a "Group 7" list, and a few notes/tasks the first time you load it.
 
 ### 4. Deploy to Vercel
 
@@ -55,10 +56,10 @@ Push to a Git repo and import it into Vercel. If you provisioned the database fr
 ## Project structure
 
 ```
-app/(app)/            Dashboard, clients, lists, tasks, notes pages (behind the shared nav shell)
+app/(app)/            Dashboard, people, lists, tasks, notes pages (behind the shared nav shell)
 components/            UI: nav shell, command bar, quick-action modals, cards, list/task/note components
 lib/actions/           Server Actions — all reads/writes to Postgres, activity logging, search
-lib/ai/                Provider-agnostic command parser + client summary generator, with a
+lib/ai/                Provider-agnostic command parser + person summary generator, with a
                         deterministic fallback and pluggable OpenAI/Anthropic providers
 lib/db/                Postgres connection pool + the single fixed owner id
 lib/types.ts            Hand-written types matching the SQL schema
@@ -67,7 +68,7 @@ db/schema.sql           SQL schema (tables + indexes) — run this once against 
 
 ## Notes on the command parser
 
-`lib/ai/command-parser.ts` classifies free text into one of: `create_client`, `add_client_note`, `add_note`, `create_task`, `create_list`, `add_to_list`, `update_client_status`, `search`, or `unknown`, then `lib/actions/command.ts` executes it (creating/linking clients, notes, tasks, or lists) and returns a short confirmation. A cohort list (`is_cohort: true`) auto-creates client records for unmatched names, since a cohort is a roster of clients; a plain list just links to an existing client when the name matches.
+`lib/ai/command-parser.ts` classifies free text into one of: `create_person`, `add_person_note`, `add_note`, `create_task`, `create_list`, `add_to_list`, `update_person_status`, `search`, or `unknown`, then `lib/actions/command.ts` executes it (creating/linking people, notes, tasks, or lists) and returns a short confirmation. A group list (`is_group: true`) auto-creates person records for unmatched names, since a group is a roster of people; a plain list just links to an existing person when the name matches.
 
 ## Troubleshooting
 

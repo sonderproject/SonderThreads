@@ -4,12 +4,12 @@ import { useState } from "react";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { QuickAddTaskForm } from "@/components/calendar/QuickAddTaskForm";
-import type { Client } from "@/lib/types";
+import type { Person } from "@/lib/types";
 
 export function NewCalendarEventButton({
-  clients,
+  people,
 }: {
-  clients: Pick<Client, "id" | "display_name">[];
+  people: Pick<Person, "id" | "display_name">[];
 }) {
   const [open, setOpen] = useState(false);
   const today = new Date();
@@ -22,7 +22,7 @@ export function NewCalendarEventButton({
           year={today.getFullYear()}
           month={today.getMonth() + 1}
           day={today.getDate()}
-          clients={clients}
+          people={people}
           onDone={() => setOpen(false)}
         />
       </Modal>

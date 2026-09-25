@@ -1,13 +1,13 @@
 "use server";
 
-import { searchClients } from "./clients";
+import { searchPeople } from "./people";
 import { searchNotes } from "./notes";
 import { searchLists } from "./lists";
 import { searchTasks } from "./tasks";
-import type { Client, List, Note, Task } from "@/lib/types";
+import type { Person, List, Note, Task } from "@/lib/types";
 
 export interface SearchResults {
-  clients: Client[];
+  people: Person[];
   notes: Note[];
   lists: List[];
   tasks: Task[];
@@ -16,15 +16,15 @@ export interface SearchResults {
 export async function searchAll(query: string): Promise<SearchResults> {
   const trimmed = query.trim();
   if (!trimmed) {
-    return { clients: [], notes: [], lists: [], tasks: [] };
+    return { people: [], notes: [], lists: [], tasks: [] };
   }
 
-  const [clients, notes, lists, tasks] = await Promise.all([
-    searchClients(trimmed),
+  const [people, notes, lists, tasks] = await Promise.all([
+    searchPeople(trimmed),
     searchNotes(trimmed),
     searchLists(trimmed),
     searchTasks(trimmed),
   ]);
 
-  return { clients, notes, lists, tasks };
+  return { people, notes, lists, tasks };
 }

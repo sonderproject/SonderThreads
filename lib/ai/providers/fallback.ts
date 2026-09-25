@@ -1,7 +1,7 @@
-import { extractDate } from "@/lib/ai/date";
+import { extractDate, extractRecurrence } from "@/lib/ai/date";
 import {
   CommandProvider,
-  KnownClient,
+  KnownPerson,
   ParsedCommand,
   ParserContext,
   emptyParsedCommand,
@@ -11,6 +11,12 @@ function escapeRegex(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
+function startOfToday(now: Date): string {
+  const d = new Date(now);
+  d.setHours(0, 0, 0, 0);
+  return d.toISOString();
+}
+
 function splitNames(text: string): string[] {
   return text
     .split(/,|&|\band\b/i)
@@ -18,23 +24,23 @@ function splitNames(text: string): string[] {
     .filter(Boolean);
 }
 
-function matchClientByName(name: string, clients: KnownClient[]): KnownClient | undefined {
+function matchPersonByName(name: string, people: KnownPerson[]): KnownPerson | undefined {
   const norm = name.trim().toLowerCase();
   if (!norm) return undefined;
   return (
-    clients.find((c) => c.displayName.toLowerCase() === norm) ||
-    clients.find((c) => c.firstName.toLowerCase() === norm) ||
-    clients.find((c) => c.displayName.toLowerCase().startsWith(norm)) ||
-    clients.find((c) => norm.includes(c.firstName.toLowerCase()) && c.firstName.length > 2)
+    people.find((c) => c.displayName.toLowerCase() === norm) ||
+    people.find((c) => c.firstName.toLowerCase() === norm) ||
+    people.find((c) => c.displayName.toLowerCase().startsWith(norm)) ||
+    people.find((c) => norm.includes(c.firstName.toLowerCase()) && c.firstName.length > 2)
   );
 }
 
-function findMentionedClient(text: string, clients: KnownClient[]): KnownClient | undefined {
+function findMentionedPerson(text: string, people: KnownPerson[]): KnownPerson | undefined {
   const lower = text.toLowerCase();
-  let best: KnownClient | undefined;
+  let best: KnownPerson | undefined;
   let bestLen = 0;
 
-  for (const c of clients) {
+  for (const c of people) {
     const dn = c.displayName.toLowerCase();
     if (dn.length > bestLen && new RegExp(`\\b${escapeRegex(dn)}\\b`).test(lower)) {
       best = c;
@@ -43,7 +49,7 @@ function findMentionedClient(text: string, clients: KnownClient[]): KnownClient 
   }
   if (best) return best;
 
-  for (const c of clients) {
+  for (const c of people) {
     const fn = c.firstName.toLowerCase();
     if (fn.length > 2 && fn.length > bestLen && new RegExp(`\\b${escapeRegex(fn)}\\b`).test(lower)) {
       best = c;
@@ -76,57 +82,55 @@ export const fallbackProvider: CommandProvider = {
     const result = emptyParsedCommand(text);
     if (!text) return result;
 
-    // --- create_list: "Create a list called Cohort 8" / "Make Cohort 8" ---
+    // --- create_list: "Create a list called Groceries" / "Make a group called Spring 2026" / "New group 8" ---
     const explicitListMatch = text.match(
-      /^(create|make|start|add)\s+(a\s+|an\s+|new\s+)*list\s*(called|named)?\s*[:\-]?\s*(.+)$/i,
+      /^(create|make|start|add|new)\s+(?:a\s+|an\s+|new\s+)*(list|group)\b\s*(called|named)?\s*[:\-]?\s*(.+)$/i,
     );
     if (explicitListMatch) {
-      const listName = explicitListMatch[4].trim();
+      const kind = explicitListMatch[2].toLowerCase();
+      let listName = explicitListMatch[4].trim();
+      // "New group 8" — a bare number isn't much of a name, so keep the noun.
+      if (!explicitListMatch[3] && /^\d+$/.test(listName)) {
+        listName = `${kind[0].toUpperCase()}${kind.slice(1)} ${listName}`;
+      }
       result.intent = "create_list";
       result.listName = listName;
-      result.isCohort = /cohort/i.test(listName);
+      result.isGroup = kind === "group";
       result.confidence = 0.9;
       return result;
     }
 
-    const cohortCreateMatch = text.match(/^(create|make|start|new)\s+(cohort\s+\S+)\b(.*)$/i);
-    if (cohortCreateMatch) {
-      result.intent = "create_list";
-      result.listName = cohortCreateMatch[2].trim();
-      result.isCohort = true;
-      result.confidence = 0.9;
-      return result;
-    }
-
-    // --- add_to_list: "Add Marcus, James and Wes to Cohort 7" ---
+    // --- add_to_list: "Add Marcus, James and Wes to Group 7" ---
     const addToListMatch = text.match(/^add\s+(.+?)\s+to\s+(.+)$/i);
     if (addToListMatch) {
       const names = splitNames(addToListMatch[1]);
-      const listName = addToListMatch[2].trim();
+      const listName = addToListMatch[2].trim().replace(/^the\s+/i, "");
       const existingList = matchList(listName, context.lists);
 
       result.intent = "add_to_list";
       result.names = names;
       result.listName = listName;
       result.listId = existingList?.id ?? null;
-      result.isCohort = /cohort/i.test(listName);
+      // An existing list keeps its own type; a new one is a group only if the
+      // input calls it one ("Add Marcus to the spring group").
+      result.isGroup = existingList ? existingList.isGroup : /\bgroup\b/i.test(listName);
       result.confidence = 0.85;
       return result;
     }
 
-    // --- create_client: "Add Marcus Johnson as a client" ---
-    const addAsClientMatch = text.match(/^add\s+(.+?)\s+as\s+(a\s+|an\s+)?client\b/i);
-    if (addAsClientMatch) {
-      result.intent = "create_client";
-      result.names = splitNames(addAsClientMatch[1]);
+    // --- create_person: "Add Marcus Johnson as a new student" (any role noun) ---
+    const addAsRoleMatch = text.match(/^add\s+(.+?)\s+as\s+(?:a|an)\s+(?:new\s+)?[a-z-]+\s*$/i);
+    if (addAsRoleMatch) {
+      result.intent = "create_person";
+      result.names = splitNames(addAsRoleMatch[1]);
       result.confidence = 0.85;
       return result;
     }
 
-    // --- create_client: plain "Add Marcus Johnson" with no other keyword ---
+    // --- create_person: plain "Add Marcus Johnson" with no other keyword ---
     const plainAddMatch = text.match(/^add\s+(.+)$/i);
     if (plainAddMatch) {
-      result.intent = "create_client";
+      result.intent = "create_person";
       result.names = splitNames(plainAddMatch[1]);
       result.confidence = 0.6;
       return result;
@@ -135,13 +139,15 @@ export const fallbackProvider: CommandProvider = {
     // --- create_task via explicit "create/add a task" ---
     const taskMatch = text.match(/^(create|add)\s+a\s+task\s*(to\s+)?(.+)$/i);
     if (taskMatch) {
-      const rawContent = taskMatch[3].trim();
+      const recurring = extractRecurrence(taskMatch[3].trim());
+      const rawContent = recurring.remaining;
       const { date, remaining } = extractDate(rawContent, context.now);
-      const mentioned = findMentionedClient(remaining, context.clients);
+      const mentioned = findMentionedPerson(remaining, context.people);
       result.intent = "create_task";
       result.content = remaining.trim() || rawContent;
-      result.dueDate = date;
-      result.clientId = mentioned?.id ?? null;
+      result.dueDate = date ?? (recurring.recurrence ? startOfToday(context.now) : null);
+      result.recurrence = recurring.recurrence;
+      result.personId = mentioned?.id ?? null;
       if (mentioned) result.names = [mentioned.displayName];
       result.confidence = 0.85;
       return result;
@@ -150,29 +156,31 @@ export const fallbackProvider: CommandProvider = {
     // --- create_task via "Remind me to ..." ---
     const reminderMatch = text.match(/^remind me\s+(to\s+)?(.+)$/i);
     if (reminderMatch) {
-      const rawContent = reminderMatch[2].trim();
+      const recurring = extractRecurrence(reminderMatch[2].trim());
+      const rawContent = recurring.remaining;
       const { date, remaining } = extractDate(rawContent, context.now);
-      const mentioned = findMentionedClient(remaining, context.clients);
+      const mentioned = findMentionedPerson(remaining, context.people);
       result.intent = "create_task";
       result.content = remaining.trim() || rawContent;
-      result.dueDate = date;
-      result.clientId = mentioned?.id ?? null;
+      result.dueDate = date ?? (recurring.recurrence ? startOfToday(context.now) : null);
+      result.recurrence = recurring.recurrence;
+      result.personId = mentioned?.id ?? null;
       if (mentioned) result.names = [mentioned.displayName];
       result.confidence = 0.9;
       return result;
     }
 
-    // --- update_client_status: "Set Marcus's current status to X" ---
+    // --- update_person_status: "Set Marcus's current status to X" ---
     const statusMatch = text.match(
       /^(update|set)\s+(.+?)('s)?\s+(current status|next action|next step|status)\s+(to|is)\s+(.+)$/i,
     );
     if (statusMatch) {
-      const clientName = statusMatch[2].trim();
+      const personName = statusMatch[2].trim();
       const field = /next/i.test(statusMatch[4]) ? "next_action" : "current_status";
-      const mentioned = matchClientByName(clientName, context.clients);
-      result.intent = "update_client_status";
-      result.names = [clientName];
-      result.clientId = mentioned?.id ?? null;
+      const mentioned = matchPersonByName(personName, context.people);
+      result.intent = "update_person_status";
+      result.names = [personName];
+      result.personId = mentioned?.id ?? null;
       result.statusField = field;
       result.content = statusMatch[6].trim();
       result.confidence = mentioned ? 0.9 : 0.5;
@@ -192,13 +200,13 @@ export const fallbackProvider: CommandProvider = {
       return result;
     }
 
-    // --- fall through: note (client-linked if a known client is mentioned) ---
+    // --- fall through: note (person-linked if a known person is mentioned) ---
     const contentForNote = noteContent ?? text;
-    const mentioned = findMentionedClient(contentForNote, context.clients);
+    const mentioned = findMentionedPerson(contentForNote, context.people);
 
     if (mentioned) {
-      result.intent = "add_client_note";
-      result.clientId = mentioned.id;
+      result.intent = "add_person_note";
+      result.personId = mentioned.id;
       result.names = [mentioned.displayName];
       result.content = contentForNote;
       result.category = detectCategory(contentForNote);

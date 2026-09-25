@@ -1,6 +1,6 @@
-export type ClientStatus = "active" | "inactive" | "alumni";
+export type PersonStatus = "active" | "inactive" | "alumni";
 
-export type Client = {
+export type Person = {
   id: string;
   user_id: string;
   first_name: string;
@@ -9,7 +9,7 @@ export type Client = {
   phone: string | null;
   email: string | null;
   birthday: string | null;
-  status: ClientStatus | null;
+  status: PersonStatus | null;
   current_status: string | null;
   next_action: string | null;
   summary: string | null;
@@ -23,7 +23,7 @@ export type Client = {
 export type Note = {
   id: string;
   user_id: string;
-  client_id: string | null;
+  person_id: string | null;
   content: string;
   category: string | null;
   ai_metadata: Record<string, unknown> | null;
@@ -37,7 +37,7 @@ export type List = {
   user_id: string;
   name: string;
   description: string | null;
-  is_cohort: boolean;
+  is_group: boolean;
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
@@ -47,7 +47,7 @@ export type ListItem = {
   id: string;
   user_id: string;
   list_id: string;
-  client_id: string | null;
+  person_id: string | null;
   label: string;
   checked: boolean;
   position: number;
@@ -55,32 +55,37 @@ export type ListItem = {
   updated_at: string;
 };
 
+export type TaskRecurrence = "daily" | "weekly" | "monthly";
+
 export type Task = {
   id: string;
   user_id: string;
   title: string;
   notes: string | null;
-  client_id: string | null;
+  person_id: string | null;
   list_id: string | null;
   due_at: string | null;
   completed: boolean;
   completed_at: string | null;
+  recurrence: TaskRecurrence | null;
+  /** The recurring task this one was spawned from, if any. */
+  recurs_from: string | null;
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
 };
 
-export type ClientSummaryRecord = {
+export type PersonSummaryRecord = {
   id: string;
   user_id: string;
-  client_id: string;
+  person_id: string;
   summary: string;
   generated_by: string;
   created_at: string;
 };
 
 export type ActivityType =
-  | "client_created"
+  | "person_created"
   | "note_added"
   | "added_to_list"
   | "removed_from_list"
@@ -93,7 +98,7 @@ export type ActivityType =
 export type Activity = {
   id: string;
   user_id: string;
-  client_id: string | null;
+  person_id: string | null;
   list_id: string | null;
   task_id: string | null;
   note_id: string | null;

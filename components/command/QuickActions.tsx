@@ -4,15 +4,16 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
-import { createClientRecordSafe } from "@/lib/actions/clients";
+import { createPersonRecordSafe } from "@/lib/actions/people";
 import { createNoteSafe } from "@/lib/actions/notes";
 import { createListSafe } from "@/lib/actions/lists";
 import { createTaskSafe } from "@/lib/actions/tasks";
-import type { Client } from "@/lib/types";
+import { RecurrenceSelect } from "@/components/tasks/RecurrenceSelect";
+import type { Person, TaskRecurrence } from "@/lib/types";
 
-type ActiveModal = "client" | "note" | "list" | "task" | null;
+type ActiveModal = "person" | "note" | "list" | "task" | null;
 
-export function QuickActions({ clients }: { clients: Pick<Client, "id" | "display_name">[] }) {
+export function QuickActions({ people }: { people: Pick<Person, "id" | "display_name">[] }) {
   const [active, setActive] = useState<ActiveModal>(null);
   const router = useRouter();
 
@@ -24,7 +25,7 @@ export function QuickActions({ clients }: { clients: Pick<Client, "id" | "displa
   return (
     <>
       <div className="mt-2 flex flex-wrap gap-2 font-mono text-xs text-text-muted">
-        {(["client", "note", "list", "task"] as const).map((type) => (
+        {(["person", "note", "list", "task"] as const).map((type) => (
           <button
             key={type}
             onClick={() => setActive(type)}
@@ -35,23 +36,23 @@ export function QuickActions({ clients }: { clients: Pick<Client, "id" | "displa
         ))}
       </div>
 
-      <Modal open={active === "client"} onClose={close} title="New client">
-        <ClientForm onDone={close} />
+      <Modal open={active === "person"} onClose={close} title="New person">
+        <PersonForm onDone={close} />
       </Modal>
       <Modal open={active === "note"} onClose={close} title="New note">
-        <NoteForm clients={clients} onDone={close} />
+        <NoteForm people={people} onDone={close} />
       </Modal>
       <Modal open={active === "list"} onClose={close} title="New list">
         <ListForm onDone={close} />
       </Modal>
       <Modal open={active === "task"} onClose={close} title="New task">
-        <TaskForm clients={clients} onDone={close} />
+        <TaskForm people={people} onDone={close} />
       </Modal>
     </>
   );
 }
 
-function ClientForm({ onDone }: { onDone: () => void }) {
+function PersonForm({ onDone }: { onDone: () => void }) {
   const [fullName, setFullName] = useState("");
   const [currentStatus, setCurrentStatus] = useState("");
   const [nextAction, setNextAction] = useState("");
@@ -63,7 +64,7 @@ function ClientForm({ onDone }: { onDone: () => void }) {
     if (!fullName.trim()) return;
     setSaving(true);
     setError(null);
-    const result = await createClientRecordSafe({
+    const result = await createPersonRecordSafe({
       fullName,
       currentStatus: currentStatus || null,
       nextAction: nextAction || null,
@@ -102,21 +103,21 @@ function ClientForm({ onDone }: { onDone: () => void }) {
         />
       </Field>
       <Button type="submit" disabled={saving || !fullName.trim()} className="w-full">
-        {saving ? "Saving..." : "Add client"}
+        {saving ? "Saving..." : "Add person"}
       </Button>
     </form>
   );
 }
 
 function NoteForm({
-  clients,
+  people,
   onDone,
 }: {
-  clients: Pick<Client, "id" | "display_name">[];
+  people: Pick<Person, "id" | "display_name">[];
   onDone: () => void;
 }) {
   const [content, setContent] = useState("");
-  const [clientId, setClientId] = useState("");
+  const [personId, setPersonId] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -125,7 +126,7 @@ function NoteForm({
     if (!content.trim()) return;
     setSaving(true);
     setError(null);
-    const result = await createNoteSafe({ content, clientId: clientId || null });
+    const result = await createNoteSafe({ content, personId: personId || null });
     setSaving(false);
     if (result.ok) onDone();
     else setError(result.error);
@@ -143,10 +144,10 @@ function NoteForm({
           placeholder="What's happening?"
         />
       </Field>
-      <Field label="Client (optional)">
-        <select value={clientId} onChange={(e) => setClientId(e.target.value)} className="input">
+      <Field label="Person (optional)">
+        <select value={personId} onChange={(e) => setPersonId(e.target.value)} className="input">
           <option value="">Standalone note</option>
-          {clients.map((c) => (
+          {people.map((c) => (
             <option key={c.id} value={c.id}>
               {c.display_name}
             </option>
@@ -162,7 +163,7 @@ function NoteForm({
 
 function ListForm({ onDone }: { onDone: () => void }) {
   const [name, setName] = useState("");
-  const [isCohort, setIsCohort] = useState(false);
+  const [isGroup, setIsGroup] = useState(false);
   const [description, setDescription] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -172,7 +173,7 @@ function ListForm({ onDone }: { onDone: () => void }) {
     if (!name.trim()) return;
     setSaving(true);
     setError(null);
-    const result = await createListSafe({ name, isCohort, description: description || null });
+    const result = await createListSafe({ name, isGroup, description: description || null });
     setSaving(false);
     if (result.ok) onDone();
     else setError(result.error);
@@ -187,7 +188,7 @@ function ListForm({ onDone }: { onDone: () => void }) {
           value={name}
           onChange={(e) => setName(e.target.value)}
           className="input"
-          placeholder="Cohort 8"
+          placeholder="Group 8"
         />
       </Field>
       <Field label="Description (optional)">
@@ -198,8 +199,8 @@ function ListForm({ onDone }: { onDone: () => void }) {
         />
       </Field>
       <label className="flex items-center gap-2 text-sm text-text-muted">
-        <input type="checkbox" checked={isCohort} onChange={(e) => setIsCohort(e.target.checked)} />
-        This is a cohort (roster of clients)
+        <input type="checkbox" checked={isGroup} onChange={(e) => setIsGroup(e.target.checked)} />
+        This is a group (roster of people)
       </label>
       <Button type="submit" disabled={saving || !name.trim()} className="w-full">
         {saving ? "Saving..." : "Create list"}
@@ -209,15 +210,16 @@ function ListForm({ onDone }: { onDone: () => void }) {
 }
 
 function TaskForm({
-  clients,
+  people,
   onDone,
 }: {
-  clients: Pick<Client, "id" | "display_name">[];
+  people: Pick<Person, "id" | "display_name">[];
   onDone: () => void;
 }) {
   const [title, setTitle] = useState("");
-  const [clientId, setClientId] = useState("");
+  const [personId, setPersonId] = useState("");
   const [dueAt, setDueAt] = useState("");
+  const [recurrence, setRecurrence] = useState<TaskRecurrence | "">("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -228,8 +230,9 @@ function TaskForm({
     setError(null);
     const result = await createTaskSafe({
       title,
-      clientId: clientId || null,
+      personId: personId || null,
       dueAt: dueAt ? new Date(dueAt).toISOString() : null,
+      recurrence: recurrence || null,
     });
     setSaving(false);
     if (result.ok) onDone();
@@ -248,10 +251,10 @@ function TaskForm({
           placeholder="Call Marcus about interview"
         />
       </Field>
-      <Field label="Client (optional)">
-        <select value={clientId} onChange={(e) => setClientId(e.target.value)} className="input">
+      <Field label="Person (optional)">
+        <select value={personId} onChange={(e) => setPersonId(e.target.value)} className="input">
           <option value="">None</option>
-          {clients.map((c) => (
+          {people.map((c) => (
             <option key={c.id} value={c.id}>
               {c.display_name}
             </option>
@@ -260,6 +263,9 @@ function TaskForm({
       </Field>
       <Field label="Due date (optional)">
         <input type="date" value={dueAt} onChange={(e) => setDueAt(e.target.value)} className="input" />
+      </Field>
+      <Field label="Repeat">
+        <RecurrenceSelect value={recurrence} onChange={setRecurrence} />
       </Field>
       <Button type="submit" disabled={saving || !title.trim()} className="w-full">
         {saving ? "Saving..." : "Create task"}

@@ -1,15 +1,17 @@
+import type { TaskRecurrence } from "@/lib/types";
+
 export type CommandIntent =
-  | "create_client"
-  | "add_client_note"
+  | "create_person"
+  | "add_person_note"
   | "add_note"
   | "create_task"
   | "create_list"
   | "add_to_list"
-  | "update_client_status"
+  | "update_person_status"
   | "search"
   | "unknown";
 
-export interface KnownClient {
+export interface KnownPerson {
   id: string;
   displayName: string;
   firstName: string;
@@ -19,11 +21,12 @@ export interface KnownClient {
 export interface KnownList {
   id: string;
   name: string;
+  isGroup: boolean;
 }
 
 export interface ParserContext {
   now: Date;
-  clients: KnownClient[];
+  people: KnownPerson[];
   lists: KnownList[];
 }
 
@@ -32,21 +35,23 @@ export interface ParsedCommand {
   raw: string;
   /** Names mentioned in the input, in the order they should be processed. */
   names: string[];
-  /** Resolved single client id, when the command clearly targets one known client. */
-  clientId: string | null;
+  /** Resolved single person id, when the command clearly targets one known person. */
+  personId: string | null;
   /** Free text content for a note or task title. */
   content: string | null;
-  /** Name of a list/cohort referenced or being created. */
+  /** Name of a list/group referenced or being created. */
   listName: string | null;
   /** Resolved id of an existing list, if matched. */
   listId: string | null;
-  /** True when the list being created/targeted should be treated as a cohort. */
-  isCohort: boolean;
+  /** True when the list being created/targeted should be treated as a group. */
+  isGroup: boolean;
   /** Loose category tag for notes, e.g. "certification", "employment". */
   category: string | null;
   /** ISO date string for tasks/reminders. */
   dueDate: string | null;
-  /** Which client field an update_client_status command targets. */
+  /** Repeat cadence for a task/reminder ("every Monday", "daily", ...). */
+  recurrence: TaskRecurrence | null;
+  /** Which person field an update_person_status command targets. */
   statusField: "current_status" | "next_action" | null;
   /** 0-1 confidence score from the provider. */
   confidence: number;
@@ -59,7 +64,7 @@ export interface CommandProvider {
 }
 
 export interface SummaryInput {
-  client: {
+  person: {
     displayName: string;
     currentStatus: string | null;
     nextAction: string | null;
@@ -85,13 +90,14 @@ export function emptyParsedCommand(raw: string): ParsedCommand {
     intent: "unknown",
     raw,
     names: [],
-    clientId: null,
+    personId: null,
     content: null,
     listName: null,
     listId: null,
-    isCohort: false,
+    isGroup: false,
     category: null,
     dueDate: null,
+    recurrence: null,
     statusField: null,
     confidence: 0,
   };

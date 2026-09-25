@@ -3,7 +3,7 @@
 import { query } from "@/lib/db/client";
 import { OWNER_ID } from "@/lib/db/constants";
 import { parseCommand } from "@/lib/ai/command-parser";
-import { findClientByName, findOrCreateClientByName, updateClient } from "./clients";
+import { findPersonByName, findOrCreatePersonByName, updatePerson } from "./people";
 import { createNote } from "./notes";
 import { createTask } from "./tasks";
 import { createList, findOrCreateListByName, addNamesToList } from "./lists";
@@ -26,59 +26,59 @@ export async function executeCommand(input: string): Promise<CommandResult> {
     return { kind: "error", message: "Type something first." };
   }
 
-  const [clients, lists] = await Promise.all([
+  const [people, lists] = await Promise.all([
     query<{ id: string; display_name: string; first_name: string; last_name: string | null }>(
-      `select id, display_name, first_name, last_name from clients where user_id = $1 and deleted_at is null`,
+      `select id, display_name, first_name, last_name from people where user_id = $1 and deleted_at is null`,
       [OWNER_ID],
     ),
-    query<{ id: string; name: string }>(
-      `select id, name from lists where user_id = $1 and deleted_at is null`,
+    query<{ id: string; name: string; is_group: boolean }>(
+      `select id, name, is_group from lists where user_id = $1 and deleted_at is null`,
       [OWNER_ID],
     ),
   ]);
 
   const parsed = await parseCommand(trimmed, {
     now: new Date(),
-    clients: clients.map((c) => ({
+    people: people.map((c) => ({
       id: c.id,
       displayName: c.display_name,
       firstName: c.first_name,
       lastName: c.last_name,
     })),
-    lists: lists.map((l) => ({ id: l.id, name: l.name })),
+    lists: lists.map((l) => ({ id: l.id, name: l.name, isGroup: l.is_group })),
   });
 
   try {
     switch (parsed.intent) {
-      case "create_client": {
+      case "create_person": {
         const names = parsed.names.length > 0 ? parsed.names : [trimmed];
         const created: string[] = [];
         for (const name of names) {
-          const { client, created: wasCreated } = await findOrCreateClientByName(name);
-          if (wasCreated) created.push(client.display_name);
+          const { person, created: wasCreated } = await findOrCreatePersonByName(name);
+          if (wasCreated) created.push(person.display_name);
         }
         if (created.length === 0) {
-          return { kind: "confirmation", message: "Already have that client on file." };
+          return { kind: "confirmation", message: "Already have that person on file." };
         }
         return { kind: "confirmation", message: `✓ Added ${created.join(", ")}` };
       }
 
-      case "add_client_note": {
-        let clientId = parsed.clientId;
-        if (!clientId && parsed.names[0]) {
-          const { client } = await findOrCreateClientByName(parsed.names[0]);
-          clientId = client.id;
+      case "add_person_note": {
+        let personId = parsed.personId;
+        if (!personId && parsed.names[0]) {
+          const { person } = await findOrCreatePersonByName(parsed.names[0]);
+          personId = person.id;
         }
-        if (!clientId) {
+        if (!personId) {
           await createNote({ content: parsed.content ?? trimmed, category: parsed.category });
           return { kind: "confirmation", message: "✓ Note saved", href: "/notes" };
         }
-        await createNote({ content: parsed.content ?? trimmed, clientId, category: parsed.category });
-        const client = await findClientByName(parsed.names[0] ?? "");
+        await createNote({ content: parsed.content ?? trimmed, personId, category: parsed.category });
+        const person = await findPersonByName(parsed.names[0] ?? "");
         return {
           kind: "confirmation",
-          message: `✓ Added note to ${client?.display_name ?? "client"}`,
-          href: `/clients/${clientId}`,
+          message: `✓ Added note to ${person?.display_name ?? "person"}`,
+          href: `/people/${personId}`,
         };
       }
 
@@ -88,30 +88,32 @@ export async function executeCommand(input: string): Promise<CommandResult> {
       }
 
       case "create_task": {
-        let clientId = parsed.clientId;
-        if (!clientId && parsed.names[0]) {
-          const match = await findClientByName(parsed.names[0]);
-          clientId = match?.id ?? null;
+        let personId = parsed.personId;
+        if (!personId && parsed.names[0]) {
+          const match = await findPersonByName(parsed.names[0]);
+          personId = match?.id ?? null;
         }
         const task = await createTask({
           title: parsed.content ?? trimmed,
-          clientId,
+          personId,
           dueAt: parsed.dueDate,
+          recurrence: parsed.recurrence,
         });
-        const client = clientId ? await findClientByName(parsed.names[0] ?? "") : null;
+        const person = personId ? await findPersonByName(parsed.names[0] ?? "") : null;
         const parts = [parsed.dueDate ? "Reminder" : "Task", "created"];
-        if (client) parts.push(`for ${client.display_name}`);
+        if (person) parts.push(`for ${person.display_name}`);
         if (parsed.dueDate) parts.push(`(${formatDateShort(parsed.dueDate)})`);
+        if (parsed.recurrence) parts.push(`↻ ${parsed.recurrence}`);
         return { kind: "confirmation", message: `✓ ${parts.join(" ")}`, href: `/tasks#${task.id}` };
       }
 
       case "create_list": {
         const name = parsed.listName ?? trimmed;
         try {
-          const list = await createList({ name, isCohort: parsed.isCohort });
+          const list = await createList({ name, isGroup: parsed.isGroup });
           return {
             kind: "confirmation",
-            message: `✓ ${parsed.isCohort ? "Cohort" : "List"} "${list.name}" created`,
+            message: `✓ ${parsed.isGroup ? "Group" : "List"} "${list.name}" created`,
             href: `/lists/${list.id}`,
           };
         } catch {
@@ -123,8 +125,8 @@ export async function executeCommand(input: string): Promise<CommandResult> {
         if (!parsed.listName || parsed.names.length === 0) {
           return { kind: "error", message: "Couldn't tell who to add or which list." };
         }
-        const { list } = await findOrCreateListByName(parsed.listName, parsed.isCohort);
-        await addNamesToList(list.id, list.is_cohort, parsed.names);
+        const { list } = await findOrCreateListByName(parsed.listName, parsed.isGroup);
+        await addNamesToList(list.id, list.is_group, parsed.names);
         return {
           kind: "confirmation",
           message: `✓ Added ${parsed.names.join(", ")} to ${list.name}`,
@@ -132,19 +134,19 @@ export async function executeCommand(input: string): Promise<CommandResult> {
         };
       }
 
-      case "update_client_status": {
-        if (!parsed.clientId && parsed.names[0]) {
-          const match = await findClientByName(parsed.names[0]);
-          parsed.clientId = match?.id ?? null;
+      case "update_person_status": {
+        if (!parsed.personId && parsed.names[0]) {
+          const match = await findPersonByName(parsed.names[0]);
+          parsed.personId = match?.id ?? null;
         }
-        if (!parsed.clientId || !parsed.statusField || !parsed.content) {
-          return { kind: "error", message: "Couldn't find that client to update." };
+        if (!parsed.personId || !parsed.statusField || !parsed.content) {
+          return { kind: "error", message: "Couldn't find that person to update." };
         }
-        await updateClient(parsed.clientId, { [parsed.statusField]: parsed.content });
+        await updatePerson(parsed.personId, { [parsed.statusField]: parsed.content });
         return {
           kind: "confirmation",
           message: `✓ Updated ${parsed.statusField === "next_action" ? "next action" : "current status"}`,
-          href: `/clients/${parsed.clientId}`,
+          href: `/people/${parsed.personId}`,
         };
       }
 

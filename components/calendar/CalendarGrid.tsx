@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Modal } from "@/components/ui/Modal";
 import { QuickAddTaskForm } from "@/components/calendar/QuickAddTaskForm";
 import type { CalendarDay } from "@/lib/calendar-utils";
-import type { Task, Client } from "@/lib/types";
+import type { Task, Person } from "@/lib/types";
 
 export type { CalendarDay };
 
@@ -17,14 +17,14 @@ export function CalendarGrid({
   weeks,
   tasksByDay,
   birthdaysByDay,
-  clients,
+  people,
 }: {
   year: number;
   month: number;
   weeks: CalendarDay[][];
   tasksByDay: Record<number, Task[]>;
-  birthdaysByDay: Record<number, { clientId: string; displayName: string }[]>;
-  clients: Pick<Client, "id" | "display_name">[];
+  birthdaysByDay: Record<number, { personId: string; displayName: string }[]>;
+  people: Pick<Person, "id" | "display_name">[];
 }) {
   const [quickAddDay, setQuickAddDay] = useState<number | null>(null);
 
@@ -72,8 +72,8 @@ export function CalendarGrid({
               <div className="mt-1 space-y-0.5">
                 {dayBirthdays.map((b) => (
                   <Link
-                    key={b.clientId}
-                    href={`/clients/${b.clientId}`}
+                    key={b.personId}
+                    href={`/people/${b.personId}`}
                     className="block truncate text-[11px] text-accent hover:underline"
                     title={`${b.displayName}'s birthday`}
                   >
@@ -108,7 +108,7 @@ export function CalendarGrid({
             year={year}
             month={month}
             day={quickAddDay}
-            clients={clients}
+            people={people}
             onDone={() => setQuickAddDay(null)}
           />
         )}

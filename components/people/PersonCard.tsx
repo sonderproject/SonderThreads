@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { Card } from "@/components/ui/Card";
-import type { Client } from "@/lib/types";
+import { Badge } from "@/components/ui/Badge";
+import { isStale } from "@/lib/stale";
+import type { Person } from "@/lib/types";
 
 function relativeTime(iso: string): string {
   const diffMs = Date.now() - new Date(iso).getTime();
@@ -16,21 +18,24 @@ function relativeTime(iso: string): string {
   return weeks === 1 ? "1w ago" : `${weeks}w ago`;
 }
 
-export function ClientCard({ client }: { client: Client }) {
+export function PersonCard({ person }: { person: Person }) {
   return (
-    <Link href={`/clients/${client.id}`}>
+    <Link href={`/people/${person.id}`}>
       <Card className="p-4 transition-colors hover:border-accent/50">
         <div className="flex items-start justify-between gap-2">
-          <p className="font-medium text-text">{client.display_name}</p>
+          <div className="flex min-w-0 items-center gap-2">
+            <p className="font-medium text-text">{person.display_name}</p>
+            {isStale(person) && <Badge>stale</Badge>}
+          </div>
           <span className="shrink-0 font-mono text-[11px] text-text-faint">
-            {relativeTime(client.last_activity_at)}
+            {relativeTime(person.last_activity_at)}
           </span>
         </div>
-        {client.current_status && (
-          <p className="mt-1 text-sm text-text-muted">{client.current_status}</p>
+        {person.current_status && (
+          <p className="mt-1 text-sm text-text-muted">{person.current_status}</p>
         )}
-        {client.next_action && (
-          <p className="mt-1 text-xs text-accent">→ {client.next_action}</p>
+        {person.next_action && (
+          <p className="mt-1 text-xs text-accent">→ {person.next_action}</p>
         )}
       </Card>
     </Link>

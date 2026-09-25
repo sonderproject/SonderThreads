@@ -16,7 +16,7 @@ const mono = VT323({
 });
 
 export const metadata: Metadata = {
-  title: "Client Command Center",
+  title: "sonderthreads",
   description: "Capture information quickly. Organize it automatically. See what matters.",
 };
 

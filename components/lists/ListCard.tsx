@@ -9,7 +9,7 @@ export function ListCard({ list, itemCount }: { list: List; itemCount: number })
       <Card className="p-4 transition-colors hover:border-accent/50">
         <div className="flex items-start justify-between gap-2">
           <p className="font-medium text-text">{list.name}</p>
-          {list.is_cohort && <Badge>cohort</Badge>}
+          {list.is_group && <Badge>group</Badge>}
         </div>
         {list.description && <p className="mt-1 text-sm text-text-muted">{list.description}</p>}
         <p className="mt-2 font-mono text-xs text-text-faint">

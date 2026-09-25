@@ -6,7 +6,7 @@ function truncate(text: string, max = 90): string {
 }
 
 /**
- * Deterministic, dependency-free summary generator. Keeps the "smart client
+ * Deterministic, dependency-free summary generator. Keeps the "smart person
  * summary" feature working with zero AI API keys configured: it builds a
  * short factual paragraph from the most recent notes and open tasks rather
  * than calling out to a model.
@@ -15,7 +15,7 @@ export const fallbackSummaryProvider: SummaryProvider = {
   name: "fallback",
 
   async summarize(input: SummaryInput): Promise<SummaryResult> {
-    const { client, recentNotes, openTasks } = input;
+    const { person, recentNotes, openTasks } = input;
     const latestNote = recentNotes[0];
     const nextTask = openTasks[0];
 
@@ -37,16 +37,16 @@ export const fallbackSummaryProvider: SummaryProvider = {
       sentences.push(
         `Next up: ${truncate(nextTask.title, 70)}${nextTask.dueAt ? ` (due ${new Date(nextTask.dueAt).toLocaleDateString()})` : ""}.`,
       );
-    } else if (client.nextAction) {
-      sentences.push(`Next: ${truncate(client.nextAction, 70)}.`);
+    } else if (person.nextAction) {
+      sentences.push(`Next: ${truncate(person.nextAction, 70)}.`);
     }
 
     if (sentences.length === 0) {
-      sentences.push(`No notes or tasks logged for ${client.displayName} yet.`);
+      sentences.push(`No notes or tasks logged for ${person.displayName} yet.`);
     }
 
-    const currentStatus = latestNote ? truncate(latestNote.content, 60) : client.currentStatus;
-    const nextAction = nextTask ? truncate(nextTask.title, 60) : client.nextAction;
+    const currentStatus = latestNote ? truncate(latestNote.content, 60) : person.currentStatus;
+    const nextAction = nextTask ? truncate(nextTask.title, 60) : person.nextAction;
 
     return {
       summary: sentences.slice(0, 5).join(" "),

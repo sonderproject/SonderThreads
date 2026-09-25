@@ -82,3 +82,31 @@ export function extractDate(
 
   return { date: null, remaining: text };
 }
+
+/**
+ * Pulls a repeat cadence out of free text ("every day", "weekly", "every
+ * Monday", "monthly"). "every <weekday>" is rewritten to just the weekday so
+ * extractDate() still picks up the first occurrence.
+ */
+export function extractRecurrence(text: string): {
+  recurrence: "daily" | "weekly" | "monthly" | null;
+  remaining: string;
+} {
+  const tidy = (s: string) => s.replace(/\s{2,}/g, " ").trim();
+
+  const everyWeekday = text.match(new RegExp(`\\bevery\\s+(${WEEKDAYS.join("|")})\\b`, "i"));
+  if (everyWeekday) {
+    return { recurrence: "weekly", remaining: tidy(text.replace(everyWeekday[0], everyWeekday[1])) };
+  }
+
+  const patterns: [RegExp, "daily" | "weekly" | "monthly"][] = [
+    [/\b(every\s+day|daily)\b/i, "daily"],
+    [/\b(every\s+week|weekly)\b/i, "weekly"],
+    [/\b(every\s+month|monthly)\b/i, "monthly"],
+  ];
+  for (const [pattern, recurrence] of patterns) {
+    if (pattern.test(text)) return { recurrence, remaining: tidy(text.replace(pattern, "")) };
+  }
+
+  return { recurrence: null, remaining: text };
+}

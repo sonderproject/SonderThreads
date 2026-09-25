@@ -3,6 +3,7 @@
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { ListCard } from "@/components/lists/ListCard";
+import { ImportPeopleButton } from "@/components/lists/ImportPeopleButton";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
@@ -36,6 +37,7 @@ export function ListsBrowser({
           placeholder="Search lists..."
           className="input font-mono"
         />
+        <ImportPeopleButton />
         <Button onClick={() => setModalOpen(true)} className="shrink-0">
           + New
         </Button>
@@ -60,7 +62,7 @@ export function ListsBrowser({
 
 function NewListForm({ onDone }: { onDone: () => void }) {
   const [name, setName] = useState("");
-  const [isCohort, setIsCohort] = useState(false);
+  const [isGroup, setIsGroup] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -72,7 +74,7 @@ function NewListForm({ onDone }: { onDone: () => void }) {
     setSaving(true);
     setError(null);
     startTransition(async () => {
-      const result = await createListSafe({ name, isCohort });
+      const result = await createListSafe({ name, isGroup });
       setSaving(false);
       if (result.ok) {
         onDone();
@@ -91,11 +93,11 @@ function NewListForm({ onDone }: { onDone: () => void }) {
         value={name}
         onChange={(e) => setName(e.target.value)}
         className="input"
-        placeholder="Cohort 8"
+        placeholder="Group 8"
       />
       <label className="flex items-center gap-2 text-sm text-text-muted">
-        <input type="checkbox" checked={isCohort} onChange={(e) => setIsCohort(e.target.checked)} />
-        This is a cohort (roster of clients)
+        <input type="checkbox" checked={isGroup} onChange={(e) => setIsGroup(e.target.checked)} />
+        This is a group (roster of people)
       </label>
       <Button type="submit" disabled={saving || pending || !name.trim()} className="w-full">
         {saving || pending ? "Creating..." : "Create list"}

@@ -4,9 +4,9 @@ import { query } from "@/lib/db/client";
 import { OWNER_ID } from "@/lib/db/constants";
 import type { Task } from "@/lib/types";
 
-export type CalendarBirthday = { clientId: string; displayName: string; day: number };
+export type CalendarBirthday = { personId: string; displayName: string; day: number };
 
-/** Everything to render a single month of the calendar: tasks due that month, plus recurring client birthdays that fall in it. */
+/** Everything to render a single month of the calendar: tasks due that month, plus recurring person birthdays that fall in it. */
 export async function getCalendarMonth(
   year: number,
   month: number,
@@ -24,7 +24,7 @@ export async function getCalendarMonth(
 
   const birthdayRows = await query<{ id: string; display_name: string; day: number }>(
     `select id, display_name, extract(day from birthday)::int as day
-     from clients
+     from people
      where user_id = $1
        and deleted_at is null
        and birthday is not null
@@ -35,6 +35,6 @@ export async function getCalendarMonth(
 
   return {
     tasks,
-    birthdays: birthdayRows.map((r) => ({ clientId: r.id, displayName: r.display_name, day: r.day })),
+    birthdays: birthdayRows.map((r) => ({ personId: r.id, displayName: r.display_name, day: r.day })),
   };
 }

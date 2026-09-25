@@ -2,7 +2,7 @@ import { SummaryInput, SummaryProvider, SummaryResult } from "./providers/types"
 import { fallbackSummaryProvider } from "./providers/fallback-summary";
 
 /**
- * Provider-agnostic client summary generator. Same fallback contract as
+ * Provider-agnostic person summary generator. Same fallback contract as
  * command-parser.ts: an unset/failed AI provider degrades to a deterministic
  * summary built from recent notes and open tasks, so summaries always work.
  */
@@ -22,7 +22,7 @@ async function resolveProvider(): Promise<SummaryProvider> {
   return fallbackSummaryProvider;
 }
 
-export async function generateClientSummary(input: SummaryInput): Promise<SummaryResult> {
+export async function generatePersonSummary(input: SummaryInput): Promise<SummaryResult> {
   const provider = await resolveProvider();
 
   if (provider.name === "fallback") {
@@ -32,7 +32,7 @@ export async function generateClientSummary(input: SummaryInput): Promise<Summar
   try {
     return await provider.summarize(input);
   } catch (err) {
-    console.error(`[client-summary] ${provider.name} provider failed, using fallback summary`, err);
+    console.error(`[person-summary] ${provider.name} provider failed, using fallback summary`, err);
     return fallbackSummaryProvider.summarize(input);
   }
 }

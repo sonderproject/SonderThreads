@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { query, queryOne } from "@/lib/db/client";
 import { OWNER_ID } from "@/lib/db/constants";
 import { logActivity } from "./activity";
+import { touchPersonActivity } from "./people";
+import { nextDueDate } from "@/lib/recurrence";
 import {
   createTaskSchema,
   updateTaskSchema,
@@ -11,7 +13,7 @@ import {
   toActionResult,
   type ActionResult,
 } from "@/lib/validation";
-import type { Task } from "@/lib/types";
+import type { Task, TaskRecurrence } from "@/lib/types";
 
 export async function listTasks(): Promise<Task[]> {
   return query<Task>(
@@ -20,34 +22,36 @@ export async function listTasks(): Promise<Task[]> {
   );
 }
 
-export async function listTasksForClient(clientId: string): Promise<Task[]> {
+export async function listTasksForPerson(personId: string): Promise<Task[]> {
   return query<Task>(
     `select * from tasks
-     where user_id = $1 and client_id = $2 and deleted_at is null
+     where user_id = $1 and person_id = $2 and deleted_at is null
      order by completed asc, due_at asc nulls last`,
-    [OWNER_ID, clientId],
+    [OWNER_ID, personId],
   );
 }
 
 export async function createTask(params: {
   title: string;
-  clientId?: string | null;
+  personId?: string | null;
   listId?: string | null;
   dueAt?: string | null;
   notes?: string | null;
+  recurrence?: TaskRecurrence | null;
 }): Promise<Task> {
   params = validate(createTaskSchema, params);
   const task = await queryOne<Task>(
-    `insert into tasks (user_id, title, client_id, list_id, due_at, notes)
-     values ($1, $2, $3, $4, $5, $6)
+    `insert into tasks (user_id, title, person_id, list_id, due_at, notes, recurrence)
+     values ($1, $2, $3, $4, $5, $6, $7)
      returning *`,
     [
       OWNER_ID,
       params.title.trim(),
-      params.clientId ?? null,
+      params.personId ?? null,
       params.listId ?? null,
       params.dueAt ?? null,
       params.notes ?? null,
+      params.recurrence ?? null,
     ],
   );
 
@@ -56,14 +60,16 @@ export async function createTask(params: {
   await logActivity({
     type: "task_created",
     description: `Task: ${task.title}`,
-    clientId: params.clientId ?? null,
+    personId: params.personId ?? null,
     taskId: task.id,
   });
+
+  if (params.personId) await touchPersonActivity(params.personId);
 
   revalidatePath("/tasks");
   revalidatePath("/");
   revalidatePath("/calendar");
-  if (params.clientId) revalidatePath(`/clients/${params.clientId}`);
+  if (params.personId) revalidatePath(`/people/${params.personId}`);
 
   return task;
 }
@@ -87,15 +93,46 @@ export async function setTaskCompleted(id: string, completed: boolean): Promise<
     await logActivity({
       type: "task_completed",
       description: `Task completed: ${task.title}`,
-      clientId: task.client_id,
+      personId: task.person_id,
       taskId: task.id,
     });
+    if (task.person_id) await touchPersonActivity(task.person_id);
+    if (task.recurrence) await spawnNextOccurrence(task);
   }
 
   revalidatePath("/tasks");
   revalidatePath("/");
   revalidatePath("/calendar");
-  if (task.client_id) revalidatePath(`/clients/${task.client_id}`);
+  if (task.person_id) revalidatePath(`/people/${task.person_id}`);
+}
+
+/**
+ * Creates the next occurrence of a recurring task. Keyed on recurs_from so
+ * un-checking and re-checking the same task doesn't stack up duplicates.
+ */
+async function spawnNextOccurrence(task: Task): Promise<void> {
+  if (!task.recurrence) return;
+
+  const existing = await queryOne<{ id: string }>(
+    `select id from tasks where user_id = $1 and recurs_from = $2 and deleted_at is null limit 1`,
+    [OWNER_ID, task.id],
+  );
+  if (existing) return;
+
+  await query(
+    `insert into tasks (user_id, title, notes, person_id, list_id, due_at, recurrence, recurs_from)
+     values ($1, $2, $3, $4, $5, $6, $7, $8)`,
+    [
+      OWNER_ID,
+      task.title,
+      task.notes,
+      task.person_id,
+      task.list_id,
+      nextDueDate(task.due_at, task.recurrence).toISOString(),
+      task.recurrence,
+      task.id,
+    ],
+  );
 }
 
 /** Soft-deletes a task — the row stays in the database (recoverable) but disappears from every view. */
@@ -111,7 +148,7 @@ export async function deleteTask(id: string): Promise<void> {
 
 export async function updateTask(
   id: string,
-  patch: Partial<Pick<Task, "title" | "due_at" | "notes" | "client_id" | "list_id">>,
+  patch: Partial<Pick<Task, "title" | "due_at" | "notes" | "person_id" | "list_id" | "recurrence">>,
 ): Promise<Task> {
   patch = validate(updateTaskSchema, patch);
   const fields = Object.keys(patch) as (keyof typeof patch)[];
@@ -139,7 +176,7 @@ export async function updateTask(
   revalidatePath("/tasks");
   revalidatePath("/");
   revalidatePath("/calendar");
-  if (task.client_id) revalidatePath(`/clients/${task.client_id}`);
+  if (task.person_id) revalidatePath(`/people/${task.person_id}`);
 
   return task;
 }

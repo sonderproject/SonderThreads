@@ -10,11 +10,11 @@ import type { Note } from "@/lib/types";
 
 export function NoteCard({
   note,
-  clientName,
+  personName,
   editable = false,
 }: {
   note: Note;
-  clientName?: string | null;
+  personName?: string | null;
   editable?: boolean;
 }) {
   const [editing, setEditing] = useState(false);
@@ -95,9 +95,9 @@ export function NoteCard({
       )}
       <div className="mt-1.5 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          {clientName && note.client_id && (
-            <Link href={`/clients/${note.client_id}`} className="text-xs text-accent hover:underline">
-              {clientName}
+          {personName && note.person_id && (
+            <Link href={`/people/${note.person_id}`} className="text-xs text-accent hover:underline">
+              {personName}
             </Link>
           )}
           {note.category && <Badge>{note.category}</Badge>}

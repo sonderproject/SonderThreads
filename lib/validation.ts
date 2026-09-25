@@ -1,15 +1,16 @@
 import { z, ZodError, type ZodType } from "zod";
 
 const uuid = z.string().uuid();
+const recurrence = z.enum(["daily", "weekly", "monthly"]).nullable().optional();
 const optionalText = (max: number) => z.string().trim().max(max).nullable().optional();
 
-export const createClientSchema = z.object({
+export const createPersonSchema = z.object({
   fullName: z.string().trim().min(1, "Name is required").max(200, "Name is too long"),
   currentStatus: optionalText(500),
   nextAction: optionalText(500),
 });
 
-export const updateClientSchema = z
+export const updatePersonSchema = z
   .object({
     current_status: optionalText(500),
     next_action: optionalText(500),
@@ -23,29 +24,46 @@ export const updateClientSchema = z
 
 export const createNoteSchema = z.object({
   content: z.string().trim().min(1, "Note can't be empty").max(5000, "Note is too long"),
-  clientId: uuid.nullable().optional(),
+  personId: uuid.nullable().optional(),
   category: optionalText(100),
   aiMetadata: z.record(z.string(), z.unknown()).nullable().optional(),
 });
 
 export const createTaskSchema = z.object({
   title: z.string().trim().min(1, "Task title is required").max(500, "Title is too long"),
-  clientId: uuid.nullable().optional(),
+  personId: uuid.nullable().optional(),
   listId: uuid.nullable().optional(),
   dueAt: z.string().nullable().optional(),
   notes: optionalText(2000),
+  recurrence,
 });
 
 export const createListSchema = z.object({
   name: z.string().trim().min(1, "List name is required").max(200, "Name is too long"),
   description: optionalText(1000),
-  isCohort: z.boolean().optional(),
+  isGroup: z.boolean().optional(),
+});
+
+export const importPeopleSchema = z.object({
+  listName: z.string().trim().min(1, "List name is required").max(200, "Name is too long"),
+  isGroup: z.boolean(),
+  rows: z
+    .array(
+      z.object({
+        name: z.string().trim().min(1).max(200),
+        email: z.string().trim().email().max(320).nullable(),
+        phone: z.string().trim().max(50).nullable(),
+        birthday: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable(),
+      }),
+    )
+    .min(1, "No names found in that file")
+    .max(2000, "That file has more than 2,000 people — split it up and import in batches"),
 });
 
 export const addListItemSchema = z.object({
   listId: uuid,
   label: z.string().trim().min(1, "Item can't be empty").max(500, "Item is too long"),
-  clientId: uuid.nullable().optional(),
+  personId: uuid.nullable().optional(),
 });
 
 export const updateListItemSchema = z.object({
@@ -61,8 +79,9 @@ export const updateTaskSchema = z
     title: z.string().trim().min(1, "Task title is required").max(500, "Title is too long"),
     due_at: z.string().nullable().optional(),
     notes: optionalText(2000),
-    client_id: uuid.nullable().optional(),
+    person_id: uuid.nullable().optional(),
     list_id: uuid.nullable().optional(),
+    recurrence,
   })
   .partial();
 

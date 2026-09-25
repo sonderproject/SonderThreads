@@ -42,4 +42,4 @@ export async function parseCommand(
   }
 }
 
-export type { CommandIntent, ParsedCommand, ParserContext, KnownClient, KnownList } from "./providers/types";
+export type { CommandIntent, ParsedCommand, ParserContext, KnownPerson, KnownList } from "./providers/types";

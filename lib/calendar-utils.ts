@@ -40,10 +40,10 @@ export function groupTasksByDay(tasks: Task[]): Record<number, Task[]> {
 
 export function groupBirthdaysByDay(
   birthdays: CalendarBirthday[],
-): Record<number, { clientId: string; displayName: string }[]> {
-  const byDay: Record<number, { clientId: string; displayName: string }[]> = {};
+): Record<number, { personId: string; displayName: string }[]> {
+  const byDay: Record<number, { personId: string; displayName: string }[]> = {};
   for (const b of birthdays) {
-    (byDay[b.day] ??= []).push({ clientId: b.clientId, displayName: b.displayName });
+    (byDay[b.day] ??= []).push({ personId: b.personId, displayName: b.displayName });
   }
   return byDay;
 }

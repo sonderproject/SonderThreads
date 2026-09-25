@@ -2,26 +2,27 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { ClientCard } from "@/components/clients/ClientCard";
+import { PersonCard } from "@/components/people/PersonCard";
+import { ImportPeopleButton } from "@/components/lists/ImportPeopleButton";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
-import { createClientRecordSafe } from "@/lib/actions/clients";
-import type { Client } from "@/lib/types";
+import { createPersonRecordSafe } from "@/lib/actions/people";
+import type { Person } from "@/lib/types";
 
-export function ClientsBrowser({ clients }: { clients: Client[] }) {
+export function PeopleBrowser({ people }: { people: Person[] }) {
   const [query, setQuery] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return clients;
-    return clients.filter((c) =>
+    if (!q) return people;
+    return people.filter((c) =>
       [c.display_name, c.current_status, c.next_action, c.summary]
         .filter(Boolean)
         .some((field) => field!.toLowerCase().includes(q)),
     );
-  }, [clients, query]);
+  }, [people, query]);
 
   return (
     <div className="space-y-4">
@@ -29,9 +30,10 @@ export function ClientsBrowser({ clients }: { clients: Client[] }) {
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search clients..."
+          placeholder="Search people..."
           className="input font-mono"
         />
+        <ImportPeopleButton />
         <Button onClick={() => setModalOpen(true)} className="shrink-0">
           + New
         </Button>
@@ -45,23 +47,23 @@ export function ClientsBrowser({ clients }: { clients: Client[] }) {
       </a>
 
       {filtered.length === 0 ? (
-        <EmptyState message={clients.length === 0 ? "No clients yet." : "No matches."} />
+        <EmptyState message={people.length === 0 ? "No people yet." : "No matches."} />
       ) : (
         <div className="grid gap-2 sm:grid-cols-2">
-          {filtered.map((client) => (
-            <ClientCard key={client.id} client={client} />
+          {filtered.map((person) => (
+            <PersonCard key={person.id} person={person} />
           ))}
         </div>
       )}
 
-      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title="New client">
-        <NewClientForm onDone={() => setModalOpen(false)} />
+      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title="New person">
+        <NewPersonForm onDone={() => setModalOpen(false)} />
       </Modal>
     </div>
   );
 }
 
-function NewClientForm({ onDone }: { onDone: () => void }) {
+function NewPersonForm({ onDone }: { onDone: () => void }) {
   const [fullName, setFullName] = useState("");
   const [currentStatus, setCurrentStatus] = useState("");
   const [nextAction, setNextAction] = useState("");
@@ -76,7 +78,7 @@ function NewClientForm({ onDone }: { onDone: () => void }) {
     setSaving(true);
     setError(null);
     startTransition(async () => {
-      const result = await createClientRecordSafe({
+      const result = await createPersonRecordSafe({
         fullName,
         currentStatus: currentStatus || null,
         nextAction: nextAction || null,
@@ -84,7 +86,7 @@ function NewClientForm({ onDone }: { onDone: () => void }) {
       setSaving(false);
       if (result.ok) {
         onDone();
-        router.push(`/clients/${result.data.id}`);
+        router.push(`/people/${result.data.id}`);
       } else {
         setError(result.error);
       }
@@ -123,7 +125,7 @@ function NewClientForm({ onDone }: { onDone: () => void }) {
         />
       </div>
       <Button type="submit" disabled={saving || pending || !fullName.trim()} className="w-full">
-        {saving || pending ? "Saving..." : "Add client"}
+        {saving || pending ? "Saving..." : "Add person"}
       </Button>
     </form>
   );

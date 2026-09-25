@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { CommandBar } from "@/components/command/CommandBar";
 import { QuickActions } from "@/components/command/QuickActions";
-import { ClientCard } from "@/components/clients/ClientCard";
+import { PersonCard } from "@/components/people/PersonCard";
 import { NoteCard } from "@/components/notes/NoteCard";
 import { TaskRow } from "@/components/tasks/TaskRow";
 import { MiniCalendar } from "@/components/calendar/MiniCalendar";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { listClients, getClientsNeedingAttention } from "@/lib/actions/clients";
+import { listPeople, getPeopleNeedingAttention } from "@/lib/actions/people";
 import { listTasks } from "@/lib/actions/tasks";
 import { listRecentNotes } from "@/lib/actions/notes";
 import { getCalendarMonth } from "@/lib/actions/calendar";
@@ -34,18 +34,18 @@ export default async function DashboardPage() {
   const year = now.getFullYear();
   const month = now.getMonth() + 1;
 
-  const [clients, tasks, notes, needsAttention, { tasks: monthTasks, birthdays }] = await Promise.all([
-    listClients(),
+  const [people, tasks, notes, needsAttention, { tasks: monthTasks, birthdays }] = await Promise.all([
+    listPeople(),
     listTasks(),
     listRecentNotes(6),
-    getClientsNeedingAttention(),
+    getPeopleNeedingAttention(),
     getCalendarMonth(year, month),
   ]);
 
-  const clientsById = new Map(clients.map((c) => [c.id, c]));
+  const peopleById = new Map(people.map((c) => [c.id, c]));
   const openTasks = tasks.filter((t) => !t.completed);
   const todayTasks = openTasks.filter((t) => t.due_at && (isToday(t.due_at) || isOverdue(t.due_at)));
-  const recentClients = clients.slice(0, 5);
+  const recentPeople = people.slice(0, 5);
 
   const eventDays = new Set<number>();
   for (const task of monthTasks) {
@@ -58,7 +58,7 @@ export default async function DashboardPage() {
     <div className="space-y-8">
       <section>
         <CommandBar />
-        <QuickActions clients={clients.map((c) => ({ id: c.id, display_name: c.display_name }))} />
+        <QuickActions people={people.map((c) => ({ id: c.id, display_name: c.display_name }))} />
       </section>
 
       <Section title="Calendar" href="/calendar">
@@ -74,7 +74,7 @@ export default async function DashboardPage() {
               <TaskRow
                 key={task.id}
                 task={task}
-                clientName={task.client_id ? clientsById.get(task.client_id)?.display_name : null}
+                personName={task.person_id ? peopleById.get(task.person_id)?.display_name : null}
               />
             ))}
           </div>
@@ -86,20 +86,20 @@ export default async function DashboardPage() {
           <EmptyState message="Everyone's up to date." />
         ) : (
           <div className="grid gap-2 sm:grid-cols-2">
-            {needsAttention.map((client) => (
-              <ClientCard key={client.id} client={client} />
+            {needsAttention.map((person) => (
+              <PersonCard key={person.id} person={person} />
             ))}
           </div>
         )}
       </Section>
 
-      <Section title="Recent Clients" href="/clients">
-        {recentClients.length === 0 ? (
-          <EmptyState message="No clients yet. Try: Add Marcus Johnson to Cohort 7" />
+      <Section title="Recent People" href="/people">
+        {recentPeople.length === 0 ? (
+          <EmptyState message="No people yet. Try: Add Marcus Johnson to Group 7" />
         ) : (
           <div className="grid gap-2 sm:grid-cols-2">
-            {recentClients.map((client) => (
-              <ClientCard key={client.id} client={client} />
+            {recentPeople.map((person) => (
+              <PersonCard key={person.id} person={person} />
             ))}
           </div>
         )}
@@ -114,7 +114,7 @@ export default async function DashboardPage() {
               <NoteCard
                 key={note.id}
                 note={note}
-                clientName={note.client_id ? clientsById.get(note.client_id)?.display_name : null}
+                personName={note.person_id ? peopleById.get(note.person_id)?.display_name : null}
               />
             ))}
           </div>

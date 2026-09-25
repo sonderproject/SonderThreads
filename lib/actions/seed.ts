@@ -2,83 +2,83 @@
 
 import { query, queryOne } from "@/lib/db/client";
 import { OWNER_ID } from "@/lib/db/constants";
-import type { Client, List } from "@/lib/types";
+import type { Person, List } from "@/lib/types";
 
 /**
- * Populates demo clients/notes/tasks/a cohort list the first time the app
+ * Populates demo people/notes/tasks/a group list the first time the app
  * is opened with an empty database, so the dashboard isn't blank on first
  * run. No-ops for anyone who already has data.
  *
  * This writes directly via query() rather than calling the normal
- * createClientRecord/createNote/etc. actions: those call revalidatePath(),
+ * createPersonRecord/createNote/etc. actions: those call revalidatePath(),
  * which Next.js disallows when invoked synchronously during a Server
  * Component's render (as this function is, from the dashboard page) —
  * there's nothing to revalidate yet anyway since this is the first render.
  */
 export async function seedDemoDataIfEmpty(): Promise<void> {
-  const existing = await query(`select id from clients where user_id = $1 limit 1`, [OWNER_ID]);
+  const existing = await query(`select id from people where user_id = $1 limit 1`, [OWNER_ID]);
   if (existing.length > 0) return;
 
-  const insertClient = (fullName: string, currentStatus: string, nextAction: string) => {
+  const insertPerson = (fullName: string, currentStatus: string, nextAction: string) => {
     const [firstName, ...rest] = fullName.trim().split(/\s+/);
     const lastName = rest.length > 0 ? rest.join(" ") : null;
-    return queryOne<Client>(
-      `insert into clients (user_id, first_name, last_name, display_name, current_status, next_action)
+    return queryOne<Person>(
+      `insert into people (user_id, first_name, last_name, display_name, current_status, next_action)
        values ($1, $2, $3, $4, $5, $6)
        returning *`,
       [OWNER_ID, firstName, lastName, fullName, currentStatus, nextAction],
     );
   };
 
-  const logActivity = (type: string, description: string, clientId?: string | null, listId?: string | null) =>
+  const logActivity = (type: string, description: string, personId?: string | null, listId?: string | null) =>
     query(
-      `insert into activity (user_id, type, description, client_id, list_id) values ($1, $2, $3, $4, $5)`,
-      [OWNER_ID, type, description, clientId ?? null, listId ?? null],
+      `insert into activity (user_id, type, description, person_id, list_id) values ($1, $2, $3, $4, $5)`,
+      [OWNER_ID, type, description, personId ?? null, listId ?? null],
     );
 
-  const insertNote = (content: string, category: string | null, clientId: string | null) =>
-    query(`insert into notes (user_id, content, category, client_id) values ($1, $2, $3, $4)`, [
+  const insertNote = (content: string, category: string | null, personId: string | null) =>
+    query(`insert into notes (user_id, content, category, person_id) values ($1, $2, $3, $4)`, [
       OWNER_ID,
       content,
       category,
-      clientId,
+      personId,
     ]);
 
-  const insertTask = (title: string, clientId: string, dueAt: string) =>
-    query(`insert into tasks (user_id, title, client_id, due_at) values ($1, $2, $3, $4)`, [
+  const insertTask = (title: string, personId: string, dueAt: string) =>
+    query(`insert into tasks (user_id, title, person_id, due_at) values ($1, $2, $3, $4)`, [
       OWNER_ID,
       title,
-      clientId,
+      personId,
       dueAt,
     ]);
 
-  const marcus = await insertClient("Marcus Johnson", "Starts Amazon Monday", "Follow up after first week");
-  const james = await insertClient("James Smith", "Guard card completed", "Apply for security positions");
-  const wes = await insertClient("Wes Carter", "Interview scheduled", "Follow up after interview");
+  const marcus = await insertPerson("Marcus Johnson", "Starts Amazon Monday", "Follow up after first week");
+  const james = await insertPerson("James Smith", "Guard card completed", "Apply for security positions");
+  const wes = await insertPerson("Wes Carter", "Interview scheduled", "Follow up after interview");
   if (!marcus || !james || !wes) return;
 
   await Promise.all([
-    logActivity("client_created", "Marcus Johnson added", marcus.id),
-    logActivity("client_created", "James Smith added", james.id),
-    logActivity("client_created", "Wes Carter added", wes.id),
+    logActivity("person_created", "Marcus Johnson added", marcus.id),
+    logActivity("person_created", "James Smith added", james.id),
+    logActivity("person_created", "Wes Carter added", wes.id),
   ]);
 
-  const cohort7 = await queryOne<List>(
-    `insert into lists (user_id, name, is_cohort) values ($1, 'Cohort 7', true) returning *`,
+  const group7 = await queryOne<List>(
+    `insert into lists (user_id, name, is_group) values ($1, 'Group 7', true) returning *`,
     [OWNER_ID],
   );
 
-  if (cohort7) {
+  if (group7) {
     const members = [marcus, james, wes];
     for (const [index, member] of members.entries()) {
       await query(
-        `insert into list_items (user_id, list_id, client_id, label, position) values ($1, $2, $3, $4, $5)`,
-        [OWNER_ID, cohort7.id, member.id, member.display_name, index],
+        `insert into list_items (user_id, list_id, person_id, label, position) values ($1, $2, $3, $4, $5)`,
+        [OWNER_ID, group7.id, member.id, member.display_name, index],
       );
     }
-    await logActivity("list_created", 'List "Cohort 7" created', null, cohort7.id);
+    await logActivity("list_created", 'List "Group 7" created', null, group7.id);
     await Promise.all(
-      members.map((m) => logActivity("added_to_list", "Added to Cohort 7", m.id, cohort7.id)),
+      members.map((m) => logActivity("added_to_list", "Added to Group 7", m.id, group7.id)),
     );
   }
 

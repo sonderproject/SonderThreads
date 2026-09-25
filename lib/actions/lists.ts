@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { query, queryOne } from "@/lib/db/client";
 import { OWNER_ID } from "@/lib/db/constants";
 import { logActivity } from "./activity";
-import { findClientByName, findOrCreateClientByName, touchClientActivity } from "./clients";
+import { findPersonByName, findOrCreatePersonByName, touchPersonActivity } from "./people";
 import {
   addListItemSchema,
   createListSchema,
@@ -49,12 +49,12 @@ export async function getListWithItems(id: string): Promise<{ list: List; items:
 export async function createList(params: {
   name: string;
   description?: string | null;
-  isCohort?: boolean;
+  isGroup?: boolean;
 }): Promise<List> {
   params = validate(createListSchema, params);
   const list = await queryOne<List>(
-    `insert into lists (user_id, name, description, is_cohort) values ($1, $2, $3, $4) returning *`,
-    [OWNER_ID, params.name.trim(), params.description ?? null, params.isCohort ?? false],
+    `insert into lists (user_id, name, description, is_group) values ($1, $2, $3, $4) returning *`,
+    [OWNER_ID, params.name.trim(), params.description ?? null, params.isGroup ?? false],
   );
 
   if (!list) throw new Error("Failed to create list");
@@ -77,11 +77,11 @@ export async function createListSafe(params: Parameters<typeof createList>[0]): 
 
 export async function findOrCreateListByName(
   name: string,
-  isCohort: boolean,
+  isGroup: boolean,
 ): Promise<{ list: List; created: boolean }> {
   const existing = await getListByName(name);
   if (existing) return { list: existing, created: false };
-  const created = await createList({ name, isCohort });
+  const created = await createList({ name, isGroup });
   return { list: created, created: true };
 }
 
@@ -120,14 +120,14 @@ export async function duplicateList(id: string): Promise<List> {
   const copy = await createList({
     name: `${existing.list.name} (copy)`,
     description: existing.list.description,
-    isCohort: existing.list.is_cohort,
+    isGroup: existing.list.is_group,
   });
 
   for (const [index, item] of existing.items.entries()) {
     await query(
-      `insert into list_items (user_id, list_id, client_id, label, checked, position)
+      `insert into list_items (user_id, list_id, person_id, label, checked, position)
        values ($1, $2, $3, $4, false, $5)`,
-      [OWNER_ID, copy.id, item.client_id, item.label, index],
+      [OWNER_ID, copy.id, item.person_id, item.label, index],
     );
   }
 
@@ -138,7 +138,7 @@ export async function duplicateList(id: string): Promise<List> {
 export async function addListItem(params: {
   listId: string;
   label: string;
-  clientId?: string | null;
+  personId?: string | null;
 }): Promise<ListItem> {
   params = validate(addListItemSchema, params);
   const last = await queryOne<{ position: number }>(
@@ -148,10 +148,10 @@ export async function addListItem(params: {
   const nextPosition = (last?.position ?? -1) + 1;
 
   const item = await queryOne<ListItem>(
-    `insert into list_items (user_id, list_id, client_id, label, position)
+    `insert into list_items (user_id, list_id, person_id, label, position)
      values ($1, $2, $3, $4, $5)
      returning *`,
-    [OWNER_ID, params.listId, params.clientId ?? null, params.label.trim(), nextPosition],
+    [OWNER_ID, params.listId, params.personId ?? null, params.label.trim(), nextPosition],
   );
 
   if (!item) throw new Error("Failed to add list item");
@@ -160,10 +160,10 @@ export async function addListItem(params: {
   return item;
 }
 
-/** Adds a single free-text item, auto-linking it if the label matches an existing client. */
+/** Adds a single free-text item, auto-linking it if the label matches an existing person. */
 export async function addListItemSmart(listId: string, label: string): Promise<ListItem> {
-  const match = await findClientByName(label);
-  return addListItem({ listId, label: match?.display_name ?? label, clientId: match?.id ?? null });
+  const match = await findPersonByName(label);
+  return addListItem({ listId, label: match?.display_name ?? label, personId: match?.id ?? null });
 }
 
 /** Client-form-safe wrapper: returns a result instead of throwing, since Next.js redacts thrown Server Action errors before they reach the client in production. */
@@ -172,18 +172,18 @@ export async function addListItemSmartSafe(listId: string, label: string): Promi
 }
 
 /**
- * Adds a set of names to a list. For cohort lists, unmatched names become new
- * client records (a cohort is a roster of clients); for plain lists, items
- * link to an existing client when the name matches but otherwise stay
+ * Adds a set of names to a list. For group lists, unmatched names become new
+ * person records (a group is a roster of people); for plain lists, items
+ * link to an existing person when the name matches but otherwise stay
  * free-text.
  */
 export async function addNamesToList(
   listId: string,
-  isCohort: boolean,
+  isGroup: boolean,
   names: string[],
-): Promise<{ createdClients: string[]; linkedClients: string[] }> {
-  const createdClients: string[] = [];
-  const linkedClients: string[] = [];
+): Promise<{ createdPeople: string[]; linkedPeople: string[] }> {
+  const createdPeople: string[] = [];
+  const linkedPeople: string[] = [];
   const list = await queryOne<List>(
     `select * from lists where user_id = $1 and id = $2 and deleted_at is null`,
     [OWNER_ID, listId],
@@ -192,28 +192,28 @@ export async function addNamesToList(
   for (const name of names) {
     if (!name.trim()) continue;
 
-    if (isCohort) {
-      const { client, created } = await findOrCreateClientByName(name);
-      await addListItem({ listId, label: client.display_name, clientId: client.id });
-      await touchClientActivity(client.id);
+    if (isGroup) {
+      const { person, created } = await findOrCreatePersonByName(name);
+      await addListItem({ listId, label: person.display_name, personId: person.id });
+      await touchPersonActivity(person.id);
       await logActivity({
         type: "added_to_list",
         description: `Added to ${list?.name ?? "list"}`,
-        clientId: client.id,
+        personId: person.id,
         listId,
       });
-      if (created) createdClients.push(client.display_name);
-      else linkedClients.push(client.display_name);
+      if (created) createdPeople.push(person.display_name);
+      else linkedPeople.push(person.display_name);
     } else {
-      const match = await findClientByName(name);
-      await addListItem({ listId, label: match?.display_name ?? name.trim(), clientId: match?.id ?? null });
+      const match = await findPersonByName(name);
+      await addListItem({ listId, label: match?.display_name ?? name.trim(), personId: match?.id ?? null });
 
       if (match) {
-        linkedClients.push(match.display_name);
+        linkedPeople.push(match.display_name);
         await logActivity({
           type: "added_to_list",
           description: `Added to ${list?.name ?? "list"}`,
-          clientId: match.id,
+          personId: match.id,
           listId,
         });
       }
@@ -221,8 +221,8 @@ export async function addNamesToList(
   }
 
   revalidatePath(`/lists/${listId}`);
-  revalidatePath("/clients");
-  return { createdClients, linkedClients };
+  revalidatePath("/people");
+  return { createdPeople, linkedPeople };
 }
 
 export async function updateListItem(id: string, label: string): Promise<ListItem> {
@@ -287,12 +287,12 @@ export async function getListItemCounts(): Promise<Record<string, number>> {
   return counts;
 }
 
-export async function listListsForClient(clientId: string): Promise<List[]> {
+export async function listListsForPerson(personId: string): Promise<List[]> {
   return query<List>(
     `select distinct l.* from lists l
      join list_items li on li.list_id = l.id
-     where l.user_id = $1 and l.deleted_at is null and li.client_id = $2`,
-    [OWNER_ID, clientId],
+     where l.user_id = $1 and l.deleted_at is null and li.person_id = $2`,
+    [OWNER_ID, personId],
   );
 }
 

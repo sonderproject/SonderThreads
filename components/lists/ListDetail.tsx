@@ -150,7 +150,7 @@ export function ListDetail({ list, items }: { list: List; items: ListItem[] }) {
               {list.name}
             </h1>
           )}
-          {list.is_cohort && <Badge>cohort</Badge>}
+          {list.is_group && <Badge>group</Badge>}
         </div>
         <div className="flex shrink-0 gap-2">
           <Button variant="ghost" onClick={handleDuplicate}>
@@ -226,9 +226,9 @@ export function ListDetail({ list, items }: { list: List; items: ListItem[] }) {
                   }}
                   className="input flex-1 text-sm"
                 />
-              ) : item.client_id ? (
+              ) : item.person_id ? (
                 <Link
-                  href={`/clients/${item.client_id}`}
+                  href={`/people/${item.person_id}`}
                   className={`flex-1 text-sm hover:underline ${item.checked ? "text-text-faint line-through" : "text-accent"}`}
                 >
                   {item.label}

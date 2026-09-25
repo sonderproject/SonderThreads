@@ -2,17 +2,17 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { updateClientSafe } from "@/lib/actions/clients";
-import type { Client } from "@/lib/types";
+import { updatePersonSafe } from "@/lib/actions/people";
+import type { Person } from "@/lib/types";
 
 export function EditableField({
-  clientId,
+  personId,
   field,
   value,
   placeholder,
   textClassName,
 }: {
-  clientId: string;
+  personId: string;
   field: "current_status" | "next_action";
   value: string | null;
   placeholder: string;
@@ -31,10 +31,10 @@ export function EditableField({
     }
     setSaving(true);
     setError(null);
-    const patch: Partial<Pick<Client, "current_status" | "next_action">> = {
+    const patch: Partial<Pick<Person, "current_status" | "next_action">> = {
       [field]: text.trim() || null,
     };
-    const result = await updateClientSafe(clientId, patch);
+    const result = await updatePersonSafe(personId, patch);
     setSaving(false);
     if (result.ok) {
       setEditing(false);

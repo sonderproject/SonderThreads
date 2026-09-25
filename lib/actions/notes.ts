@@ -5,8 +5,8 @@ import { query, queryOne } from "@/lib/db/client";
 import { OWNER_ID } from "@/lib/db/constants";
 import { truncate } from "./helpers";
 import { logActivity } from "./activity";
-import { touchClientActivity } from "./clients";
-import { regenerateClientSummary } from "./summary";
+import { touchPersonActivity } from "./people";
+import { regeneratePersonSummary } from "./summary";
 import {
   createNoteSchema,
   updateNoteSchema,
@@ -18,19 +18,19 @@ import type { Note } from "@/lib/types";
 
 export async function createNote(params: {
   content: string;
-  clientId?: string | null;
+  personId?: string | null;
   category?: string | null;
   aiMetadata?: Record<string, unknown> | null;
 }): Promise<Note> {
   params = validate(createNoteSchema, params);
   const note = await queryOne<Note>(
-    `insert into notes (user_id, content, client_id, category, ai_metadata)
+    `insert into notes (user_id, content, person_id, category, ai_metadata)
      values ($1, $2, $3, $4, $5)
      returning *`,
     [
       OWNER_ID,
       params.content,
-      params.clientId ?? null,
+      params.personId ?? null,
       params.category ?? null,
       params.aiMetadata ? JSON.stringify(params.aiMetadata) : null,
     ],
@@ -41,18 +41,18 @@ export async function createNote(params: {
   await logActivity({
     type: "note_added",
     description: `Note: ${truncate(params.content)}`,
-    clientId: params.clientId ?? null,
+    personId: params.personId ?? null,
     noteId: note.id,
   });
 
-  if (params.clientId) {
-    await touchClientActivity(params.clientId);
-    await regenerateClientSummary(params.clientId);
+  if (params.personId) {
+    await touchPersonActivity(params.personId);
+    await regeneratePersonSummary(params.personId);
   }
 
   revalidatePath("/");
   revalidatePath("/notes");
-  if (params.clientId) revalidatePath(`/clients/${params.clientId}`);
+  if (params.personId) revalidatePath(`/people/${params.personId}`);
 
   return note;
 }
@@ -78,15 +78,15 @@ export async function listAllNotes(): Promise<Note[]> {
 
 export async function listStandaloneNotes(): Promise<Note[]> {
   return query<Note>(
-    `select * from notes where user_id = $1 and client_id is null and deleted_at is null order by created_at desc`,
+    `select * from notes where user_id = $1 and person_id is null and deleted_at is null order by created_at desc`,
     [OWNER_ID],
   );
 }
 
-export async function listNotesForClient(clientId: string): Promise<Note[]> {
+export async function listNotesForPerson(personId: string): Promise<Note[]> {
   return query<Note>(
-    `select * from notes where user_id = $1 and client_id = $2 and deleted_at is null order by created_at desc`,
-    [OWNER_ID, clientId],
+    `select * from notes where user_id = $1 and person_id = $2 and deleted_at is null order by created_at desc`,
+    [OWNER_ID, personId],
   );
 }
 
@@ -101,7 +101,7 @@ export async function updateNote(id: string, content: string): Promise<Note> {
 
   revalidatePath("/notes");
   revalidatePath("/");
-  if (note.client_id) revalidatePath(`/clients/${note.client_id}`);
+  if (note.person_id) revalidatePath(`/people/${note.person_id}`);
 
   return note;
 }

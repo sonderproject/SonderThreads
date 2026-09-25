@@ -1,5 +1,5 @@
 import { listTasks } from "@/lib/actions/tasks";
-import { listClients } from "@/lib/actions/clients";
+import { listPeople } from "@/lib/actions/people";
 import { TaskRow } from "@/components/tasks/TaskRow";
 import { NewTaskButton } from "@/components/tasks/NewTaskButton";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -20,8 +20,8 @@ function isPast(iso: string): boolean {
 }
 
 export default async function TasksPage() {
-  const [tasks, clients] = await Promise.all([listTasks(), listClients()]);
-  const clientsById = new Map(clients.map((c) => [c.id, c]));
+  const [tasks, people] = await Promise.all([listTasks(), listPeople()]);
+  const peopleById = new Map(people.map((c) => [c.id, c]));
 
   const open = tasks.filter((t) => !t.completed);
   const completed = tasks.filter((t) => t.completed);
@@ -34,13 +34,13 @@ export default async function TasksPage() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <h1 className="font-mono text-xs uppercase tracking-wide text-text-faint">Tasks</h1>
-        <NewTaskButton clients={clients.map((c) => ({ id: c.id, display_name: c.display_name }))} />
+        <NewTaskButton people={people.map((c) => ({ id: c.id, display_name: c.display_name }))} />
       </div>
 
-      <TaskSection title="Today" tasks={today} clientsById={clientsById} empty="Nothing due today." />
-      <TaskSection title="Upcoming" tasks={upcoming} clientsById={clientsById} empty="Nothing upcoming." />
-      <TaskSection title="No Date" tasks={noDate} clientsById={clientsById} empty="Nothing here." />
-      <TaskSection title="Completed" tasks={completed} clientsById={clientsById} empty="Nothing completed yet." />
+      <TaskSection title="Today" tasks={today} peopleById={peopleById} empty="Nothing due today." />
+      <TaskSection title="Upcoming" tasks={upcoming} peopleById={peopleById} empty="Nothing upcoming." />
+      <TaskSection title="No Date" tasks={noDate} peopleById={peopleById} empty="Nothing here." />
+      <TaskSection title="Completed" tasks={completed} peopleById={peopleById} empty="Nothing completed yet." />
     </div>
   );
 }
@@ -48,12 +48,12 @@ export default async function TasksPage() {
 function TaskSection({
   title,
   tasks,
-  clientsById,
+  peopleById,
   empty,
 }: {
   title: string;
   tasks: Task[];
-  clientsById: Map<string, { display_name: string }>;
+  peopleById: Map<string, { display_name: string }>;
   empty: string;
 }) {
   return (
@@ -67,7 +67,7 @@ function TaskSection({
             <TaskRow
               key={task.id}
               task={task}
-              clientName={task.client_id ? clientsById.get(task.client_id)?.display_name : null}
+              personName={task.person_id ? peopleById.get(task.person_id)?.display_name : null}
             />
           ))}
         </div>

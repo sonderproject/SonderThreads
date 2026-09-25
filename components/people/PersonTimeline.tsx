@@ -1,7 +1,7 @@
 import { EmptyState } from "@/components/ui/EmptyState";
 import type { Activity } from "@/lib/types";
 
-export function ClientTimeline({ activity }: { activity: Activity[] }) {
+export function PersonTimeline({ activity }: { activity: Activity[] }) {
   if (activity.length === 0) {
     return <EmptyState message="No activity yet." />;
   }

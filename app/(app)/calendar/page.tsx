@@ -1,5 +1,5 @@
 import { getCalendarMonth } from "@/lib/actions/calendar";
-import { listClients } from "@/lib/actions/clients";
+import { listPeople } from "@/lib/actions/people";
 import { CalendarGrid } from "@/components/calendar/CalendarGrid";
 import { NewCalendarEventButton } from "@/components/calendar/NewCalendarEventButton";
 import { buildWeeks, groupTasksByDay, groupBirthdaysByDay } from "@/lib/calendar-utils";
@@ -19,9 +19,9 @@ export default async function CalendarPage({
   const year = sp.year ? parseInt(sp.year, 10) : now.getFullYear();
   const month = sp.month ? parseInt(sp.month, 10) : now.getMonth() + 1;
 
-  const [{ tasks, birthdays }, clients] = await Promise.all([
+  const [{ tasks, birthdays }, people] = await Promise.all([
     getCalendarMonth(year, month),
-    listClients(),
+    listPeople(),
   ]);
 
   const tasksByDay = groupTasksByDay(tasks);
@@ -54,7 +54,7 @@ export default async function CalendarPage({
             </a>
           </div>
           <NewCalendarEventButton
-            clients={clients.map((c) => ({ id: c.id, display_name: c.display_name }))}
+            people={people.map((c) => ({ id: c.id, display_name: c.display_name }))}
           />
         </div>
       </div>
@@ -65,7 +65,7 @@ export default async function CalendarPage({
         weeks={weeks}
         tasksByDay={tasksByDay}
         birthdaysByDay={birthdaysByDay}
-        clients={clients.map((c) => ({ id: c.id, display_name: c.display_name }))}
+        people={people.map((c) => ({ id: c.id, display_name: c.display_name }))}
       />
     </div>
   );

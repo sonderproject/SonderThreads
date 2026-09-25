@@ -1,29 +1,30 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getClient } from "@/lib/actions/clients";
-import { getClientTimeline } from "@/lib/actions/activity";
-import { listTasksForClient } from "@/lib/actions/tasks";
-import { listListsForClient } from "@/lib/actions/lists";
-import { ClientTimeline } from "@/components/clients/ClientTimeline";
-import { EditableField } from "@/components/clients/EditableField";
+import { getPerson } from "@/lib/actions/people";
+import { getPersonTimeline } from "@/lib/actions/activity";
+import { listTasksForPerson } from "@/lib/actions/tasks";
+import { listListsForPerson } from "@/lib/actions/lists";
+import { PersonTimeline } from "@/components/people/PersonTimeline";
+import { EditableField } from "@/components/people/EditableField";
 import { TaskRow } from "@/components/tasks/TaskRow";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Badge } from "@/components/ui/Badge";
+import { isStale, STALE_DAYS } from "@/lib/stale";
 import type { Activity } from "@/lib/types";
 
-export default async function ClientProfilePage({
+export default async function PersonProfilePage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const client = await getClient(id);
-  if (!client) notFound();
+  const person = await getPerson(id);
+  if (!person) notFound();
 
   const [activity, tasks, lists] = await Promise.all([
-    getClientTimeline(client.id),
-    listTasksForClient(client.id),
-    listListsForClient(client.id),
+    getPersonTimeline(person.id),
+    listTasksForPerson(person.id),
+    listListsForPerson(person.id),
   ]);
 
   const openTasks = tasks.filter((t) => !t.completed);
@@ -33,17 +34,22 @@ export default async function ClientProfilePage({
       <div>
         <div className="flex items-center gap-2">
           <h1 className="font-mono text-lg uppercase tracking-wide text-text">
-            {client.display_name}
+            {person.display_name}
           </h1>
-          {client.needs_followup && <Badge>follow up</Badge>}
+          {person.needs_followup && <Badge>follow up</Badge>}
+          {isStale(person) && (
+            <span title={`No activity in ${STALE_DAYS}+ days`}>
+              <Badge>stale</Badge>
+            </span>
+          )}
         </div>
       </div>
 
       <Section title="Current">
         <EditableField
-          clientId={client.id}
+          personId={person.id}
           field="current_status"
-          value={client.current_status}
+          value={person.current_status}
           placeholder="Click to add current status..."
           textClassName="text-sm text-text"
         />
@@ -51,20 +57,20 @@ export default async function ClientProfilePage({
 
       <Section title="Next">
         <EditableField
-          clientId={client.id}
+          personId={person.id}
           field="next_action"
-          value={client.next_action}
+          value={person.next_action}
           placeholder="Click to add next action..."
           textClassName="text-sm text-accent"
         />
       </Section>
 
       <Section title="Summary">
-        <p className="text-sm text-text-muted">{client.summary ?? "No summary yet."}</p>
+        <p className="text-sm text-text-muted">{person.summary ?? "No summary yet."}</p>
       </Section>
 
       <Section title="Timeline">
-        <ClientTimeline activity={activity as Activity[]} />
+        <PersonTimeline activity={activity as Activity[]} />
       </Section>
 
       <Section title="Tasks">

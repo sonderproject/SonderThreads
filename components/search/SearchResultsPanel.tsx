@@ -12,7 +12,7 @@ export function SearchResultsPanel({
   onClose?: () => void;
 }) {
   const total =
-    results.clients.length + results.notes.length + results.lists.length + results.tasks.length;
+    results.people.length + results.notes.length + results.lists.length + results.tasks.length;
 
   return (
     <Card className="mt-3 p-4">
@@ -30,12 +30,12 @@ export function SearchResultsPanel({
       {total === 0 && <p className="text-sm text-text-faint">Nothing found.</p>}
 
       <div className="space-y-4">
-        {results.clients.length > 0 && (
-          <ResultSection title="Clients">
-            {results.clients.map((c) => (
+        {results.people.length > 0 && (
+          <ResultSection title="People">
+            {results.people.map((c) => (
               <Link
                 key={c.id}
-                href={`/clients/${c.id}`}
+                href={`/people/${c.id}`}
                 className="block rounded px-2 py-1.5 hover:bg-bg-hover"
               >
                 <p className="text-sm text-text">{c.display_name}</p>
@@ -50,7 +50,7 @@ export function SearchResultsPanel({
             {results.notes.map((n) => (
               <Link
                 key={n.id}
-                href={n.client_id ? `/clients/${n.client_id}` : "/notes"}
+                href={n.person_id ? `/people/${n.person_id}` : "/notes"}
                 className="block rounded px-2 py-1.5 hover:bg-bg-hover"
               >
                 <p className="text-sm text-text">{n.content}</p>

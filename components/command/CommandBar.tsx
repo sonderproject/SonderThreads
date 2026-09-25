@@ -42,7 +42,7 @@ export function CommandBar() {
         <input
           value={value}
           onChange={(e) => setValue(e.target.value)}
-          placeholder="Type a command, note, task, reminder, or client update..."
+          placeholder="Type a command, note, task, reminder, or person update..."
           className="flex-1 bg-transparent font-mono text-sm text-text placeholder:text-text-faint outline-none"
           disabled={pending}
         />
