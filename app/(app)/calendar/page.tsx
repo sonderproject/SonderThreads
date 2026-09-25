@@ -1,38 +1,13 @@
 import { getCalendarMonth } from "@/lib/actions/calendar";
 import { listClients } from "@/lib/actions/clients";
-import { CalendarGrid, type CalendarDay } from "@/components/calendar/CalendarGrid";
+import { CalendarGrid } from "@/components/calendar/CalendarGrid";
 import { NewCalendarEventButton } from "@/components/calendar/NewCalendarEventButton";
-import type { Task } from "@/lib/types";
+import { buildWeeks, groupTasksByDay, groupBirthdaysByDay } from "@/lib/calendar-utils";
 
 const MONTH_NAMES = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December",
 ];
-
-function buildWeeks(year: number, month: number): CalendarDay[][] {
-  const daysInMonth = new Date(year, month, 0).getDate();
-  const startWeekday = new Date(year, month - 1, 1).getDay();
-  const totalCells = Math.ceil((startWeekday + daysInMonth) / 7) * 7;
-  const today = new Date();
-
-  const days: CalendarDay[] = [];
-  for (let i = 0; i < totalCells; i++) {
-    const dayNum = i - startWeekday + 1;
-    const inMonth = dayNum >= 1 && dayNum <= daysInMonth;
-    days.push({
-      dayNum: inMonth ? dayNum : null,
-      isToday:
-        inMonth &&
-        year === today.getFullYear() &&
-        month === today.getMonth() + 1 &&
-        dayNum === today.getDate(),
-    });
-  }
-
-  const weeks: CalendarDay[][] = [];
-  for (let i = 0; i < days.length; i += 7) weeks.push(days.slice(i, i + 7));
-  return weeks;
-}
 
 export default async function CalendarPage({
   searchParams,
@@ -49,18 +24,8 @@ export default async function CalendarPage({
     listClients(),
   ]);
 
-  const tasksByDay: Record<number, Task[]> = {};
-  for (const task of tasks) {
-    if (!task.due_at) continue;
-    const day = new Date(task.due_at).getDate();
-    (tasksByDay[day] ??= []).push(task);
-  }
-
-  const birthdaysByDay: Record<number, { clientId: string; displayName: string }[]> = {};
-  for (const b of birthdays) {
-    (birthdaysByDay[b.day] ??= []).push({ clientId: b.clientId, displayName: b.displayName });
-  }
-
+  const tasksByDay = groupTasksByDay(tasks);
+  const birthdaysByDay = groupBirthdaysByDay(birthdays);
   const weeks = buildWeeks(year, month);
 
   const prevMonth = month === 1 ? { year: year - 1, month: 12 } : { year, month: month - 1 };

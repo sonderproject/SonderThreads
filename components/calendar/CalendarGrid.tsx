@@ -4,9 +4,10 @@ import { useState } from "react";
 import Link from "next/link";
 import { Modal } from "@/components/ui/Modal";
 import { QuickAddTaskForm } from "@/components/calendar/QuickAddTaskForm";
+import type { CalendarDay } from "@/lib/calendar-utils";
 import type { Task, Client } from "@/lib/types";
 
-export type CalendarDay = { dayNum: number | null; isToday: boolean };
+export type { CalendarDay };
 
 const WEEKDAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
