@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ThemeToggle } from "@/components/nav/ThemeToggle";
+import { logout } from "@/app/login/actions";
 
 const NAV_ITEMS = [
   { href: "/", label: "Command" },
@@ -51,6 +52,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               ⭳
             </a>
             <ThemeToggle />
+            <form action={logout}>
+              <button
+                type="submit"
+                title="Sign out"
+                aria-label="Sign out"
+                className="rounded px-2 py-1.5 text-sm text-text-muted transition-colors hover:bg-bg-hover hover:text-text"
+              >
+                ⏻
+              </button>
+            </form>
           </div>
         </div>
       </header>
