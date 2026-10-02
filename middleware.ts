@@ -14,19 +14,23 @@ export function middleware(request: NextRequest) {
   if (hasToken) return NextResponse.next();
 
   const { pathname, search } = request.nextUrl;
+  // Signed-out visitors to the home page get the public landing page, at the
+  // same address, so search engines and shared links see what the app is.
+  if (pathname === "/") return NextResponse.rewrite(new URL("/welcome", request.url));
+
   if (pathname.startsWith("/api/")) {
     return NextResponse.json({ error: "Not signed in" }, { status: 401 });
   }
 
   const loginUrl = new URL("/login", request.url);
-  if (pathname !== "/") loginUrl.searchParams.set("next", pathname + search);
+  loginUrl.searchParams.set("next", pathname + search);
   return NextResponse.redirect(loginUrl);
 }
 
 export const config = {
-  // Everything except the sign-in/sign-up/password-reset pages, the sitemap and static assets (icons and
+  // Everything except the sign-in/sign-up/password-reset pages, the landing page, the sitemap and static assets (icons and
   // the manifest must load before sign-in so "Add to Home Screen" works).
   matcher: [
-    "/((?!login|signup|forgot-password|reset-password|sitemap.xml|_next/static|_next/image|favicon.ico|robots.txt|manifest.webmanifest|icon-.*\\.png|apple-touch-icon.*\\.png).*)",
+    "/((?!login|signup|forgot-password|reset-password|welcome|sitemap.xml|_next/static|_next/image|favicon.ico|robots.txt|manifest.webmanifest|icon-.*\\.png|apple-touch-icon.*\\.png).*)",
   ],
 };

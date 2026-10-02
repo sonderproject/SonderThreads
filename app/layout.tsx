@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, VT323 } from "next/font/google";
 import "./globals.css";
+import { SITE_DESCRIPTION, SITE_URL } from "@/lib/site";
 
 const sans = Inter({
   subsets: ["latin"],
@@ -16,8 +17,9 @@ const mono = VT323({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: "sonderthreads",
-  description: "Capture information quickly. Organize it automatically. See what matters.",
+  description: SITE_DESCRIPTION,
   applicationName: "sonderthreads",
   appleWebApp: { capable: true, title: "sonderthreads", statusBarStyle: "black-translucent" },
   icons: {
