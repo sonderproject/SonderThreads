@@ -53,7 +53,8 @@ function AuthButtons() {
 export default function WelcomePage() {
   return (
     <div className="pt-safe min-h-screen bg-bg font-mono text-lg leading-relaxed text-text sm:text-xl">
-      <div className="mx-auto max-w-2xl space-y-10 px-4 py-10 sm:py-16">
+      {/* Phones: one column. Computers (lg+): two columns that fit on one screen without scrolling. */}
+      <div className="mx-auto flex max-w-2xl flex-col gap-10 px-4 py-10 sm:py-16 lg:min-h-screen lg:max-w-6xl lg:gap-0 lg:px-10 lg:py-8">
         <header className="flex items-center justify-between gap-3 whitespace-nowrap text-base sm:text-xl">
           <span className="text-accent">&gt; sonderthreads</span>
           <nav className="flex gap-2">
@@ -69,43 +70,46 @@ export default function WelcomePage() {
           </nav>
         </header>
 
-        <section className="space-y-1">
-          <p className="text-text-faint">$ sonderthreads --about</p>
-          <h1 className="text-text">lists, notes and dates. one place.</h1>
-          <p className="text-text-muted">type it or say it. it files itself.</p>
-        </section>
+        <div className="flex flex-col gap-10 lg:my-auto lg:gap-10 lg:py-4">
+          <div className="flex flex-col gap-10 lg:grid lg:grid-cols-2 lg:items-center lg:gap-16">
+            <div className="flex flex-col gap-10 lg:gap-8">
+              <section className="space-y-1">
+                <p className="text-text-faint">$ sonderthreads --about</p>
+                <h1 className="text-text lg:text-3xl">lists, notes and dates. one place.</h1>
+                <p className="text-text-muted">type it or say it. it files itself.</p>
+              </section>
 
-        <AuthButtons />
-
-        <section className="space-y-3">
-          {EXAMPLES.map((ex) => (
-            <div key={ex.input}>
-              <p>
-                <span className="text-accent">&gt; </span>
-                {ex.input}
-              </p>
-              <p className="text-text-muted">  ✓ {ex.result}</p>
-            </div>
-          ))}
-        </section>
-
-        <section className="space-y-1">
-          <p className="text-text-faint">$ sonderthreads --help</p>
-          <dl className="space-y-1">
-            {COMMANDS.map(([cmd, desc]) => (
-              <div key={cmd} className="grid grid-cols-[5.5rem_1fr] gap-2 sm:grid-cols-[7rem_1fr]">
-                <dt className="text-accent">{cmd}</dt>
-                <dd className="text-text-muted">{desc}</dd>
+              <div className="space-y-3">
+                <AuthButtons />
+                <p className="text-text-faint">free. browser and phone.</p>
               </div>
-            ))}
-          </dl>
-        </section>
+            </div>
 
-        <section className="space-y-3">
-          <p className="text-text-faint">$ ./start</p>
-          <AuthButtons />
-          <p className="text-text-faint">free. browser and phone.</p>
-        </section>
+            <section className="space-y-3">
+              {EXAMPLES.map((ex) => (
+                <div key={ex.input}>
+                  <p>
+                    <span className="text-accent">&gt; </span>
+                    {ex.input}
+                  </p>
+                  <p className="text-text-muted">  ✓ {ex.result}</p>
+                </div>
+              ))}
+            </section>
+          </div>
+
+          <section className="space-y-1">
+            <p className="text-text-faint">$ sonderthreads --help</p>
+            <dl className="space-y-1 lg:grid lg:grid-cols-2 lg:gap-x-16 lg:gap-y-1 lg:space-y-0">
+              {COMMANDS.map(([cmd, desc]) => (
+                <div key={cmd} className="grid grid-cols-[5.5rem_1fr] gap-2 sm:grid-cols-[7rem_1fr]">
+                  <dt className="text-accent">{cmd}</dt>
+                  <dd className="text-text-muted">{desc}</dd>
+                </div>
+              ))}
+            </dl>
+          </section>
+        </div>
       </div>
     </div>
   );
