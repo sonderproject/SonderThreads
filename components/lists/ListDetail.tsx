@@ -22,6 +22,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { useUndo } from "@/components/ui/UndoToast";
 import type { List, ListItem } from "@/lib/types";
 import { Dictate } from "@/components/voice/Dictate";
+import { ShareMenu } from "@/components/lists/ShareMenu";
 
 export function ListDetail({ list, items }: { list: List; items: ListItem[] }) {
   const router = useRouter();
@@ -179,7 +180,7 @@ export function ListDetail({ list, items }: { list: List; items: ListItem[] }) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0 flex-1">
           {renaming ? (
             <Dictate value={name} onChange={setName}>
@@ -203,12 +204,13 @@ export function ListDetail({ list, items }: { list: List; items: ListItem[] }) {
           )}
           {list.is_group && <Badge>group</Badge>}
         </div>
-        <div className="flex shrink-0 gap-2">
+        <div className="flex shrink-0 flex-wrap gap-2">
+          <ShareMenu list={{ ...list, name, description: description || null }} items={localItems} />
           <details className="relative">
             <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 rounded border border-border px-3 py-1.5 text-sm font-medium text-text transition-colors hover:bg-bg-hover [&::-webkit-details-marker]:hidden">
               Export ▾
             </summary>
-            <div className="absolute right-0 z-20 mt-1 w-36 overflow-hidden rounded border border-border bg-bg shadow-lg">
+            <div className="absolute left-0 z-20 mt-1 w-36 overflow-hidden sm:left-auto sm:right-0 rounded border border-border bg-bg shadow-lg">
               {[
                 ["pdf", "PDF"],
                 ["xlsx", "Excel (.xlsx)"],
