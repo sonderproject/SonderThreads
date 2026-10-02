@@ -204,6 +204,27 @@ export function ListDetail({ list, items }: { list: List; items: ListItem[] }) {
           {list.is_group && <Badge>group</Badge>}
         </div>
         <div className="flex shrink-0 gap-2">
+          <details className="relative">
+            <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 rounded border border-border px-3 py-1.5 text-sm font-medium text-text transition-colors hover:bg-bg-hover [&::-webkit-details-marker]:hidden">
+              Export ▾
+            </summary>
+            <div className="absolute right-0 z-20 mt-1 w-36 overflow-hidden rounded border border-border bg-bg shadow-lg">
+              {[
+                ["pdf", "PDF"],
+                ["xlsx", "Excel (.xlsx)"],
+              ].map(([format, label]) => (
+                <a
+                  key={format}
+                  href={`/api/lists/${list.id}/export?format=${format}`}
+                  download
+                  onClick={(e) => e.currentTarget.closest("details")?.removeAttribute("open")}
+                  className="block px-3 py-2 text-sm text-text hover:bg-bg-hover"
+                >
+                  {label}
+                </a>
+              ))}
+            </div>
+          </details>
           <Button variant="ghost" onClick={handleDuplicate}>
             Duplicate
           </Button>
