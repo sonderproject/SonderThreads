@@ -1,7 +1,7 @@
 "use server";
 
 import { query, queryOne } from "@/lib/db/client";
-import { OWNER_ID } from "@/lib/db/constants";
+import { requireUserId } from "@/lib/current-user";
 import type { Person, List } from "@/lib/types";
 
 /**
@@ -16,7 +16,8 @@ import type { Person, List } from "@/lib/types";
  * there's nothing to revalidate yet anyway since this is the first render.
  */
 export async function seedDemoDataIfEmpty(): Promise<void> {
-  const existing = await query(`select id from people where user_id = $1 limit 1`, [OWNER_ID]);
+  const userId = await requireUserId();
+  const existing = await query(`select id from people where user_id = $1 limit 1`, [userId]);
   if (existing.length > 0) return;
 
   const insertPerson = (fullName: string, currentStatus: string, nextAction: string) => {
@@ -26,19 +27,19 @@ export async function seedDemoDataIfEmpty(): Promise<void> {
       `insert into people (user_id, first_name, last_name, display_name, current_status, next_action)
        values ($1, $2, $3, $4, $5, $6)
        returning *`,
-      [OWNER_ID, firstName, lastName, fullName, currentStatus, nextAction],
+      [userId, firstName, lastName, fullName, currentStatus, nextAction],
     );
   };
 
   const logActivity = (type: string, description: string, personId?: string | null, listId?: string | null) =>
     query(
       `insert into activity (user_id, type, description, person_id, list_id) values ($1, $2, $3, $4, $5)`,
-      [OWNER_ID, type, description, personId ?? null, listId ?? null],
+      [userId, type, description, personId ?? null, listId ?? null],
     );
 
   const insertNote = (content: string, category: string | null, personId: string | null) =>
     query(`insert into notes (user_id, content, category, person_id) values ($1, $2, $3, $4)`, [
-      OWNER_ID,
+      userId,
       content,
       category,
       personId,
@@ -46,7 +47,7 @@ export async function seedDemoDataIfEmpty(): Promise<void> {
 
   const insertTask = (title: string, personId: string, dueAt: string) =>
     query(`insert into tasks (user_id, title, person_id, due_at) values ($1, $2, $3, $4)`, [
-      OWNER_ID,
+      userId,
       title,
       personId,
       dueAt,
@@ -65,7 +66,7 @@ export async function seedDemoDataIfEmpty(): Promise<void> {
 
   const group7 = await queryOne<List>(
     `insert into lists (user_id, name, is_group) values ($1, 'Group 7', true) returning *`,
-    [OWNER_ID],
+    [userId],
   );
 
   if (group7) {
@@ -73,7 +74,7 @@ export async function seedDemoDataIfEmpty(): Promise<void> {
     for (const [index, member] of members.entries()) {
       await query(
         `insert into list_items (user_id, list_id, person_id, label, position) values ($1, $2, $3, $4, $5)`,
-        [OWNER_ID, group7.id, member.id, member.display_name, index],
+        [userId, group7.id, member.id, member.display_name, index],
       );
     }
     await logActivity("list_created", 'List "Group 7" created', null, group7.id);

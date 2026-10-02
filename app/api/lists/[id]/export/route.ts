@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import ExcelJS from "exceljs";
 import PDFDocument from "pdfkit";
 import { query, queryOne } from "@/lib/db/client";
-import { OWNER_ID } from "@/lib/db/constants";
+import { requireUserId } from "@/lib/current-user";
 import type { List } from "@/lib/types";
 
 // pdfkit and exceljs need Node APIs (fs, streams).
@@ -113,6 +113,7 @@ function toPdf(list: List, exportedOn: string, headers: string[], body: string[]
 }
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const userId = await requireUserId();
   const { id } = await params;
   const raw = new URL(request.url).searchParams.get("format");
   if (raw !== "pdf" && raw !== "xlsx") {
@@ -122,7 +123,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 
   const list = await queryOne<List>(
     `select * from lists where user_id = $1 and id = $2 and deleted_at is null`,
-    [OWNER_ID, id],
+    [userId, id],
   );
   if (!list) return NextResponse.json({ error: "List not found" }, { status: 404 });
 
@@ -133,7 +134,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
        left join people p on p.id = li.person_id and p.deleted_at is null
       where li.user_id = $1 and li.list_id = $2
       order by li.position asc`,
-    [OWNER_ID, id],
+    [userId, id],
   );
 
   const exportedOn = new Date().toISOString().slice(0, 10);

@@ -2,15 +2,16 @@
 
 import { revalidatePath } from "next/cache";
 import { query, queryOne } from "@/lib/db/client";
-import { OWNER_ID } from "@/lib/db/constants";
+import { requireUserId } from "@/lib/current-user";
 import { generatePersonSummary } from "@/lib/ai/person-summary";
 import type { Person } from "@/lib/types";
 
 /** Regenerates a person's short summary + current/next fields from their recent notes and open tasks. */
 export async function regeneratePersonSummary(personId: string): Promise<void> {
+  const userId = await requireUserId();
   const person = await queryOne<Person>(
     `select * from people where user_id = $1 and id = $2 and deleted_at is null`,
-    [OWNER_ID, personId],
+    [userId, personId],
   );
 
   if (!person) return;
@@ -20,7 +21,7 @@ export async function regeneratePersonSummary(personId: string): Promise<void> {
      where user_id = $1 and person_id = $2 and deleted_at is null
      order by created_at desc
      limit 5`,
-    [OWNER_ID, personId],
+    [userId, personId],
   );
 
   const tasks = await query<{ title: string; due_at: string | null }>(
@@ -28,7 +29,7 @@ export async function regeneratePersonSummary(personId: string): Promise<void> {
      where user_id = $1 and person_id = $2 and completed = false and deleted_at is null
      order by due_at asc nulls last
      limit 5`,
-    [OWNER_ID, personId],
+    [userId, personId],
   );
 
   const result = await generatePersonSummary({
@@ -48,7 +49,7 @@ export async function regeneratePersonSummary(personId: string): Promise<void> {
       result.summary || person.summary,
       result.currentStatus ?? person.current_status,
       result.nextAction ?? person.next_action,
-      OWNER_ID,
+      userId,
       personId,
     ],
   );
@@ -56,7 +57,7 @@ export async function regeneratePersonSummary(personId: string): Promise<void> {
   if (result.summary) {
     await query(
       `insert into person_summaries (user_id, person_id, summary, generated_by) values ($1, $2, $3, $4)`,
-      [OWNER_ID, personId, result.summary, result.generatedBy],
+      [userId, personId, result.summary, result.generatedBy],
     );
   }
 

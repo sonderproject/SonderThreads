@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { query, queryOne } from "@/lib/db/client";
-import { OWNER_ID } from "@/lib/db/constants";
+import { requireUserId } from "@/lib/current-user";
 import { logActivity } from "./activity";
 import { createPersonSchema, updatePersonSchema, validate, toActionResult, type ActionResult } from "@/lib/validation";
 import type { Person } from "@/lib/types";
@@ -15,16 +15,18 @@ function splitName(fullName: string): { firstName: string; lastName: string | nu
 }
 
 export async function listPeople(): Promise<Person[]> {
+  const userId = await requireUserId();
   return query<Person>(
     `select * from people where user_id = $1 and deleted_at is null order by last_activity_at desc`,
-    [OWNER_ID],
+    [userId],
   );
 }
 
 export async function getPerson(id: string): Promise<Person | null> {
+  const userId = await requireUserId();
   return queryOne<Person>(
     `select * from people where user_id = $1 and id = $2 and deleted_at is null`,
-    [OWNER_ID, id],
+    [userId, id],
   );
 }
 
@@ -33,6 +35,7 @@ export async function createPersonRecord(params: {
   currentStatus?: string | null;
   nextAction?: string | null;
 }): Promise<Person> {
+  const userId = await requireUserId();
   params = validate(createPersonSchema, params);
   const { firstName, lastName } = splitName(params.fullName);
 
@@ -41,7 +44,7 @@ export async function createPersonRecord(params: {
      values ($1, $2, $3, $4, $5, $6)
      returning *`,
     [
-      OWNER_ID,
+      userId,
       firstName,
       lastName,
       params.fullName.trim(),
@@ -83,6 +86,7 @@ export async function findOrCreatePersonByName(
 
 /** Finds a person by loose name match without creating one. */
 export async function findPersonByName(fullName: string): Promise<Person | null> {
+  const userId = await requireUserId();
   const norm = fullName.trim().toLowerCase();
   if (!norm) return null;
 
@@ -93,7 +97,7 @@ export async function findPersonByName(fullName: string): Promise<Person | null>
        and (lower(display_name) = $2 or lower(first_name) = $2 or lower(display_name) like $2 || '%')
      order by (lower(display_name) = $2) desc
      limit 1`,
-    [OWNER_ID, norm],
+    [userId, norm],
   );
 }
 
@@ -103,6 +107,7 @@ export async function updatePerson(
     Pick<Person, "current_status" | "next_action" | "status" | "phone" | "email" | "birthday" | "display_name">
   >,
 ): Promise<Person> {
+  const userId = await requireUserId();
   patch = validate(updatePersonSchema, patch);
   const before = await getPerson(id);
 
@@ -126,7 +131,7 @@ export async function updatePerson(
     `update people set ${[...setClauses, "last_activity_at = now()"].join(", ")}
      where user_id = $1 and id = $2 and deleted_at is null
      returning *`,
-    [OWNER_ID, id, ...values],
+    [userId, id, ...values],
   );
 
   if (!person) throw new Error("Person not found");
@@ -135,7 +140,7 @@ export async function updatePerson(
     // List items keep a copy of the name as their label — keep linked ones in sync.
     await query(`update list_items set label = $1 where user_id = $2 and person_id = $3`, [
       person.display_name,
-      OWNER_ID,
+      userId,
       id,
     ]);
     await logActivity({
@@ -179,9 +184,10 @@ export async function updatePersonSafe(
 
 /** Soft-deletes a person — the row stays in the database (recoverable) but disappears from every view. */
 export async function deletePersonRecord(id: string): Promise<void> {
+  const userId = await requireUserId();
   const person = await queryOne<Person>(
     `update people set deleted_at = now() where user_id = $1 and id = $2 and deleted_at is null returning *`,
-    [OWNER_ID, id],
+    [userId, id],
   );
 
   if (person) {
@@ -197,13 +203,15 @@ export async function deletePersonRecord(id: string): Promise<void> {
 }
 
 export async function touchPersonActivity(id: string): Promise<void> {
+  const userId = await requireUserId();
   await query(
     `update people set last_activity_at = now() where user_id = $1 and id = $2 and deleted_at is null`,
-    [OWNER_ID, id],
+    [userId, id],
   );
 }
 
 export async function searchPeople(searchQuery: string): Promise<Person[]> {
+  const userId = await requireUserId();
   return query<Person>(
     `select * from people
      where user_id = $1
@@ -211,12 +219,13 @@ export async function searchPeople(searchQuery: string): Promise<Person[]> {
        and search_vector @@ plainto_tsquery('english', $2)
      order by ts_rank(search_vector, plainto_tsquery('english', $2)) desc
      limit 20`,
-    [OWNER_ID, searchQuery],
+    [userId, searchQuery],
   );
 }
 
 /** People needing attention: overdue tasks, no recent activity, or flagged for follow-up. */
 export async function getPeopleNeedingAttention(): Promise<Person[]> {
+  const userId = await requireUserId();
   const quietSince = new Date();
   quietSince.setDate(quietSince.getDate() - 7);
 
@@ -233,6 +242,6 @@ export async function getPeopleNeedingAttention(): Promise<Person[]> {
        and (c.needs_followup = true or c.last_activity_at < $2 or t.id is not null)
      order by c.last_activity_at asc
      limit 10`,
-    [OWNER_ID, quietSince.toISOString()],
+    [userId, quietSince.toISOString()],
   );
 }

@@ -1,7 +1,7 @@
 "use server";
 
 import { query } from "@/lib/db/client";
-import { OWNER_ID } from "@/lib/db/constants";
+import { requireUserId } from "@/lib/current-user";
 import type { Task } from "@/lib/types";
 
 export type CalendarBirthday = { personId: string; displayName: string; day: number };
@@ -11,6 +11,7 @@ export async function getCalendarMonth(
   year: number,
   month: number,
 ): Promise<{ tasks: Task[]; birthdays: CalendarBirthday[] }> {
+  const userId = await requireUserId();
   const tasks = await query<Task>(
     `select * from tasks
      where user_id = $1
@@ -19,7 +20,7 @@ export async function getCalendarMonth(
        and extract(year from due_at) = $2
        and extract(month from due_at) = $3
      order by due_at asc`,
-    [OWNER_ID, year, month],
+    [userId, year, month],
   );
 
   const birthdayRows = await query<{ id: string; display_name: string; day: number }>(
@@ -30,7 +31,7 @@ export async function getCalendarMonth(
        and birthday is not null
        and extract(month from birthday) = $2
      order by day asc`,
-    [OWNER_ID, month],
+    [userId, month],
   );
 
   return {

@@ -1,7 +1,7 @@
 "use server";
 
 import { query } from "@/lib/db/client";
-import { OWNER_ID } from "@/lib/db/constants";
+import { requireUserId } from "@/lib/current-user";
 import { parseCommand, type ParserContext } from "@/lib/ai/command-parser";
 import { fallbackProvider } from "@/lib/ai/providers/fallback";
 import { splitCommands } from "@/lib/ai/split";
@@ -24,14 +24,15 @@ function formatDateShort(iso: string | null): string {
 }
 
 async function loadParserContext(tzOffset: number): Promise<ParserContext> {
+  const userId = await requireUserId();
   const [people, lists] = await Promise.all([
     query<{ id: string; display_name: string; first_name: string; last_name: string | null }>(
       `select id, display_name, first_name, last_name from people where user_id = $1 and deleted_at is null`,
-      [OWNER_ID],
+      [userId],
     ),
     query<{ id: string; name: string; is_group: boolean }>(
       `select id, name, is_group from lists where user_id = $1 and deleted_at is null`,
-      [OWNER_ID],
+      [userId],
     ),
   ]);
 

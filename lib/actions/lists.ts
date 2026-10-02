@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { query, queryOne } from "@/lib/db/client";
-import { OWNER_ID } from "@/lib/db/constants";
+import { requireUserId } from "@/lib/current-user";
 import { logActivity } from "./activity";
 import { findPersonByName, findOrCreatePersonByName, touchPersonActivity } from "./people";
 import {
@@ -16,31 +16,34 @@ import {
 import type { List, ListItem } from "@/lib/types";
 
 export async function listLists(): Promise<List[]> {
+  const userId = await requireUserId();
   return query<List>(
     `select * from lists where user_id = $1 and deleted_at is null order by updated_at desc`,
-    [OWNER_ID],
+    [userId],
   );
 }
 
 export async function getListByName(name: string): Promise<List | null> {
+  const userId = await requireUserId();
   const trimmed = name.trim();
   if (!trimmed) return null;
   return queryOne<List>(
     `select * from lists where user_id = $1 and deleted_at is null and lower(name) = lower($2)`,
-    [OWNER_ID, trimmed],
+    [userId, trimmed],
   );
 }
 
 export async function getListWithItems(id: string): Promise<{ list: List; items: ListItem[] } | null> {
+  const userId = await requireUserId();
   const list = await queryOne<List>(
     `select * from lists where user_id = $1 and id = $2 and deleted_at is null`,
-    [OWNER_ID, id],
+    [userId, id],
   );
   if (!list) return null;
 
   const items = await query<ListItem>(
     `select * from list_items where user_id = $1 and list_id = $2 order by position asc`,
-    [OWNER_ID, id],
+    [userId, id],
   );
 
   return { list, items };
@@ -51,10 +54,11 @@ export async function createList(params: {
   description?: string | null;
   isGroup?: boolean;
 }): Promise<List> {
+  const userId = await requireUserId();
   params = validate(createListSchema, params);
   const list = await queryOne<List>(
     `insert into lists (user_id, name, description, is_group) values ($1, $2, $3, $4) returning *`,
-    [OWNER_ID, params.name.trim(), params.description ?? null, params.isGroup ?? false],
+    [userId, params.name.trim(), params.description ?? null, params.isGroup ?? false],
   );
 
   if (!list) throw new Error("Failed to create list");
@@ -86,9 +90,10 @@ export async function findOrCreateListByName(
 }
 
 export async function renameList(id: string, name: string): Promise<void> {
+  const userId = await requireUserId();
   await query(`update lists set name = $1 where user_id = $2 and id = $3 and deleted_at is null`, [
     name.trim(),
-    OWNER_ID,
+    userId,
     id,
   ]);
   revalidatePath(`/lists/${id}`);
@@ -96,18 +101,20 @@ export async function renameList(id: string, name: string): Promise<void> {
 }
 
 export async function updateListDescription(id: string, description: string): Promise<void> {
+  const userId = await requireUserId();
   await query(
     `update lists set description = $1 where user_id = $2 and id = $3 and deleted_at is null`,
-    [description, OWNER_ID, id],
+    [description, userId, id],
   );
   revalidatePath(`/lists/${id}`);
 }
 
 /** Soft-deletes a list — the row (and its items) stay in the database (recoverable) but disappear from every view. */
 export async function deleteList(id: string): Promise<void> {
+  const userId = await requireUserId();
   await query(
     `update lists set deleted_at = now() where user_id = $1 and id = $2 and deleted_at is null`,
-    [OWNER_ID, id],
+    [userId, id],
   );
   revalidatePath("/lists");
   revalidatePath("/");
@@ -115,6 +122,7 @@ export async function deleteList(id: string): Promise<void> {
 
 /** Undoes deleteList(). Fails quietly if another list has since taken the same name. */
 export async function restoreList(id: string): Promise<void> {
+  const userId = await requireUserId();
   await query(
     `update lists set deleted_at = null
      where user_id = $1 and id = $2 and deleted_at is not null
@@ -123,7 +131,7 @@ export async function restoreList(id: string): Promise<void> {
          where other.user_id = $1 and other.deleted_at is null
            and lower(other.name) = lower(lists.name)
        )`,
-    [OWNER_ID, id],
+    [userId, id],
   );
   revalidatePath("/lists");
   revalidatePath(`/lists/${id}`);
@@ -131,6 +139,7 @@ export async function restoreList(id: string): Promise<void> {
 }
 
 export async function duplicateList(id: string): Promise<List> {
+  const userId = await requireUserId();
   const existing = await getListWithItems(id);
   if (!existing) throw new Error("List not found");
 
@@ -144,7 +153,7 @@ export async function duplicateList(id: string): Promise<List> {
     await query(
       `insert into list_items (user_id, list_id, person_id, label, checked, position)
        values ($1, $2, $3, $4, false, $5)`,
-      [OWNER_ID, copy.id, item.person_id, item.label, index],
+      [userId, copy.id, item.person_id, item.label, index],
     );
   }
 
@@ -157,10 +166,11 @@ export async function addListItem(params: {
   label: string;
   personId?: string | null;
 }): Promise<ListItem> {
+  const userId = await requireUserId();
   params = validate(addListItemSchema, params);
   const last = await queryOne<{ position: number }>(
     `select position from list_items where user_id = $1 and list_id = $2 order by position desc limit 1`,
-    [OWNER_ID, params.listId],
+    [userId, params.listId],
   );
   const nextPosition = (last?.position ?? -1) + 1;
 
@@ -168,7 +178,7 @@ export async function addListItem(params: {
     `insert into list_items (user_id, list_id, person_id, label, position)
      values ($1, $2, $3, $4, $5)
      returning *`,
-    [OWNER_ID, params.listId, params.personId ?? null, params.label.trim(), nextPosition],
+    [userId, params.listId, params.personId ?? null, params.label.trim(), nextPosition],
   );
 
   if (!item) throw new Error("Failed to add list item");
@@ -199,11 +209,12 @@ export async function addNamesToList(
   isGroup: boolean,
   names: string[],
 ): Promise<{ createdPeople: string[]; linkedPeople: string[] }> {
+  const userId = await requireUserId();
   const createdPeople: string[] = [];
   const linkedPeople: string[] = [];
   const list = await queryOne<List>(
     `select * from lists where user_id = $1 and id = $2 and deleted_at is null`,
-    [OWNER_ID, listId],
+    [userId, listId],
   );
 
   for (const name of names) {
@@ -243,10 +254,11 @@ export async function addNamesToList(
 }
 
 export async function updateListItem(id: string, label: string): Promise<ListItem> {
+  const userId = await requireUserId();
   const params = validate(updateListItemSchema, { label });
   const item = await queryOne<ListItem>(
     `update list_items set label = $1 where user_id = $2 and id = $3 returning *`,
-    [params.label, OWNER_ID, id],
+    [params.label, userId, id],
   );
 
   if (!item) throw new Error("Item not found");
@@ -261,17 +273,19 @@ export async function updateListItemSafe(id: string, label: string): Promise<Act
 }
 
 export async function toggleListItem(id: string, checked: boolean): Promise<void> {
+  const userId = await requireUserId();
   const item = await queryOne<{ list_id: string }>(
     `update list_items set checked = $1 where user_id = $2 and id = $3 returning list_id`,
-    [checked, OWNER_ID, id],
+    [checked, userId, id],
   );
   if (item) revalidatePath(`/lists/${item.list_id}`);
 }
 
 export async function removeListItem(id: string): Promise<ListItem | null> {
+  const userId = await requireUserId();
   const item = await queryOne<ListItem>(
     `delete from list_items where user_id = $1 and id = $2 returning *`,
-    [OWNER_ID, id],
+    [userId, id],
   );
   if (item) revalidatePath(`/lists/${item.list_id}`);
   return item;
@@ -279,21 +293,23 @@ export async function removeListItem(id: string): Promise<ListItem | null> {
 
 /** Undoes removeListItem() by putting the same row (same id and position) back. */
 export async function restoreListItem(item: ListItem): Promise<void> {
+  const userId = await requireUserId();
   await query(
     `insert into list_items (id, user_id, list_id, person_id, label, checked, position, created_at)
      values ($1, $2, $3, $4, $5, $6, $7, $8)
      on conflict (id) do nothing`,
-    [item.id, OWNER_ID, item.list_id, item.person_id, item.label, item.checked, item.position, item.created_at],
+    [item.id, userId, item.list_id, item.person_id, item.label, item.checked, item.position, item.created_at],
   );
   revalidatePath(`/lists/${item.list_id}`);
 }
 
 export async function reorderListItems(listId: string, orderedIds: string[]): Promise<void> {
+  const userId = await requireUserId();
   await Promise.all(
     orderedIds.map((id, index) =>
       query(`update list_items set position = $1 where user_id = $2 and id = $3`, [
         index,
-        OWNER_ID,
+        userId,
         id,
       ]),
     ),
@@ -302,13 +318,14 @@ export async function reorderListItems(listId: string, orderedIds: string[]): Pr
 }
 
 export async function getListItemCounts(): Promise<Record<string, number>> {
+  const userId = await requireUserId();
   const rows = await query<{ list_id: string; count: string }>(
     `select li.list_id, count(*)::text as count
      from list_items li
      join lists l on l.id = li.list_id
      where li.user_id = $1 and l.deleted_at is null
      group by li.list_id`,
-    [OWNER_ID],
+    [userId],
   );
 
   const counts: Record<string, number> = {};
@@ -317,15 +334,17 @@ export async function getListItemCounts(): Promise<Record<string, number>> {
 }
 
 export async function listListsForPerson(personId: string): Promise<List[]> {
+  const userId = await requireUserId();
   return query<List>(
     `select distinct l.* from lists l
      join list_items li on li.list_id = l.id
      where l.user_id = $1 and l.deleted_at is null and li.person_id = $2`,
-    [OWNER_ID, personId],
+    [userId, personId],
   );
 }
 
 export async function searchLists(searchQuery: string): Promise<List[]> {
+  const userId = await requireUserId();
   return query<List>(
     `select * from lists
      where user_id = $1
@@ -333,6 +352,6 @@ export async function searchLists(searchQuery: string): Promise<List[]> {
        and search_vector @@ plainto_tsquery('english', $2)
      order by ts_rank(search_vector, plainto_tsquery('english', $2)) desc
      limit 20`,
-    [OWNER_ID, searchQuery],
+    [userId, searchQuery],
   );
 }

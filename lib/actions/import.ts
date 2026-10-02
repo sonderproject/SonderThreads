@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { query, queryOne } from "@/lib/db/client";
-import { OWNER_ID } from "@/lib/db/constants";
+import { requireUserId } from "@/lib/current-user";
 import { logActivity } from "./activity";
 import { createPersonRecord, touchPersonActivity } from "./people";
 import { findOrCreateListByName } from "./lists";
@@ -23,17 +23,18 @@ export async function importPeopleToList(params: {
   isGroup: boolean;
   rows: ImportRow[];
 }): Promise<ImportResult> {
+  const userId = await requireUserId();
   params = validate(importPeopleSchema, params);
   const { list } = await findOrCreateListByName(params.listName, params.isGroup);
 
   const onList = await query<{ person_id: string }>(
     `select person_id from list_items where user_id = $1 and list_id = $2 and person_id is not null`,
-    [OWNER_ID, list.id],
+    [userId, list.id],
   );
   const onListIds = new Set(onList.map((r) => r.person_id));
   const last = await queryOne<{ position: number }>(
     `select position from list_items where user_id = $1 and list_id = $2 order by position desc limit 1`,
-    [OWNER_ID, list.id],
+    [userId, list.id],
   );
   let position = (last?.position ?? -1) + 1;
 
@@ -44,7 +45,7 @@ export async function importPeopleToList(params: {
   for (const row of params.rows) {
     let person = await queryOne<Person>(
       `select * from people where user_id = $1 and deleted_at is null and lower(display_name) = lower($2) limit 1`,
-      [OWNER_ID, row.name],
+      [userId, row.name],
     );
     if (person) linked++;
     else {
@@ -58,7 +59,7 @@ export async function importPeopleToList(params: {
          phone = coalesce(phone, $4),
          birthday = coalesce(birthday, $5::date)
        where user_id = $1 and id = $2`,
-      [OWNER_ID, person.id, row.email, row.phone, row.birthday],
+      [userId, person.id, row.email, row.phone, row.birthday],
     );
 
     if (onListIds.has(person.id)) {
@@ -69,7 +70,7 @@ export async function importPeopleToList(params: {
 
     await query(
       `insert into list_items (user_id, list_id, person_id, label, position) values ($1, $2, $3, $4, $5)`,
-      [OWNER_ID, list.id, person.id, person.display_name, position++],
+      [userId, list.id, person.id, person.display_name, position++],
     );
     await touchPersonActivity(person.id);
     await logActivity({

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { query } from "@/lib/db/client";
-import { OWNER_ID } from "@/lib/db/constants";
+import { requireUserId } from "@/lib/current-user";
 import type { Activity, Person, List, ListItem, Note, Task } from "@/lib/types";
 
 const COLUMNS = {
@@ -39,16 +39,17 @@ function toCsv<T extends Record<string, unknown>>(rows: T[]): string {
 }
 
 export async function GET(request: Request) {
+  const userId = await requireUserId();
   const { searchParams } = new URL(request.url);
   const format = searchParams.get("format") === "csv" ? "csv" : "json";
 
   const [people, notes, lists, listItems, tasks, activity] = await Promise.all([
-    query<Person>(`select ${COLUMNS.people} from people where user_id = $1 and deleted_at is null order by display_name`, [OWNER_ID]),
-    query<Note>(`select ${COLUMNS.notes} from notes where user_id = $1 and deleted_at is null order by created_at`, [OWNER_ID]),
-    query<List>(`select ${COLUMNS.lists} from lists where user_id = $1 and deleted_at is null order by name`, [OWNER_ID]),
-    query<ListItem>(`select ${COLUMNS.list_items} from list_items where user_id = $1 order by list_id, position`, [OWNER_ID]),
-    query<Task>(`select ${COLUMNS.tasks} from tasks where user_id = $1 and deleted_at is null order by due_at nulls last`, [OWNER_ID]),
-    query<Activity>(`select ${COLUMNS.activity} from activity where user_id = $1 order by created_at`, [OWNER_ID]),
+    query<Person>(`select ${COLUMNS.people} from people where user_id = $1 and deleted_at is null order by display_name`, [userId]),
+    query<Note>(`select ${COLUMNS.notes} from notes where user_id = $1 and deleted_at is null order by created_at`, [userId]),
+    query<List>(`select ${COLUMNS.lists} from lists where user_id = $1 and deleted_at is null order by name`, [userId]),
+    query<ListItem>(`select ${COLUMNS.list_items} from list_items where user_id = $1 order by list_id, position`, [userId]),
+    query<Task>(`select ${COLUMNS.tasks} from tasks where user_id = $1 and deleted_at is null order by due_at nulls last`, [userId]),
+    query<Activity>(`select ${COLUMNS.activity} from activity where user_id = $1 order by created_at`, [userId]),
   ]);
 
   const timestamp = new Date().toISOString().slice(0, 10);

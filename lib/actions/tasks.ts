@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { query, queryOne } from "@/lib/db/client";
-import { OWNER_ID } from "@/lib/db/constants";
+import { requireUserId } from "@/lib/current-user";
 import { logActivity } from "./activity";
 import { touchPersonActivity } from "./people";
 import { nextDueDate } from "@/lib/recurrence";
@@ -16,18 +16,20 @@ import {
 import type { Task, TaskRecurrence } from "@/lib/types";
 
 export async function listTasks(): Promise<Task[]> {
+  const userId = await requireUserId();
   return query<Task>(
     `select * from tasks where user_id = $1 and deleted_at is null order by due_at asc nulls last`,
-    [OWNER_ID],
+    [userId],
   );
 }
 
 export async function listTasksForPerson(personId: string): Promise<Task[]> {
+  const userId = await requireUserId();
   return query<Task>(
     `select * from tasks
      where user_id = $1 and person_id = $2 and deleted_at is null
      order by completed asc, due_at asc nulls last`,
-    [OWNER_ID, personId],
+    [userId, personId],
   );
 }
 
@@ -39,13 +41,14 @@ export async function createTask(params: {
   notes?: string | null;
   recurrence?: TaskRecurrence | null;
 }): Promise<Task> {
+  const userId = await requireUserId();
   params = validate(createTaskSchema, params);
   const task = await queryOne<Task>(
     `insert into tasks (user_id, title, person_id, list_id, due_at, notes, recurrence)
      values ($1, $2, $3, $4, $5, $6, $7)
      returning *`,
     [
-      OWNER_ID,
+      userId,
       params.title.trim(),
       params.personId ?? null,
       params.listId ?? null,
@@ -80,11 +83,12 @@ export async function createTaskSafe(params: Parameters<typeof createTask>[0]): 
 }
 
 export async function setTaskCompleted(id: string, completed: boolean): Promise<void> {
+  const userId = await requireUserId();
   const task = await queryOne<Task>(
     `update tasks set completed = $1, completed_at = $2
      where user_id = $3 and id = $4 and deleted_at is null
      returning *`,
-    [completed, completed ? new Date().toISOString() : null, OWNER_ID, id],
+    [completed, completed ? new Date().toISOString() : null, userId, id],
   );
 
   if (!task) throw new Error("Task not found");
@@ -104,7 +108,7 @@ export async function setTaskCompleted(id: string, completed: boolean): Promise<
     await query(
       `update tasks set deleted_at = now()
        where user_id = $1 and recurs_from = $2 and completed = false and deleted_at is null`,
-      [OWNER_ID, task.id],
+      [userId, task.id],
     );
   }
 
@@ -119,11 +123,12 @@ export async function setTaskCompleted(id: string, completed: boolean): Promise<
  * un-checking and re-checking the same task doesn't stack up duplicates.
  */
 async function spawnNextOccurrence(task: Task): Promise<void> {
+  const userId = await requireUserId();
   if (!task.recurrence) return;
 
   const existing = await queryOne<{ id: string }>(
     `select id from tasks where user_id = $1 and recurs_from = $2 and deleted_at is null limit 1`,
-    [OWNER_ID, task.id],
+    [userId, task.id],
   );
   if (existing) return;
 
@@ -131,7 +136,7 @@ async function spawnNextOccurrence(task: Task): Promise<void> {
     `insert into tasks (user_id, title, notes, person_id, list_id, due_at, recurrence, recurs_from)
      values ($1, $2, $3, $4, $5, $6, $7, $8)`,
     [
-      OWNER_ID,
+      userId,
       task.title,
       task.notes,
       task.person_id,
@@ -154,11 +159,12 @@ export async function restoreTask(id: string): Promise<void> {
 }
 
 async function setTaskDeleted(id: string, deleted: boolean): Promise<void> {
+  const userId = await requireUserId();
   const task = await queryOne<Task>(
     `update tasks set deleted_at = ${deleted ? "now()" : "null"}
      where user_id = $1 and id = $2 and deleted_at is ${deleted ? "null" : "not null"}
      returning *`,
-    [OWNER_ID, id],
+    [userId, id],
   );
   revalidatePath("/tasks");
   revalidatePath("/");
@@ -170,11 +176,12 @@ export async function updateTask(
   id: string,
   patch: Partial<Pick<Task, "title" | "due_at" | "notes" | "person_id" | "list_id" | "recurrence">>,
 ): Promise<Task> {
+  const userId = await requireUserId();
   patch = validate(updateTaskSchema, patch);
   const fields = Object.keys(patch) as (keyof typeof patch)[];
   if (fields.length === 0) {
     const task = await queryOne<Task>(`select * from tasks where user_id = $1 and id = $2`, [
-      OWNER_ID,
+      userId,
       id,
     ]);
     if (!task) throw new Error("Task not found");
@@ -188,7 +195,7 @@ export async function updateTask(
     `update tasks set ${setClauses.join(", ")}
      where user_id = $1 and id = $2 and deleted_at is null
      returning *`,
-    [OWNER_ID, id, ...values],
+    [userId, id, ...values],
   );
 
   if (!task) throw new Error("Task not found");
@@ -210,6 +217,7 @@ export async function updateTaskSafe(
 }
 
 export async function searchTasks(searchQuery: string): Promise<Task[]> {
+  const userId = await requireUserId();
   return query<Task>(
     `select * from tasks
      where user_id = $1
@@ -217,6 +225,6 @@ export async function searchTasks(searchQuery: string): Promise<Task[]> {
        and search_vector @@ plainto_tsquery('english', $2)
      order by ts_rank(search_vector, plainto_tsquery('english', $2)) desc
      limit 20`,
-    [OWNER_ID, searchQuery],
+    [userId, searchQuery],
   );
 }

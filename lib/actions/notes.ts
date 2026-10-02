@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { query, queryOne } from "@/lib/db/client";
-import { OWNER_ID } from "@/lib/db/constants";
+import { requireUserId } from "@/lib/current-user";
 import { truncate } from "./helpers";
 import { logActivity } from "./activity";
 import { touchPersonActivity } from "./people";
@@ -22,13 +22,14 @@ export async function createNote(params: {
   category?: string | null;
   aiMetadata?: Record<string, unknown> | null;
 }): Promise<Note> {
+  const userId = await requireUserId();
   params = validate(createNoteSchema, params);
   const note = await queryOne<Note>(
     `insert into notes (user_id, content, person_id, category, ai_metadata)
      values ($1, $2, $3, $4, $5)
      returning *`,
     [
-      OWNER_ID,
+      userId,
       params.content,
       params.personId ?? null,
       params.category ?? null,
@@ -63,38 +64,43 @@ export async function createNoteSafe(params: Parameters<typeof createNote>[0]): 
 }
 
 export async function listRecentNotes(limit = 10): Promise<Note[]> {
+  const userId = await requireUserId();
   return query<Note>(
     `select * from notes where user_id = $1 and deleted_at is null order by created_at desc limit $2`,
-    [OWNER_ID, limit],
+    [userId, limit],
   );
 }
 
 export async function listAllNotes(): Promise<Note[]> {
+  const userId = await requireUserId();
   return query<Note>(
     `select * from notes where user_id = $1 and deleted_at is null order by created_at desc limit 200`,
-    [OWNER_ID],
+    [userId],
   );
 }
 
 export async function listStandaloneNotes(): Promise<Note[]> {
+  const userId = await requireUserId();
   return query<Note>(
     `select * from notes where user_id = $1 and person_id is null and deleted_at is null order by created_at desc`,
-    [OWNER_ID],
+    [userId],
   );
 }
 
 export async function listNotesForPerson(personId: string): Promise<Note[]> {
+  const userId = await requireUserId();
   return query<Note>(
     `select * from notes where user_id = $1 and person_id = $2 and deleted_at is null order by created_at desc`,
-    [OWNER_ID, personId],
+    [userId, personId],
   );
 }
 
 export async function updateNote(id: string, content: string): Promise<Note> {
+  const userId = await requireUserId();
   const params = validate(updateNoteSchema, { content });
   const note = await queryOne<Note>(
     `update notes set content = $1 where user_id = $2 and id = $3 and deleted_at is null returning *`,
-    [params.content, OWNER_ID, id],
+    [params.content, userId, id],
   );
 
   if (!note) throw new Error("Note not found");
@@ -122,11 +128,12 @@ export async function restoreNote(id: string): Promise<void> {
 }
 
 async function setNoteDeleted(id: string, deleted: boolean): Promise<void> {
+  const userId = await requireUserId();
   const note = await queryOne<Note>(
     `update notes set deleted_at = ${deleted ? "now()" : "null"}
      where user_id = $1 and id = $2 and deleted_at is ${deleted ? "null" : "not null"}
      returning *`,
-    [OWNER_ID, id],
+    [userId, id],
   );
   revalidatePath("/notes");
   revalidatePath("/");
@@ -134,6 +141,7 @@ async function setNoteDeleted(id: string, deleted: boolean): Promise<void> {
 }
 
 export async function searchNotes(searchQuery: string): Promise<Note[]> {
+  const userId = await requireUserId();
   return query<Note>(
     `select * from notes
      where user_id = $1
@@ -141,6 +149,6 @@ export async function searchNotes(searchQuery: string): Promise<Note[]> {
        and search_vector @@ plainto_tsquery('english', $2)
      order by ts_rank(search_vector, plainto_tsquery('english', $2)) desc
      limit 20`,
-    [OWNER_ID, searchQuery],
+    [userId, searchQuery],
   );
 }
