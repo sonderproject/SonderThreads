@@ -24,9 +24,9 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  // Everything except the sign-in/sign-up/password-reset pages and static assets (icons and
+  // Everything except the sign-in/sign-up/password-reset pages, the sitemap and static assets (icons and
   // the manifest must load before sign-in so "Add to Home Screen" works).
   matcher: [
-    "/((?!login|signup|forgot-password|reset-password|_next/static|_next/image|favicon.ico|robots.txt|manifest.webmanifest|icon-.*\\.png|apple-touch-icon.*\\.png).*)",
+    "/((?!login|signup|forgot-password|reset-password|sitemap.xml|_next/static|_next/image|favicon.ico|robots.txt|manifest.webmanifest|icon-.*\\.png|apple-touch-icon.*\\.png).*)",
   ],
 };
