@@ -1,15 +1,17 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { queryOne, transaction } from "@/lib/db/client";
+import { query, queryOne, transaction } from "@/lib/db/client";
 import { LEGACY_OWNER_ID } from "@/lib/db/constants";
 import { getAppPassword, safeEqual, safeNextPath } from "@/lib/auth";
-import { endSession, getSessionUser, hashPassword, startSession, verifyPassword } from "@/lib/session";
+import { randomBytes } from "crypto";
+import { endSession, getSessionUser, hashPassword, hashToken, startSession, verifyPassword } from "@/lib/session";
+import { appUrl, emailConfigured, sendEmail } from "@/lib/email";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MIN_PASSWORD_LENGTH = 8;
 
-function back(path: "/login" | "/signup", error: string, email: string, next: string): never {
+function back(path: "/login" | "/signup" | "/reset-password", error: string, email: string, next: string): never {
   const params = new URLSearchParams({ error });
   if (email) params.set("email", email);
   if (next !== "/") params.set("next", next);
@@ -99,4 +101,80 @@ export async function deleteAccount(formData: FormData): Promise<void> {
   });
   await endSession();
   redirect("/signup?deleted=1");
+}
+
+const RESET_TTL_MINUTES = 60;
+
+/**
+ * Emails a one-time reset link. Always ends on the same "check your email"
+ * screen, whether or not the address has an account, so the form can't be
+ * used to find out who's signed up.
+ */
+export async function requestPasswordReset(formData: FormData): Promise<void> {
+  const email = formData.get("email")?.toString().trim().toLowerCase() ?? "";
+  if (!emailConfigured()) redirect("/login");
+
+  const user = await queryOne<{ id: string; email: string }>(
+    `select id, email from users where lower(email) = $1`,
+    [email],
+  );
+  // At most one email a minute per account, so the form can't be used to spam someone.
+  const recent =
+    user &&
+    (await queryOne(
+      `select 1 from password_resets where user_id = $1 and created_at > now() - interval '1 minute'`,
+      [user.id],
+    ));
+
+  if (user && !recent) {
+    const token = randomBytes(32).toString("base64url");
+    await query(`delete from password_resets where user_id = $1`, [user.id]);
+    await query(
+      `insert into password_resets (id, user_id, expires_at)
+       values ($1, $2, now() + make_interval(mins => $3))`,
+      [hashToken(token), user.id, RESET_TTL_MINUTES],
+    );
+    try {
+      await sendEmail({
+        to: user.email,
+        subject: "Reset your sonderthreads password",
+        text:
+          `Someone asked to reset the password for this sonderthreads account.\n\n` +
+          `Set a new password here (the link works once and expires in 1 hour):\n` +
+          `${appUrl()}/reset-password?token=${token}\n\n` +
+          `If it wasn't you, ignore this email. Your password won't change.`,
+      });
+    } catch (err) {
+      console.error("[password reset] email failed", err);
+    }
+  }
+
+  redirect("/forgot-password?sent=1");
+}
+
+/** Sets a new password from an emailed link, signs out every other device, and signs in here. */
+export async function resetPassword(formData: FormData): Promise<void> {
+  const token = formData.get("token")?.toString() ?? "";
+  const password = formData.get("password")?.toString() ?? "";
+  const retry = (error: string) => redirect(`/reset-password?${new URLSearchParams({ token, error })}`);
+
+  if (password.length < MIN_PASSWORD_LENGTH) retry("short");
+
+  const passwordHash = await hashPassword(password);
+  const userId = await transaction(async (q) => {
+    const res = (await q(
+      `delete from password_resets where id = $1 and expires_at > now() returning user_id`,
+      [hashToken(token)],
+    )) as { rows: { user_id: string }[] };
+    const id = res.rows[0]?.user_id;
+    if (!id) return null;
+    await q(`update users set password_hash = $1, updated_at = now() where id = $2`, [passwordHash, id]);
+    await q(`delete from password_resets where user_id = $1`, [id]);
+    await q(`delete from sessions where user_id = $1`, [id]);
+    return id;
+  });
+  if (!userId) redirect("/reset-password?error=invalid");
+
+  await startSession(userId);
+  redirect("/");
 }

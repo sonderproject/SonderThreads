@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { login } from "./actions";
+import { emailConfigured } from "@/lib/email";
 
 export const dynamic = "force-dynamic";
 
@@ -42,6 +43,13 @@ export default async function LoginPage({
         >
           Sign in
         </button>
+        {emailConfigured() && (
+          <p className="text-center text-xs">
+            <Link href="/forgot-password" className="text-text-muted hover:text-accent hover:underline">
+              Forgot password?
+            </Link>
+          </p>
+        )}
         <p className="text-center text-xs text-text-muted">
           New here?{" "}
           <Link href={signupHref} className="text-accent hover:underline">

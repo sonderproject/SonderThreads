@@ -248,6 +248,17 @@ create table if not exists sessions (
 
 create index if not exists sessions_user_id_idx on sessions(user_id);
 
+-- Forgot-password links. Like sessions, id is a SHA-256 of the emailed
+-- token; a row is deleted as soon as it's used.
+create table if not exists password_resets (
+  id text primary key,
+  user_id uuid not null references users(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  expires_at timestamptz not null
+);
+
+create index if not exists password_resets_user_id_idx on password_resets(user_id);
+
 -- No silent fallback to the old single owner: an insert that forgets
 -- user_id now fails instead of landing in someone else's account.
 alter table people alter column user_id drop default;

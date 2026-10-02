@@ -1,6 +1,6 @@
 # Accounts plan
 
-Status: **email sign-up is live** (steps 1–7, 11, 13). Google, Apple and the public deletion page (steps 8–10, 12) are still to do.
+Status: **email sign-up is live** (steps 1–7, 11, 13). Forgot password is built (Resend; needs `RESEND_API_KEY` + `EMAIL_FROM`). Google, Apple and the public deletion page (steps 8–10, 12) are still to do.
 Every query gets its `user_id` from `requireUserId()` in `lib/current-user.ts`,
 which looks up the signed-in session.
 
