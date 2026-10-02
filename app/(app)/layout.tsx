@@ -4,10 +4,7 @@ import { SetupIssuePanel } from "@/components/diagnostics/SetupIssuePanel";
 import { listPeople } from "@/lib/actions/people";
 import { listLists } from "@/lib/actions/lists";
 
-// This whole route group is a live, personal dashboard — never prerender it.
-// Without this, Next.js can attempt to statically generate "/" at build
-// time, and the demo-data seeding call (which writes to the database) then
-// fails with "revalidatePath used during render is unsupported".
+// This whole route group is a live, per-user dashboard — never prerender it.
 export const dynamic = "force-dynamic";
 
 export default async function AppGroupLayout({ children }: { children: React.ReactNode }) {

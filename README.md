@@ -13,13 +13,12 @@ A minimal, command-first personal tracker for staying on top of people, notes, l
 
 - **One command bar.** Type natural language ("Add Marcus Johnson to Group 7", "Remind me to call Marcus Friday") and the app figures out what you meant.
 - **No AI key required.** `lib/ai/command-parser.ts` and `lib/ai/person-summary.ts` are provider-agnostic. Out of the box they use a deterministic, regex-based fallback parser (`lib/ai/providers/fallback.ts`) so the app is fully functional with zero API keys. Set `AI_PROVIDER=openai` or `AI_PROVIDER=anthropic` plus the matching API key to upgrade to model-based parsing/summaries.
-- **Single-user, no login.** There's exactly one owner (a fixed id in `lib/db/constants.ts`) and no authentication layer at all — the app talks directly to Postgres with a plain connection string. Every table still has a `user_id` column, so real per-user accounts can be added later without a schema change.
+- **Accounts.** Email + password sign-up (open to anyone), stored in the app's own `users` and `sessions` tables — no auth service. Every query is scoped to the signed-in user through `requireUserId()` in `lib/current-user.ts`, so each account sees only its own data. New accounts start empty. Data from before accounts belongs to whoever signs up first while entering the old `APP_PASSWORD`. Account → Delete account removes the account and everything in it. Google/Apple sign-in are planned (`docs/accounts-plan.md`).
 - **Groups, import, recurring tasks, stale flag.** Import a CSV (or a plain one-name-per-line file) from the People or Lists page to create a list of people — name/first+last, email, phone and birthday columns are recognized. Tasks can repeat daily/weekly/monthly (from the task forms, or "Remind me to call Marcus every Monday"); checking one off schedules the next. Anyone with no activity for 14+ days gets a **stale** badge.
-- **Password-protected.** Every page and the export endpoint require the `APP_PASSWORD` environment variable's password (30-day sign-in, ⏻ in the header signs out). It's one shared password, so everyone who has it sees the same data. Per-user accounts are the next step before sharing the app.
 - **Phone-first on small screens.** Below the `sm` breakpoint the app switches to a bottom tab bar, a floating + button that opens the command bar, and bottom sheets for every form. It's installable ("Add to Home Screen") and opens full-screen with its own icon.
 - **Forgiving and fast.** The command bar previews what it will do as you type. Completing, deleting, snoozing or moving something shows a 5-second Undo. On phones, swipe a task right to complete it or left to snooze it; list items reorder by dragging the ⠿ handle (mouse or finger). ⌘K / Ctrl+K searches everything.
 - **Fast input.** Tap the mic (or hold the + button on a phone) and speak. Short commands like "new note" or "new list" ask a follow-up question and keep listening. Several sentences or lines at once become separate items. Dates and times ("Friday at 3", "Oct 5", "in 2 weeks", "tonight") resolve in your own time zone. `@` and `#` autocomplete people and lists; `/` opens the command bar anywhere. Voice uses the browser's free speech recognition where available and falls back to OpenAI transcription (needs `OPENAI_API_KEY`) on iPhone home-screen apps.
-- **Self-provisioning.** The app creates its own tables on first connection (`lib/db/client.ts` → `ensureSchema()`) and seeds demo data on first empty load. Point it at a brand-new, completely empty Postgres database and there is nothing else to run anywhere — no migration step, no SQL editor, no CLI command. Databases from before the People/Group rename (`clients`, `client_id`, `is_cohort`) are renamed in place on the next start — no data is dropped.
+- **Self-provisioning.** The app creates its own tables on first connection (`lib/db/client.ts` → `ensureSchema()`). Point it at a brand-new, completely empty Postgres database and there is nothing else to run anywhere — no migration step, no SQL editor, no CLI command. Databases from before the People/Group rename (`clients`, `client_id`, `is_cohort`) are renamed in place on the next start — no data is dropped.
 
 ## Setup
 
@@ -32,7 +31,7 @@ Easiest path — Vercel's own Storage tab:
 
 Any other Postgres works too (Neon, Railway, a local install) — just put its connection string in `POSTGRES_URL`.
 
-That's the entire setup. The first request the app handles creates all its tables automatically (`people`, `notes`, `lists`, `list_items`, `tasks`, `person_summaries`, `activity`) and seeds demo data — `db/schema.sql` is kept only as a human-readable reference of what gets created; nothing needs to be run against the database by hand.
+That's the entire setup. The first request the app handles creates all its tables automatically (`users`, `sessions`, `people`, `notes`, `lists`, `list_items`, `tasks`, `person_summaries`, `activity`) — `db/schema.sql` is kept only as a human-readable reference of what gets created; nothing needs to be run against the database by hand.
 
 ### 2. Configure environment variables
 
@@ -51,7 +50,7 @@ npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000). The dashboard creates its tables and seeds demo people (Marcus Johnson, James Smith, Wes Carter), a "Group 7" list, and a few notes/tasks the first time you load it.
+Open [http://localhost:3000](http://localhost:3000) and create an account.
 
 ### 4. Deploy to Vercel
 

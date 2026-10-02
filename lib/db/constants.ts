@@ -1,7 +1,7 @@
 /**
- * This is a single-user app for now — every row belongs to this fixed id
- * rather than a real authenticated account. The column is still named
- * user_id and kept on every table so real multi-user auth can be added
- * later without a schema change.
+ * Before accounts existed every row belonged to this fixed id. The first
+ * person to sign up with the old shared APP_PASSWORD gets an account with
+ * this id, so they keep all of that data. Nothing else should use it —
+ * every query is scoped to the signed-in user via requireUserId().
  */
-export const OWNER_ID = "00000000-0000-0000-0000-000000000001";
+export const LEGACY_OWNER_ID = "00000000-0000-0000-0000-000000000001";

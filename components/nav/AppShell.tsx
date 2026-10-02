@@ -74,6 +74,14 @@ export function AppShell({
                   ⭳
                 </a>
                 <ThemeToggle />
+                <Link
+                  href="/account"
+                  title="Account"
+                  aria-label="Account"
+                  className="rounded px-2 py-1.5 text-sm text-text-muted transition-colors hover:bg-bg-hover hover:text-text"
+                >
+                  ☺
+                </Link>
                 <form action={logout}>
                   <button
                     type="submit"

@@ -11,7 +11,6 @@ import { listPeople, getPeopleNeedingAttention } from "@/lib/actions/people";
 import { listTasks } from "@/lib/actions/tasks";
 import { listRecentNotes } from "@/lib/actions/notes";
 import { getCalendarMonth } from "@/lib/actions/calendar";
-import { seedDemoDataIfEmpty } from "@/lib/actions/seed";
 import { buildWeeks } from "@/lib/calendar-utils";
 
 function isToday(iso: string): boolean {
@@ -29,8 +28,6 @@ function isOverdue(iso: string): boolean {
 }
 
 export default async function DashboardPage() {
-  await seedDemoDataIfEmpty();
-
   const now = new Date();
   const year = now.getFullYear();
   const month = now.getMonth() + 1;

@@ -220,4 +220,41 @@ create table if not exists activity (
 
 create index if not exists activity_user_id_idx on activity(user_id, created_at desc);
 create index if not exists activity_person_id_idx on activity(person_id, created_at desc);
+
+-- Accounts. Before accounts existed every row belonged to one fixed owner id
+-- (LEGACY_OWNER_ID in lib/db/constants.ts); the first person to sign up with
+-- the old shared APP_PASSWORD is created with that id, so they keep all of
+-- that data without any rows being moved.
+create table if not exists users (
+  id uuid primary key default gen_random_uuid(),
+  email text not null,
+  name text,
+  password_hash text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create unique index if not exists users_email_idx on users(lower(email));
+
+-- id is a SHA-256 of the session token, so a leaked copy of this table
+-- can't be used to sign in. The same token works as a cookie (web) or an
+-- "Authorization: Bearer" header (future native apps).
+create table if not exists sessions (
+  id text primary key,
+  user_id uuid not null references users(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  expires_at timestamptz not null
+);
+
+create index if not exists sessions_user_id_idx on sessions(user_id);
+
+-- No silent fallback to the old single owner: an insert that forgets
+-- user_id now fails instead of landing in someone else's account.
+alter table people alter column user_id drop default;
+alter table notes alter column user_id drop default;
+alter table lists alter column user_id drop default;
+alter table list_items alter column user_id drop default;
+alter table tasks alter column user_id drop default;
+alter table person_summaries alter column user_id drop default;
+alter table activity alter column user_id drop default;
 `;

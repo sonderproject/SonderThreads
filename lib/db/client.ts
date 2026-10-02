@@ -111,6 +111,25 @@ export async function queryOne<T extends QueryResultRow = QueryResultRow>(
   return rows[0] ?? null;
 }
 
+/** Runs fn inside one transaction: everything commits together or nothing does. */
+export async function transaction<T>(
+  fn: (q: (text: string, params?: unknown[]) => Promise<unknown>) => Promise<T>,
+): Promise<T> {
+  await ensureSchema();
+  const client = await getPool().connect();
+  try {
+    await client.query("begin");
+    const result = await fn((text, params = []) => client.query(text, params));
+    await client.query("commit");
+    return result;
+  } catch (err) {
+    await client.query("rollback").catch(() => undefined);
+    throw err;
+  } finally {
+    client.release();
+  }
+}
+
 export async function checkDatabaseConnection(): Promise<{ ok: true } | { ok: false; detail: string }> {
   try {
     if (!resolveConnectionString()) {

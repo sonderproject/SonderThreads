@@ -1,9 +1,8 @@
 # Accounts plan
 
-Status: **not started.** The groundwork is in place: every query gets its
-`user_id` from `requireUserId()` in `lib/current-user.ts`, which returns the
-single fixed owner today. Turning accounts on means making that function
-look up a real session. No other data code needs to change.
+Status: **email sign-up is live** (steps 1–7, 11, 13). Google, Apple and the public deletion page (steps 8–10, 12) are still to do.
+Every query gets its `user_id` from `requireUserId()` in `lib/current-user.ts`,
+which looks up the signed-in session.
 
 ## Decisions already made
 

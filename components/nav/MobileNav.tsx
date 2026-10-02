@@ -23,6 +23,7 @@ const TABS = [
 const MORE_LINKS = [
   { href: "/lists", label: "Lists" },
   { href: "/notes", label: "Notes" },
+  { href: "/account", label: "Account" },
 ];
 
 function isActive(pathname: string, href: string) {

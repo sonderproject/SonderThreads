@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { query } from "@/lib/db/client";
-import { requireUserId } from "@/lib/current-user";
+import { getSessionUser } from "@/lib/session";
 import type { Activity, Person, List, ListItem, Note, Task } from "@/lib/types";
 
 const COLUMNS = {
@@ -39,7 +39,9 @@ function toCsv<T extends Record<string, unknown>>(rows: T[]): string {
 }
 
 export async function GET(request: Request) {
-  const userId = await requireUserId();
+  const user = await getSessionUser();
+  if (!user) return NextResponse.json({ error: "Not signed in" }, { status: 401 });
+  const userId = user.id;
   const { searchParams } = new URL(request.url);
   const format = searchParams.get("format") === "csv" ? "csv" : "json";
 

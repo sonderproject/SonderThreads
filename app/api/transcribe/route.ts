@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getSessionUser } from "@/lib/session";
 
 export const runtime = "nodejs";
 
@@ -6,11 +7,14 @@ const MAX_BYTES = 10 * 1024 * 1024; // ~several minutes of compressed speech; co
 
 /**
  * Speech-to-text for voice commands on devices without built-in speech
- * recognition (notably iPhone home-screen apps). Behind the password gate
- * via middleware, so strangers can't run up the transcription bill.
+ * recognition (notably iPhone home-screen apps). Signed-in users only, so
+ * strangers can't run up the transcription bill.
  * Returns 501 when OPENAI_API_KEY isn't configured.
  */
 export async function POST(request: Request) {
+  if (!(await getSessionUser())) {
+    return NextResponse.json({ error: "Not signed in" }, { status: 401 });
+  }
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
     return NextResponse.json({ error: "Voice transcription isn't set up yet." }, { status: 501 });

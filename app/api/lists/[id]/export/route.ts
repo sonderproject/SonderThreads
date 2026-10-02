@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import ExcelJS from "exceljs";
 import PDFDocument from "pdfkit";
 import { query, queryOne } from "@/lib/db/client";
-import { requireUserId } from "@/lib/current-user";
+import { getSessionUser } from "@/lib/session";
 import type { List } from "@/lib/types";
 
 // pdfkit and exceljs need Node APIs (fs, streams).
@@ -113,7 +113,9 @@ function toPdf(list: List, exportedOn: string, headers: string[], body: string[]
 }
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const userId = await requireUserId();
+  const user = await getSessionUser();
+  if (!user) return NextResponse.json({ error: "Not signed in" }, { status: 401 });
+  const userId = user.id;
   const { id } = await params;
   const raw = new URL(request.url).searchParams.get("format");
   if (raw !== "pdf" && raw !== "xlsx") {

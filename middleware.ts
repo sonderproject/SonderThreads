@@ -1,13 +1,17 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { SESSION_COOKIE, getAppPassword, safeEqual, sessionToken } from "@/lib/auth";
+import { SESSION_COOKIE } from "@/lib/auth";
 
-export async function middleware(request: NextRequest) {
-  const password = getAppPassword();
-  const cookie = request.cookies.get(SESSION_COOKIE)?.value;
-
-  if (password && cookie && safeEqual(cookie, await sessionToken(password))) {
-    return NextResponse.next();
-  }
+/**
+ * First-pass gate: sends anyone without a session cookie (or bearer token)
+ * to sign-in. Middleware runs on the Edge and can't reach Postgres, so it
+ * only checks that a token is present — requireUserId()/getSessionUser()
+ * validate it against the sessions table on every data access.
+ */
+export function middleware(request: NextRequest) {
+  const hasToken =
+    !!request.cookies.get(SESSION_COOKIE)?.value ||
+    !!request.headers.get("authorization")?.toLowerCase().startsWith("bearer ");
+  if (hasToken) return NextResponse.next();
 
   const { pathname, search } = request.nextUrl;
   if (pathname.startsWith("/api/")) {
@@ -20,9 +24,9 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  // Everything except the login page itself and static assets (icons and the
-  // manifest must load before sign-in so "Add to Home Screen" works).
+  // Everything except the sign-in/sign-up pages and static assets (icons and
+  // the manifest must load before sign-in so "Add to Home Screen" works).
   matcher: [
-    "/((?!login|_next/static|_next/image|favicon.ico|robots.txt|manifest.webmanifest|icon-.*\\.png|apple-touch-icon.*\\.png).*)",
+    "/((?!login|signup|_next/static|_next/image|favicon.ico|robots.txt|manifest.webmanifest|icon-.*\\.png|apple-touch-icon.*\\.png).*)",
   ],
 };
