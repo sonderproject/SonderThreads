@@ -42,7 +42,11 @@ export async function getListWithItems(id: string): Promise<{ list: List; items:
   if (!list) return null;
 
   const items = await query<ListItem>(
-    `select * from list_items where user_id = $1 and list_id = $2 order by position asc`,
+    // An item whose person was deleted shows as plain text, not a dead link.
+    `select li.*, case when p.deleted_at is null then li.person_id end as person_id
+       from list_items li left join people p on p.id = li.person_id
+      where li.user_id = $1 and li.list_id = $2
+      order by li.position asc`,
     [userId, id],
   );
 

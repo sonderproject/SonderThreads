@@ -121,7 +121,10 @@ export async function addListItemsToPeople(listId: string): Promise<ListToPeople
   if (!list) throw new Error("List not found");
 
   const items = await query<{ id: string; label: string; person_id: string | null }>(
-    `select id, label, person_id from list_items where user_id = $1 and list_id = $2 order by position`,
+    `select li.id, li.label, case when p.deleted_at is null then li.person_id end as person_id
+       from list_items li left join people p on p.id = li.person_id
+      where li.user_id = $1 and li.list_id = $2
+      order by li.position`,
     [userId, listId],
   );
 

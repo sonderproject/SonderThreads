@@ -200,6 +200,48 @@ export async function deletePersonRecord(id: string): Promise<void> {
 
   revalidatePath("/people");
   revalidatePath("/");
+  revalidatePath("/lists", "layout");
+}
+
+/** Undoes deletePersonRecord(). */
+export async function restorePersonRecord(id: string): Promise<void> {
+  await restorePeople([id]);
+}
+
+/** Soft-deletes several people at once (People tab → Select → Delete). */
+export async function deletePeople(ids: string[]): Promise<number> {
+  const userId = await requireUserId();
+  if (ids.length === 0) return 0;
+  const deleted = await query<{ id: string }>(
+    `update people set deleted_at = now()
+     where user_id = $1 and id = any($2::uuid[]) and deleted_at is null
+     returning id`,
+    [userId, ids],
+  );
+  if (deleted.length) {
+    await logActivity({
+      type: "status_changed",
+      description: `${deleted.length} ${deleted.length === 1 ? "person" : "people"} deleted`,
+      personId: null,
+    });
+  }
+  revalidatePath("/people");
+  revalidatePath("/");
+  revalidatePath("/lists", "layout");
+  return deleted.length;
+}
+
+/** Undoes deletePeople(). */
+export async function restorePeople(ids: string[]): Promise<void> {
+  const userId = await requireUserId();
+  if (ids.length === 0) return;
+  await query(
+    `update people set deleted_at = null where user_id = $1 and id = any($2::uuid[]) and deleted_at is not null`,
+    [userId, ids],
+  );
+  revalidatePath("/people");
+  revalidatePath("/");
+  revalidatePath("/lists", "layout");
 }
 
 export async function touchPersonActivity(id: string): Promise<void> {

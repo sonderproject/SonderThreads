@@ -7,6 +7,7 @@ import { listTasksForPerson } from "@/lib/actions/tasks";
 import { listListsForPerson } from "@/lib/actions/lists";
 import { PersonTimeline } from "@/components/people/PersonTimeline";
 import { EditableField } from "@/components/people/EditableField";
+import { DeletePersonButton } from "@/components/people/DeletePersonButton";
 import { TaskRow } from "@/components/tasks/TaskRow";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Badge } from "@/components/ui/Badge";
@@ -69,6 +70,7 @@ export default async function PersonProfilePage({
               <Badge>stale</Badge>
             </span>
           )}
+          <DeletePersonButton personId={person.id} name={person.display_name} />
         </div>
       </div>
 
