@@ -39,6 +39,7 @@ export const createTaskSchema = z.object({
   dueAt: z.string().nullable().optional(),
   notes: optionalText(2000),
   recurrence,
+  sourceNoteId: uuid.nullable().optional(),
 });
 
 export const createListSchema = z.object({

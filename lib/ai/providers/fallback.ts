@@ -16,7 +16,7 @@ function startOfToday(now: Date, tzOffset: number): string {
 }
 
 /** Sentences that start like a to-do ("call…", "buy…", "email…") become tasks. */
-const ACTION_VERB =
+export const ACTION_VERB =
   /^(call|phone|text|email|e-mail|message|buy|get|grab|pick up|drop off|pay|send|schedule|book|check|follow up|meet|visit|finish|submit|renew|clean|fix|bring|order|review|prepare|prep|write|apply|sign|return|cancel|confirm|ask|tell|water|take|mail|print|reach out|reply|respond|register|study|practice|clean up|wash|cook|make an appointment)\b/i;
 
 function splitNames(text: string): string[] {
@@ -37,7 +37,7 @@ function matchPersonByName(name: string, people: KnownPerson[]): KnownPerson | u
   );
 }
 
-function findMentionedPerson(text: string, people: KnownPerson[]): KnownPerson | undefined {
+export function findMentionedPerson(text: string, people: KnownPerson[]): KnownPerson | undefined {
   const lower = text.toLowerCase();
   let best: KnownPerson | undefined;
   let bestLen = 0;

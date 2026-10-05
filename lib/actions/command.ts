@@ -156,10 +156,10 @@ async function executeOne(trimmed: string, tzOffset: number): Promise<CommandRes
           personId = person.id;
         }
         if (!personId) {
-          await createNote({ content: parsed.content ?? trimmed, category: parsed.category });
+          await createNote({ content: parsed.content ?? trimmed, category: parsed.category, tzOffset });
           return { kind: "confirmation", message: "✓ Note saved", href: "/notes" };
         }
-        await createNote({ content: parsed.content ?? trimmed, personId, category: parsed.category });
+        await createNote({ content: parsed.content ?? trimmed, personId, category: parsed.category, tzOffset });
         const person = await findPersonByName(parsed.names[0] ?? "");
         return {
           kind: "confirmation",
@@ -169,7 +169,7 @@ async function executeOne(trimmed: string, tzOffset: number): Promise<CommandRes
       }
 
       case "add_note": {
-        await createNote({ content: parsed.content ?? trimmed, category: parsed.category });
+        await createNote({ content: parsed.content ?? trimmed, category: parsed.category, tzOffset });
         return { kind: "confirmation", message: "✓ Note saved" };
       }
 
@@ -244,7 +244,7 @@ async function executeOne(trimmed: string, tzOffset: number): Promise<CommandRes
 
       case "unknown":
       default: {
-        await createNote({ content: trimmed });
+        await createNote({ content: trimmed, tzOffset });
         return { kind: "confirmation", message: "✓ Saved as a note" };
       }
     }

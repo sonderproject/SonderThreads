@@ -259,6 +259,49 @@ create table if not exists password_resets (
 
 create index if not exists password_resets_user_id_idx on password_resets(user_id);
 
+-- Contact details for notifications. sms_opt_in is the user's explicit
+-- consent to texts (carriers require it); a phone number alone isn't consent.
+alter table users add column if not exists phone text;
+alter table users add column if not exists sms_opt_in boolean not null default false;
+-- IANA zone ("America/Chicago") from the browser, so all-day task reminders
+-- go out in the morning instead of at midnight.
+alter table users add column if not exists timezone text;
+
+-- A task pulled out of a note links back to it. reminded_at marks a due
+-- task whose push/text reminder has gone out, so it's sent once.
+alter table tasks add column if not exists source_note_id uuid references notes(id) on delete set null;
+alter table tasks add column if not exists reminded_at timestamptz;
+
+-- Things that happened in the background and want the user's attention
+-- ("Task created from your note"). Due/overdue tasks, birthdays and people
+-- needing attention are computed live on the Notifications page instead.
+create table if not exists notifications (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null,
+  type text not null,
+  title text not null,
+  body text,
+  href text,
+  task_id uuid references tasks(id) on delete cascade,
+  note_id uuid references notes(id) on delete set null,
+  person_id uuid references people(id) on delete set null,
+  read_at timestamptz,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists notifications_user_id_idx on notifications(user_id, created_at desc);
+
+-- Web Push subscriptions, one per browser/device the user turned push on in.
+create table if not exists push_subscriptions (
+  endpoint text primary key,
+  user_id uuid not null references users(id) on delete cascade,
+  p256dh text not null,
+  auth text not null,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists push_subscriptions_user_id_idx on push_subscriptions(user_id);
+
 -- No silent fallback to the old single owner: an insert that forgets
 -- user_id now fails instead of landing in someone else's account.
 alter table people alter column user_id drop default;

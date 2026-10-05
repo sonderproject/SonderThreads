@@ -31,6 +31,6 @@ export const config = {
   // Everything except the sign-in/sign-up/password-reset pages, the landing page, the sitemap and static assets (icons and
   // the manifest must load before sign-in so "Add to Home Screen" works).
   matcher: [
-    "/((?!login|signup|forgot-password|reset-password|welcome|sitemap.xml|_next/static|_next/image|favicon.ico|robots.txt|manifest.webmanifest|icon-.*\\.png|apple-touch-icon.*\\.png).*)",
+    "/((?!login|signup|forgot-password|reset-password|welcome|sitemap.xml|sw.js|_next/static|_next/image|favicon.ico|robots.txt|manifest.webmanifest|icon-.*\\.png|apple-touch-icon.*\\.png).*)",
   ],
 };

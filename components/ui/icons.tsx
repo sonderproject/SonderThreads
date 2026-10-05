@@ -72,3 +72,9 @@ export const SendIcon = ({ className = "h-5 w-5" }: IconProps) => (
     <path d="M5 12h13M13 6l6 6-6 6" />
   </svg>
 );
+
+export const BellIcon = ({ className = "h-5 w-5" }: IconProps) => (
+  <svg {...base} className={className} aria-hidden>
+    <path d="M6 16.5V11a6 6 0 0112 0v5.5l1.5 1.5h-15L6 16.5zM10 20.5a2 2 0 004 0" />
+  </svg>
+);

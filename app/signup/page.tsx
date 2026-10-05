@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { legacyDataUnclaimed, signup } from "@/app/login/actions";
+import { TimeZoneInput } from "@/components/notifications/TimeZoneInput";
 
 export const dynamic = "force-dynamic";
 
 const ERRORS: Record<string, string> = {
   email: "Enter a valid email address.",
+  phone: "Enter a valid mobile number.",
   short: "Password must be at least 8 characters.",
   exists: "An account with that email already exists.",
   legacy: "That isn't the current shared password.",
@@ -13,9 +15,9 @@ const ERRORS: Record<string, string> = {
 export default async function SignupPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; next?: string; email?: string; deleted?: string }>;
+  searchParams: Promise<{ error?: string; next?: string; email?: string; phone?: string; deleted?: string }>;
 }) {
-  const { error, next, email, deleted } = await searchParams;
+  const { error, next, email, phone, deleted } = await searchParams;
   const showLegacy = await legacyDataUnclaimed();
   const loginHref = next ? `/login?next=${encodeURIComponent(next)}` : "/login";
 
@@ -26,6 +28,7 @@ export default async function SignupPage({
         {deleted && <p className="text-xs text-text-muted">Your account and data were deleted.</p>}
         {error && <p className="text-xs text-danger">{ERRORS[error] ?? "Something went wrong."}</p>}
         <input type="hidden" name="next" value={next ?? ""} />
+        <TimeZoneInput />
         <input
           type="email"
           name="email"
@@ -36,6 +39,22 @@ export default async function SignupPage({
           placeholder="Email"
           className="input font-mono"
         />
+        <input
+          type="tel"
+          name="phone"
+          required
+          defaultValue={phone ?? ""}
+          autoComplete="tel"
+          inputMode="tel"
+          placeholder="Mobile number"
+          className="input font-mono"
+        />
+        <label className="flex items-start gap-2 text-xs text-text-muted">
+          <input type="checkbox" name="sms_opt_in" className="mt-0.5" />
+          <span>
+            Text me task reminders. Message &amp; data rates may apply. Reply STOP to opt out, HELP for help.
+          </span>
+        </label>
         <input
           type="password"
           name="password"

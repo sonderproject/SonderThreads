@@ -55,7 +55,7 @@ export function NoteCard({
   }
 
   return (
-    <Card className="p-3">
+    <Card id={note.id} className="scroll-mt-20 p-3">
       {editing ? (
         <div className="space-y-1.5">
           {error && <p className="text-xs text-red-400">{error}</p>}

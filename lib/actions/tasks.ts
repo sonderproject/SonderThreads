@@ -40,12 +40,14 @@ export async function createTask(params: {
   dueAt?: string | null;
   notes?: string | null;
   recurrence?: TaskRecurrence | null;
+  /** The note this task was pulled out of, if any. */
+  sourceNoteId?: string | null;
 }): Promise<Task> {
   const userId = await requireUserId();
   params = validate(createTaskSchema, params);
   const task = await queryOne<Task>(
-    `insert into tasks (user_id, title, person_id, list_id, due_at, notes, recurrence)
-     values ($1, $2, $3, $4, $5, $6, $7)
+    `insert into tasks (user_id, title, person_id, list_id, due_at, notes, recurrence, source_note_id)
+     values ($1, $2, $3, $4, $5, $6, $7, $8)
      returning *`,
     [
       userId,
@@ -55,6 +57,7 @@ export async function createTask(params: {
       params.dueAt ?? null,
       params.notes ?? null,
       params.recurrence ?? null,
+      params.sourceNoteId ?? null,
     ],
   );
 
@@ -189,6 +192,8 @@ export async function updateTask(
   }
 
   const setClauses = fields.map((field, i) => `${field} = $${i + 3}`);
+  // A new due date gets its own push/text reminder.
+  if (fields.includes("due_at")) setClauses.push("reminded_at = null");
   const values = fields.map((field) => patch[field]);
 
   const task = await queryOne<Task>(

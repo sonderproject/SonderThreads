@@ -7,13 +7,21 @@ import { getAppPassword, safeEqual, safeNextPath } from "@/lib/auth";
 import { randomBytes } from "crypto";
 import { endSession, getSessionUser, hashPassword, hashToken, startSession, verifyPassword } from "@/lib/session";
 import { appUrl, emailConfigured, sendEmail } from "@/lib/email";
+import { normalizePhone, validTimeZone } from "@/lib/notify/phone";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MIN_PASSWORD_LENGTH = 8;
 
-function back(path: "/login" | "/signup" | "/reset-password", error: string, email: string, next: string): never {
+function back(
+  path: "/login" | "/signup" | "/reset-password",
+  error: string,
+  email: string,
+  next: string,
+  phone = "",
+): never {
   const params = new URLSearchParams({ error });
   if (email) params.set("email", email);
+  if (phone) params.set("phone", phone);
   if (next !== "/") params.set("next", next);
   redirect(`${path}?${params}`);
 }
@@ -48,9 +56,14 @@ export async function signup(formData: FormData): Promise<void> {
   const email = formData.get("email")?.toString().trim().toLowerCase() ?? "";
   const password = formData.get("password")?.toString() ?? "";
   const legacyCode = formData.get("legacy")?.toString() ?? "";
+  const rawPhone = formData.get("phone")?.toString().trim() ?? "";
+  const phone = normalizePhone(rawPhone);
+  const smsOptIn = formData.get("sms_opt_in") === "on";
+  const timeZone = formData.get("timezone")?.toString() || null;
 
-  if (!EMAIL_RE.test(email) || email.length > 254) back("/signup", "email", email, next);
-  if (password.length < MIN_PASSWORD_LENGTH) back("/signup", "short", email, next);
+  if (!EMAIL_RE.test(email) || email.length > 254) back("/signup", "email", email, next, rawPhone);
+  if (!phone) back("/signup", "phone", email, next, rawPhone);
+  if (password.length < MIN_PASSWORD_LENGTH) back("/signup", "short", email, next, rawPhone);
 
   // Entering the old shared password claims everything created before
   // accounts existed: the account is created with the id those rows use.
@@ -59,7 +72,7 @@ export async function signup(formData: FormData): Promise<void> {
     const appPassword = getAppPassword();
     if (!appPassword || !safeEqual(legacyCode, appPassword) || !(await legacyDataUnclaimed())) {
       await new Promise((r) => setTimeout(r, 1000));
-      back("/signup", "legacy", email, next);
+      back("/signup", "legacy", email, next, rawPhone);
     }
     id = LEGACY_OWNER_ID;
   }
@@ -68,12 +81,13 @@ export async function signup(formData: FormData): Promise<void> {
   let user: { id: string } | null;
   try {
     user = await queryOne<{ id: string }>(
-      `insert into users (id, email, password_hash) values (coalesce($1::uuid, gen_random_uuid()), $2, $3)
+      `insert into users (id, email, password_hash, phone, sms_opt_in, timezone)
+       values (coalesce($1::uuid, gen_random_uuid()), $2, $3, $4, $5, $6)
        returning id`,
-      [id, email, passwordHash],
+      [id, email, passwordHash, phone, smsOptIn, validTimeZone(timeZone)],
     );
   } catch (err) {
-    if ((err as { code?: string }).code === "23505") back("/signup", "exists", email, next);
+    if ((err as { code?: string }).code === "23505") back("/signup", "exists", email, next, rawPhone);
     throw err;
   }
   if (!user) throw new Error("Failed to create account");
@@ -94,7 +108,7 @@ export async function deleteAccount(formData: FormData): Promise<void> {
   if (formData.get("confirm")?.toString().trim() !== "DELETE") redirect("/account?error=confirm");
 
   await transaction(async (q) => {
-    for (const table of ["activity", "person_summaries", "list_items", "tasks", "notes", "lists", "people"]) {
+    for (const table of ["notifications", "activity", "person_summaries", "list_items", "tasks", "notes", "lists", "people"]) {
       await q(`delete from ${table} where user_id = $1`, [user.id]);
     }
     await q(`delete from users where id = $1`, [user.id]); // sessions cascade

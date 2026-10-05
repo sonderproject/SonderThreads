@@ -7,6 +7,9 @@ import { truncate } from "./helpers";
 import { logActivity } from "./activity";
 import { touchPersonActivity } from "./people";
 import { regeneratePersonSummary } from "./summary";
+import { createTask } from "./tasks";
+import { extractNoteTasks } from "@/lib/ai/note-tasks";
+import { notify } from "@/lib/notify";
 import {
   createNoteSchema,
   updateNoteSchema,
@@ -21,8 +24,11 @@ export async function createNote(params: {
   personId?: string | null;
   category?: string | null;
   aiMetadata?: Record<string, unknown> | null;
+  /** The browser's getTimezoneOffset(), so "Friday" in a note means the user's Friday. */
+  tzOffset?: number;
 }): Promise<Note> {
   const userId = await requireUserId();
+  const tzOffset = params.tzOffset;
   params = validate(createNoteSchema, params);
   const note = await queryOne<Note>(
     `insert into notes (user_id, content, person_id, category, ai_metadata)
@@ -51,11 +57,48 @@ export async function createNote(params: {
     await regeneratePersonSummary(params.personId);
   }
 
+  // A to-do never stops the note from saving.
+  await createTasksFromNote(userId, note, tzOffset).catch((err) =>
+    console.error("[notes] creating tasks from note failed", err),
+  );
+
   revalidatePath("/");
   revalidatePath("/notes");
   if (params.personId) revalidatePath(`/people/${params.personId}`);
 
   return note;
+}
+
+/**
+ * Turns the to-dos in a new note into tasks ("Talk to Marcus about…" →
+ * a task linked to Marcus and back to the note) and leaves a notification
+ * for each, so the user can keep or undo it.
+ */
+async function createTasksFromNote(userId: string, note: Note, tzOffset = 0): Promise<void> {
+  const people = await query<{ id: string; display_name: string; first_name: string; last_name: string | null }>(
+    `select id, display_name, first_name, last_name from people where user_id = $1 and deleted_at is null`,
+    [userId],
+  );
+  const found = extractNoteTasks(note.content, {
+    now: new Date(),
+    tzOffset: Number.isFinite(tzOffset) ? Math.max(-840, Math.min(840, tzOffset)) : 0,
+    people: people.map((p) => ({ id: p.id, displayName: p.display_name, firstName: p.first_name, lastName: p.last_name })),
+    personId: note.person_id,
+  });
+
+  for (const t of found) {
+    const task = await createTask({ title: t.title, dueAt: t.dueAt, personId: t.personId, sourceNoteId: note.id });
+    await notify(userId, {
+      type: "task_from_note",
+      title: `New task: ${task.title}`,
+      body: "Created from your note",
+      href: `/tasks#${task.id}`,
+      taskId: task.id,
+      noteId: note.id,
+      personId: task.person_id,
+    });
+  }
+  if (found.length) revalidatePath("/notifications");
 }
 
 /** Client-form-safe wrapper: returns a result instead of throwing, since Next.js redacts thrown Server Action errors before they reach the client in production. */

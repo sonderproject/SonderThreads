@@ -70,6 +70,10 @@ export type Task = {
   recurrence: TaskRecurrence | null;
   /** The recurring task this one was spawned from, if any. */
   recurs_from: string | null;
+  /** The note this task was pulled out of, if any. */
+  source_note_id: string | null;
+  /** When its push/text reminder went out. */
+  reminded_at: string | null;
   created_at: string;
   updated_at: string;
   deleted_at: string | null;

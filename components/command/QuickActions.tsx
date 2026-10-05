@@ -133,7 +133,7 @@ function NoteForm({
     if (!content.trim()) return;
     setSaving(true);
     setError(null);
-    const result = await createNoteSafe({ content, personId: personId || null });
+    const result = await createNoteSafe({ content, personId: personId || null, tzOffset: new Date().getTimezoneOffset() });
     setSaving(false);
     if (result.ok) onDone();
     else setError(result.error);

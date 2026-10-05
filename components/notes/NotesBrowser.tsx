@@ -37,7 +37,7 @@ export function NotesBrowser({
     setSaving(true);
     setError(null);
     startTransition(async () => {
-      const result = await createNoteSafe({ content, personId: personId || null });
+      const result = await createNoteSafe({ content, personId: personId || null, tzOffset: new Date().getTimezoneOffset() });
       setSaving(false);
       if (result.ok) {
         setContent("");
