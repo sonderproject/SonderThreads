@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter, VT323 } from "next/font/google";
 import "./globals.css";
 import { SITE_DESCRIPTION, SITE_URL } from "@/lib/site";
+import { Analytics } from '@vercel/analytics/next';
 
 const sans = Inter({
   subsets: ["latin"],
@@ -54,7 +55,10 @@ export default function RootLayout({
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
       </head>
-      <body className="font-sans antialiased">{children}</body>
+      <body className="font-sans antialiased">
+        {children}
+        <Analytics />
+      </body>
     </html>
   );
 }
