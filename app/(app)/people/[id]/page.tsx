@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { NO_BIRTH_YEAR } from "@/lib/parse-person-line";
 import { getPerson } from "@/lib/actions/people";
 import { getPersonTimeline } from "@/lib/actions/activity";
 import { listTasksForPerson } from "@/lib/actions/tasks";
@@ -22,7 +23,12 @@ function toDateString(value: string | Date | null): string | null {
 
 function formatBirthday(iso: string): string {
   const [y, m, d] = iso.split("-").map(Number);
-  return new Date(y, m - 1, d).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" });
+  return new Date(y, m - 1, d).toLocaleDateString(undefined, {
+    month: "long",
+    day: "numeric",
+    // Saved without a year (e.g. "05/12" from a list) — don't show the placeholder one.
+    year: y === NO_BIRTH_YEAR ? undefined : "numeric",
+  });
 }
 
 export default async function PersonProfilePage({

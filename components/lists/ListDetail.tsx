@@ -23,6 +23,7 @@ import { useUndo } from "@/components/ui/UndoToast";
 import type { List, ListItem } from "@/lib/types";
 import { Dictate } from "@/components/voice/Dictate";
 import { ShareMenu } from "@/components/lists/ShareMenu";
+import { addListItemsToPeopleSafe } from "@/lib/actions/import";
 
 export function ListDetail({ list, items }: { list: List; items: ListItem[] }) {
   const router = useRouter();
@@ -41,9 +42,31 @@ export function ListDetail({ list, items }: { list: List; items: ListItem[] }) {
   const [editLabel, setEditLabel] = useState("");
   const [itemError, setItemError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const [toPeopleBusy, setToPeopleBusy] = useState(false);
+  const [toPeopleMsg, setToPeopleMsg] = useState<string | null>(null);
 
   function refresh() {
     startTransition(() => router.refresh());
+  }
+
+  async function handleAddToPeople() {
+    setToPeopleBusy(true);
+    setToPeopleMsg(null);
+    const result = await addListItemsToPeopleSafe(list.id);
+    setToPeopleBusy(false);
+    if (!result.ok) {
+      setToPeopleMsg(result.error);
+      return;
+    }
+    const { created, linked, skipped, links } = result.data;
+    setLocalItems((prev) => prev.map((i) => (links[i.id] ? { ...i, person_id: links[i.id] } : i)));
+    const parts = [
+      created && `${created} added to People`,
+      linked && `${linked} matched existing people`,
+      skipped && `${skipped} skipped (no name)`,
+    ].filter(Boolean);
+    setToPeopleMsg(parts.length ? `✓ ${parts.join(" · ")}` : "Everyone here is already in People.");
+    router.refresh();
   }
 
   async function handleAddItem(e: React.FormEvent) {
@@ -206,6 +229,14 @@ export function ListDetail({ list, items }: { list: List; items: ListItem[] }) {
         </div>
         <div className="flex shrink-0 flex-wrap gap-2">
           <ShareMenu list={{ ...list, name, description: description || null }} items={localItems} />
+          <Button
+            variant="ghost"
+            onClick={handleAddToPeople}
+            disabled={toPeopleBusy || localItems.length === 0}
+            title="Make each item a person in People (name, birthday and phone are split out)"
+          >
+            {toPeopleBusy ? "Adding…" : "Add to People"}
+          </Button>
           <details className="relative">
             <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 rounded border border-border px-3 py-1.5 text-sm font-medium text-text transition-colors hover:bg-bg-hover [&::-webkit-details-marker]:hidden">
               Export ▾
@@ -235,6 +266,7 @@ export function ListDetail({ list, items }: { list: List; items: ListItem[] }) {
           </Button>
         </div>
       </div>
+      {toPeopleMsg && <p className="font-mono text-xs text-text-muted">{toPeopleMsg}</p>}
 
       {editingDescription ? (
         <Dictate value={description} onChange={setDescription}>

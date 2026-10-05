@@ -9,6 +9,7 @@ import { findOrCreateListByName } from "./lists";
 import { importPeopleSchema, validate, toActionResult, type ActionResult } from "@/lib/validation";
 import type { Person } from "@/lib/types";
 import type { ImportRow } from "@/lib/csv";
+import { parsePersonLine } from "@/lib/parse-person-line";
 
 export type ImportResult = { listId: string; created: number; linked: number; alreadyOnList: number };
 
@@ -94,4 +95,83 @@ export async function importPeopleToListSafe(
   params: Parameters<typeof importPeopleToList>[0],
 ): Promise<ActionResult<ImportResult>> {
   return toActionResult(() => importPeopleToList(params));
+}
+
+export type ListToPeopleResult = {
+  created: number;
+  linked: number;
+  skipped: number;
+  /** item id → the person it now links to */
+  links: Record<string, string>;
+};
+
+/**
+ * "Add to People" on a list: every item becomes (or links to) a person.
+ * Each label is split into name / birthday / phone ("Marcus Johnson 05/12
+ * 5551234567"); the person is named with the letters only, and their phone
+ * and birthday are filled in where blank. People are matched by exact name,
+ * like CSV import. Item labels are left as they are.
+ */
+export async function addListItemsToPeople(listId: string): Promise<ListToPeopleResult> {
+  const userId = await requireUserId();
+  const list = await queryOne<{ id: string; name: string }>(
+    `select id, name from lists where user_id = $1 and id = $2 and deleted_at is null`,
+    [userId, listId],
+  );
+  if (!list) throw new Error("List not found");
+
+  const items = await query<{ id: string; label: string; person_id: string | null }>(
+    `select id, label, person_id from list_items where user_id = $1 and list_id = $2 order by position`,
+    [userId, listId],
+  );
+
+  let created = 0;
+  let linked = 0;
+  let skipped = 0;
+  const links: Record<string, string> = {};
+
+  for (const item of items) {
+    const { name, phone, birthday } = parsePersonLine(item.label);
+    let personId = item.person_id;
+
+    if (!personId) {
+      if (!name) {
+        skipped++;
+        continue;
+      }
+      let person = await queryOne<Person>(
+        `select * from people where user_id = $1 and deleted_at is null and lower(display_name) = lower($2) limit 1`,
+        [userId, name],
+      );
+      if (person) linked++;
+      else {
+        person = await createPersonRecord({ fullName: name });
+        created++;
+      }
+      personId = person.id;
+      await query(`update list_items set person_id = $3 where user_id = $1 and id = $2`, [userId, item.id, personId]);
+      links[item.id] = personId;
+      await logActivity({ type: "added_to_list", description: `Added to ${list.name}`, personId, listId });
+      await touchPersonActivity(personId);
+    }
+
+    if (phone || birthday) {
+      await query(
+        `update people set phone = coalesce(phone, $3), birthday = coalesce(birthday, $4::date)
+         where user_id = $1 and id = $2`,
+        [userId, personId, phone, birthday],
+      );
+    }
+  }
+
+  revalidatePath(`/lists/${listId}`);
+  revalidatePath("/people");
+  revalidatePath("/");
+  revalidatePath("/calendar");
+  return { created, linked, skipped, links };
+}
+
+/** Client-form-safe wrapper: returns a result instead of throwing, since Next.js redacts thrown Server Action errors before they reach the client in production. */
+export async function addListItemsToPeopleSafe(listId: string): Promise<ActionResult<ListToPeopleResult>> {
+  return toActionResult(() => addListItemsToPeople(listId));
 }
