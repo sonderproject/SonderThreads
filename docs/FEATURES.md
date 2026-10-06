@@ -37,6 +37,7 @@ The heart of the app is on the Home tab. Press `/` anywhere, or tap the **+** bu
 ## The connective tissue (sections talk to each other)
 
 - **Notes become tasks.** Write "Talk to Marcus about getting more clients downtown" in any note and a task is created automatically, linked to Marcus and back to the note. It recognizes phrases like "need to…", "remember to…", "follow up with…", "call…", "email…" and "todo:", plus any date in the sentence.
+- **Notes about people always leave a follow-up.** Any note that names someone in People, even a standalone note with no to-do wording ("Marcus got hired at Amazon"), creates a "Follow up with Marcus Johnson" task. The task carries the note's text and any date mentioned in the note.
 - **Lists become people.** **Add to People** on a list turns each line ("Marcus Johnson 05/12 5551234567") into a person: name from the letters, birthday from `MM/DD`, phone from the digits.
 - **Groups build your roster.** Adding names to a group creates people automatically.
 - **Everything lands on the person.** Notes, tasks, list memberships and activity all show on that person's timeline.

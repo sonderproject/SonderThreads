@@ -87,7 +87,13 @@ async function createTasksFromNote(userId: string, note: Note, tzOffset = 0): Pr
   });
 
   for (const t of found) {
-    const task = await createTask({ title: t.title, dueAt: t.dueAt, personId: t.personId, sourceNoteId: note.id });
+    const task = await createTask({
+      title: t.title,
+      dueAt: t.dueAt,
+      personId: t.personId,
+      notes: t.notes ?? null,
+      sourceNoteId: note.id,
+    });
     await notify(userId, {
       type: "task_from_note",
       title: `New task: ${task.title}`,
