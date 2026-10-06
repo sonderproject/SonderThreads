@@ -58,8 +58,8 @@ export async function createNote(params: {
   }
 
   // A to-do never stops the note from saving.
-  await createTasksFromNote(userId, note, tzOffset).catch((err) =>
-    console.error("[notes] creating tasks from note failed", err),
+  await tasksFromNote(userId, note, tzOffset).catch((err) =>
+    console.error("[notes] finding tasks in note failed", err),
   );
 
   revalidatePath("/");
@@ -70,11 +70,13 @@ export async function createNote(params: {
 }
 
 /**
- * Turns the to-dos in a new note into tasks ("Talk to Marcus about…" →
- * a task linked to Marcus and back to the note) and leaves a notification
- * for each, so the user can keep or undo it.
+ * Finds the to-dos in a new note. Ones the note asks for outright
+ * ("remind me to…", "todo:") become tasks right away, with a Keep/Undo
+ * notification; the rest ("Talk to Marcus about…", "need to work on the
+ * deck", a note about Marcus) are offered as suggested tasks on the
+ * Notifications page, created only if the user taps Add.
  */
-async function createTasksFromNote(userId: string, note: Note, tzOffset = 0): Promise<void> {
+async function tasksFromNote(userId: string, note: Note, tzOffset = 0): Promise<void> {
   const people = await query<{ id: string; display_name: string; first_name: string; last_name: string | null }>(
     `select id, display_name, first_name, last_name from people where user_id = $1 and deleted_at is null`,
     [userId],
@@ -87,6 +89,17 @@ async function createTasksFromNote(userId: string, note: Note, tzOffset = 0): Pr
   });
 
   for (const t of found) {
+    if (!t.explicit) {
+      await notify(userId, {
+        type: "task_suggestion",
+        title: t.title,
+        body: "Suggested from your note",
+        noteId: note.id,
+        personId: t.personId,
+        payload: { title: t.title, dueAt: t.dueAt, personId: t.personId, notes: t.notes ?? null },
+      });
+      continue;
+    }
     const task = await createTask({
       title: t.title,
       dueAt: t.dueAt,

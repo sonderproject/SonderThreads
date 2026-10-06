@@ -290,6 +290,9 @@ create table if not exists notifications (
 );
 
 create index if not exists notifications_user_id_idx on notifications(user_id, created_at desc);
+-- A suggested task's details (title, due_at, person_id, notes), turned into
+-- a real task only if the user taps Add.
+alter table notifications add column if not exists payload jsonb;
 
 -- Web Push subscriptions, one per browser/device the user turned push on in.
 create table if not exists push_subscriptions (

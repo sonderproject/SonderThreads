@@ -3,17 +3,27 @@ import { splitCommands } from "@/lib/ai/split";
 import { ACTION_VERB, findMentionedPerson } from "@/lib/ai/providers/fallback";
 import type { KnownPerson } from "@/lib/ai/providers/types";
 
-/** "I need to…", "remember to…", "todo: …" — whatever follows is a to-do. */
+/** "I need to…", "I'll…", "remember to…" — whatever follows is probably a to-do. */
 const LEAD =
-  /^(?:(?:i|we)\s+)?(?:(?:really|still|also|definitely)\s+)?(?:need to|have to|gotta|got to|must|should|want to)\s+|^(?:please\s+)?(?:remember to|don'?t forget to|do not forget to|make sure to|remind me to)\s+|^(?:todo|to-?do|task|action item|next step)s?\s*[:\-]\s*/i;
+  /^(?:(?:i|we)\s+)?(?:(?:really|still|also|definitely)\s+)?(?:need to|have to|gotta|got to|must|should|want to|plan to)\s+|^(?:i|we)(?:'ll|\s+will)(?:\s+(?:need to|have to))?\s+|^(?:please\s+)?(?:remember to|don'?t forget to|do not forget to|make sure to)\s+/i;
+
+/** "Remind me to…", "todo: …" — the user is asking for a task outright. */
+const EXPLICIT = /^(?:remind me to|(?:todo|to-?do|task|action item)s?\s*[:\-])\s*/i;
 
 /** To-do verbs common in notes that the command bar's list doesn't cover. */
 const NOTE_VERB =
-  /^(talk|speak|chat|discuss|connect|catch up|touch base|circle back|sit down|set up|line up|look into|figure out|find out|research|plan|invite|introduce|contact|hire|interview|onboard|update)\b/i;
+  /^(talk|speak|chat|discuss|connect|catch up|touch base|circle back|sit down|set up|line up|look into|figure out|find out|research|plan|invite|introduce|contact|hire|interview|onboard|update|work on|start on|build|draft|design|launch|post|create|organize|redo|test)\b/i;
 
 const MAX_TASKS_PER_NOTE = 5;
 
-export type NoteTask = { title: string; dueAt: string | null; personId: string | null; notes?: string | null };
+export type NoteTask = {
+  title: string;
+  dueAt: string | null;
+  personId: string | null;
+  notes?: string | null;
+  /** The note asked for it outright ("remind me to…", "todo:") — create it; otherwise only suggest it. */
+  explicit: boolean;
+};
 
 function escapeRegex(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -39,12 +49,13 @@ function mentionedPeople(text: string, people: KnownPerson[]): KnownPerson[] {
 }
 
 /**
- * Pulls the to-dos out of a note, one per sentence that reads like one:
+ * Finds the to-dos in a note, one per sentence that reads like one:
  * "Marcus got hired. Talk to Marcus about getting more clients downtown
  * Friday." → one task, "Talk to Marcus about getting more clients
  * downtown", due Friday, linked to Marcus. Rule-based (no AI), so it only
  * catches sentences that start like a to-do — plus one "Follow up with …"
- * task for each known person the note is about.
+ * task for each known person the note is about. Only `explicit` ones are
+ * created outright; the rest are offered as suggestions.
  */
 export function extractNoteTasks(
   content: string,
@@ -52,7 +63,8 @@ export function extractNoteTasks(
 ): NoteTask[] {
   const tasks: NoteTask[] = [];
   for (const sentence of splitCommands(content)) {
-    const lead = sentence.match(LEAD);
+    const explicit = sentence.match(EXPLICIT);
+    const lead = explicit ?? sentence.match(LEAD);
     const rest = lead ? sentence.slice(lead[0].length).trim() : sentence;
     if (!lead && !ACTION_VERB.test(rest) && !NOTE_VERB.test(rest)) continue;
     if (rest.split(/\s+/).length < 2) continue;
@@ -60,12 +72,12 @@ export function extractNoteTasks(
     const { date, remaining } = extractDate(rest, ctx.now, ctx.tzOffset);
     const title = (remaining.trim() || rest).replace(/^./, (c) => c.toUpperCase());
     const person = findMentionedPerson(rest, ctx.people);
-    tasks.push({ title, dueAt: date, personId: person?.id ?? ctx.personId });
+    tasks.push({ title, dueAt: date, personId: person?.id ?? ctx.personId, explicit: !!explicit });
     if (tasks.length >= MAX_TASKS_PER_NOTE) break;
   }
 
-  // A note about someone always leaves a follow-up for them, even with no
-  // to-do wording ("Marcus got hired at Amazon" → "Follow up with Marcus").
+  // A note about someone always suggests a follow-up, even with no to-do
+  // wording ("Marcus got hired at Amazon" → "Follow up with Marcus").
   // People who already got a task from a to-do sentence above are skipped.
   const covered = new Set(tasks.map((t) => t.personId).filter(Boolean));
   const about = mentionedPeople(content, ctx.people);
@@ -74,7 +86,13 @@ export function extractNoteTasks(
   const { date } = extractDate(content, ctx.now, ctx.tzOffset);
   for (const p of about) {
     if (covered.has(p.id) || tasks.length >= MAX_TASKS_PER_NOTE) continue;
-    tasks.push({ title: `Follow up with ${p.displayName}`, dueAt: date, personId: p.id, notes: content.slice(0, 2000) });
+    tasks.push({
+      title: `Follow up with ${p.displayName}`,
+      dueAt: date,
+      personId: p.id,
+      notes: content.slice(0, 2000),
+      explicit: false,
+    });
   }
   return tasks;
 }

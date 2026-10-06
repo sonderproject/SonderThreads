@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { query, queryOne } from "@/lib/db/client";
 import { requireUserId } from "@/lib/current-user";
-import { deleteTask } from "./tasks";
+import { createTask, deleteTask } from "./tasks";
 import { deliver } from "@/lib/notify";
 import { pushConfigured } from "@/lib/notify/push";
 import { smsConfigured } from "@/lib/notify/sms";
@@ -20,9 +20,13 @@ export type AppNotification = {
   task_id: string | null;
   note_id: string | null;
   person_id: string | null;
+  /** A suggested task's details (type "task_suggestion"). */
+  payload: SuggestedTask | null;
   read_at: string | null;
   created_at: string;
 };
+
+export type SuggestedTask = { title: string; dueAt: string | null; personId: string | null; notes: string | null };
 
 export type UpcomingBirthday = { id: string; display_name: string; month_day: string };
 
@@ -35,8 +39,10 @@ export async function getNotificationsFeed(): Promise<{
   const userId = await requireUserId();
   const [notifications, tasks, birthdays, needsAttention] = await Promise.all([
     query<AppNotification>(
-      `select id, type, title, body, href, task_id, note_id, person_id, read_at, created_at
-         from notifications where user_id = $1 order by created_at desc limit 50`,
+      // Pending suggestions first, so a busy activity feed never pushes them out.
+      `select id, type, title, body, href, task_id, note_id, person_id, payload, read_at, created_at
+         from notifications where user_id = $1
+        order by (type = 'task_suggestion') desc, created_at desc limit 100`,
       [userId],
     ),
     // Overdue, due today, and the next couple of days. The page sorts them
@@ -103,6 +109,50 @@ export async function undoTaskFromNote(notificationId: string): Promise<void> {
   );
   if (n?.task_id) await deleteTask(n.task_id);
   await dismissNotification(notificationId);
+}
+
+/** "Add" on a suggested task: creates it, linked to the note it came from. */
+export async function acceptSuggestion(notificationId: string): Promise<void> {
+  await acceptSuggestions([notificationId]);
+}
+
+/** Creates the tasks for several suggestions (or all of them, with no ids). */
+export async function acceptSuggestions(ids?: string[]): Promise<void> {
+  const userId = await requireUserId();
+  const rows = await query<{ id: string; note_id: string | null; payload: SuggestedTask | null }>(
+    `delete from notifications
+      where user_id = $1 and type = 'task_suggestion' and ($2::uuid[] is null or id = any($2::uuid[]))
+      returning id, note_id, payload`,
+    [userId, ids ?? null],
+  );
+  for (const r of rows) {
+    if (!r.payload?.title) continue;
+    // The suggested person may have been deleted since; drop the link rather than fail.
+    const person = r.payload.personId
+      ? await queryOne(`select 1 from people where user_id = $1 and id = $2 and deleted_at is null`, [
+          userId,
+          r.payload.personId,
+        ])
+      : null;
+    const note = r.note_id
+      ? await queryOne(`select 1 from notes where user_id = $1 and id = $2 and deleted_at is null`, [userId, r.note_id])
+      : null;
+    await createTask({
+      title: r.payload.title,
+      dueAt: r.payload.dueAt,
+      personId: person ? r.payload.personId : null,
+      notes: r.payload.notes,
+      sourceNoteId: note ? r.note_id : null,
+    });
+  }
+  revalidatePath("/notifications");
+}
+
+/** Dismisses every pending suggestion. */
+export async function dismissAllSuggestions(): Promise<void> {
+  const userId = await requireUserId();
+  await query(`delete from notifications where user_id = $1 and type = 'task_suggestion'`, [userId]);
+  revalidatePath("/notifications");
 }
 
 // --- Push / text settings -------------------------------------------------

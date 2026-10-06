@@ -14,6 +14,8 @@ export type NotifyParams = {
   taskId?: string | null;
   noteId?: string | null;
   personId?: string | null;
+  /** Extra data for the Notifications page, e.g. a suggested task's details. */
+  payload?: Record<string, unknown> | null;
   /** Where else to send it besides the Notifications page. Default: nowhere. */
   channels?: NotifyChannel[];
 };
@@ -26,15 +28,25 @@ export type NotifyParams = {
  */
 export async function notify(userId: string, n: NotifyParams): Promise<void> {
   await query(
-    `insert into notifications (user_id, type, title, body, href, task_id, note_id, person_id)
-     values ($1, $2, $3, $4, $5, $6, $7, $8)`,
-    [userId, n.type, n.title, n.body ?? null, n.href ?? null, n.taskId ?? null, n.noteId ?? null, n.personId ?? null],
+    `insert into notifications (user_id, type, title, body, href, task_id, note_id, person_id, payload)
+     values ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+    [
+      userId,
+      n.type,
+      n.title,
+      n.body ?? null,
+      n.href ?? null,
+      n.taskId ?? null,
+      n.noteId ?? null,
+      n.personId ?? null,
+      n.payload ? JSON.stringify(n.payload) : null,
+    ],
   );
   await deliver(userId, n);
 }
 
 /** Sends by push/text without saving a row — for test messages. */
-export async function deliver(userId: string, n: Omit<NotifyParams, "type">): Promise<void> {
+export async function deliver(userId: string, n: Omit<NotifyParams, "type" | "payload">): Promise<void> {
   const channels = n.channels ?? [];
   const url = n.href ?? "/notifications";
 

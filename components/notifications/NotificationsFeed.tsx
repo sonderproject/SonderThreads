@@ -7,6 +7,9 @@ import { TaskRow } from "@/components/tasks/TaskRow";
 import { PersonCard } from "@/components/people/PersonCard";
 import { EmptyState } from "@/components/ui/EmptyState";
 import {
+  acceptSuggestion,
+  acceptSuggestions,
+  dismissAllSuggestions,
   dismissNotification,
   markNotificationsRead,
   undoTaskFromNote,
@@ -14,6 +17,7 @@ import {
   type UpcomingBirthday,
 } from "@/lib/actions/notifications";
 import type { Person, Task } from "@/lib/types";
+import { formatDue } from "@/lib/format-due";
 
 const DAY = 86_400_000;
 
@@ -84,7 +88,9 @@ export function NotificationsFeed({
     const at = new Date(t.due_at!).getTime();
     return at >= today + DAY && at < today + 3 * DAY;
   });
-  const visible = notifications.filter((n) => !hidden.has(n.id));
+  const shown = notifications.filter((n) => !hidden.has(n.id));
+  const suggestions = shown.filter((n) => n.type === "task_suggestion");
+  const visible = shown.filter((n) => n.type !== "task_suggestion");
   const upcomingBirthdays = birthdays
     .map((b) => ({ ...b, ...birthdayLabel(b.month_day) }))
     .filter((b) => b.sort >= today - DAY && b.sort <= today + 7 * DAY)
@@ -98,12 +104,82 @@ export function NotificationsFeed({
     });
   }
 
+  function actAll(fn: () => Promise<void>) {
+    setHidden((h) => new Set([...h, ...suggestions.map((n) => n.id)]));
+    startTransition(async () => {
+      await fn();
+      router.refresh();
+    });
+  }
+
   const nothing =
+    !suggestions.length &&
     !visible.length && !tasks.length && !upcomingBirthdays.length && !needsAttention.length;
 
   return (
     <div className="space-y-8">
       {nothing && <EmptyState message="You're all caught up." />}
+
+      {suggestions.length > 0 && (
+        <Section
+          title="Suggested tasks"
+          action={
+            suggestions.length > 1 && (
+              <div className="flex gap-3 text-xs">
+                <button onClick={() => actAll(() => acceptSuggestions())} className="text-text-muted hover:text-accent">
+                  Add all
+                </button>
+                <button onClick={() => actAll(dismissAllSuggestions)} className="text-text-muted hover:text-danger">
+                  Dismiss all
+                </button>
+              </div>
+            )
+          }
+        >
+          <div className="divide-y divide-border-subtle rounded border border-border">
+            {suggestions.map((n) => (
+              <div key={n.id} className="flex items-start gap-3 px-3 py-3">
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm text-text">{n.title}</p>
+                  <p className="mt-0.5 font-mono text-[11px] text-text-faint">
+                    {[
+                      n.person_id && personNames[n.person_id],
+                      n.payload?.dueAt && formatDue(n.payload.dueAt),
+                      timeAgo(n.created_at),
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
+                    {n.note_id && (
+                      <>
+                        {" · "}
+                        <Link href={`/notes#${n.note_id}`} className="hover:text-accent">
+                          from note
+                        </Link>
+                      </>
+                    )}
+                  </p>
+                </div>
+                <div className="flex shrink-0 gap-1">
+                  <button
+                    onClick={() => act(n.id, () => acceptSuggestion(n.id))}
+                    aria-label={`Add task: ${n.title}`}
+                    className="flex h-9 items-center rounded border border-accent/50 px-3 text-xs font-medium text-accent hover:bg-accent/10"
+                  >
+                    ✓ Add
+                  </button>
+                  <button
+                    onClick={() => act(n.id, () => dismissNotification(n.id))}
+                    aria-label={`Dismiss suggestion: ${n.title}`}
+                    className="flex h-9 w-9 items-center justify-center rounded text-text-muted hover:bg-bg-hover hover:text-danger"
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Section>
+      )}
 
       {overdue.length > 0 && <TaskGroup title="Overdue" tasks={overdue} personNames={personNames} />}
       {dueToday.length > 0 && <TaskGroup title="Due today" tasks={dueToday} personNames={personNames} />}
@@ -209,10 +285,21 @@ function TaskGroup({ title, tasks, personNames }: { title: string; tasks: Task[]
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({
+  title,
+  action,
+  children,
+}: {
+  title: string;
+  action?: React.ReactNode;
+  children: React.ReactNode;
+}) {
   return (
     <section>
-      <h2 className="mb-2 font-mono text-xs uppercase tracking-wide text-text-faint">{title}</h2>
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <h2 className="font-mono text-xs uppercase tracking-wide text-text-faint">{title}</h2>
+        {action}
+      </div>
       {children}
     </section>
   );

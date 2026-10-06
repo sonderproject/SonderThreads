@@ -1,9 +1,7 @@
 import { listTasks } from "@/lib/actions/tasks";
 import { listPeople } from "@/lib/actions/people";
-import { TaskRow } from "@/components/tasks/TaskRow";
+import { TasksBrowser } from "@/components/tasks/TasksBrowser";
 import { NewTaskButton } from "@/components/tasks/NewTaskButton";
-import { EmptyState } from "@/components/ui/EmptyState";
-import type { Task } from "@/lib/types";
 
 function isToday(iso: string): boolean {
   const d = new Date(iso);
@@ -21,7 +19,6 @@ function isPast(iso: string): boolean {
 
 export default async function TasksPage() {
   const [tasks, people] = await Promise.all([listTasks(), listPeople()]);
-  const peopleById = new Map(people.map((c) => [c.id, c]));
 
   const open = tasks.filter((t) => !t.completed);
   const completed = tasks.filter((t) => t.completed);
@@ -31,47 +28,15 @@ export default async function TasksPage() {
   const noDate = open.filter((t) => !t.due_at);
 
   return (
-    <div className="space-y-8">
-      <div className="flex items-center justify-between">
-        <h1 className="font-mono text-xs uppercase tracking-wide text-text-faint">Tasks</h1>
-        <NewTaskButton people={people.map((c) => ({ id: c.id, display_name: c.display_name }))} />
-      </div>
-
-      <TaskSection title="Today" tasks={today} peopleById={peopleById} empty="Nothing due today." />
-      <TaskSection title="Upcoming" tasks={upcoming} peopleById={peopleById} empty="Nothing upcoming." />
-      <TaskSection title="No Date" tasks={noDate} peopleById={peopleById} empty="Nothing here." />
-      <TaskSection title="Completed" tasks={completed} peopleById={peopleById} empty="Nothing completed yet." />
-    </div>
-  );
-}
-
-function TaskSection({
-  title,
-  tasks,
-  peopleById,
-  empty,
-}: {
-  title: string;
-  tasks: Task[];
-  peopleById: Map<string, { display_name: string }>;
-  empty: string;
-}) {
-  return (
-    <section>
-      <h2 className="mb-2 font-mono text-xs uppercase tracking-wide text-text-faint">{title}</h2>
-      {tasks.length === 0 ? (
-        <EmptyState message={empty} />
-      ) : (
-        <div className="divide-y divide-border-subtle rounded border border-border">
-          {tasks.map((task) => (
-            <TaskRow
-              key={task.id}
-              task={task}
-              personName={task.person_id ? peopleById.get(task.person_id)?.display_name : null}
-            />
-          ))}
-        </div>
-      )}
-    </section>
+    <TasksBrowser
+      sections={[
+        { title: "Today", tasks: today, empty: "Nothing due today." },
+        { title: "Upcoming", tasks: upcoming, empty: "Nothing upcoming." },
+        { title: "No Date", tasks: noDate, empty: "Nothing here." },
+        { title: "Completed", tasks: completed, empty: "Nothing completed yet." },
+      ]}
+      personNames={Object.fromEntries(people.map((c) => [c.id, c.display_name]))}
+      newButton={<NewTaskButton people={people.map((c) => ({ id: c.id, display_name: c.display_name }))} />}
+    />
   );
 }

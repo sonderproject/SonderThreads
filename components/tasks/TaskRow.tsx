@@ -8,7 +8,7 @@ import { RecurrenceSelect } from "@/components/tasks/RecurrenceSelect";
 import { Modal } from "@/components/ui/Modal";
 import { useUndo } from "@/components/ui/UndoToast";
 import { snoozeOptions } from "@/components/tasks/snooze";
-import { SnoozeIcon } from "@/components/ui/icons";
+import { SnoozeIcon, TrashIcon } from "@/components/ui/icons";
 import type { Task, TaskRecurrence } from "@/lib/types";
 import { formatDue } from "@/lib/format-due";
 import { Dictate } from "@/components/voice/Dictate";
@@ -248,9 +248,17 @@ export function TaskRow({
         <button
           onClick={() => setEditing(true)}
           aria-label="Edit task"
-          className="-my-1 -mr-1 flex h-9 w-9 shrink-0 items-center justify-center rounded text-text-faint hover:text-accent [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100"
+          className="-my-1 flex h-9 w-9 shrink-0 items-center justify-center rounded text-text-faint hover:text-accent [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100"
         >
           ✎
+        </button>
+        <button
+          onClick={remove}
+          aria-label="Delete task"
+          title="Delete"
+          className="-my-1 -mr-1 flex h-9 w-9 shrink-0 items-center justify-center rounded text-text-faint hover:text-danger [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100"
+        >
+          <TrashIcon />
         </button>
       </div>
 

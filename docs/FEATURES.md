@@ -36,8 +36,11 @@ The heart of the app is on the Home tab. Press `/` anywhere, or tap the **+** bu
 
 ## The connective tissue (sections talk to each other)
 
-- **Notes become tasks.** Write "Talk to Marcus about getting more clients downtown" in any note and a task is created automatically, linked to Marcus and back to the note. It recognizes phrases like "need to…", "remember to…", "follow up with…", "call…", "email…" and "todo:", plus any date in the sentence.
-- **Notes about people always leave a follow-up.** Any note that names someone in People, even a standalone note with no to-do wording ("Marcus got hired at Amazon"), creates a "Follow up with Marcus Johnson" task. The task carries the note's text and any date mentioned in the note.
+- **Notes suggest tasks.** Every note is scanned for to-dos, and anything that looks like one shows up under **Suggested tasks** on the Notifications page with one-tap **✓ Add** / **✕ Dismiss** (or Add all / Dismiss all). Nothing lands on your task list until you say yes.
+  - To-do wording: "need to work on the pitch deck by Friday", "I'll call the landlord tomorrow", "talk to Marcus about…", "follow up with…".
+  - A note that names someone in People, even a standalone note ("Marcus got hired at Amazon"), suggests "Follow up with Marcus Johnson", carrying the note's text.
+  - Dates in the sentence become the due date, and people named become the linked person.
+  - **Explicit asks skip the suggestion step:** "remind me to…" or "todo: …" in a note creates the task right away, with **Undo** on the Notifications page.
 - **Lists become people.** **Add to People** on a list turns each line ("Marcus Johnson 05/12 5551234567") into a person: name from the letters, birthday from `MM/DD`, phone from the digits.
 - **Groups build your roster.** Adding names to a group creates people automatically.
 - **Everything lands on the person.** Notes, tasks, list memberships and activity all show on that person's timeline.
@@ -53,6 +56,7 @@ The command bar and quick actions, plus a mini calendar and clock, **Today** (du
 ### 🔔 Notifications
 The bell in the top-right shows a badge for unread items plus overdue tasks. The page shows:
 - **Overdue** and **Due today** tasks (complete or snooze them right there)
+- **Suggested tasks** pulled from your notes, each with ✓ Add or ✕ Dismiss
 - **Activity**, such as "New task: … (created from your note)", with **Keep** or **Undo**
 - **Coming up**: tasks due in the next couple of days
 - **Birthdays** in the next 7 days
@@ -77,9 +81,10 @@ The bell in the top-right shows a badge for unread items plus overdue tasks. The
 - **Today**, **Upcoming**, **No Date** and **Completed** sections.
 - Due dates, optional times, and repeats (daily, weekly or monthly). Checking off a repeating task schedules the next one.
 - On a phone, swipe right to complete or left to snooze.
+- 🗑 on every task deletes it in one tap. **Select** → check tasks (or Select all per section) → **Delete N** clears many at once. Both have Undo.
 
 ### Notes
-Quick notes, standalone or attached to a person. You can search them and edit them inline, and any to-dos inside become tasks automatically.
+Quick notes, standalone or attached to a person. You can search them and edit them inline, and any to-dos inside show up as suggested tasks.
 
 ### Calendar
 A month view of every task with a due date, plus everyone's birthdays. **+ New** adds a task straight onto a day.

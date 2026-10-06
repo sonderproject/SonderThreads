@@ -161,6 +161,30 @@ export async function restoreTask(id: string): Promise<void> {
   await setTaskDeleted(id, false);
 }
 
+/** Soft-deletes several tasks at once (Tasks tab → Select → Delete). */
+export async function deleteTasks(ids: string[]): Promise<void> {
+  await setTasksDeleted(ids, true);
+}
+
+/** Undoes deleteTasks(). */
+export async function restoreTasks(ids: string[]): Promise<void> {
+  await setTasksDeleted(ids, false);
+}
+
+async function setTasksDeleted(ids: string[], deleted: boolean): Promise<void> {
+  const userId = await requireUserId();
+  if (ids.length === 0) return;
+  await query(
+    `update tasks set deleted_at = ${deleted ? "now()" : "null"}
+     where user_id = $1 and id = any($2::uuid[]) and deleted_at is ${deleted ? "null" : "not null"}`,
+    [userId, ids],
+  );
+  revalidatePath("/tasks");
+  revalidatePath("/");
+  revalidatePath("/calendar");
+  revalidatePath("/notifications");
+}
+
 async function setTaskDeleted(id: string, deleted: boolean): Promise<void> {
   const userId = await requireUserId();
   const task = await queryOne<Task>(

@@ -78,3 +78,9 @@ export const BellIcon = ({ className = "h-5 w-5" }: IconProps) => (
     <path d="M6 16.5V11a6 6 0 0112 0v5.5l1.5 1.5h-15L6 16.5zM10 20.5a2 2 0 004 0" />
   </svg>
 );
+
+export const TrashIcon = ({ className = "h-4 w-4" }: IconProps) => (
+  <svg {...base} className={className} aria-hidden>
+    <path d="M4.5 6.5h15M9.5 6.5V4.5h5v2M6.5 6.5l1 13h9l1-13M10 10.5v5.5M14 10.5v5.5" />
+  </svg>
+);
