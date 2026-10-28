@@ -7,7 +7,7 @@ export default async function NotesPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="font-mono text-xs uppercase tracking-wide text-text-faint">Notes</h1>
+      <h1 className="page-title">Notes</h1>
       <NotesBrowser notes={notes} people={people} />
     </div>
   );

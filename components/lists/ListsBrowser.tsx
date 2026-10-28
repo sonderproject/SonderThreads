@@ -37,7 +37,7 @@ export function ListsBrowser({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search lists..."
-            className="input font-mono"
+            className="input tabular-nums"
           />
         </Dictate>
         <ImportPeopleButton />

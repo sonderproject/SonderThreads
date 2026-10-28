@@ -1,7 +1,7 @@
 import type { Config } from "tailwindcss";
 
 const config: Config = {
-  darkMode: "class",
+  darkMode: ["selector", '[data-theme="dark"]'],
   content: [
     "./app/**/*.{ts,tsx}",
     "./components/**/*.{ts,tsx}",
@@ -27,18 +27,16 @@ const config: Config = {
         accent: {
           DEFAULT: "var(--color-accent)",
           dim: "var(--color-accent-dim)",
+          soft: "var(--color-accent-soft)",
         },
         danger: "var(--color-danger)",
-        warn: "var(--color-warn)",
+        warn: {
+          DEFAULT: "var(--color-warn)",
+          soft: "var(--color-warn-soft)",
+        },
       },
       fontFamily: {
-        mono: [
-          "var(--font-mono)",
-          "ui-monospace",
-          "SFMono-Regular",
-          "Menlo",
-          "monospace",
-        ],
+        display: ["var(--font-display)", "Georgia", "serif"],
         sans: [
           "var(--font-sans)",
           "ui-sans-serif",

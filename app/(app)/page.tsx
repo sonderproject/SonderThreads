@@ -137,7 +137,7 @@ function Section({
   return (
     <section>
       <div className="mb-2 flex items-center justify-between">
-        <h2 className="font-mono text-xs uppercase tracking-wide text-text-faint">{title}</h2>
+        <h2 className="eyebrow text-text-faint">{title}</h2>
         {href && (
           <Link href={href} className="text-xs text-text-muted hover:text-accent">
             view all

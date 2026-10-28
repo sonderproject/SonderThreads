@@ -16,7 +16,7 @@ export default async function ForgotPasswordPage({
   return (
     <div className="flex min-h-screen items-start justify-center bg-bg px-4 pt-32">
       <div className="w-full max-w-xs space-y-3">
-        <p className="font-mono text-lg text-accent">&gt; sonderthreads</p>
+        <p className="font-display text-xl font-semibold text-accent">sonderthreads</p>
         {sent ? (
           <p className="text-sm text-text-muted">
             If that email has an account, a reset link is on its way. It expires in 1 hour. Check your spam
@@ -32,7 +32,7 @@ export default async function ForgotPasswordPage({
               autoFocus
               autoComplete="email"
               placeholder="Email"
-              className="input font-mono"
+              className="input tabular-nums"
             />
             <button
               type="submit"

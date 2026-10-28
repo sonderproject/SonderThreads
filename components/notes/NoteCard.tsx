@@ -120,7 +120,7 @@ export function NoteCard({
           )}
           {note.category && <Badge>{note.category}</Badge>}
         </div>
-        <span className="font-mono text-[11px] text-text-faint">
+        <span className="tabular-nums text-[11px] text-text-faint">
           {new Date(note.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
         </span>
       </div>

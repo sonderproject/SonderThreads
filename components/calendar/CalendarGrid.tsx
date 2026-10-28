@@ -47,7 +47,7 @@ export function CalendarGrid({
           {WEEKDAY_LABELS.map((label) => (
             <div
               key={label}
-              className="px-2 py-1.5 text-center font-mono text-[11px] uppercase text-text-faint"
+              className="px-2 py-1.5 text-center tabular-nums text-[11px] uppercase text-text-faint"
             >
               {label}
             </div>
@@ -67,7 +67,7 @@ export function CalendarGrid({
                 {cell.dayNum && (
                   <div className="flex items-center justify-between">
                     <span
-                      className={`font-mono text-xs ${
+                      className={`tabular-nums text-xs ${
                         cell.isToday ? "font-bold text-accent" : "text-text-faint"
                       }`}
                     >
@@ -163,7 +163,7 @@ function MobileMonth({
       <div className="rounded border border-border p-2">
         <div className="grid grid-cols-7">
           {WEEKDAY_LABELS.map((l) => (
-            <div key={l} className="py-1 text-center font-mono text-xs uppercase text-text-faint">
+            <div key={l} className="py-1 text-center tabular-nums text-xs uppercase text-text-faint">
               {l[0]}
             </div>
           ))}
@@ -180,7 +180,7 @@ function MobileMonth({
                 onClick={() => onSelect(day)}
                 aria-pressed={selected}
                 aria-label={`${month}/${day}/${year}${hasItems ? ", has items" : ""}`}
-                className={`flex h-12 flex-col items-center justify-center rounded font-mono text-base ${
+                className={`flex h-12 flex-col items-center justify-center rounded tabular-nums text-base ${
                   selected
                     ? "bg-accent text-bg"
                     : cell.isToday
@@ -202,8 +202,8 @@ function MobileMonth({
 
       <div>
         <div className="mb-2 flex items-center justify-between">
-          <h2 className="font-mono text-sm uppercase tracking-wide text-text-faint">{label}</h2>
-          <button onClick={onAdd} className="h-10 rounded px-3 font-mono text-sm text-accent">
+          <h2 className="eyebrow text-text-faint">{label}</h2>
+          <button onClick={onAdd} className="h-10 rounded px-3 tabular-nums text-sm text-accent">
             + add
           </button>
         </div>

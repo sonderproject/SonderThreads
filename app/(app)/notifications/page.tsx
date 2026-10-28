@@ -8,7 +8,7 @@ export default async function NotificationsPage() {
 
   return (
     <div className="space-y-8">
-      <h1 className="font-mono text-xs uppercase tracking-wide text-text-faint">Notifications</h1>
+      <h1 className="page-title">Notifications</h1>
       <NotificationsFeed {...feed} personNames={personNames} />
     </div>
   );

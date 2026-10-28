@@ -48,11 +48,11 @@ export function UndoProvider({ children }: { children: React.ReactNode }) {
           role="status"
           className="bottom-above-tabbar sheet-in fixed left-4 right-20 z-40 flex items-center justify-between gap-3 rounded border border-border bg-bg-raised px-4 py-3 shadow-lg shadow-black/40 sm:bottom-6 sm:left-1/2 sm:right-auto sm:w-96 sm:-translate-x-1/2"
         >
-          <span className="truncate font-mono text-sm text-text">{entry.message}</span>
+          <span className="truncate tabular-nums text-sm text-text">{entry.message}</span>
           <button
             onClick={runUndo}
             disabled={busy}
-            className="h-9 shrink-0 rounded px-3 font-mono text-sm uppercase text-accent hover:bg-bg-hover disabled:opacity-50"
+            className="h-9 shrink-0 rounded px-3 tabular-nums text-sm uppercase text-accent hover:bg-bg-hover disabled:opacity-50"
           >
             {busy ? "…" : "Undo"}
           </button>

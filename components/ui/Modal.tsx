@@ -44,7 +44,7 @@ export function Modal({ open, onClose, title, children }: ModalProps) {
       >
         <div className="mx-auto -mt-2 mb-3 h-1 w-10 rounded-full bg-border sm:hidden" aria-hidden />
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="font-mono text-sm uppercase tracking-wide text-text">{title}</h2>
+          <h2 className="eyebrow text-text">{title}</h2>
           <button
             onClick={onClose}
             className="-mr-2 flex h-10 w-10 items-center justify-center rounded text-text-muted hover:bg-bg-hover hover:text-text"

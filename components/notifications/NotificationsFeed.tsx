@@ -141,7 +141,7 @@ export function NotificationsFeed({
               <div key={n.id} className="flex items-start gap-3 px-3 py-3">
                 <div className="min-w-0 flex-1">
                   <p className="text-sm text-text">{n.title}</p>
-                  <p className="mt-0.5 font-mono text-[11px] text-text-faint">
+                  <p className="mt-0.5 tabular-nums text-[11px] text-text-faint">
                     {[
                       n.person_id && personNames[n.person_id],
                       n.payload?.dueAt && formatDue(n.payload.dueAt),
@@ -201,7 +201,7 @@ export function NotificationsFeed({
                   ) : (
                     <p className="text-sm text-text">{n.title}</p>
                   )}
-                  <p className="mt-0.5 font-mono text-[11px] text-text-faint">
+                  <p className="mt-0.5 tabular-nums text-[11px] text-text-faint">
                     {[
                       n.body,
                       n.person_id && personNames[n.person_id],
@@ -253,7 +253,7 @@ export function NotificationsFeed({
                 className="flex items-center justify-between px-3 py-3 text-sm text-text hover:bg-bg-hover"
               >
                 {b.display_name}
-                <span className="font-mono text-xs text-text-faint">{b.label}</span>
+                <span className="tabular-nums text-xs text-text-faint">{b.label}</span>
               </Link>
             ))}
           </div>
@@ -297,7 +297,7 @@ function Section({
   return (
     <section>
       <div className="mb-2 flex items-center justify-between gap-2">
-        <h2 className="font-mono text-xs uppercase tracking-wide text-text-faint">{title}</h2>
+        <h2 className="eyebrow text-text-faint">{title}</h2>
         {action}
       </div>
       {children}

@@ -9,8 +9,8 @@ export default function manifest(): MetadataRoute.Manifest {
     start_url: "/",
     display: "standalone",
     orientation: "portrait",
-    background_color: "#0a0a0a",
-    theme_color: "#0a0a0a",
+    background_color: "#f7f8f6",
+    theme_color: "#f7f8f6",
     // Long-press the app icon (Android) for these.
     shortcuts: [
       { name: "Voice command", short_name: "Voice", url: "/?voice=1", icons: [{ src: "/icon-192.png", sizes: "192x192" }] },

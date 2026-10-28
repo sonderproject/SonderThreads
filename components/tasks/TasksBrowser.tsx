@@ -61,7 +61,7 @@ export function TasksBrowser({
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between gap-2">
-        <h1 className="font-mono text-xs uppercase tracking-wide text-text-faint">Tasks</h1>
+        <h1 className="page-title">Tasks</h1>
         <div className="flex items-center gap-3">
           {hasTasks && !selecting && (
             <button onClick={() => setSelecting(true)} className="text-xs text-text-muted hover:text-accent">
@@ -74,7 +74,7 @@ export function TasksBrowser({
 
       {selecting && (
         <div className="sticky top-16 z-10 -mt-4 flex flex-wrap items-center gap-2 rounded border border-border bg-bg-raised p-2">
-          <span className="font-mono text-xs text-text-muted">{selected.size} selected</span>
+          <span className="tabular-nums text-xs text-text-muted">{selected.size} selected</span>
           <div className="ml-auto flex gap-2">
             <Button variant="ghost" onClick={stopSelecting}>
               Cancel
@@ -92,7 +92,7 @@ export function TasksBrowser({
         return (
           <section key={title}>
             <div className="mb-2 flex items-center justify-between">
-              <h2 className="font-mono text-xs uppercase tracking-wide text-text-faint">{title}</h2>
+              <h2 className="eyebrow text-text-faint">{title}</h2>
               {selecting && ids.length > 0 && (
                 <button onClick={() => toggle(ids, !all)} className="text-xs text-text-muted hover:text-accent">
                   {all ? "Select none" : "Select all"}

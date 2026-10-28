@@ -213,13 +213,13 @@ export function ListDetail({ list, items }: { list: List; items: ListItem[] }) {
                 onChange={(e) => setName(e.target.value)}
                 onBlur={handleRename}
                 onKeyDown={(e) => e.key === "Enter" && handleRename()}
-                className="input font-mono text-lg uppercase"
+                className="input text-lg"
               />
             </Dictate>
           ) : (
             <h1
               onClick={() => setRenaming(true)}
-              className="cursor-text font-mono text-lg uppercase tracking-wide text-text"
+              className="page-title cursor-text"
               title="Click to rename"
             >
               {list.name}
@@ -266,7 +266,7 @@ export function ListDetail({ list, items }: { list: List; items: ListItem[] }) {
           </Button>
         </div>
       </div>
-      {toPeopleMsg && <p className="font-mono text-xs text-text-muted">{toPeopleMsg}</p>}
+      {toPeopleMsg && <p className="tabular-nums text-xs text-text-muted">{toPeopleMsg}</p>}
 
       {editingDescription ? (
         <Dictate value={description} onChange={setDescription}>
@@ -295,7 +295,7 @@ export function ListDetail({ list, items }: { list: List; items: ListItem[] }) {
             value={newLabel}
             onChange={(e) => setNewLabel(e.target.value)}
             placeholder="Add item..."
-            className="input font-mono"
+            className="input tabular-nums"
           />
         </Dictate>
         <Button type="submit" disabled={!newLabel.trim() || pending}>

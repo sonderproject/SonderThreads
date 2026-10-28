@@ -5,7 +5,7 @@ type Variant = "primary" | "ghost" | "danger";
 const variantClasses: Record<Variant, string> = {
   primary: "bg-accent text-bg hover:bg-accent-dim",
   ghost: "bg-transparent text-text hover:bg-bg-hover border border-border",
-  danger: "bg-transparent text-danger hover:bg-danger/10 border border-danger/40",
+  danger: "bg-transparent text-danger hover:bg-bg-hover border border-danger",
 };
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -17,7 +17,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     return (
       <button
         ref={ref}
-        className={`inline-flex items-center justify-center gap-1.5 rounded px-3 py-1.5 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${variantClasses[variant]} ${className}`}
+        className={`inline-flex items-center justify-center gap-1.5 rounded px-3 py-1.5 text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${variantClasses[variant]} ${className}`}
         {...props}
       />
     );

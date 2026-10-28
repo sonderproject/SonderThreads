@@ -12,7 +12,7 @@ export function ListCard({ list, itemCount }: { list: List; itemCount: number })
           {list.is_group && <Badge>group</Badge>}
         </div>
         {list.description && <p className="mt-1 text-sm text-text-muted">{list.description}</p>}
-        <p className="mt-2 font-mono text-xs text-text-faint">
+        <p className="mt-2 tabular-nums text-xs text-text-faint">
           {itemCount} item{itemCount === 1 ? "" : "s"}
         </p>
       </Card>

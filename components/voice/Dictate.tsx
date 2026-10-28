@@ -67,7 +67,7 @@ export function Dictate({
       >
         <MicIcon className="h-4 w-4" />
       </button>
-      {error && <p className="mt-1 font-mono text-xs text-warn">{error}</p>}
+      {error && <p className="mt-1 tabular-nums text-xs text-warn">{error}</p>}
     </div>
   );
 }

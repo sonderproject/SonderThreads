@@ -74,7 +74,7 @@ function ImportForm({ onDone }: { onDone: () => void }) {
         </p>
       </div>
       {people.length > 0 && (
-        <p className="font-mono text-xs text-accent">
+        <p className="tabular-nums text-xs text-accent">
           {people.length} {people.length === 1 ? "person" : "people"} found · columns: {columns.join(", ")}
         </p>
       )}

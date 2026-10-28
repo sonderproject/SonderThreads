@@ -34,9 +34,9 @@ export default async function CalendarPage({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="font-mono text-xs uppercase tracking-wide text-text-faint">Calendar</h1>
+        <h1 className="page-title">Calendar</h1>
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-3 font-mono text-sm">
+          <div className="flex items-center gap-3 tabular-nums text-sm">
             <a
               href={`/calendar?year=${prevMonth.year}&month=${prevMonth.month}`}
               className="text-text-muted hover:text-accent"

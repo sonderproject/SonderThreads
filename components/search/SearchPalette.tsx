@@ -67,7 +67,7 @@ export function SearchPalette() {
           onChange={(e) => setQuery(e.target.value)}
           placeholder="People, notes, lists, tasks..."
           enterKeyHint="search"
-          className="input font-mono"
+          className="input tabular-nums"
         />
       </Dictate>
       {results && <SearchResultsPanel query={query.trim()} results={results} />}

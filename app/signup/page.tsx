@@ -24,7 +24,7 @@ export default async function SignupPage({
   return (
     <div className="flex min-h-screen items-start justify-center bg-bg px-4 pt-32">
       <form action={signup} className="w-full max-w-xs space-y-3">
-        <p className="font-mono text-lg text-accent">&gt; sonderthreads</p>
+        <p className="font-display text-xl font-semibold text-accent">sonderthreads</p>
         {deleted && <p className="text-xs text-text-muted">Your account and data were deleted.</p>}
         {error && <p className="text-xs text-danger">{ERRORS[error] ?? "Something went wrong."}</p>}
         <input type="hidden" name="next" value={next ?? ""} />
@@ -37,7 +37,7 @@ export default async function SignupPage({
           defaultValue={email ?? ""}
           autoComplete="email"
           placeholder="Email"
-          className="input font-mono"
+          className="input tabular-nums"
         />
         <input
           type="tel"
@@ -47,7 +47,7 @@ export default async function SignupPage({
           autoComplete="tel"
           inputMode="tel"
           placeholder="Mobile number"
-          className="input font-mono"
+          className="input tabular-nums"
         />
         <label className="flex items-start gap-2 text-xs text-text-muted">
           <input type="checkbox" name="sms_opt_in" className="mt-0.5" />
@@ -62,7 +62,7 @@ export default async function SignupPage({
           minLength={8}
           autoComplete="new-password"
           placeholder="Password (8+ characters)"
-          className="input font-mono"
+          className="input tabular-nums"
         />
         {showLegacy && (
           <div className="space-y-1 rounded border border-border p-2">
@@ -71,7 +71,7 @@ export default async function SignupPage({
               name="legacy"
               autoComplete="off"
               placeholder="Current shared password (optional)"
-              className="input font-mono"
+              className="input tabular-nums"
             />
             <p className="text-xs text-text-muted">
               Enter the app&apos;s current shared password to move all existing data into this account.

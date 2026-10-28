@@ -27,7 +27,7 @@ export function PersonCard({ person }: { person: Person }) {
             <p className="font-medium text-text">{person.display_name}</p>
             {isStale(person) && <Badge>stale</Badge>}
           </div>
-          <span className="shrink-0 font-mono text-[11px] text-text-faint">
+          <span className="shrink-0 tabular-nums text-[11px] text-text-faint">
             {relativeTime(person.last_activity_at)}
           </span>
         </div>

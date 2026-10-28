@@ -16,7 +16,7 @@ export default function RootError({
   return (
     <div className="flex min-h-screen items-center justify-center bg-bg px-4">
       <div className="w-full max-w-lg rounded border border-border bg-bg-raised p-6">
-        <p className="mb-2 font-mono text-xs uppercase tracking-wide text-danger">
+        <p className="mb-2 eyebrow text-danger">
           Something went wrong
         </p>
         <p className="mb-4 text-sm text-text-muted whitespace-pre-wrap">{error.message}</p>

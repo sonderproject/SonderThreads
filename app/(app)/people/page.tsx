@@ -6,7 +6,7 @@ export default async function PeoplePage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="font-mono text-xs uppercase tracking-wide text-text-faint">People</h1>
+      <h1 className="page-title">People</h1>
       <PeopleBrowser people={people} />
     </div>
   );

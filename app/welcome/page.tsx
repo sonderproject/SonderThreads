@@ -52,7 +52,7 @@ function AuthButtons() {
 
 export default function WelcomePage() {
   return (
-    <div className="pt-safe min-h-screen bg-bg font-mono text-lg leading-relaxed text-text sm:text-xl">
+    <div className="pt-safe min-h-screen bg-bg text-base leading-relaxed text-text sm:text-lg">
       {/* Phones: one column. Computers (lg+): two columns that fit on one screen without scrolling. */}
       <div className="mx-auto flex max-w-2xl flex-col gap-10 px-4 py-10 sm:py-16 lg:min-h-screen lg:max-w-6xl lg:gap-0 lg:px-10 lg:py-8">
         <header className="flex items-center justify-between gap-3 whitespace-nowrap text-base sm:text-xl">

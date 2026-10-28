@@ -13,7 +13,7 @@ export default async function ResetPasswordPage({
   return (
     <div className="flex min-h-screen items-start justify-center bg-bg px-4 pt-32">
       <div className="w-full max-w-xs space-y-3">
-        <p className="font-mono text-lg text-accent">&gt; sonderthreads</p>
+        <p className="font-display text-xl font-semibold text-accent">sonderthreads</p>
         {error === "invalid" || !token ? (
           <p className="text-sm text-danger">
             This reset link has expired or was already used.{" "}
@@ -34,7 +34,7 @@ export default async function ResetPasswordPage({
               autoFocus
               autoComplete="new-password"
               placeholder="New password (8+ characters)"
-              className="input font-mono"
+              className="input tabular-nums"
             />
             <button
               type="submit"

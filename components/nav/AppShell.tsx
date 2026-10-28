@@ -39,8 +39,8 @@ export function AppShell({
         <div className="min-h-screen bg-bg">
           <header className="pt-safe sticky top-0 z-20 border-b border-border bg-bg/95 backdrop-blur">
             <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3 sm:px-6">
-              <Link href="/" className="font-mono text-lg text-accent">
-                &gt; sonderthreads
+              <Link href="/" className="font-display text-lg font-semibold text-accent">
+                sonderthreads
               </Link>
               <div className="flex items-center">
                 <div className="hidden items-center gap-2 sm:flex">
@@ -66,7 +66,7 @@ export function AppShell({
                   <button
                     onClick={() => window.dispatchEvent(new Event(OPEN_SEARCH_EVENT))}
                     title="Search (⌘K / Ctrl+K)"
-                    className="rounded border border-border px-2 py-1 font-mono text-xs text-text-muted transition-colors hover:border-accent hover:text-text"
+                    className="rounded border border-border px-2 py-1 tabular-nums text-xs text-text-muted transition-colors hover:border-accent hover:text-text"
                   >
                     ⌘K
                   </button>
@@ -108,7 +108,7 @@ export function AppShell({
                 >
                   <BellIcon />
                   {notificationCount > 0 && (
-                    <span className="absolute right-0.5 top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 font-mono text-[10px] leading-none text-bg">
+                    <span className="absolute right-0.5 top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 tabular-nums text-[10px] leading-none text-bg">
                       {notificationCount > 99 ? "99+" : notificationCount}
                     </span>
                   )}

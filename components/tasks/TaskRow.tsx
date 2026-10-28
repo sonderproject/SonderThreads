@@ -188,7 +188,7 @@ export function TaskRow({
       {swipeX !== 0 && (
         <div
           aria-hidden
-          className={`absolute inset-0 flex items-center px-5 font-mono text-sm ${
+          className={`absolute inset-0 flex items-center px-5 tabular-nums text-sm ${
             swipeX > 0 ? "justify-start text-accent" : "justify-end text-warn"
           }`}
           style={{ backgroundColor: swipeX > 0 ? "color-mix(in srgb, var(--color-accent) 15%, transparent)" : "color-mix(in srgb, var(--color-warn) 15%, transparent)" }}
@@ -281,7 +281,7 @@ function SnoozePicker({ onPick }: { onPick: (date: Date) => void }) {
             className="flex h-12 w-full items-center justify-between px-4 text-left hover:bg-bg-hover"
           >
             <span className="text-base text-text sm:text-sm">{o.label}</span>
-            <span className="font-mono text-sm text-text-muted">{o.hint}</span>
+            <span className="tabular-nums text-sm text-text-muted">{o.hint}</span>
           </button>
         ))}
       </div>

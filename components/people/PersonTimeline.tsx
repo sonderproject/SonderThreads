@@ -10,7 +10,7 @@ export function PersonTimeline({ activity }: { activity: Activity[] }) {
     <div className="space-y-3">
       {activity.map((item) => (
         <div key={item.id} className="flex gap-4">
-          <span className="w-16 shrink-0 font-mono text-xs text-text-faint">
+          <span className="w-16 shrink-0 tabular-nums text-xs text-text-faint">
             {new Date(item.created_at).toLocaleDateString(undefined, {
               month: "short",
               day: "numeric",

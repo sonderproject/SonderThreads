@@ -25,7 +25,7 @@ export function QuickActions({ people }: { people: Pick<Person, "id" | "display_
 
   return (
     <>
-      <div className="mt-2 flex flex-wrap gap-2 font-mono text-xs text-text-muted">
+      <div className="mt-2 flex flex-wrap gap-2 tabular-nums text-xs text-text-muted">
         {(["person", "note", "list", "task"] as const).map((type) => (
           <button
             key={type}

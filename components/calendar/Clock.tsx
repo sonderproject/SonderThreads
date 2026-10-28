@@ -35,7 +35,7 @@ export function Clock() {
         }}
       />
       {now && (
-        <div className="relative text-center font-mono" style={{ color: ACCENT }}>
+        <div className="relative text-center tabular-nums" style={{ color: ACCENT }}>
           <p className="text-[11px] uppercase tracking-widest opacity-60">&gt; system.time</p>
           <p className="mt-1 text-6xl leading-none tabular-nums" style={{ textShadow: GLOW }}>
             {pad(hours12)}:{pad(now.getMinutes())}

@@ -6,7 +6,7 @@ export default async function ListsPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="font-mono text-xs uppercase tracking-wide text-text-faint">Lists</h1>
+      <h1 className="page-title">Lists</h1>
       <ListsBrowser lists={lists} itemCounts={itemCounts} />
     </div>
   );

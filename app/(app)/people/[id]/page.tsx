@@ -60,7 +60,7 @@ export default async function PersonProfilePage({
               field="display_name"
               value={person.display_name}
               placeholder="Name"
-              textClassName="font-mono text-lg uppercase tracking-wide text-text"
+              textClassName="page-title"
               required
             />
           </h1>
@@ -174,7 +174,7 @@ export default async function PersonProfilePage({
 function Detail({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="rounded border border-border px-3 py-2">
-      <p className="mb-0.5 font-mono text-[11px] uppercase text-text-faint">{label}</p>
+      <p className="mb-0.5 tabular-nums text-[11px] uppercase text-text-faint">{label}</p>
       {children}
     </div>
   );
@@ -183,7 +183,7 @@ function Detail({ label, children }: { label: string; children: React.ReactNode 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section>
-      <h2 className="mb-2 font-mono text-xs uppercase tracking-wide text-text-faint">{title}</h2>
+      <h2 className="mb-2 eyebrow text-text-faint">{title}</h2>
       {children}
     </section>
   );

@@ -19,7 +19,7 @@ export default async function AccountPage({
   return (
     <div className="max-w-md space-y-8">
       <div className="space-y-1">
-        <h1 className="font-mono text-lg uppercase tracking-wide text-text">Account</h1>
+        <h1 className="page-title">Account</h1>
         <p className="text-sm text-text-muted">{user.email}</p>
       </div>
 
@@ -37,7 +37,7 @@ export default async function AccountPage({
               autoComplete="tel"
               inputMode="tel"
               placeholder="(555) 123-4567"
-              className="input font-mono"
+              className="input tabular-nums"
             />
           </label>
           {error === "phone" && <p className="text-xs text-danger">Enter a valid mobile number.</p>}
@@ -92,7 +92,7 @@ export default async function AccountPage({
           can&apos;t be undone. Type DELETE to confirm.
         </p>
         {error === "confirm" && <p className="text-xs text-danger">Type DELETE exactly to confirm.</p>}
-        <input name="confirm" autoComplete="off" placeholder="DELETE" className="input font-mono" />
+        <input name="confirm" autoComplete="off" placeholder="DELETE" className="input tabular-nums" />
         <button
           type="submit"
           className="rounded border border-danger/40 px-3 py-1.5 text-sm font-medium text-danger hover:bg-danger/10"

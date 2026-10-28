@@ -17,7 +17,7 @@ export function SearchResultsPanel({
   return (
     <Card className="mt-3 p-4">
       <div className="mb-3 flex items-center justify-between">
-        <p className="font-mono text-xs text-text-muted">
+        <p className="tabular-nums text-xs text-text-muted">
           {total} result{total === 1 ? "" : "s"} for &ldquo;{query}&rdquo;
         </p>
         {onClose && (
@@ -94,7 +94,7 @@ export function SearchResultsPanel({
 function ResultSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <p className="mb-1 font-mono text-[11px] uppercase tracking-wide text-text-faint">{title}</p>
+      <p className="mb-1 tabular-nums text-[11px] uppercase tracking-wide text-text-faint">{title}</p>
       <div className="space-y-0.5">{children}</div>
     </div>
   );

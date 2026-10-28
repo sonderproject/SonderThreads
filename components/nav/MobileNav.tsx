@@ -141,7 +141,7 @@ export function MobileNav({ people }: { people: Pick<Person, "id" | "display_nam
               <Link
                 key={href}
                 href={href}
-                className={`flex h-16 flex-col items-center justify-center gap-0.5 font-mono text-xs ${
+                className={`flex h-16 flex-col items-center justify-center gap-0.5 tabular-nums text-xs ${
                   active ? "text-accent" : "text-text-muted"
                 }`}
                 aria-current={active ? "page" : undefined}
@@ -153,7 +153,7 @@ export function MobileNav({ people }: { people: Pick<Person, "id" | "display_nam
           })}
           <button
             onClick={() => setSheet("more")}
-            className={`flex h-16 flex-col items-center justify-center gap-0.5 font-mono text-xs ${
+            className={`flex h-16 flex-col items-center justify-center gap-0.5 tabular-nums text-xs ${
               moreActive ? "text-accent" : "text-text-muted"
             }`}
           >
@@ -173,7 +173,7 @@ export function MobileNav({ people }: { people: Pick<Person, "id" | "display_nam
           initialFollowUp={commandOpts.followUp ? { kind: commandOpts.followUp } : null}
         />
         <QuickActions people={people} />
-        <p className="mt-3 hidden font-mono text-xs text-text-faint sm:block">
+        <p className="mt-3 hidden tabular-nums text-xs text-text-faint sm:block">
           Tip: press / anywhere to open this · @ for people · # for lists
         </p>
       </Modal>

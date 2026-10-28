@@ -3,59 +3,96 @@
 @tailwind utilities;
 
 :root {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
-
-  /* Dark theme (default) */
-  --color-bg: #0a0a0a;
-  --color-bg-raised: #121212;
-  --color-bg-hover: #1a1a1a;
-  --color-border: #262626;
-  --color-border-subtle: #1c1c1c;
-  --color-text: #e8e8e6;
-  --color-text-muted: #8a8a86;
-  --color-text-faint: #5c5c58;
-  --color-accent: #5eead4;
-  --color-accent-dim: #2dd4bf;
-  --color-danger: #f87171;
-  --color-warn: #fbbf24;
-}
-
-:root.light {
-  --color-bg: #ffffff;
-  --color-bg-raised: #f6f6f5;
-  --color-bg-hover: #ececea;
-  --color-border: #e2e2df;
-  --color-border-subtle: #ececea;
-  --color-text: #171715;
-  --color-text-muted: #5c5c58;
-  --color-text-faint: #8a8a86;
-  --color-accent: #0d9488;
-  --color-accent-dim: #0f766e;
-  --color-danger: #dc2626;
-  --color-warn: #b45309;
-}
-
-html {
-  color-scheme: dark;
-}
-
-html.light {
+  /* Design tokens: docs/DESIGN.md. Light by default, dark follows the system
+     unless the user picked a theme (data-theme on <html>). */
+  --bg: #f7f8f6;
+  --surface: #ffffff;
+  --fg: #1d2420;
+  --muted: #5d6a63;
+  --line: #d9dfdb;
+  --accent: #1f6b4f;
+  --accent-soft: #e3efe9;
+  --warn: #9a5b00;
+  --warn-soft: #fbf0de;
+  --hover: #eef1ef;
+  --accent-strong: #18573f;
+  --danger: #b42318;
   color-scheme: light;
 }
 
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #141917;
+    --surface: #1c2320;
+    --fg: #e7ece9;
+    --muted: #9aa8a1;
+    --line: #2e3833;
+    --accent: #6cc39f;
+    --accent-soft: #1f3229;
+    --warn: #e8b25c;
+    --warn-soft: #33281a;
+    --hover: #242c28;
+    --accent-strong: #8fd3b5;
+    --danger: #f28b82;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #141917;
+  --surface: #1c2320;
+  --fg: #e7ece9;
+  --muted: #9aa8a1;
+  --line: #2e3833;
+  --accent: #6cc39f;
+  --accent-soft: #1f3229;
+  --warn: #e8b25c;
+  --warn-soft: #33281a;
+  --hover: #242c28;
+  --accent-strong: #8fd3b5;
+  --danger: #f28b82;
+  color-scheme: dark;
+}
+
+:root {
+  /* Older names used across components, pointed at the design tokens. */
+  --color-bg: var(--bg);
+  --color-bg-raised: var(--surface);
+  --color-bg-hover: var(--hover);
+  --color-border: var(--line);
+  --color-border-subtle: var(--line);
+  --color-text: var(--fg);
+  --color-text-muted: var(--muted);
+  --color-text-faint: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent-dim: var(--accent-strong);
+  --color-accent-soft: var(--accent-soft);
+  --color-danger: var(--danger);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+}
+
 body {
-  background-color: var(--color-bg);
-  color: var(--color-text);
+  background-color: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-sans), system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+h1,
+h2,
+h3 {
+  text-wrap: balance;
 }
 
 * {
-  border-color: var(--color-border);
+  border-color: var(--line);
 }
 
 ::selection {
-  background-color: var(--color-accent-dim);
-  color: var(--color-bg);
+  background-color: var(--accent-soft);
+  color: var(--fg);
 }
 
 ::-webkit-scrollbar {
@@ -87,7 +124,70 @@ button:focus {
   outline: none;
 }
 
+:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 @layer components {
+  .page-title {
+    font-family: var(--font-display), Georgia, serif;
+    font-size: 2rem;
+    line-height: 1.15;
+    font-weight: 600;
+    color: var(--fg);
+  }
+  .section-title {
+    font-family: var(--font-display), Georgia, serif;
+    font-size: 1.3rem;
+    font-weight: 600;
+  }
+  .eyebrow {
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .tag {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    padding: 1px 6px;
+    border-radius: 3px;
+  }
+  .tag-v {
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+  .tag-e {
+    background: var(--warn-soft);
+    color: var(--warn);
+  }
+  .flag {
+    background: var(--warn-soft);
+    border-left: 3px solid var(--warn);
+    padding: 12px 14px;
+    border-radius: 4px;
+    font-size: 0.95rem;
+  }
+  .progress-bar {
+    flex: 1;
+    height: 8px;
+    border-radius: 4px;
+    background: var(--line);
+    overflow: hidden;
+  }
+  .progress-bar > span {
+    display: block;
+    height: 100%;
+    background: var(--accent);
+    transition: width 0.25s;
+  }
+
   /* 16px on phones — iOS Safari zooms the page when focusing any smaller input. */
   .input {
     @apply w-full rounded border border-border bg-bg px-3 py-2.5 text-base text-text placeholder:text-text-faint focus:border-accent sm:py-2 sm:text-sm;
@@ -129,8 +229,11 @@ button:focus {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .sheet-in {
-    animation: none;
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
   }
 }
 

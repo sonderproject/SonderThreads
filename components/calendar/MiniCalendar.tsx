@@ -18,7 +18,7 @@ export function MiniCalendar({
     <div className="rounded border border-border p-3">
       <div className="grid grid-cols-7">
         {WEEKDAY_LABELS.map((label, i) => (
-          <div key={i} className="py-1 text-center font-mono text-xs text-text-faint">
+          <div key={i} className="py-1 text-center tabular-nums text-xs text-text-faint">
             {label}
           </div>
         ))}

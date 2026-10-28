@@ -210,7 +210,7 @@ export function CommandBar({
   return (
     <div>
       {followUp && (
-        <div className="mb-2 flex items-center justify-between font-mono text-sm">
+        <div className="mb-2 flex items-center justify-between tabular-nums text-sm">
           <span className="text-accent">? {followUpPrompt(followUp)}</span>
           <button
             type="button"
@@ -232,7 +232,7 @@ export function CommandBar({
           listening ? "border-accent" : "border-border"
         }`}
       >
-        <span className="pb-2 font-mono text-accent">&gt;</span>
+        <span className="pb-2 tabular-nums text-accent">&gt;</span>
         <textarea
           ref={inputRef}
           rows={1}
@@ -258,7 +258,7 @@ export function CommandBar({
           }}
           placeholder={placeholder}
           aria-label="Command"
-          className="max-h-40 min-h-[2.25rem] flex-1 resize-none bg-transparent py-1.5 font-mono text-base text-text outline-none placeholder:text-text-faint sm:text-sm"
+          className="max-h-40 min-h-[2.25rem] flex-1 resize-none bg-transparent py-1.5 tabular-nums text-base text-text outline-none placeholder:text-text-faint sm:text-sm"
           disabled={pending}
         />
         <button
@@ -295,7 +295,7 @@ export function CommandBar({
               aria-selected={false}
               onMouseDown={(e) => e.preventDefault()}
               onClick={() => pick(name)}
-              className="h-9 rounded border border-border px-3 font-mono text-sm text-text hover:border-accent"
+              className="h-9 rounded border border-border px-3 tabular-nums text-sm text-text hover:border-accent"
             >
               {token?.sigil}
               {name}
@@ -304,10 +304,10 @@ export function CommandBar({
         </div>
       )}
 
-      {voiceError && <p className="mt-2 font-mono text-xs text-warn">{voiceError}</p>}
+      {voiceError && <p className="mt-2 tabular-nums text-xs text-warn">{voiceError}</p>}
 
       {preview && value.trim() && !pending && (
-        <div className="mt-2 font-mono text-sm text-text-muted" aria-live="polite">
+        <div className="mt-2 tabular-nums text-sm text-text-muted" aria-live="polite">
           {preview.length > 1 && <p className="text-accent">→ {preview.length} items</p>}
           {preview.map((p, i) => (
             <p key={i} className={`truncate ${preview.length > 1 ? "pl-3" : ""}`}>
@@ -320,7 +320,7 @@ export function CommandBar({
         </div>
       )}
 
-      {pending && <p className="mt-2 font-mono text-xs text-text-faint">Working...</p>}
+      {pending && <p className="mt-2 tabular-nums text-xs text-text-faint">Working...</p>}
 
       {result && <ResultView result={result} onClose={() => setResult(null)} />}
     </div>
@@ -339,7 +339,7 @@ function ResultView({ result, onClose }: { result: CommandResult; onClose: () =>
   }
   if (result.kind === "confirmation") {
     return (
-      <p className="mt-2 font-mono text-xs text-accent">
+      <p className="mt-2 tabular-nums text-xs text-accent">
         {result.href ? (
           <Link href={result.href} className="hover:underline">
             {result.message}
@@ -350,6 +350,6 @@ function ResultView({ result, onClose }: { result: CommandResult; onClose: () =>
       </p>
     );
   }
-  if (result.kind === "error") return <p className="mt-2 font-mono text-xs text-danger">{result.message}</p>;
+  if (result.kind === "error") return <p className="mt-2 tabular-nums text-xs text-danger">{result.message}</p>;
   return <SearchResultsPanel query={result.query} results={result.results} onClose={onClose} />;
 }

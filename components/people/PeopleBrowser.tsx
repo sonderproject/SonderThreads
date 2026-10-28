@@ -70,7 +70,7 @@ export function PeopleBrowser({ people }: { people: Person[] }) {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search people..."
-            className="input font-mono"
+            className="input tabular-nums"
           />
         </Dictate>
         <ImportPeopleButton />
@@ -92,7 +92,7 @@ export function PeopleBrowser({ people }: { people: Person[] }) {
 
       {selecting && (
         <div className="sticky top-16 z-10 flex flex-wrap items-center gap-2 rounded border border-border bg-bg-raised p-2">
-          <span className="font-mono text-xs text-text-muted">{selected.size} selected</span>
+          <span className="tabular-nums text-xs text-text-muted">{selected.size} selected</span>
           <button
             onClick={() =>
               setSelected((prev) => {

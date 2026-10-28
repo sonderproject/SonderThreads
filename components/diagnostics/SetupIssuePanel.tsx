@@ -4,7 +4,7 @@ export function SetupIssuePanel({ diagnostic }: { diagnostic: Extract<Diagnostic
   return (
     <div className="mx-auto max-w-lg py-16">
       <div className="rounded border border-border bg-bg-raised p-6">
-        <p className="mb-2 font-mono text-xs uppercase tracking-wide text-danger">
+        <p className="mb-2 eyebrow text-danger">
           Setup issue: {diagnostic.reason}
         </p>
         <p className="mb-4 text-sm text-text-muted whitespace-pre-wrap">{diagnostic.detail}</p>

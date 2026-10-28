@@ -58,7 +58,7 @@ export function NotesBrowser({
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder="Quick note..."
-            className="input min-h-[60px] resize-none font-mono"
+            className="input min-h-[60px] resize-none tabular-nums"
           />
         </Dictate>
         <div className="flex gap-2">
@@ -81,7 +81,7 @@ export function NotesBrowser({
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search notes..."
-          className="input font-mono"
+          className="input tabular-nums"
         />
       </Dictate>
 

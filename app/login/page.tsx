@@ -15,7 +15,7 @@ export default async function LoginPage({
   return (
     <div className="flex min-h-screen items-start justify-center bg-bg px-4 pt-32">
       <form action={login} className="w-full max-w-xs space-y-3">
-        <p className="font-mono text-lg text-accent">&gt; sonderthreads</p>
+        <p className="font-display text-xl font-semibold text-accent">sonderthreads</p>
         {error && <p className="text-xs text-danger">Wrong email or password.</p>}
         <input type="hidden" name="next" value={next ?? ""} />
         <input
@@ -26,7 +26,7 @@ export default async function LoginPage({
           defaultValue={email ?? ""}
           autoComplete="email"
           placeholder="Email"
-          className="input font-mono"
+          className="input tabular-nums"
         />
         <input
           type="password"
@@ -35,7 +35,7 @@ export default async function LoginPage({
           autoFocus={!!email}
           autoComplete="current-password"
           placeholder="Password"
-          className="input font-mono"
+          className="input tabular-nums"
         />
         <button
           type="submit"

@@ -18,7 +18,7 @@ export default function AppError({
   return (
     <div className="mx-auto max-w-lg py-16">
       <Card className="p-6">
-        <p className="mb-2 font-mono text-xs uppercase tracking-wide text-danger">
+        <p className="mb-2 eyebrow text-danger">
           Something went wrong
         </p>
         <p className="mb-4 text-sm text-text-muted whitespace-pre-wrap">{error.message}</p>
