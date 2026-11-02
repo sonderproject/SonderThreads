@@ -6,10 +6,13 @@ import { getPersonTimeline } from "@/lib/actions/activity";
 import { listTasksForPerson } from "@/lib/actions/tasks";
 import { listListsForPerson } from "@/lib/actions/lists";
 import { listNotesForPerson } from "@/lib/actions/notes";
+import { listCheckInsForPerson, listCheckInReasons } from "@/lib/actions/check-ins";
 import { PersonTimeline } from "@/components/people/PersonTimeline";
 import { EditableField } from "@/components/people/EditableField";
 import { DeletePersonButton } from "@/components/people/DeletePersonButton";
 import { PersonNotes } from "@/components/people/PersonNotes";
+import { CheckInForm } from "@/components/check-ins/CheckInForm";
+import { CheckInRow } from "@/components/check-ins/CheckInRow";
 import { TaskRow } from "@/components/tasks/TaskRow";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Badge } from "@/components/ui/Badge";
@@ -43,11 +46,13 @@ export default async function PersonProfilePage({
   const person = await getPerson(id);
   if (!person) notFound();
 
-  const [activity, tasks, lists, notes] = await Promise.all([
+  const [activity, tasks, lists, notes, checkIns, reasons] = await Promise.all([
     getPersonTimeline(person.id),
     listTasksForPerson(person.id),
     listListsForPerson(person.id),
     listNotesForPerson(person.id),
+    listCheckInsForPerson(person.id),
+    listCheckInReasons(),
   ]);
 
   const openTasks = tasks.filter((t) => !t.completed);
@@ -139,6 +144,21 @@ export default async function PersonProfilePage({
 
       <Section title="Notes">
         <PersonNotes personId={person.id} personName={person.display_name} notes={notes} />
+      </Section>
+
+      <Section title={`Check-ins${checkIns.length ? ` · ${checkIns.length}` : ""}`}>
+        <div className="space-y-3">
+          <CheckInForm personId={person.id} reasons={reasons} />
+          {checkIns.length === 0 ? (
+            <EmptyState message="No check-ins yet." />
+          ) : (
+            <div className="divide-y divide-border-subtle rounded border border-border bg-bg-raised">
+              {checkIns.map((c) => (
+                <CheckInRow key={c.id} checkIn={c} showPerson={false} showDay />
+              ))}
+            </div>
+          )}
+        </div>
       </Section>
 
       <Section title="Timeline">

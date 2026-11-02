@@ -23,6 +23,7 @@ const TABS = [
 const MORE_LINKS = [
   { href: "/lists", label: "Lists" },
   { href: "/notes", label: "Notes" },
+  { href: "/check-ins", label: "Check-ins" },
   { href: "/account", label: "Account" },
 ];
 

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { query } from "@/lib/db/client";
 import { getSessionUser } from "@/lib/session";
-import type { Activity, Person, List, ListItem, Note, Task } from "@/lib/types";
+import type { Activity, CheckIn, Person, List, ListItem, Note, Task } from "@/lib/types";
 
 const COLUMNS = {
   people:
@@ -11,6 +11,7 @@ const COLUMNS = {
   list_items: "id, list_id, person_id, label, checked, position, created_at, updated_at",
   tasks: "id, title, notes, person_id, list_id, due_at, recurrence, completed, completed_at, created_at, updated_at",
   activity: "id, person_id, list_id, task_id, note_id, type, description, created_at",
+  check_ins: "id, person_id, checked_in_at, reason, created_at, updated_at",
 };
 
 function toCsvValue(value: unknown): string {
@@ -45,13 +46,14 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const format = searchParams.get("format") === "csv" ? "csv" : "json";
 
-  const [people, notes, lists, listItems, tasks, activity] = await Promise.all([
+  const [people, notes, lists, listItems, tasks, activity, checkIns] = await Promise.all([
     query<Person>(`select ${COLUMNS.people} from people where user_id = $1 and deleted_at is null order by display_name`, [userId]),
     query<Note>(`select ${COLUMNS.notes} from notes where user_id = $1 and deleted_at is null order by created_at`, [userId]),
     query<List>(`select ${COLUMNS.lists} from lists where user_id = $1 and deleted_at is null order by name`, [userId]),
     query<ListItem>(`select ${COLUMNS.list_items} from list_items where user_id = $1 order by list_id, position`, [userId]),
     query<Task>(`select ${COLUMNS.tasks} from tasks where user_id = $1 and deleted_at is null order by due_at nulls last`, [userId]),
     query<Activity>(`select ${COLUMNS.activity} from activity where user_id = $1 order by created_at`, [userId]),
+    query<CheckIn>(`select ${COLUMNS.check_ins} from check_ins where user_id = $1 and deleted_at is null order by checked_in_at`, [userId]),
   ]);
 
   const timestamp = new Date().toISOString().slice(0, 10);
@@ -77,6 +79,7 @@ export async function GET(request: Request) {
     list_items: listItems,
     tasks,
     activity,
+    check_ins: checkIns,
   };
 
   return new NextResponse(JSON.stringify(payload, null, 2), {

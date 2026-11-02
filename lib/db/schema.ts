@@ -305,6 +305,21 @@ create table if not exists push_subscriptions (
 
 create index if not exists push_subscriptions_user_id_idx on push_subscriptions(user_id);
 
+-- Check-ins: a person showing up (or being seen) at a date/time, with a reason.
+create table if not exists check_ins (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null,
+  person_id uuid not null references people(id) on delete cascade,
+  checked_in_at timestamptz not null default now(),
+  reason text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  deleted_at timestamptz
+);
+
+create index if not exists check_ins_user_id_idx on check_ins(user_id, checked_in_at desc);
+create index if not exists check_ins_person_id_idx on check_ins(person_id, checked_in_at desc);
+
 -- No silent fallback to the old single owner: an insert that forgets
 -- user_id now fails instead of landing in someone else's account.
 alter table people alter column user_id drop default;

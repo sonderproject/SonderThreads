@@ -89,6 +89,21 @@ export const updateTaskSchema = z
   })
   .partial();
 
+const isoDate = z
+  .string()
+  .refine((v) => !Number.isNaN(Date.parse(v)), "Not a valid date and time");
+
+export const createCheckInSchema = z.object({
+  personId: uuid,
+  checkedInAt: isoDate.nullable().optional(),
+  reason: optionalText(500),
+});
+
+export const updateCheckInSchema = z.object({
+  checkedInAt: isoDate.optional(),
+  reason: optionalText(500),
+});
+
 /**
  * Validates input against a schema, throwing a plain Error with just the
  * first issue's message rather than a raw ZodError — clean enough to show

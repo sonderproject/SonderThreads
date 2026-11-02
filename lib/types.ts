@@ -97,7 +97,8 @@ export type ActivityType =
   | "task_completed"
   | "status_changed"
   | "summary_updated"
-  | "list_created";
+  | "list_created"
+  | "check_in";
 
 export type Activity = {
   id: string;
@@ -110,3 +111,17 @@ export type Activity = {
   description: string;
   created_at: string;
 };
+
+export type CheckIn = {
+  id: string;
+  user_id: string;
+  person_id: string;
+  checked_in_at: string;
+  reason: string | null;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+};
+
+/** A check-in joined with the person's name, for lists. */
+export type CheckInWithPerson = CheckIn & { display_name: string };
