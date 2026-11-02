@@ -5,9 +5,11 @@ import { getPerson } from "@/lib/actions/people";
 import { getPersonTimeline } from "@/lib/actions/activity";
 import { listTasksForPerson } from "@/lib/actions/tasks";
 import { listListsForPerson } from "@/lib/actions/lists";
+import { listNotesForPerson } from "@/lib/actions/notes";
 import { PersonTimeline } from "@/components/people/PersonTimeline";
 import { EditableField } from "@/components/people/EditableField";
 import { DeletePersonButton } from "@/components/people/DeletePersonButton";
+import { PersonNotes } from "@/components/people/PersonNotes";
 import { TaskRow } from "@/components/tasks/TaskRow";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Badge } from "@/components/ui/Badge";
@@ -41,10 +43,11 @@ export default async function PersonProfilePage({
   const person = await getPerson(id);
   if (!person) notFound();
 
-  const [activity, tasks, lists] = await Promise.all([
+  const [activity, tasks, lists, notes] = await Promise.all([
     getPersonTimeline(person.id),
     listTasksForPerson(person.id),
     listListsForPerson(person.id),
+    listNotesForPerson(person.id),
   ]);
 
   const openTasks = tasks.filter((t) => !t.completed);
@@ -132,6 +135,10 @@ export default async function PersonProfilePage({
 
       <Section title="Summary">
         <p className="text-sm text-text-muted">{person.summary ?? "No summary yet."}</p>
+      </Section>
+
+      <Section title="Notes">
+        <PersonNotes personId={person.id} personName={person.display_name} notes={notes} />
       </Section>
 
       <Section title="Timeline">
