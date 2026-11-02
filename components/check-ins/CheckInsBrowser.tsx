@@ -46,12 +46,29 @@ export function CheckInsBrowser({
   const todayCount = checkIns.filter((c) => localDayKey(c.checked_in_at) === todayKey).length;
   const filtering = Boolean(search.trim() || from || to);
 
+  /** Export uses the same filters as the list on screen. */
+  function exportHref(format: string): string {
+    const params = new URLSearchParams({ format });
+    try {
+      params.set("tz", Intl.DateTimeFormat().resolvedOptions().timeZone);
+    } catch {}
+    if (search.trim()) params.set("q", search.trim());
+    // Local calendar days -> instants; `to` is exclusive, so it's the next midnight.
+    if (from) params.set("from", new Date(`${from}T00:00`).toISOString());
+    if (to) {
+      const end = new Date(`${to}T00:00`);
+      end.setDate(end.getDate() + 1);
+      params.set("to", end.toISOString());
+    }
+    return `/api/check-ins/export?${params}`;
+  }
+
   return (
     <div className="space-y-6">
       <CheckInForm people={people} reasons={reasons} />
 
       <section className="space-y-3">
-        <div className="flex flex-wrap items-baseline gap-x-5 gap-y-1 text-sm text-text-muted">
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-1 text-sm text-text-muted">
           <span>
             Today <strong className="tabular-nums text-text">{todayCount}</strong>
           </span>
@@ -59,6 +76,28 @@ export function CheckInsBrowser({
             {filtering ? "Showing" : "All time"}{" "}
             <strong className="tabular-nums text-text">{filtered.length}</strong>
           </span>
+          <details className="relative ml-auto">
+            <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 rounded border border-border px-3 py-1.5 text-sm font-medium text-text transition-colors hover:bg-bg-hover [&::-webkit-details-marker]:hidden">
+              Export{filtering ? " filtered" : ""} ▾
+            </summary>
+            <div className="absolute right-0 z-20 mt-1 w-36 overflow-hidden rounded border border-border bg-bg shadow-lg">
+              {[
+                ["pdf", "PDF"],
+                ["xlsx", "Excel (.xlsx)"],
+                ["csv", "CSV"],
+              ].map(([format, label]) => (
+                <a
+                  key={format}
+                  href={exportHref(format)}
+                  download
+                  onClick={(e) => e.currentTarget.closest("details")?.removeAttribute("open")}
+                  className="block px-3 py-2 text-sm text-text hover:bg-bg-hover"
+                >
+                  {label}
+                </a>
+              ))}
+            </div>
+          </details>
         </div>
 
         <div className="grid gap-2 sm:grid-cols-[1fr_auto_auto]">
