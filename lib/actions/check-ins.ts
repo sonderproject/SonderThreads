@@ -113,16 +113,24 @@ async function setCheckInDeleted(id: string, deleted: boolean): Promise<void> {
   if (row) revalidate(row.person_id);
 }
 
-export async function listCheckIns(limit = 500): Promise<CheckInWithPerson[]> {
+/**
+ * Check-ins between two instants (either side optional), newest first.
+ * The page widens its local-day range by a day on each side and trims to
+ * exact local days in the browser, so the server needn't know the time zone.
+ */
+export async function listCheckIns(range: { from?: string | null; to?: string | null } = {}): Promise<CheckInWithPerson[]> {
   const userId = await requireUserId();
+  const valid = (v?: string | null) => (v && !Number.isNaN(Date.parse(v)) ? v : null);
   return query<CheckInWithPerson>(
     `select c.*, p.display_name
      from check_ins c
      join people p on p.id = c.person_id and p.deleted_at is null
      where c.user_id = $1 and c.deleted_at is null
+       and ($2::timestamptz is null or c.checked_in_at >= $2::timestamptz)
+       and ($3::timestamptz is null or c.checked_in_at < $3::timestamptz)
      order by c.checked_in_at desc
-     limit $2`,
-    [userId, limit],
+     limit 20000`,
+    [userId, valid(range.from), valid(range.to)],
   );
 }
 
