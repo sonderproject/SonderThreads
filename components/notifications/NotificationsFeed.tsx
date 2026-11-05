@@ -138,7 +138,7 @@ export function NotificationsFeed({
         >
           <div className="divide-y divide-border-subtle card">
             {suggestions.map((n) => (
-              <div key={n.id} className="flex items-start gap-3 px-3 py-3">
+              <div key={n.id} className={`flex items-start gap-3 px-3 py-3 ${n.read_at ? "" : "flag-new"}`}>
                 <div className="min-w-0 flex-1">
                   <p className="text-sm text-text">{n.title}</p>
                   <p className="mt-0.5 tabular-nums text-[11px] text-text-faint">
@@ -181,7 +181,9 @@ export function NotificationsFeed({
         </Section>
       )}
 
-      {overdue.length > 0 && <TaskGroup title="Overdue" tasks={overdue} personNames={personNames} />}
+      {overdue.length > 0 && (
+        <TaskGroup title="Overdue" titleClassName="text-urgent" tasks={overdue} personNames={personNames} />
+      )}
       {dueToday.length > 0 && <TaskGroup title="Due today" tasks={dueToday} personNames={personNames} />}
 
       {visible.length > 0 && (
@@ -190,7 +192,7 @@ export function NotificationsFeed({
             {visible.map((n) => (
               <div key={n.id} className="flex items-start gap-3 px-3 py-3">
                 <span
-                  className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${n.read_at ? "bg-transparent" : "bg-accent"}`}
+                  className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${n.read_at ? "bg-transparent" : "bg-new"}`}
                   aria-hidden
                 />
                 <div className="min-w-0 flex-1">
@@ -273,9 +275,19 @@ export function NotificationsFeed({
   );
 }
 
-function TaskGroup({ title, tasks, personNames }: { title: string; tasks: Task[]; personNames: Record<string, string> }) {
+function TaskGroup({
+  title,
+  titleClassName,
+  tasks,
+  personNames,
+}: {
+  title: string;
+  titleClassName?: string;
+  tasks: Task[];
+  personNames: Record<string, string>;
+}) {
   return (
-    <Section title={title}>
+    <Section title={title} titleClassName={titleClassName}>
       <div className="divide-y divide-border-subtle card">
         {tasks.map((t) => (
           <TaskRow key={t.id} task={t} personName={t.person_id ? personNames[t.person_id] : null} />
@@ -287,17 +299,19 @@ function TaskGroup({ title, tasks, personNames }: { title: string; tasks: Task[]
 
 function Section({
   title,
+  titleClassName = "text-text-faint",
   action,
   children,
 }: {
   title: string;
+  titleClassName?: string;
   action?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
     <section>
       <div className="mb-2 flex items-center justify-between gap-2">
-        <h2 className="eyebrow text-text-faint">{title}</h2>
+        <h2 className={`eyebrow ${titleClassName}`}>{title}</h2>
         {action}
       </div>
       {children}

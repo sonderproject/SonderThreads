@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/Badge";
 import { deleteNote, restoreNote, updateNoteSafe } from "@/lib/actions/notes";
 import { useUndo } from "@/components/ui/UndoToast";
 import type { Note } from "@/lib/types";
+import { isNew } from "@/lib/urgency";
 import { Dictate } from "@/components/voice/Dictate";
 
 export function NoteCard({
@@ -118,6 +119,7 @@ export function NoteCard({
               {personName}
             </Link>
           )}
+          {isNew(note.created_at) && <Badge tone="new">new</Badge>}
           {note.category && <Badge>{note.category}</Badge>}
         </div>
         <span className="tabular-nums text-[11px] text-text-faint">

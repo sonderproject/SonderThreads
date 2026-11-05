@@ -18,6 +18,10 @@
   --hover: #f1f5f2;
   --accent-strong: #18573f;
   --danger: #b42318;
+  --urgent: #b93815;
+  --urgent-soft: #fdebe4;
+  --new: #1d5fbf;
+  --new-soft: #e4eefd;
   --shadow-card: 0 1px 2px rgba(20, 32, 26, 0.05), 0 2px 8px rgba(20, 32, 26, 0.04);
   color-scheme: light;
 }
@@ -37,6 +41,10 @@
     --hover: #232d29;
     --accent-strong: #8fd3b5;
     --danger: #f28b82;
+    --urgent: #ff8f6b;
+    --urgent-soft: #3a1f17;
+    --new: #7fb4ff;
+    --new-soft: #172a45;
     --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.35);
     color-scheme: dark;
   }
@@ -56,6 +64,10 @@
   --hover: #232d29;
   --accent-strong: #8fd3b5;
   --danger: #f28b82;
+  --urgent: #ff8f6b;
+  --urgent-soft: #3a1f17;
+  --new: #7fb4ff;
+  --new-soft: #172a45;
   --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.35);
   color-scheme: dark;
 }
@@ -76,6 +88,10 @@
   --color-danger: var(--danger);
   --color-warn: var(--warn);
   --color-warn-soft: var(--warn-soft);
+  --color-urgent: var(--urgent);
+  --color-urgent-soft: var(--urgent-soft);
+  --color-new: var(--new);
+  --color-new-soft: var(--new-soft);
 }
 
 body {
@@ -173,6 +189,24 @@ textarea:focus-visible {
     background: var(--warn-soft);
     color: var(--warn);
   }
+  .tag-u {
+    background: var(--urgent-soft);
+    color: var(--urgent);
+  }
+  .tag-n {
+    background: var(--new-soft);
+    color: var(--new);
+  }
+  /* A colored stripe on the left edge of a row or card that needs a look. */
+  .flag-urgent {
+    box-shadow: inset 3px 0 0 var(--urgent);
+  }
+  .flag-attention {
+    box-shadow: inset 3px 0 0 var(--warn);
+  }
+  .flag-new {
+    box-shadow: inset 3px 0 0 var(--new);
+  }
   .flag {
     background: var(--warn-soft);
     border-left: 3px solid var(--warn);
@@ -200,6 +234,16 @@ textarea:focus-visible {
     border: 1px solid var(--line);
     border-radius: 6px;
     box-shadow: var(--shadow-card);
+  }
+  /* Keep the card shadow when a status stripe is added. */
+  .card.flag-urgent {
+    box-shadow: inset 3px 0 0 var(--urgent), var(--shadow-card);
+  }
+  .card.flag-attention {
+    box-shadow: inset 3px 0 0 var(--warn), var(--shadow-card);
+  }
+  .card.flag-new {
+    box-shadow: inset 3px 0 0 var(--new), var(--shadow-card);
   }
 
   /* 16px on phones — iOS Safari zooms the page when focusing any smaller input. */

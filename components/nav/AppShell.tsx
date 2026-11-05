@@ -109,7 +109,7 @@ export function AppShell({
                 >
                   <BellIcon />
                   {notificationCount > 0 && (
-                    <span className="absolute right-0.5 top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 tabular-nums text-[10px] leading-none text-bg">
+                    <span className="absolute right-0.5 top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-urgent px-1 tabular-nums text-[10px] font-semibold leading-none text-bg-raised">
                       {notificationCount > 99 ? "99+" : notificationCount}
                     </span>
                   )}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { deleteTask, restoreTask, setTaskCompleted, updateTaskSafe } from "@/lib/actions/tasks";
@@ -11,6 +11,7 @@ import { snoozeOptions } from "@/components/tasks/snooze";
 import { SnoozeIcon, TrashIcon } from "@/components/ui/icons";
 import type { Task, TaskRecurrence } from "@/lib/types";
 import { formatDue } from "@/lib/format-due";
+import { dueState } from "@/lib/urgency";
 import { Dictate } from "@/components/voice/Dictate";
 
 function toDateInputValue(iso: string | null): string {
@@ -38,6 +39,10 @@ export function TaskRow({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [swipeX, setSwipeX] = useState(0);
+  // Overdue/today depends on the viewer's clock and time zone, so decide it after mount.
+  const [now, setNow] = useState<Date | null>(null);
+  useEffect(() => setNow(new Date()), []);
+  const due = now ? dueState(task.due_at, completed, now) : null;
   const swipe = useRef<{ x: number; y: number; locked: boolean | null } | null>(null);
   const suppressClick = useRef(false);
   const [pending, startTransition] = useTransition();
@@ -212,7 +217,9 @@ export function TaskRow({
           transition: swipe.current ? "none" : "transform 150ms ease-out",
           touchAction: "pan-y",
         }}
-        className="group relative flex items-start gap-3 bg-bg-raised px-3 py-3 hover:bg-bg-hover sm:px-2 sm:py-2"
+        className={`group relative flex items-start gap-3 bg-bg-raised px-3 py-3 hover:bg-bg-hover sm:px-2 sm:py-2 ${
+          due === "overdue" ? "flag-urgent" : due === "today" ? "flag-attention" : ""
+        }`}
       >
         <input
           type="checkbox"
@@ -231,7 +238,16 @@ export function TaskRow({
                 {personName}
               </Link>
             )}
-            {task.due_at && <span>{formatDue(task.due_at)}</span>}
+            {task.due_at && (
+              <span
+                className={
+                  due === "overdue" ? "font-semibold text-urgent" : due === "today" ? "font-semibold text-warn" : undefined
+                }
+              >
+                {due === "overdue" && "Overdue · "}
+                {formatDue(task.due_at)}
+              </span>
+            )}
             {task.recurrence && <span title={`Repeats ${task.recurrence}`}>↻ {task.recurrence}</span>}
           </div>
         </div>

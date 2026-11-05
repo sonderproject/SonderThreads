@@ -15,6 +15,7 @@ Define every color as a CSS variable on `:root`, then redefine for dark mode. Ne
 :root{
   --bg:#eef2ef; --surface:#ffffff; --fg:#1a211d; --muted:#56635c; --line:#d5ddd8; --line-subtle:#e7ece9;
   --accent:#1f6b4f; --accent-soft:#e1efe8; --warn:#9a5b00; --warn-soft:#fbf0de; --hover:#f1f5f2;
+  --urgent:#b93815; --urgent-soft:#fdebe4; --new:#1d5fbf; --new-soft:#e4eefd;
   --shadow-card:0 1px 2px rgba(20,32,26,.05), 0 2px 8px rgba(20,32,26,.04);
   --display:"Source Serif 4", Georgia, serif;
   --body:"Source Sans 3", system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -22,10 +23,12 @@ Define every color as a CSS variable on `:root`, then redefine for dark mode. Ne
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#0b0f0d; --surface:#1b2420; --fg:#e7ece9; --muted:#9eaca5; --line:#303c36; --line-subtle:#27312c;
   --accent:#6cc39f; --accent-soft:#1d3329; --warn:#e8b25c; --warn-soft:#33281a; --hover:#232d29;
+  --urgent:#ff8f6b; --urgent-soft:#3a1f17; --new:#7fb4ff; --new-soft:#172a45;
   --shadow-card:0 1px 2px rgba(0,0,0,.35); color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#0b0f0d; --surface:#1b2420; --fg:#e7ece9; --muted:#9eaca5; --line:#303c36; --line-subtle:#27312c;
   --accent:#6cc39f; --accent-soft:#1d3329; --warn:#e8b25c; --warn-soft:#33281a; --hover:#232d29;
+  --urgent:#ff8f6b; --urgent-soft:#3a1f17; --new:#7fb4ff; --new-soft:#172a45;
   --shadow-card:0 1px 2px rgba(0,0,0,.35); color-scheme:dark}
 body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.5}
 ```
@@ -40,7 +43,9 @@ body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px
 | `--line-subtle` | Row dividers inside a card |
 | `--shadow-card` | The one soft shadow, on `.card` only |
 | `--accent` / `--accent-soft` | Links, checkboxes, progress, "verified"/success tags |
-| `--warn` / `--warn-soft` | Callouts, "estimate"/caution tags |
+| `--warn` / `--warn-soft` | **Attention**: due today, follow up, stale; callouts |
+| `--urgent` / `--urgent-soft` | **Urgent**: overdue, the unread-count bubble. Not for delete buttons (that's `--danger`) |
+| `--new` / `--new-soft` | **New**: people/notes added in the last 2 days, unread notifications |
 
 ## Typography
 
@@ -120,10 +125,17 @@ Small inline status pills next to text:
 .e{background:var(--warn-soft);color:var(--warn)}       /* caution / draft / estimate */
 ```
 
+### Status colors
+Three meanings, used the same way everywhere (rules in `lib/urgency.ts`):
+- `<Badge tone="urgent|attention|new">` for the pill; plain `<Badge>` for neutral labels.
+- `.flag-urgent` / `.flag-attention` / `.flag-new` put a 3px stripe on the left edge of the row or card.
+- Overdue due-dates read "Overdue · …" in `--urgent`; due today in `--warn`.
+Green stays the brand/action color; never use these three for decoration.
+
 ## Rules
 
 - Group related content in a `.card` so it separates clearly from the page; headings and section labels sit on the page background between cards. Don't nest cards inside cards.
-- One accent color. Warn color only for caution states.
+- One brand accent (green). Status colors (urgent, attention, new) only to mark state, never decoration.
 - Focus states visible: `outline: 2px solid var(--accent); outline-offset: 2px`.
 - Respect `prefers-reduced-motion` (turn off transitions).
 - Copy is plain and direct. Buttons say exactly what they do.

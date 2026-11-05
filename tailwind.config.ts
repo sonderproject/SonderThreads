@@ -34,6 +34,14 @@ const config: Config = {
           DEFAULT: "var(--color-warn)",
           soft: "var(--color-warn-soft)",
         },
+        urgent: {
+          DEFAULT: "var(--color-urgent)",
+          soft: "var(--color-urgent-soft)",
+        },
+        new: {
+          DEFAULT: "var(--color-new)",
+          soft: "var(--color-new-soft)",
+        },
       },
       fontFamily: {
         display: ["var(--font-display)", "Georgia", "serif"],

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { isStale } from "@/lib/stale";
+import { isNew } from "@/lib/urgency";
 import type { Person } from "@/lib/types";
 
 function relativeTime(iso: string): string {
@@ -19,13 +20,18 @@ function relativeTime(iso: string): string {
 }
 
 export function PersonCard({ person }: { person: Person }) {
+  const fresh = isNew(person.created_at);
+  const stale = isStale(person);
+  const flag = person.needs_followup || stale ? "flag-attention" : fresh ? "flag-new" : "";
   return (
     <Link href={`/people/${person.id}`}>
-      <Card className="p-4 transition-colors hover:border-accent/50">
+      <Card className={`p-4 transition-colors hover:border-accent/50 ${flag}`}>
         <div className="flex items-start justify-between gap-2">
-          <div className="flex min-w-0 items-center gap-2">
-            <p className="font-medium text-text">{person.display_name}</p>
-            {isStale(person) && <Badge>stale</Badge>}
+          <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+            <p className="truncate font-medium text-text">{person.display_name}</p>
+            {fresh && <Badge tone="new">new</Badge>}
+            {person.needs_followup && <Badge tone="attention">follow up</Badge>}
+            {stale && <Badge tone="attention">stale</Badge>}
           </div>
           <span className="shrink-0 tabular-nums text-[11px] text-text-faint">
             {relativeTime(person.last_activity_at)}

@@ -17,6 +17,7 @@ import { TaskRow } from "@/components/tasks/TaskRow";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Badge } from "@/components/ui/Badge";
 import { isStale, STALE_DAYS } from "@/lib/stale";
+import { isNew } from "@/lib/urgency";
 import type { Activity } from "@/lib/types";
 
 /** node-postgres returns `date` columns as a local-midnight Date; the date input wants YYYY-MM-DD. */
@@ -72,10 +73,11 @@ export default async function PersonProfilePage({
               required
             />
           </h1>
-          {person.needs_followup && <Badge>follow up</Badge>}
+          {isNew(person.created_at) && <Badge tone="new">new</Badge>}
+          {person.needs_followup && <Badge tone="attention">follow up</Badge>}
           {isStale(person) && (
             <span title={`No activity in ${STALE_DAYS}+ days`}>
-              <Badge>stale</Badge>
+              <Badge tone="attention">stale</Badge>
             </span>
           )}
           <DeletePersonButton personId={person.id} name={person.display_name} />
