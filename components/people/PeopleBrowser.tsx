@@ -84,9 +84,30 @@ export function PeopleBrowser({ people }: { people: Person[] }) {
       </div>
 
       <div className="flex items-center justify-between gap-2">
-        <a href="/api/export?format=csv" className="text-xs text-text-faint hover:text-accent">
-          Export roster as CSV
-        </a>
+        <details className="relative">
+          <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 rounded border border-border bg-bg-raised px-3 py-1.5 text-sm font-medium text-text transition-colors hover:bg-bg-hover [&::-webkit-details-marker]:hidden">
+            Export{query.trim() ? " results" : ""} ▾
+          </summary>
+          <div className="absolute left-0 z-20 mt-1 w-36 overflow-hidden rounded border border-border bg-bg-raised shadow-lg">
+            {[
+              ["pdf", "PDF"],
+              ["xlsx", "Excel (.xlsx)"],
+              ["csv", "CSV"],
+            ].map(([format, label]) => (
+              <a
+                key={format}
+                href={`/api/people/export?${new URLSearchParams(
+                  query.trim() ? { format, q: query.trim() } : { format },
+                )}`}
+                download
+                onClick={(e) => e.currentTarget.closest("details")?.removeAttribute("open")}
+                className="block px-3 py-2 text-sm text-text hover:bg-bg-hover"
+              >
+                {label}
+              </a>
+            ))}
+          </div>
+        </details>
         {people.length > 0 && !selecting && (
           <button onClick={() => setSelecting(true)} className="text-xs text-text-muted hover:text-accent">
             Select
