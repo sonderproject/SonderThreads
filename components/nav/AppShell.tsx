@@ -38,7 +38,7 @@ export function AppShell({
     <DirectoryProvider value={{ people, lists }}>
       <UndoProvider>
         <div className="min-h-screen bg-bg">
-          <header className="pt-safe sticky top-0 z-20 border-b border-border bg-bg/95 backdrop-blur">
+          <header className="pt-safe sticky top-0 z-20 border-b border-border bg-bg-raised">
             <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3 sm:px-6">
               <Link href="/" className="font-display text-lg font-semibold text-accent">
                 sonderthreads

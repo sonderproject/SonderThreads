@@ -5,52 +5,58 @@
 :root {
   /* Design tokens: docs/DESIGN.md. Light by default, dark follows the system
      unless the user picked a theme (data-theme on <html>). */
-  --bg: #f7f8f6;
+  --bg: #eef2ef;
   --surface: #ffffff;
-  --fg: #1d2420;
-  --muted: #5d6a63;
-  --line: #d9dfdb;
+  --fg: #1a211d;
+  --muted: #56635c;
+  --line: #d5ddd8;
+  --line-subtle: #e7ece9;
   --accent: #1f6b4f;
-  --accent-soft: #e3efe9;
+  --accent-soft: #e1efe8;
   --warn: #9a5b00;
   --warn-soft: #fbf0de;
-  --hover: #eef1ef;
+  --hover: #f1f5f2;
   --accent-strong: #18573f;
   --danger: #b42318;
+  --shadow-card: 0 1px 2px rgba(20, 32, 26, 0.05), 0 2px 8px rgba(20, 32, 26, 0.04);
   color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #141917;
-    --surface: #1c2320;
+    --bg: #0b0f0d;
+    --surface: #1b2420;
     --fg: #e7ece9;
-    --muted: #9aa8a1;
-    --line: #2e3833;
+    --muted: #9eaca5;
+    --line: #303c36;
+    --line-subtle: #27312c;
     --accent: #6cc39f;
-    --accent-soft: #1f3229;
+    --accent-soft: #1d3329;
     --warn: #e8b25c;
     --warn-soft: #33281a;
-    --hover: #242c28;
+    --hover: #232d29;
     --accent-strong: #8fd3b5;
     --danger: #f28b82;
+    --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.35);
     color-scheme: dark;
   }
 }
 
 :root[data-theme="dark"] {
-  --bg: #141917;
-  --surface: #1c2320;
+  --bg: #0b0f0d;
+  --surface: #1b2420;
   --fg: #e7ece9;
-  --muted: #9aa8a1;
-  --line: #2e3833;
+  --muted: #9eaca5;
+  --line: #303c36;
+  --line-subtle: #27312c;
   --accent: #6cc39f;
-  --accent-soft: #1f3229;
+  --accent-soft: #1d3329;
   --warn: #e8b25c;
   --warn-soft: #33281a;
-  --hover: #242c28;
+  --hover: #232d29;
   --accent-strong: #8fd3b5;
   --danger: #f28b82;
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.35);
   color-scheme: dark;
 }
 
@@ -60,7 +66,7 @@
   --color-bg-raised: var(--surface);
   --color-bg-hover: var(--hover);
   --color-border: var(--line);
-  --color-border-subtle: var(--line);
+  --color-border-subtle: var(--line-subtle);
   --color-text: var(--fg);
   --color-text-muted: var(--muted);
   --color-text-faint: var(--muted);
@@ -188,9 +194,17 @@ textarea:focus-visible {
     transition: width 0.25s;
   }
 
+  /* A grouped block of content: white (dark: raised) surface that stands off the page. */
+  .card {
+    background-color: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    box-shadow: var(--shadow-card);
+  }
+
   /* 16px on phones — iOS Safari zooms the page when focusing any smaller input. */
   .input {
-    @apply w-full rounded border border-border bg-bg px-3 py-2.5 text-base text-text placeholder:text-text-faint focus:border-accent sm:py-2 sm:text-sm;
+    @apply w-full rounded border border-border bg-bg-raised px-3 py-2.5 text-base text-text placeholder:text-text-faint focus:border-accent sm:py-2 sm:text-sm;
   }
 }
 

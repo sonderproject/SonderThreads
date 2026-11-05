@@ -241,7 +241,7 @@ export function ListDetail({ list, items }: { list: List; items: ListItem[] }) {
             <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 rounded border border-border px-3 py-1.5 text-sm font-medium text-text transition-colors hover:bg-bg-hover [&::-webkit-details-marker]:hidden">
               Export ▾
             </summary>
-            <div className="absolute left-0 z-20 mt-1 w-36 overflow-hidden sm:left-auto sm:right-0 rounded border border-border bg-bg shadow-lg">
+            <div className="absolute left-0 z-20 mt-1 w-36 overflow-hidden sm:left-auto sm:right-0 rounded border border-border bg-bg-raised shadow-lg">
               {[
                 ["pdf", "PDF"],
                 ["xlsx", "Excel (.xlsx)"],
@@ -307,7 +307,7 @@ export function ListDetail({ list, items }: { list: List; items: ListItem[] }) {
       {localItems.length === 0 ? (
         <EmptyState message="No items yet." />
       ) : (
-        <div className="divide-y divide-border-subtle rounded border border-border">
+        <div className="divide-y divide-border-subtle card">
           {localItems.map((item) => (
             <div
               key={item.id}

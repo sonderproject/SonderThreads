@@ -132,7 +132,7 @@ export function MobileNav({ people }: { people: Pick<Person, "id" | "display_nam
       </button>
 
       <nav
-        className="pb-safe fixed inset-x-0 bottom-0 z-30 border-t border-border bg-bg/95 backdrop-blur sm:hidden"
+        className="pb-safe fixed inset-x-0 bottom-0 z-30 border-t border-border bg-bg-raised sm:hidden"
         aria-label="Main"
       >
         <div className="grid grid-cols-5">
@@ -180,7 +180,7 @@ export function MobileNav({ people }: { people: Pick<Person, "id" | "display_nam
       </Modal>
 
       <Modal open={sheet === "more"} onClose={() => setSheet(null)} title="More">
-        <div className="divide-y divide-border-subtle rounded border border-border">
+        <div className="divide-y divide-border-subtle card">
           <button
             onClick={() => {
               setSheet(null);

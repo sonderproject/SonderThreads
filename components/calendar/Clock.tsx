@@ -23,7 +23,7 @@ export function Clock() {
 
   return (
     <div
-      className="relative flex flex-col items-center justify-center overflow-hidden rounded border bg-bg-raised px-5 py-4"
+      className="relative flex flex-col items-center justify-center overflow-hidden card px-5 py-4"
       style={{ borderColor: tint(35), boxShadow: `inset 0 0 24px ${tint(6)}` }}
     >
       {/* CRT scanlines */}

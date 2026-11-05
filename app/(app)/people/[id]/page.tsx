@@ -119,27 +119,31 @@ export default async function PersonProfilePage({
       </Section>
 
       <Section title="Current">
-        <EditableField
-          personId={person.id}
-          field="current_status"
-          value={person.current_status}
-          placeholder="Click to add current status..."
-          textClassName="text-sm text-text"
-        />
+        <div className="card px-3 py-2.5">
+          <EditableField
+            personId={person.id}
+            field="current_status"
+            value={person.current_status}
+            placeholder="Click to add current status..."
+            textClassName="text-sm text-text"
+          />
+        </div>
       </Section>
 
       <Section title="Next">
-        <EditableField
-          personId={person.id}
-          field="next_action"
-          value={person.next_action}
-          placeholder="Click to add next action..."
-          textClassName="text-sm text-accent"
-        />
+        <div className="card px-3 py-2.5">
+          <EditableField
+            personId={person.id}
+            field="next_action"
+            value={person.next_action}
+            placeholder="Click to add next action..."
+            textClassName="text-sm text-accent"
+          />
+        </div>
       </Section>
 
       <Section title="Summary">
-        <p className="text-sm text-text-muted">{person.summary ?? "No summary yet."}</p>
+        <p className="card px-3 py-2.5 text-sm text-text-muted">{person.summary ?? "No summary yet."}</p>
       </Section>
 
       <Section title="Notes">
@@ -152,7 +156,7 @@ export default async function PersonProfilePage({
           {checkIns.length === 0 ? (
             <EmptyState message="No check-ins yet." />
           ) : (
-            <div className="divide-y divide-border-subtle rounded border border-border bg-bg-raised">
+            <div className="divide-y divide-border-subtle card">
               {checkIns.map((c) => (
                 <CheckInRow key={c.id} checkIn={c} showPerson={false} showDay />
               ))}
@@ -169,7 +173,7 @@ export default async function PersonProfilePage({
         {openTasks.length === 0 ? (
           <EmptyState message="No open tasks." />
         ) : (
-          <div className="divide-y divide-border-subtle rounded border border-border">
+          <div className="divide-y divide-border-subtle card">
             {openTasks.map((task) => (
               <TaskRow key={task.id} task={task} />
             ))}
@@ -200,7 +204,7 @@ export default async function PersonProfilePage({
 
 function Detail({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="rounded border border-border px-3 py-2">
+    <div className="card px-3 py-2">
       <p className="mb-0.5 tabular-nums text-[11px] uppercase text-text-faint">{label}</p>
       {children}
     </div>

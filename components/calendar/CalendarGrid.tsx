@@ -42,7 +42,7 @@ export function CalendarGrid({
         onSelect={setSelectedDay}
         onAdd={() => setQuickAddDay(selectedDay)}
       />
-      <div className="hidden rounded border border-border sm:block">
+      <div className="hidden card sm:block">
         <div className="grid grid-cols-7 border-b border-border">
           {WEEKDAY_LABELS.map((label) => (
             <div
@@ -160,7 +160,7 @@ function MobileMonth({
 
   return (
     <div className="space-y-4 sm:hidden">
-      <div className="rounded border border-border p-2">
+      <div className="card p-2">
         <div className="grid grid-cols-7">
           {WEEKDAY_LABELS.map((l) => (
             <div key={l} className="py-1 text-center tabular-nums text-xs uppercase text-text-faint">
@@ -212,7 +212,7 @@ function MobileMonth({
             Nothing on this day.
           </p>
         ) : (
-          <div className="divide-y divide-border-subtle rounded border border-border">
+          <div className="divide-y divide-border-subtle card">
             {dayBirthdays.map((b) => (
               <Link key={b.personId} href={`/people/${b.personId}`} className="flex min-h-12 items-center px-4 text-accent">
                 🎂 {b.displayName}&apos;s birthday

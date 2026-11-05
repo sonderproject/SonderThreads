@@ -70,7 +70,7 @@ export default async function DashboardPage() {
         {todayTasks.length === 0 ? (
           <EmptyState message="Nothing due today." />
         ) : (
-          <div className="divide-y divide-border-subtle rounded border border-border">
+          <div className="divide-y divide-border-subtle card">
             {todayTasks.map((task) => (
               <TaskRow
                 key={task.id}

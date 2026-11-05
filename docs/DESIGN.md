@@ -13,27 +13,32 @@ Define every color as a CSS variable on `:root`, then redefine for dark mode. Ne
 ```css
 /* Layout: single readable column; grouped sections; running progress */
 :root{
-  --bg:#f7f8f6; --surface:#ffffff; --fg:#1d2420; --muted:#5d6a63; --line:#d9dfdb;
-  --accent:#1f6b4f; --accent-soft:#e3efe9; --warn:#9a5b00; --warn-soft:#fbf0de;
+  --bg:#eef2ef; --surface:#ffffff; --fg:#1a211d; --muted:#56635c; --line:#d5ddd8; --line-subtle:#e7ece9;
+  --accent:#1f6b4f; --accent-soft:#e1efe8; --warn:#9a5b00; --warn-soft:#fbf0de; --hover:#f1f5f2;
+  --shadow-card:0 1px 2px rgba(20,32,26,.05), 0 2px 8px rgba(20,32,26,.04);
   --display:"Source Serif 4", Georgia, serif;
   --body:"Source Sans 3", system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#141917; --surface:#1c2320; --fg:#e7ece9; --muted:#9aa8a1; --line:#2e3833;
-  --accent:#6cc39f; --accent-soft:#1f3229; --warn:#e8b25c; --warn-soft:#33281a; color-scheme:dark}}
+  --bg:#0b0f0d; --surface:#1b2420; --fg:#e7ece9; --muted:#9eaca5; --line:#303c36; --line-subtle:#27312c;
+  --accent:#6cc39f; --accent-soft:#1d3329; --warn:#e8b25c; --warn-soft:#33281a; --hover:#232d29;
+  --shadow-card:0 1px 2px rgba(0,0,0,.35); color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#141917; --surface:#1c2320; --fg:#e7ece9; --muted:#9aa8a1; --line:#2e3833;
-  --accent:#6cc39f; --accent-soft:#1f3229; --warn:#e8b25c; --warn-soft:#33281a; color-scheme:dark}
+  --bg:#0b0f0d; --surface:#1b2420; --fg:#e7ece9; --muted:#9eaca5; --line:#303c36; --line-subtle:#27312c;
+  --accent:#6cc39f; --accent-soft:#1d3329; --warn:#e8b25c; --warn-soft:#33281a; --hover:#232d29;
+  --shadow-card:0 1px 2px rgba(0,0,0,.35); color-scheme:dark}
 body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.5}
 ```
 
 | Token | Use |
 |---|---|
-| `--bg` | Page background |
-| `--surface` | Cards, lists, tables |
+| `--bg` | Page background — tinted so `--surface` cards clearly stand off it |
+| `--surface` | Cards, lists, tables, header and tab bar, inputs, menus |
 | `--fg` | Main text |
 | `--muted` | Secondary text, labels, dates |
-| `--line` | Borders and dividers |
+| `--line` | Card and input borders |
+| `--line-subtle` | Row dividers inside a card |
+| `--shadow-card` | The one soft shadow, on `.card` only |
 | `--accent` / `--accent-soft` | Links, checkboxes, progress, "verified"/success tags |
 | `--warn` / `--warn-soft` | Callouts, "estimate"/caution tags |
 
@@ -88,6 +93,9 @@ For one important warning per page. Soft warn background, 3px left border in `--
 ### Section header
 h2 on the left, a short due/status label on the right in `--accent`, 0.85rem, 600. Flex, `justify-content: space-between`, wraps on mobile.
 
+### Card
+`.card` in `app/globals.css`: `--surface` background, 1px `--line` border, 6px radius, `--shadow-card`. Every grouped block (lists, forms, detail boxes, calendar) uses it; nothing on the page should sit bare on `--bg` except headings, labels and empty states (dashed border, no fill).
+
 ### List (the core component)
 One bordered `--surface` box with rows separated by 1px `--line` dividers. Radius 6px.
 Each row is a 3-column grid: control (22px) | text (1fr, `min-width:0`) | meta on the right (date, count — `--muted`, 0.82rem, no wrap).
@@ -114,7 +122,7 @@ Small inline status pills next to text:
 
 ## Rules
 
-- Cards and borders only on the list/table boxes and the one callout. Don't put every block in a card.
+- Group related content in a `.card` so it separates clearly from the page; headings and section labels sit on the page background between cards. Don't nest cards inside cards.
 - One accent color. Warn color only for caution states.
 - Focus states visible: `outline: 2px solid var(--accent); outline-offset: 2px`.
 - Respect `prefers-reduced-motion` (turn off transitions).

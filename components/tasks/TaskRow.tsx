@@ -212,7 +212,7 @@ export function TaskRow({
           transition: swipe.current ? "none" : "transform 150ms ease-out",
           touchAction: "pan-y",
         }}
-        className="group relative flex items-start gap-3 bg-bg px-3 py-3 hover:bg-bg-hover sm:px-2 sm:py-2"
+        className="group relative flex items-start gap-3 bg-bg-raised px-3 py-3 hover:bg-bg-hover sm:px-2 sm:py-2"
       >
         <input
           type="checkbox"
@@ -273,7 +273,7 @@ function SnoozePicker({ onPick }: { onPick: (date: Date) => void }) {
   const [custom, setCustom] = useState("");
   return (
     <div className="space-y-3">
-      <div className="divide-y divide-border-subtle rounded border border-border">
+      <div className="divide-y divide-border-subtle card">
         {snoozeOptions().map((o) => (
           <button
             key={o.label}

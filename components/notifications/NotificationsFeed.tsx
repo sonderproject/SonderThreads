@@ -136,7 +136,7 @@ export function NotificationsFeed({
             )
           }
         >
-          <div className="divide-y divide-border-subtle rounded border border-border">
+          <div className="divide-y divide-border-subtle card">
             {suggestions.map((n) => (
               <div key={n.id} className="flex items-start gap-3 px-3 py-3">
                 <div className="min-w-0 flex-1">
@@ -186,7 +186,7 @@ export function NotificationsFeed({
 
       {visible.length > 0 && (
         <Section title="Activity">
-          <div className="divide-y divide-border-subtle rounded border border-border">
+          <div className="divide-y divide-border-subtle card">
             {visible.map((n) => (
               <div key={n.id} className="flex items-start gap-3 px-3 py-3">
                 <span
@@ -245,7 +245,7 @@ export function NotificationsFeed({
 
       {upcomingBirthdays.length > 0 && (
         <Section title="Birthdays">
-          <div className="divide-y divide-border-subtle rounded border border-border">
+          <div className="divide-y divide-border-subtle card">
             {upcomingBirthdays.map((b) => (
               <Link
                 key={b.id}
@@ -276,7 +276,7 @@ export function NotificationsFeed({
 function TaskGroup({ title, tasks, personNames }: { title: string; tasks: Task[]; personNames: Record<string, string> }) {
   return (
     <Section title={title}>
-      <div className="divide-y divide-border-subtle rounded border border-border">
+      <div className="divide-y divide-border-subtle card">
         {tasks.map((t) => (
           <TaskRow key={t.id} task={t} personName={t.person_id ? personNames[t.person_id] : null} />
         ))}

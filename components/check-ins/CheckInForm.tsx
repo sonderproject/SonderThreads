@@ -65,7 +65,7 @@ export function CheckInForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-2 rounded border border-border bg-bg-raised p-3">
+    <form onSubmit={handleSubmit} className="space-y-2 card p-3">
       {error && <p className="text-xs text-danger">{error}</p>}
       {saved && <p className="text-xs text-accent">{saved}</p>}
 

@@ -102,7 +102,7 @@ export function TasksBrowser({
             {tasks.length === 0 ? (
               <EmptyState message={empty} />
             ) : (
-              <div className="divide-y divide-border-subtle rounded border border-border">
+              <div className="divide-y divide-border-subtle card">
                 {tasks.map((task) =>
                   selecting ? (
                     <label

@@ -122,7 +122,7 @@ export function CheckInsBrowser({
             <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 rounded border border-border px-3 py-1.5 text-sm font-medium text-text transition-colors hover:bg-bg-hover [&::-webkit-details-marker]:hidden">
               Export ▾
             </summary>
-            <div className="absolute right-0 z-20 mt-1 w-36 overflow-hidden rounded border border-border bg-bg shadow-lg">
+            <div className="absolute right-0 z-20 mt-1 w-36 overflow-hidden rounded border border-border bg-bg-raised shadow-lg">
               {[
                 ["pdf", "PDF"],
                 ["xlsx", "Excel (.xlsx)"],
@@ -233,7 +233,7 @@ export function CheckInsBrowser({
                   </button>
                 )}
               </h3>
-              <div className="divide-y divide-border-subtle rounded border border-border bg-bg-raised">
+              <div className="divide-y divide-border-subtle card">
                 {day.items.map((c) => (
                   <CheckInRow key={c.id} checkIn={c} />
                 ))}

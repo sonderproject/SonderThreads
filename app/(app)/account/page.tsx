@@ -23,7 +23,7 @@ export default async function AccountPage({
         <p className="text-sm text-text-muted">{user.email}</p>
       </div>
 
-      <section className="space-y-4 rounded border border-border p-4">
+      <section className="space-y-4 card p-4">
         <p className="text-sm font-medium text-text">Notifications</p>
 
         <form action={saveContactSettings} className="space-y-2">

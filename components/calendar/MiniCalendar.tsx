@@ -15,7 +15,7 @@ export function MiniCalendar({
   eventDays: Set<number>;
 }) {
   return (
-    <div className="rounded border border-border p-3">
+    <div className="card p-3">
       <div className="grid grid-cols-7">
         {WEEKDAY_LABELS.map((label, i) => (
           <div key={i} className="py-1 text-center tabular-nums text-xs text-text-faint">

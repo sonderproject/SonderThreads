@@ -51,7 +51,7 @@ export function NotesBrowser({
 
   return (
     <div className="space-y-4">
-      <form onSubmit={handleAdd} className="space-y-2 rounded border border-border bg-bg-raised p-3">
+      <form onSubmit={handleAdd} className="space-y-2 card p-3">
         {error && <p className="text-xs text-red-400">{error}</p>}
         <Dictate value={content} onChange={setContent}>
           <textarea
