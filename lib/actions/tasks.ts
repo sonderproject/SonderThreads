@@ -14,6 +14,7 @@ import {
   type ActionResult,
 } from "@/lib/validation";
 import type { Task, TaskRecurrence } from "@/lib/types";
+import { fuzzyFilter } from "@/lib/fuzzy";
 
 export async function listTasks(): Promise<Task[]> {
   const userId = await requireUserId();
@@ -247,13 +248,13 @@ export async function updateTaskSafe(
 
 export async function searchTasks(searchQuery: string): Promise<Task[]> {
   const userId = await requireUserId();
-  return query<Task>(
+  // Typo-tolerant ranking in JS over open tasks plus the most recent completed ones.
+  const tasks = await query<Task>(
     `select * from tasks
-     where user_id = $1
-       and deleted_at is null
-       and search_vector @@ plainto_tsquery('english', $2)
-     order by ts_rank(search_vector, plainto_tsquery('english', $2)) desc
-     limit 20`,
-    [userId, searchQuery],
+     where user_id = $1 and deleted_at is null
+     order by completed asc, coalesce(due_at, created_at) desc
+     limit 2000`,
+    [userId],
   );
+  return fuzzyFilter(tasks, searchQuery, (t) => [{ text: t.title, weight: 1 }, { text: t.notes, weight: 0.8 }], 20);
 }

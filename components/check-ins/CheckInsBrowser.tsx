@@ -9,6 +9,7 @@ import { formatCheckInDay, localDayKey } from "./time";
 import { DEFAULT_RANGE_DAYS, addDays } from "./range";
 import type { CheckInWithPerson, Person } from "@/lib/types";
 import { SEARCH_INPUT } from "@/lib/input-props";
+import { fuzzyMatcher } from "@/lib/fuzzy";
 
 const PRESETS: [label: string, days: number][] = [
   ["Today", 1],
@@ -62,13 +63,13 @@ export function CheckInsBrowser({
   const activePreset = range !== null && to === todayKey ? PRESETS.find(([, n]) => addDays(todayKey, -(n - 1)) === from)?.[1] : undefined;
 
   const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
+    // Typo-tolerant, but kept in date order (the list is grouped by day).
+    const matches = fuzzyMatcher(search);
     return checkIns.filter((c) => {
       const day = localDayKey(c.checked_in_at);
       if (from && day < from) return false;
       if (to && day > to) return false;
-      if (!q) return true;
-      return c.display_name.toLowerCase().includes(q) || (c.reason ?? "").toLowerCase().includes(q);
+      return matches([{ text: c.display_name, weight: 1 }, { text: c.reason, weight: 1 }]) > 0;
     });
   }, [checkIns, search, from, to]);
 

@@ -7,6 +7,7 @@ import { requireUserId } from "@/lib/current-user";
 import { logActivity } from "./activity";
 import { createPersonSchema, updatePersonSchema, validate, toActionResult, type ActionResult } from "@/lib/validation";
 import type { Person } from "@/lib/types";
+import { fuzzyFilter } from "@/lib/fuzzy";
 
 function splitName(fullName: string): { firstName: string; lastName: string | null } {
   const parts = fullName.trim().split(/\s+/);
@@ -263,15 +264,13 @@ export async function touchPersonActivity(id: string): Promise<void> {
 }
 
 export async function searchPeople(searchQuery: string): Promise<Person[]> {
-  const userId = await requireUserId();
-  return query<Person>(
-    `select * from people
-     where user_id = $1
-       and deleted_at is null
-       and search_vector @@ plainto_tsquery('english', $2)
-     order by ts_rank(search_vector, plainto_tsquery('english', $2)) desc
-     limit 20`,
-    [userId, searchQuery],
+  // Typo-tolerant: rank everyone in JS (a person list is small) instead of exact full-text matching.
+  const people = await listPeople();
+  return fuzzyFilter(
+    people,
+    searchQuery,
+    (p) => [{ text: p.display_name, weight: 1 }, { text: p.current_status, weight: 0.8 }, { text: p.next_action, weight: 0.8 }, { text: p.summary, weight: 0.7 }],
+    20,
   );
 }
 

@@ -18,6 +18,7 @@ import {
   type ActionResult,
 } from "@/lib/validation";
 import type { Note } from "@/lib/types";
+import { fuzzyFilter } from "@/lib/fuzzy";
 
 export async function createNote(params: {
   content: string;
@@ -204,13 +205,10 @@ async function setNoteDeleted(id: string, deleted: boolean): Promise<void> {
 
 export async function searchNotes(searchQuery: string): Promise<Note[]> {
   const userId = await requireUserId();
-  return query<Note>(
-    `select * from notes
-     where user_id = $1
-       and deleted_at is null
-       and search_vector @@ plainto_tsquery('english', $2)
-     order by ts_rank(search_vector, plainto_tsquery('english', $2)) desc
-     limit 20`,
-    [userId, searchQuery],
+  // Typo-tolerant ranking in JS over the most recent notes.
+  const notes = await query<Note>(
+    `select * from notes where user_id = $1 and deleted_at is null order by created_at desc limit 1000`,
+    [userId],
   );
+  return fuzzyFilter(notes, searchQuery, (n) => [n.content], 20);
 }

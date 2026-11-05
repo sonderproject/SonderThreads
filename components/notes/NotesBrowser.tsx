@@ -9,6 +9,7 @@ import { createNoteSafe } from "@/lib/actions/notes";
 import type { Person, Note } from "@/lib/types";
 import { Dictate } from "@/components/voice/Dictate";
 import { PROSE_INPUT, SEARCH_INPUT } from "@/lib/input-props";
+import { fuzzyFilter } from "@/lib/fuzzy";
 
 export function NotesBrowser({
   notes,
@@ -24,13 +25,16 @@ export function NotesBrowser({
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const router = useRouter();
-  const peopleById = new Map(people.map((c) => [c.id, c]));
+  const peopleById = useMemo(() => new Map(people.map((c) => [c.id, c])), [people]);
 
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return notes;
-    return notes.filter((n) => n.content.toLowerCase().includes(q));
-  }, [notes, query]);
+  const filtered = useMemo(
+    () =>
+      fuzzyFilter(notes, query, (n) => [
+        n.content,
+        { text: n.person_id ? peopleById.get(n.person_id)?.display_name : null, weight: 0.9 },
+      ]),
+    [notes, query, peopleById],
+  );
 
   function handleAdd(e: React.FormEvent) {
     e.preventDefault();

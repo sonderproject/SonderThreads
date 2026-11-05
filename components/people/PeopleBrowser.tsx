@@ -12,6 +12,7 @@ import { useUndo } from "@/components/ui/UndoToast";
 import type { Person } from "@/lib/types";
 import { Dictate } from "@/components/voice/Dictate";
 import { NAME_INPUT, PROSE_INPUT, SEARCH_INPUT } from "@/lib/input-props";
+import { fuzzyFilter } from "@/lib/fuzzy";
 
 export function PeopleBrowser({ people }: { people: Person[] }) {
   const [query, setQuery] = useState("");
@@ -22,15 +23,16 @@ export function PeopleBrowser({ people }: { people: Person[] }) {
   const router = useRouter();
   const undo = useUndo();
 
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return people;
-    return people.filter((c) =>
-      [c.display_name, c.current_status, c.next_action, c.summary]
-        .filter(Boolean)
-        .some((field) => field!.toLowerCase().includes(q)),
-    );
-  }, [people, query]);
+  const filtered = useMemo(
+    () =>
+      fuzzyFilter(people, query, (c) => [
+        { text: c.display_name, weight: 1 },
+        { text: c.current_status, weight: 0.8 },
+        { text: c.next_action, weight: 0.8 },
+        { text: c.summary, weight: 0.7 },
+      ]),
+    [people, query],
+  );
 
   function toggle(id: string) {
     setSelected((prev) => {

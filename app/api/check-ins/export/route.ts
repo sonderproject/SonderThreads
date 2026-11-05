@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { query } from "@/lib/db/client";
 import { getSessionUser } from "@/lib/session";
 import { CONTENT_TYPES, renderTable } from "@/lib/export/table";
+import { fuzzyMatcher } from "@/lib/fuzzy";
 
 // pdfkit and exceljs need Node APIs (fs, streams).
 export const runtime = "nodejs";
@@ -48,7 +49,7 @@ export async function GET(request: Request) {
   const from = validInstant(params.get("from"));
   const to = validInstant(params.get("to"));
 
-  const rows = await query<Row>(
+  const allRows = await query<Row>(
     `select p.display_name, c.checked_in_at, c.reason
        from check_ins c
        join people p on p.id = c.person_id and p.deleted_at is null
@@ -56,10 +57,12 @@ export async function GET(request: Request) {
         and c.deleted_at is null
         and ($2::timestamptz is null or c.checked_in_at >= $2::timestamptz)
         and ($3::timestamptz is null or c.checked_in_at < $3::timestamptz)
-        and ($4::text is null or p.display_name ilike '%' || $4 || '%' or c.reason ilike '%' || $4 || '%')
       order by c.checked_in_at desc`,
-    [user.id, from, to, q],
+    [user.id, from, to],
   );
+  // Same typo-tolerant match as the Check-ins page, so the file matches the screen.
+  const matches = fuzzyMatcher(q ?? "");
+  const rows = allRows.filter((r) => matches([{ text: r.display_name, weight: 1 }, { text: r.reason, weight: 1 }]) > 0);
 
   const date = new Intl.DateTimeFormat("en-US", { timeZone: tz, year: "numeric", month: "short", day: "numeric", weekday: "short" });
   const time = new Intl.DateTimeFormat("en-US", { timeZone: tz, hour: "numeric", minute: "2-digit" });

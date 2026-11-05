@@ -14,6 +14,7 @@ import {
   type ActionResult,
 } from "@/lib/validation";
 import type { List, ListItem } from "@/lib/types";
+import { fuzzyFilter } from "@/lib/fuzzy";
 
 export async function listLists(): Promise<List[]> {
   const userId = await requireUserId();
@@ -348,14 +349,6 @@ export async function listListsForPerson(personId: string): Promise<List[]> {
 }
 
 export async function searchLists(searchQuery: string): Promise<List[]> {
-  const userId = await requireUserId();
-  return query<List>(
-    `select * from lists
-     where user_id = $1
-       and deleted_at is null
-       and search_vector @@ plainto_tsquery('english', $2)
-     order by ts_rank(search_vector, plainto_tsquery('english', $2)) desc
-     limit 20`,
-    [userId, searchQuery],
-  );
+  const lists = await listLists();
+  return fuzzyFilter(lists, searchQuery, (l) => [{ text: l.name, weight: 1 }, { text: l.description, weight: 0.8 }], 20);
 }

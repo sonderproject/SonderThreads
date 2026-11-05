@@ -11,6 +11,7 @@ import { createListSafe } from "@/lib/actions/lists";
 import type { List } from "@/lib/types";
 import { Dictate } from "@/components/voice/Dictate";
 import { PROSE_INPUT, SEARCH_INPUT } from "@/lib/input-props";
+import { fuzzyFilter } from "@/lib/fuzzy";
 
 export function ListsBrowser({
   lists,
@@ -22,13 +23,10 @@ export function ListsBrowser({
   const [query, setQuery] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
 
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return lists;
-    return lists.filter((l) =>
-      [l.name, l.description].filter(Boolean).some((f) => f!.toLowerCase().includes(q)),
-    );
-  }, [lists, query]);
+  const filtered = useMemo(
+    () => fuzzyFilter(lists, query, (l) => [{ text: l.name, weight: 1 }, { text: l.description, weight: 0.8 }]),
+    [lists, query],
+  );
 
   return (
     <div className="space-y-4">
