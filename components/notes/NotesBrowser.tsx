@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { createNoteSafe } from "@/lib/actions/notes";
 import type { Person, Note } from "@/lib/types";
 import { Dictate } from "@/components/voice/Dictate";
+import { PROSE_INPUT, SEARCH_INPUT } from "@/lib/input-props";
 
 export function NotesBrowser({
   notes,
@@ -55,6 +56,7 @@ export function NotesBrowser({
         {error && <p className="text-xs text-red-400">{error}</p>}
         <Dictate value={content} onChange={setContent}>
           <textarea
+            {...PROSE_INPUT}
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder="Quick note..."
@@ -78,6 +80,7 @@ export function NotesBrowser({
 
       <Dictate value={query} onChange={setQuery}>
         <input
+          {...SEARCH_INPUT}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search notes..."

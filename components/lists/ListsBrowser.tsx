@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/Button";
 import { createListSafe } from "@/lib/actions/lists";
 import type { List } from "@/lib/types";
 import { Dictate } from "@/components/voice/Dictate";
+import { PROSE_INPUT, SEARCH_INPUT } from "@/lib/input-props";
 
 export function ListsBrowser({
   lists,
@@ -34,6 +35,7 @@ export function ListsBrowser({
       <div className="flex gap-2">
         <Dictate value={query} onChange={setQuery}>
           <input
+            {...SEARCH_INPUT}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search lists..."
@@ -93,6 +95,7 @@ function NewListForm({ onDone }: { onDone: () => void }) {
       {error && <p className="text-xs text-red-400">{error}</p>}
       <Dictate value={name} onChange={setName}>
         <input
+          {...PROSE_INPUT}
           autoFocus
           value={name}
           onChange={(e) => setName(e.target.value)}

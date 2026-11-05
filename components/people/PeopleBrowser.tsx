@@ -11,6 +11,7 @@ import { createPersonRecordSafe, deletePeople, restorePeople } from "@/lib/actio
 import { useUndo } from "@/components/ui/UndoToast";
 import type { Person } from "@/lib/types";
 import { Dictate } from "@/components/voice/Dictate";
+import { NAME_INPUT, PROSE_INPUT, SEARCH_INPUT } from "@/lib/input-props";
 
 export function PeopleBrowser({ people }: { people: Person[] }) {
   const [query, setQuery] = useState("");
@@ -67,6 +68,7 @@ export function PeopleBrowser({ people }: { people: Person[] }) {
       <div className="flex gap-2">
         <Dictate value={query} onChange={setQuery}>
           <input
+            {...SEARCH_INPUT}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search people..."
@@ -190,6 +192,7 @@ function NewPersonForm({ onDone }: { onDone: () => void }) {
         <label className="mb-1 block text-xs text-text-muted">Name</label>
         <Dictate value={fullName} onChange={setFullName}>
           <input
+            {...NAME_INPUT}
             autoFocus
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
@@ -202,6 +205,7 @@ function NewPersonForm({ onDone }: { onDone: () => void }) {
         <label className="mb-1 block text-xs text-text-muted">Current (optional)</label>
         <Dictate value={currentStatus} onChange={setCurrentStatus}>
           <input
+            {...PROSE_INPUT}
             value={currentStatus}
             onChange={(e) => setCurrentStatus(e.target.value)}
             className="input"
@@ -213,6 +217,7 @@ function NewPersonForm({ onDone }: { onDone: () => void }) {
         <label className="mb-1 block text-xs text-text-muted">Next (optional)</label>
         <Dictate value={nextAction} onChange={setNextAction}>
           <input
+            {...PROSE_INPUT}
             value={nextAction}
             onChange={(e) => setNextAction(e.target.value)}
             className="input"

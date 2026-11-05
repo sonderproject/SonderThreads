@@ -7,6 +7,7 @@ import { createCheckInSafe } from "@/lib/actions/check-ins";
 import { createPersonRecordSafe } from "@/lib/actions/people";
 import { fromLocalInputValue, toLocalInputValue } from "./time";
 import type { Person } from "@/lib/types";
+import { NAME_INPUT, PROSE_INPUT } from "@/lib/input-props";
 
 const NEW_PERSON = "__new__";
 
@@ -90,6 +91,7 @@ export function CheckInForm({
           </label>
           {creatingPerson && (
             <input
+              {...NAME_INPUT}
               autoFocus
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
@@ -114,6 +116,7 @@ export function CheckInForm({
         <label className="block">
           <span className="eyebrow mb-1 block text-text-faint">Reason</span>
           <input
+            {...PROSE_INPUT}
             value={reason}
             onChange={(e) => setReason(e.target.value)}
             placeholder="Why they checked in..."

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { Dictate } from "@/components/voice/Dictate";
 import { createNoteSafe } from "@/lib/actions/notes";
 import type { Note } from "@/lib/types";
+import { PROSE_INPUT } from "@/lib/input-props";
 
 export function PersonNotes({
   personId,
@@ -48,6 +49,7 @@ export function PersonNotes({
         {error && <p className="text-xs text-danger">{error}</p>}
         <Dictate value={content} onChange={setContent}>
           <textarea
+            {...PROSE_INPUT}
             value={content}
             onChange={(e) => setContent(e.target.value)}
             onKeyDown={(e) => {

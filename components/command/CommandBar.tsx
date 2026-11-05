@@ -10,6 +10,7 @@ import { MicIcon, SendIcon } from "@/components/ui/icons";
 import { useDirectory, VOICE_STOP_EVENT } from "@/components/command/Directory";
 import { applyFollowUp, detectBareCommand, followUpPrompt, isDoneWord, type FollowUp } from "@/lib/ai/followup";
 import { formatDue } from "@/lib/format-due";
+import { PROSE_INPUT } from "@/lib/input-props";
 
 const tzOffset = () => new Date().getTimezoneOffset();
 
@@ -234,6 +235,7 @@ export function CommandBar({
       >
         <span className="pb-2 tabular-nums text-accent">&gt;</span>
         <textarea
+          {...PROSE_INPUT}
           ref={inputRef}
           rows={1}
           value={value}

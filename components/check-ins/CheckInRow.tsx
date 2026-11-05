@@ -7,6 +7,7 @@ import { deleteCheckIn, restoreCheckIn, updateCheckInSafe } from "@/lib/actions/
 import { useUndo } from "@/components/ui/UndoToast";
 import { formatCheckInDay, formatCheckInTime, fromLocalInputValue, toLocalInputValue } from "./time";
 import type { CheckInWithPerson } from "@/lib/types";
+import { PROSE_INPUT } from "@/lib/input-props";
 
 export function CheckInRow({
   checkIn,
@@ -67,6 +68,7 @@ export function CheckInRow({
             disabled={saving}
           />
           <input
+            {...PROSE_INPUT}
             autoFocus
             value={reason}
             onChange={(e) => setReason(e.target.value)}

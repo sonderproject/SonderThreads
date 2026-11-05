@@ -13,6 +13,7 @@ import type { Task, TaskRecurrence } from "@/lib/types";
 import { formatDue } from "@/lib/format-due";
 import { dueState } from "@/lib/urgency";
 import { Dictate } from "@/components/voice/Dictate";
+import { PROSE_INPUT } from "@/lib/input-props";
 
 function toDateInputValue(iso: string | null): string {
   if (!iso) return "";
@@ -151,6 +152,7 @@ export function TaskRow({
         {error && <p className="text-xs text-red-400">{error}</p>}
         <Dictate value={title} onChange={setTitle}>
           <input
+            {...PROSE_INPUT}
             autoFocus
             value={title}
             onChange={(e) => setTitle(e.target.value)}

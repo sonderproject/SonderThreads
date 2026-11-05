@@ -8,6 +8,7 @@ import { CheckInRow } from "./CheckInRow";
 import { formatCheckInDay, localDayKey } from "./time";
 import { DEFAULT_RANGE_DAYS, addDays } from "./range";
 import type { CheckInWithPerson, Person } from "@/lib/types";
+import { SEARCH_INPUT } from "@/lib/input-props";
 
 const PRESETS: [label: string, days: number][] = [
   ["Today", 1],
@@ -180,6 +181,7 @@ export function CheckInsBrowser({
             />
           </label>
           <input
+            {...SEARCH_INPUT}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search name or reason..."

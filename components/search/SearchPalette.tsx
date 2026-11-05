@@ -6,6 +6,7 @@ import { Modal } from "@/components/ui/Modal";
 import { SearchResultsPanel } from "@/components/search/SearchResultsPanel";
 import { searchAll, type SearchResults } from "@/lib/actions/search";
 import { Dictate } from "@/components/voice/Dictate";
+import { SEARCH_INPUT } from "@/lib/input-props";
 
 /** Fire this to open the palette from anywhere (e.g. the mobile More menu). */
 export const OPEN_SEARCH_EVENT = "sonderthreads:open-search";
@@ -62,6 +63,7 @@ export function SearchPalette() {
     <Modal open={open} onClose={() => setOpen(false)} title="> search">
       <Dictate value={query} onChange={setQuery}>
         <input
+          {...SEARCH_INPUT}
           autoFocus
           value={query}
           onChange={(e) => setQuery(e.target.value)}

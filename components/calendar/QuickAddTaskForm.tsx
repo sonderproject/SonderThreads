@@ -7,6 +7,7 @@ import { createTaskSafe } from "@/lib/actions/tasks";
 import { RecurrenceSelect } from "@/components/tasks/RecurrenceSelect";
 import type { Person, TaskRecurrence } from "@/lib/types";
 import { Dictate } from "@/components/voice/Dictate";
+import { PROSE_INPUT } from "@/lib/input-props";
 
 function toDateInputValue(year: number, month: number, day: number): string {
   return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
@@ -55,6 +56,7 @@ export function QuickAddTaskForm({
       {error && <p className="text-xs text-red-400">{error}</p>}
       <Dictate value={title} onChange={setTitle}>
         <input
+          {...PROSE_INPUT}
           autoFocus
           value={title}
           onChange={(e) => setTitle(e.target.value)}

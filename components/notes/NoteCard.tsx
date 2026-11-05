@@ -10,6 +10,7 @@ import { useUndo } from "@/components/ui/UndoToast";
 import type { Note } from "@/lib/types";
 import { isNew } from "@/lib/urgency";
 import { Dictate } from "@/components/voice/Dictate";
+import { PROSE_INPUT } from "@/lib/input-props";
 
 export function NoteCard({
   note,
@@ -62,6 +63,7 @@ export function NoteCard({
           {error && <p className="text-xs text-red-400">{error}</p>}
           <Dictate value={content} onChange={setContent}>
             <textarea
+              {...PROSE_INPUT}
               autoFocus
               value={content}
               onChange={(e) => setContent(e.target.value)}

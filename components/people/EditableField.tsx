@@ -1,5 +1,6 @@
 "use client";
 
+import { NAME_INPUT, PROSE_INPUT } from "@/lib/input-props";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { updatePersonSafe } from "@/lib/actions/people";
@@ -57,8 +58,10 @@ export function EditableField({
   }
 
   if (editing) {
-    const field = (
+    const keyboard = field === "display_name" ? NAME_INPUT : PROSE_INPUT;
+    const fieldInput = (
       <input
+        {...(inputType === "text" ? keyboard : {})}
         autoFocus
         type={inputType}
         value={text}
@@ -81,7 +84,7 @@ export function EditableField({
         {error && <p className="text-xs text-red-400">{error}</p>}
         {inputType === "text" ? (
           <Dictate value={text} onChange={setText}>
-            {field}
+            {fieldInput}
           </Dictate>
         ) : (
           field

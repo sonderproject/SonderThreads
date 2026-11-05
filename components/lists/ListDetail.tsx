@@ -24,6 +24,7 @@ import type { List, ListItem } from "@/lib/types";
 import { Dictate } from "@/components/voice/Dictate";
 import { ShareMenu } from "@/components/lists/ShareMenu";
 import { addListItemsToPeopleSafe } from "@/lib/actions/import";
+import { NAME_INPUT, PROSE_INPUT } from "@/lib/input-props";
 
 export function ListDetail({ list, items }: { list: List; items: ListItem[] }) {
   const router = useRouter();
@@ -208,6 +209,7 @@ export function ListDetail({ list, items }: { list: List; items: ListItem[] }) {
           {renaming ? (
             <Dictate value={name} onChange={setName}>
               <input
+                {...PROSE_INPUT}
                 autoFocus
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -271,6 +273,7 @@ export function ListDetail({ list, items }: { list: List; items: ListItem[] }) {
       {editingDescription ? (
         <Dictate value={description} onChange={setDescription}>
           <input
+            {...PROSE_INPUT}
             autoFocus
             value={description}
             onChange={(e) => setDescription(e.target.value)}
@@ -292,6 +295,7 @@ export function ListDetail({ list, items }: { list: List; items: ListItem[] }) {
       <form onSubmit={handleAddItem} className="flex gap-2">
         <Dictate value={newLabel} onChange={setNewLabel}>
           <input
+            {...(list.is_group ? NAME_INPUT : PROSE_INPUT)}
             value={newLabel}
             onChange={(e) => setNewLabel(e.target.value)}
             placeholder="Add item..."
@@ -339,6 +343,7 @@ export function ListDetail({ list, items }: { list: List; items: ListItem[] }) {
               {editingItemId === item.id ? (
                 <Dictate value={editLabel} onChange={setEditLabel}>
                   <input
+                    {...(list.is_group ? NAME_INPUT : PROSE_INPUT)}
                     autoFocus
                     value={editLabel}
                     onChange={(e) => setEditLabel(e.target.value)}

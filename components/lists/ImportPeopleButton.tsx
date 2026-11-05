@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { parseCsv, rowsToPeople, type ImportRow } from "@/lib/csv";
 import { importPeopleToListSafe } from "@/lib/actions/import";
 import { Dictate } from "@/components/voice/Dictate";
+import { PROSE_INPUT } from "@/lib/input-props";
 
 export function ImportPeopleButton() {
   const [open, setOpen] = useState(false);
@@ -80,6 +81,7 @@ function ImportForm({ onDone }: { onDone: () => void }) {
       )}
       <Dictate value={listName} onChange={setListName}>
         <input
+          {...PROSE_INPUT}
           value={listName}
           onChange={(e) => setListName(e.target.value)}
           className="input"

@@ -11,6 +11,7 @@ import { createTaskSafe } from "@/lib/actions/tasks";
 import { RecurrenceSelect } from "@/components/tasks/RecurrenceSelect";
 import type { Person, TaskRecurrence } from "@/lib/types";
 import { Dictate } from "@/components/voice/Dictate";
+import { NAME_INPUT, PROSE_INPUT } from "@/lib/input-props";
 
 type ActiveModal = "person" | "note" | "list" | "task" | null;
 
@@ -81,6 +82,7 @@ function PersonForm({ onDone }: { onDone: () => void }) {
       <Field label="Name">
         <Dictate value={fullName} onChange={setFullName}>
           <input
+            {...NAME_INPUT}
             autoFocus
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
@@ -92,6 +94,7 @@ function PersonForm({ onDone }: { onDone: () => void }) {
       <Field label="Current (optional)">
         <Dictate value={currentStatus} onChange={setCurrentStatus}>
           <input
+            {...PROSE_INPUT}
             value={currentStatus}
             onChange={(e) => setCurrentStatus(e.target.value)}
             className="input"
@@ -102,6 +105,7 @@ function PersonForm({ onDone }: { onDone: () => void }) {
       <Field label="Next (optional)">
         <Dictate value={nextAction} onChange={setNextAction}>
           <input
+            {...PROSE_INPUT}
             value={nextAction}
             onChange={(e) => setNextAction(e.target.value)}
             className="input"
@@ -145,6 +149,7 @@ function NoteForm({
       <Field label="Note">
         <Dictate value={content} onChange={setContent}>
           <textarea
+            {...PROSE_INPUT}
             autoFocus
             value={content}
             onChange={(e) => setContent(e.target.value)}
@@ -194,6 +199,7 @@ function ListForm({ onDone }: { onDone: () => void }) {
       <Field label="Name">
         <Dictate value={name} onChange={setName}>
           <input
+            {...PROSE_INPUT}
             autoFocus
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -205,6 +211,7 @@ function ListForm({ onDone }: { onDone: () => void }) {
       <Field label="Description (optional)">
         <Dictate value={description} onChange={setDescription}>
           <input
+            {...PROSE_INPUT}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             className="input"
@@ -258,6 +265,7 @@ function TaskForm({
       <Field label="Task">
         <Dictate value={title} onChange={setTitle}>
           <input
+            {...PROSE_INPUT}
             autoFocus
             value={title}
             onChange={(e) => setTitle(e.target.value)}
