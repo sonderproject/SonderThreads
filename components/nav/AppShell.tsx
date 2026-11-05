@@ -9,7 +9,7 @@ import { UndoProvider } from "@/components/ui/UndoToast";
 import { SearchPalette, OPEN_SEARCH_EVENT } from "@/components/search/SearchPalette";
 import type { Person } from "@/lib/types";
 import { DirectoryProvider } from "@/components/command/Directory";
-import { BellIcon } from "@/components/ui/icons";
+import { BellIcon, DownloadIcon, SignOutIcon, UserIcon } from "@/components/ui/icons";
 
 const NAV_ITEMS = [
   { href: "/", label: "Command" },
@@ -74,27 +74,28 @@ export function AppShell({
                   <a
                     href="/api/export"
                     title="Download a full backup of your data (JSON)"
-                    className="rounded px-2 py-1.5 text-sm text-text-muted transition-colors hover:bg-bg-hover hover:text-text"
+                    aria-label="Download backup"
+                    className="rounded p-2 text-text-muted transition-colors hover:bg-bg-hover hover:text-text"
                   >
-                    ⭳
+                    <DownloadIcon />
                   </a>
                   <ThemeToggle />
                   <Link
                     href="/account"
                     title="Account"
                     aria-label="Account"
-                    className="rounded px-2 py-1.5 text-sm text-text-muted transition-colors hover:bg-bg-hover hover:text-text"
+                    className="rounded p-2 text-text-muted transition-colors hover:bg-bg-hover hover:text-text"
                   >
-                    ☺
+                    <UserIcon />
                   </Link>
                   <form action={logout}>
                     <button
                       type="submit"
                       title="Sign out"
                       aria-label="Sign out"
-                      className="rounded px-2 py-1.5 text-sm text-text-muted transition-colors hover:bg-bg-hover hover:text-text"
+                      className="rounded p-2 text-text-muted transition-colors hover:bg-bg-hover hover:text-text"
                     >
-                      ⏻
+                      <SignOutIcon />
                     </button>
                   </form>
                 </div>

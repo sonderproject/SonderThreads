@@ -86,7 +86,9 @@ export function TasksBrowser({
         </div>
       )}
 
-      {sections.map(({ title, tasks, empty }) => {
+      {!hasTasks && <EmptyState message="No tasks yet. Tap + New to add one." />}
+
+      {sections.filter(({ tasks }) => tasks.length > 0).map(({ title, tasks }) => {
         const ids = tasks.map((t) => t.id);
         const all = ids.length > 0 && ids.every((id) => selected.has(id));
         return (
@@ -99,38 +101,34 @@ export function TasksBrowser({
                 </button>
               )}
             </div>
-            {tasks.length === 0 ? (
-              <EmptyState message={empty} />
-            ) : (
-              <div className="divide-y divide-border-subtle card">
-                {tasks.map((task) =>
-                  selecting ? (
-                    <label
-                      key={task.id}
-                      className={`flex cursor-pointer items-center gap-3 px-3 py-3 sm:px-2 sm:py-2 ${
-                        selected.has(task.id) ? "bg-danger/5" : ""
-                      }`}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={selected.has(task.id)}
-                        onChange={(e) => toggle([task.id], e.target.checked)}
-                        className="h-5 w-5 shrink-0 sm:h-4 sm:w-4"
-                      />
-                      <span className={`text-sm ${task.completed ? "text-text-faint line-through" : "text-text"}`}>
-                        {task.title}
-                      </span>
-                    </label>
-                  ) : (
-                    <TaskRow
-                      key={task.id}
-                      task={task}
-                      personName={task.person_id ? personNames[task.person_id] : null}
+            <div className="divide-y divide-border-subtle card">
+              {tasks.map((task) =>
+                selecting ? (
+                  <label
+                    key={task.id}
+                    className={`flex cursor-pointer items-center gap-3 px-3 py-3 sm:px-2 sm:py-2 ${
+                      selected.has(task.id) ? "bg-danger/5" : ""
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selected.has(task.id)}
+                      onChange={(e) => toggle([task.id], e.target.checked)}
+                      className="h-5 w-5 shrink-0 sm:h-4 sm:w-4"
                     />
-                  ),
-                )}
-              </div>
-            )}
+                    <span className={`text-sm ${task.completed ? "text-text-faint line-through" : "text-text"}`}>
+                      {task.title}
+                    </span>
+                  </label>
+                ) : (
+                  <TaskRow
+                    key={task.id}
+                    task={task}
+                    personName={task.person_id ? personNames[task.person_id] : null}
+                  />
+                ),
+              )}
+            </div>
           </section>
         );
       })}

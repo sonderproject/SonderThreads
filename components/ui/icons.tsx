@@ -84,3 +84,44 @@ export const TrashIcon = ({ className = "h-4 w-4" }: IconProps) => (
     <path d="M4.5 6.5h15M9.5 6.5V4.5h5v2M6.5 6.5l1 13h9l1-13M10 10.5v5.5M14 10.5v5.5" />
   </svg>
 );
+
+export const CheckInIcon = ({ className = "h-6 w-6" }: IconProps) => (
+  <svg {...base} className={className} aria-hidden>
+    <rect x="5" y="4.5" width="14" height="16" rx="2.5" />
+    <path d="M9 3h6v3H9z" />
+    <path d="M9 13l2.2 2.2L15.5 11" />
+  </svg>
+);
+
+export const DownloadIcon = ({ className = "h-5 w-5" }: IconProps) => (
+  <svg {...base} className={className} aria-hidden>
+    <path d="M12 4v11M7.5 10.5L12 15l4.5-4.5M5 19.5h14" />
+  </svg>
+);
+
+export const SunIcon = ({ className = "h-5 w-5" }: IconProps) => (
+  <svg {...base} className={className} aria-hidden>
+    <circle cx="12" cy="12" r="4" />
+    <path d="M12 2.5v2M12 19.5v2M4.6 4.6L6 6M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4L6 18M18 6l1.4-1.4" />
+  </svg>
+);
+
+export const MoonIcon = ({ className = "h-5 w-5" }: IconProps) => (
+  <svg {...base} className={className} aria-hidden>
+    <path d="M20 14.5A8 8 0 019.5 4a8 8 0 1010.5 10.5z" />
+  </svg>
+);
+
+export const UserIcon = ({ className = "h-5 w-5" }: IconProps) => (
+  <svg {...base} className={className} aria-hidden>
+    <circle cx="12" cy="8" r="4" />
+    <path d="M4.5 20.5c.9-3.7 3.9-6 7.5-6s6.6 2.3 7.5 6" />
+  </svg>
+);
+
+export const SignOutIcon = ({ className = "h-5 w-5" }: IconProps) => (
+  <svg {...base} className={className} aria-hidden>
+    <path d="M14 4.5H6.5a2 2 0 00-2 2v11a2 2 0 002 2H14" />
+    <path d="M10 12h10M16.5 8.5L20 12l-3.5 3.5" />
+  </svg>
+);

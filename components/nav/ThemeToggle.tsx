@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { MoonIcon, SunIcon } from "@/components/ui/icons";
 
 // No stored choice = follow the system setting. A pick sets data-theme on <html>.
 function currentlyDark() {
@@ -37,9 +38,9 @@ export function ThemeToggle() {
       onClick={toggle}
       aria-label={label}
       title={label}
-      className="rounded px-2 py-1.5 text-sm text-text-muted transition-colors hover:bg-bg-hover hover:text-text"
+      className="rounded p-2 text-text-muted transition-colors hover:bg-bg-hover hover:text-text"
     >
-      {isDark ? "☀" : "☾"}
+      {isDark ? <SunIcon /> : <MoonIcon />}
     </button>
   );
 }

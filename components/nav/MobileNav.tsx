@@ -10,20 +10,20 @@ import { ThemeToggle } from "@/components/nav/ThemeToggle";
 import { logout } from "@/app/login/actions";
 import { OPEN_SEARCH_EVENT } from "@/components/search/SearchPalette";
 import { OPEN_COMMAND_EVENT, VOICE_STOP_EVENT, type OpenCommandDetail } from "@/components/command/Directory";
-import { CalendarIcon, HomeIcon, MoreIcon, PeopleIcon, PlusIcon, TasksIcon } from "@/components/ui/icons";
+import { CheckInIcon, HomeIcon, MoreIcon, PeopleIcon, PlusIcon, TasksIcon } from "@/components/ui/icons";
 import type { Person } from "@/lib/types";
 
 const TABS = [
   { href: "/", label: "Home", Icon: HomeIcon },
   { href: "/people", label: "People", Icon: PeopleIcon },
   { href: "/tasks", label: "Tasks", Icon: TasksIcon },
-  { href: "/calendar", label: "Calendar", Icon: CalendarIcon },
+  { href: "/check-ins", label: "Check-ins", Icon: CheckInIcon },
 ];
 
 const MORE_LINKS = [
   { href: "/lists", label: "Lists" },
   { href: "/notes", label: "Notes" },
-  { href: "/check-ins", label: "Check-ins" },
+  { href: "/calendar", label: "Calendar" },
   { href: "/account", label: "Account" },
 ];
 
