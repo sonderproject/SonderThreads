@@ -5,7 +5,7 @@ import { PersonCard } from "@/components/people/PersonCard";
 import { NoteCard } from "@/components/notes/NoteCard";
 import { TaskRow } from "@/components/tasks/TaskRow";
 import { MiniCalendar } from "@/components/calendar/MiniCalendar";
-import { Clock } from "@/components/calendar/Clock";
+import { SkyCard } from "@/components/home/SkyCard";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { listPeople, getPeopleNeedingAttention } from "@/lib/actions/people";
 import { listTasks } from "@/lib/actions/tasks";
@@ -62,9 +62,10 @@ export default async function DashboardPage() {
       <Section title="Calendar" href="/calendar">
         <div className="grid gap-3 sm:grid-cols-2">
           <MiniCalendar year={year} month={month} weeks={weeks} eventDays={eventDays} />
-          <Clock />
+          <SkyCard />
         </div>
       </Section>
+
 
       <Section title="Today">
         {todayTasks.length === 0 ? (

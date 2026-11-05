@@ -72,6 +72,54 @@
   color-scheme: dark;
 }
 
+/* Illustration palette for the home sky card (decorative, not UI state; same in both themes). */
+:root {
+  --sky-night-top: #0b1530;
+  --sky-night-bottom: #22305e;
+  --sky-dawn-top: #4f6fb8;
+  --sky-dawn-bottom: #f6b38b;
+  --sky-day-top: #3a8ad3;
+  --sky-day-bottom: #a8d5f4;
+  --sky-dusk-top: #3b2f6e;
+  --sky-dusk-bottom: #ef8a5e;
+  --sky-overcast-top: #6b7b8c;
+  --sky-overcast-bottom: #b4c0cb;
+  --sky-cloud: #ffffff;
+  --sky-cloud-dim: #c5cdd6;
+  --sky-sun: #ffd66b;
+  --sky-moon: #eef1f7;
+  --sky-star: #ffffff;
+  --sky-rain: #d6e7ff;
+  --sky-text: #ffffff;
+}
+
+/* Sky motion; all of it stops for reduced motion. */
+@keyframes drift {
+  from { transform: translateX(-30%); }
+  to { transform: translateX(130%); }
+}
+@keyframes fall {
+  from { transform: translateY(-20px); }
+  to { transform: translateY(260px); }
+}
+@keyframes twinkle {
+  0%, 100% { opacity: 0.25; }
+  50% { opacity: 1; }
+}
+@keyframes flash {
+  0%, 92%, 100% { opacity: 0; }
+  94% { opacity: 0.55; }
+  96% { opacity: 0.1; }
+  97% { opacity: 0.4; }
+}
+.sky-drift { animation: drift linear infinite; }
+.sky-fall { animation: fall linear infinite; }
+.sky-twinkle { animation: twinkle ease-in-out infinite; }
+.sky-flash { animation: flash 7s linear infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .sky-drift, .sky-fall, .sky-twinkle, .sky-flash { animation: none; }
+}
+
 :root {
   /* Older names used across components, pointed at the design tokens. */
   --color-bg: var(--bg);
