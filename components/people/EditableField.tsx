@@ -87,7 +87,7 @@ export function EditableField({
             {fieldInput}
           </Dictate>
         ) : (
-          field
+          fieldInput
         )}
       </div>
     );
