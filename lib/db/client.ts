@@ -1,3 +1,4 @@
+import { createHash } from "crypto";
 import { Pool, type QueryResultRow } from "pg";
 import { SCHEMA_SQL } from "./schema";
 
@@ -72,24 +73,40 @@ function getPool(): Pool {
 }
 
 /**
- * Creates the schema (tables/indexes) if it doesn't exist yet. Runs once
- * per warm server instance — every statement is `if not exists`, so it's
- * a cheap no-op once the schema is already there. This is what lets the
- * app self-provision on first request with zero manual setup: whoever
- * deploys it only has to point POSTGRES_URL/DATABASE_URL at an empty
- * database, nothing else.
+ * Creates/migrates the schema on first use, with zero manual setup: point
+ * POSTGRES_URL/DATABASE_URL at an empty database and the app provisions it.
+ *
+ * Running all of SCHEMA_SQL on every cold start was the slowest part of
+ * opening the app after a break (~90 DDL statements, some taking table
+ * locks), so a hash of SCHEMA_SQL is stored in app_meta and the DDL only
+ * runs when the schema text has changed since it last ran. Warm instances
+ * skip even the check.
  */
+const SCHEMA_HASH = createHash("sha256").update(SCHEMA_SQL).digest("hex").slice(0, 16);
 let schemaReady: Promise<void> | null = null;
+
+async function migrateIfNeeded(): Promise<void> {
+  const db = getPool();
+  try {
+    const { rows } = await db.query<{ value: string }>(`select value from app_meta where key = 'schema_hash'`);
+    if (rows[0]?.value === SCHEMA_HASH) return;
+  } catch {
+    // app_meta doesn't exist yet (new or pre-hash database) — fall through and migrate.
+  }
+  await db.query(SCHEMA_SQL);
+  await db.query(
+    `create table if not exists app_meta (key text primary key, value text not null);
+     insert into app_meta (key, value) values ('schema_hash', '${SCHEMA_HASH}')
+     on conflict (key) do update set value = excluded.value`,
+  );
+}
 
 function ensureSchema(): Promise<void> {
   if (!schemaReady) {
-    schemaReady = getPool()
-      .query(SCHEMA_SQL)
-      .then(() => undefined)
-      .catch((err) => {
-        schemaReady = null; // allow retry on the next call instead of caching a failure forever
-        throw err;
-      });
+    schemaReady = migrateIfNeeded().catch((err) => {
+      schemaReady = null; // allow retry on the next call instead of caching a failure forever
+      throw err;
+    });
   }
   return schemaReady;
 }

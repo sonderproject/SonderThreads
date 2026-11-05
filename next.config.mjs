@@ -1,6 +1,12 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  experimental: {
+    // Reuse a page the client already loaded for 30s when you navigate back
+    // to it, instead of refetching. Saving anything still refreshes at once
+    // (server actions call revalidatePath / router.refresh).
+    staleTimes: { dynamic: 30 },
+  },
   // pdfkit loads its font metrics from its own package folder at runtime.
   serverExternalPackages: ["pdfkit"],
   // ...and loads them with a runtime require()/fs read the bundler can't

@@ -1,5 +1,6 @@
 "use server";
 
+import { cache } from "react";
 import { revalidatePath } from "next/cache";
 import { query, queryOne } from "@/lib/db/client";
 import { requireUserId } from "@/lib/current-user";
@@ -14,12 +15,21 @@ function splitName(fullName: string): { firstName: string; lastName: string | nu
   return { firstName, lastName };
 }
 
-export async function listPeople(): Promise<Person[]> {
+// The layout and most pages both need everyone; cache() makes that one query per request.
+// Explicit columns skip search_vector, which can be large and is never read here.
+const listPeopleCached = cache(async (): Promise<Person[]> => {
   const userId = await requireUserId();
   return query<Person>(
-    `select * from people where user_id = $1 and deleted_at is null order by last_activity_at desc`,
+    `select id, user_id, first_name, last_name, display_name, phone, email, birthday, status,
+            current_status, next_action, summary, needs_followup, created_at, updated_at,
+            last_activity_at, deleted_at
+       from people where user_id = $1 and deleted_at is null order by last_activity_at desc`,
     [userId],
   );
+});
+
+export async function listPeople(): Promise<Person[]> {
+  return listPeopleCached();
 }
 
 export async function getPerson(id: string): Promise<Person | null> {

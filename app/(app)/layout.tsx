@@ -1,3 +1,4 @@
+import { unstable_rethrow } from "next/navigation";
 import { AppShell } from "@/components/nav/AppShell";
 import { checkSetup } from "@/lib/actions/diagnostics";
 import { SetupIssuePanel } from "@/components/diagnostics/SetupIssuePanel";
@@ -9,9 +10,15 @@ import { getNotificationCount } from "@/lib/actions/notifications";
 export const dynamic = "force-dynamic";
 
 export default async function AppGroupLayout({ children }: { children: React.ReactNode }) {
-  const diagnostic = await checkSetup();
-
-  if (!diagnostic.ok) {
+  // Load straight away; only run the database diagnostic if that fails.
+  // (Checking first added a full database round trip before every page.)
+  let data;
+  try {
+    data = await Promise.all([listPeople(), listLists(), getNotificationCount()]);
+  } catch (err) {
+    unstable_rethrow(err); // let Next's redirect-to-sign-in through
+    const diagnostic = await checkSetup();
+    if (diagnostic.ok) throw err;
     return (
       <AppShell>
         <SetupIssuePanel diagnostic={diagnostic} />
@@ -19,7 +26,7 @@ export default async function AppGroupLayout({ children }: { children: React.Rea
     );
   }
 
-  const [people, lists, notificationCount] = await Promise.all([listPeople(), listLists(), getNotificationCount()]);
+  const [people, lists, notificationCount] = data;
   return (
     <AppShell
       people={people.map((p) => ({ id: p.id, display_name: p.display_name }))}
