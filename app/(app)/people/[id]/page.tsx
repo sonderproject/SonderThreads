@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { isUuid } from "@/lib/ids";
 import { NO_BIRTH_YEAR } from "@/lib/parse-person-line";
 import { getPerson } from "@/lib/actions/people";
 import { getPersonTimeline } from "@/lib/actions/activity";
@@ -45,18 +46,19 @@ export default async function PersonProfilePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const person = await getPerson(id);
-  if (!person) notFound();
-
-  const [activity, tasks, lists, notes, checkIns, reasons, allLists] = await Promise.all([
-    getPersonTimeline(person.id),
-    listTasksForPerson(person.id),
-    listListsForPerson(person.id),
-    listNotesForPerson(person.id),
-    listCheckInsForPerson(person.id),
+  if (!isUuid(id)) notFound();
+  // Everything loads at once (each query is scoped to the user, so a bad id just returns nothing).
+  const [person, activity, tasks, lists, notes, checkIns, reasons, allLists] = await Promise.all([
+    getPerson(id),
+    getPersonTimeline(id),
+    listTasksForPerson(id),
+    listListsForPerson(id),
+    listNotesForPerson(id),
+    listCheckInsForPerson(id),
     listCheckInReasons(),
     listLists(),
   ]);
+  if (!person) notFound();
 
   const openTasks = tasks.filter((t) => !t.completed);
   const birthday = toDateString(person.birthday as string | Date | null);

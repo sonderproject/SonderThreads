@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { isUuid } from "@/lib/ids";
 import { getListWithItems } from "@/lib/actions/lists";
 import { ListDetail } from "@/components/lists/ListDetail";
 import { listPeople } from "@/lib/actions/people";
@@ -9,6 +10,7 @@ export default async function ListDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  if (!isUuid(id)) notFound();
   const [data, people] = await Promise.all([getListWithItems(id), listPeople()]);
   if (!data) notFound();
 

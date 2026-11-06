@@ -3,6 +3,7 @@ import { query, queryOne } from "@/lib/db/client";
 import { getSessionUser } from "@/lib/session";
 import { CONTENT_TYPES, fileStem, renderTable, type ExportFormat } from "@/lib/export/table";
 import type { List } from "@/lib/types";
+import { isUuid } from "@/lib/ids";
 
 // pdfkit and exceljs need Node APIs (fs, streams).
 export const runtime = "nodejs";
@@ -35,6 +36,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   if (!user) return NextResponse.json({ error: "Not signed in" }, { status: 401 });
   const userId = user.id;
   const { id } = await params;
+  if (!isUuid(id)) return NextResponse.json({ error: "List not found" }, { status: 404 });
   const raw = new URL(request.url).searchParams.get("format");
   if (raw !== "pdf" && raw !== "xlsx") {
     return NextResponse.json({ error: "format must be pdf or xlsx" }, { status: 400 });
