@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { ThemeToggle } from "@/components/nav/ThemeToggle";
 import { logout } from "@/app/login/actions";
 import { MobileNav } from "@/components/nav/MobileNav";
+import { WakeOnReturn } from "@/components/nav/WakeOnReturn";
 import { UndoProvider } from "@/components/ui/UndoToast";
 import { SearchPalette, OPEN_SEARCH_EVENT } from "@/components/search/SearchPalette";
 import type { Person } from "@/lib/types";
@@ -37,6 +38,7 @@ export function AppShell({
   return (
     <DirectoryProvider value={{ people, lists }}>
       <UndoProvider>
+        <WakeOnReturn />
         <div className="min-h-screen bg-bg">
           <header className="pt-safe sticky top-0 z-20 border-b border-border bg-bg-raised">
             <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3 sm:px-6">

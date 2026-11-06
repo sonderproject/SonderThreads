@@ -67,7 +67,17 @@ function getPool(): Pool {
     connectionString: cleanedConnectionString,
     ssl: isLocal ? undefined : { rejectUnauthorized: false },
     max: 10,
+    // Keep a warm connection for a minute between requests (the default 10s
+    // meant almost every visit paid for a fresh TLS handshake to the database),
+    // detect dead sockets, and fail fast instead of hanging on one.
+    idleTimeoutMillis: 60_000,
+    keepAlive: true,
+    connectionTimeoutMillis: 8_000,
   });
+  // The database (or its pooler) can drop an idle connection, e.g. while a
+  // serverless instance is frozen. Without a listener that 'error' event would
+  // crash the process; the pool already discards the dead client.
+  pool.on("error", (err) => console.error("[db] idle client error", err.message));
 
   return pool;
 }
@@ -111,13 +121,30 @@ function ensureSchema(): Promise<void> {
   return schemaReady;
 }
 
+/** A broken/stale connection rather than a problem with the query itself. */
+function isConnectionError(err: unknown): boolean {
+  const e = err as { code?: string; message?: string };
+  return (
+    ["ECONNRESET", "EPIPE", "ETIMEDOUT", "ECONNREFUSED", "57P01", "08006", "08003"].includes(e?.code ?? "") ||
+    /Connection terminated|connection timeout|Client has encountered a connection error/i.test(e?.message ?? "")
+  );
+}
+
 export async function query<T extends QueryResultRow = QueryResultRow>(
   text: string,
   params: unknown[] = [],
 ): Promise<T[]> {
   await ensureSchema();
-  const result = await getPool().query<T>(text, params);
-  return result.rows;
+  try {
+    return (await getPool().query<T>(text, params)).rows;
+  } catch (err) {
+    // After an idle stretch the first query can hit a connection that died
+    // while the server was asleep. Reads are safe to retry once on a fresh
+    // connection; writes aren't retried, since they may have gone through.
+    if (!isConnectionError(err) || !/^\s*(select|with)\b/i.test(text)) throw err;
+    console.warn("[db] retrying read after connection error:", (err as Error).message);
+    return (await getPool().query<T>(text, params)).rows;
+  }
 }
 
 export async function queryOne<T extends QueryResultRow = QueryResultRow>(
