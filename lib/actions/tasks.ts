@@ -98,14 +98,16 @@ export async function setTaskCompleted(id: string, completed: boolean): Promise<
   if (!task) throw new Error("Task not found");
 
   if (completed) {
-    await logActivity({
-      type: "task_completed",
-      description: `Task completed: ${task.title}`,
-      personId: task.person_id,
-      taskId: task.id,
-    });
-    if (task.person_id) await touchPersonActivity(task.person_id);
-    if (task.recurrence) await spawnNextOccurrence(task);
+    await Promise.all([
+      logActivity({
+        type: "task_completed",
+        description: `Task completed: ${task.title}`,
+        personId: task.person_id,
+        taskId: task.id,
+      }),
+      task.person_id ? touchPersonActivity(task.person_id) : null,
+      task.recurrence ? spawnNextOccurrence(task) : null,
+    ]);
   } else if (task.recurrence) {
     // Un-completing means the next occurrence isn't due after all — drop it
     // unless it's already been worked on.

@@ -6,7 +6,8 @@ import { requireUserId } from "@/lib/current-user";
 import { truncate } from "./helpers";
 import { logActivity } from "./activity";
 import { touchPersonActivity } from "./people";
-import { regeneratePersonSummary } from "./summary";
+import { regenerateSummaryFor } from "@/lib/summary-core";
+import { after } from "next/server";
 import { createTask } from "./tasks";
 import { extractNoteTasks } from "@/lib/ai/note-tasks";
 import { notify } from "@/lib/notify";
@@ -46,22 +47,23 @@ export async function createNote(params: {
 
   if (!note) throw new Error("Failed to create note");
 
-  await logActivity({
-    type: "note_added",
-    description: `Note: ${truncate(params.content)}`,
-    personId: params.personId ?? null,
-    noteId: note.id,
-  });
+  const personId = params.personId ?? null;
+  // An AI summary can take seconds; with an AI provider on, write it after the
+  // response so saving a note feels instant. The built-in summary is fast, so
+  // it runs inline and the profile updates right away.
+  const summarize = personId
+    ? () => regenerateSummaryFor(userId, personId).catch((err) => console.error("[notes] summary failed", err))
+    : null;
+  const deferSummary = Boolean(summarize && process.env.AI_PROVIDER);
+  if (deferSummary) after(summarize!);
 
-  if (params.personId) {
-    await touchPersonActivity(params.personId);
-    await regeneratePersonSummary(params.personId);
-  }
-
-  // A to-do never stops the note from saving.
-  await tasksFromNote(userId, note, tzOffset).catch((err) =>
-    console.error("[notes] finding tasks in note failed", err),
-  );
+  await Promise.all([
+    logActivity({ type: "note_added", description: `Note: ${truncate(params.content)}`, personId, noteId: note.id }),
+    personId ? touchPersonActivity(personId) : null,
+    summarize && !deferSummary ? summarize() : null,
+    // A to-do never stops the note from saving.
+    tasksFromNote(userId, note, tzOffset).catch((err) => console.error("[notes] finding tasks in note failed", err)),
+  ]);
 
   revalidatePath("/");
   revalidatePath("/notes");

@@ -41,12 +41,14 @@ export async function createCheckIn(params: {
   );
   if (!checkIn) throw new Error("Failed to save check-in");
 
-  await logActivity({
-    type: "check_in",
-    description: reason ? `Checked in: ${truncate(reason)}` : "Checked in",
-    personId: person.id,
-  });
-  await touchPersonActivity(person.id);
+  await Promise.all([
+    logActivity({
+      type: "check_in",
+      description: reason ? `Checked in: ${truncate(reason)}` : "Checked in",
+      personId: person.id,
+    }),
+    touchPersonActivity(person.id),
+  ]);
 
   revalidate(person.id);
   return checkIn;
