@@ -53,12 +53,15 @@ function wordScore(token: string, word: string): number {
   if (token.length >= 3 && word.includes(token)) return 0.75;
   const max = allowedTypos(token.length);
   if (max === 0) return 0;
-  // Compare against the whole word, and against its start (for half-typed words with a typo).
-  const d = Math.min(
-    editDistance(token, word, max),
-    word.length > token.length ? editDistance(token, word.slice(0, token.length), max) + 0.5 : Infinity,
-  );
-  return d <= max ? 0.65 - 0.12 * d : 0;
+  // A typo in the whole word...
+  const whole = editDistance(token, word, max);
+  if (whole <= max) return 0.65 - 0.12 * whole;
+  // ...or in the start of a longer word, for half-typed names ("jrod" -> "jordan").
+  if (word.length > token.length) {
+    const start = editDistance(token, word.slice(0, token.length), max);
+    if (start <= max) return 0.55 - 0.12 * start;
+  }
+  return 0;
 }
 
 /** A query prepared once, scored against many items. */

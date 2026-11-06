@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { query, queryOne } from "@/lib/db/client";
 import { requireUserId } from "@/lib/current-user";
 import { logActivity } from "./activity";
-import { findPersonByName, findOrCreatePersonByName, touchPersonActivity } from "./people";
+import { createPersonRecord, findPersonByName, findOrCreatePersonByName, touchPersonActivity } from "./people";
 import {
   addListItemSchema,
   createListSchema,
@@ -201,6 +201,56 @@ export async function addListItemSmart(listId: string, label: string): Promise<L
 /** Client-form-safe wrapper: returns a result instead of throwing, since Next.js redacts thrown Server Action errors before they reach the client in production. */
 export async function addListItemSmartSafe(listId: string, label: string): Promise<ActionResult<ListItem>> {
   return toActionResult(() => addListItemSmart(listId, label));
+}
+
+/**
+ * Puts an existing person on a list (linked item labeled with their name).
+ * Refuses a person who's already on it, so a roster never has duplicates.
+ */
+export async function addPersonToList(listId: string, personId: string): Promise<ListItem> {
+  const userId = await requireUserId();
+  const [list, person] = await Promise.all([
+    queryOne<List>(`select * from lists where user_id = $1 and id = $2 and deleted_at is null`, [userId, listId]),
+    queryOne<{ id: string; display_name: string }>(
+      `select id, display_name from people where user_id = $1 and id = $2 and deleted_at is null`,
+      [userId, personId],
+    ),
+  ]);
+  if (!list) throw new Error("List not found");
+  if (!person) throw new Error("Person not found");
+  const existing = await queryOne(
+    `select 1 from list_items where user_id = $1 and list_id = $2 and person_id = $3`,
+    [userId, listId, personId],
+  );
+  if (existing) throw new Error(`${person.display_name} is already on ${list.name}`);
+
+  const item = await addListItem({ listId, label: person.display_name, personId: person.id });
+  await touchPersonActivity(person.id);
+  await logActivity({ type: "added_to_list", description: `Added to ${list.name}`, personId: person.id, listId });
+  revalidatePath(`/people/${person.id}`);
+  revalidatePath("/lists");
+  return item;
+}
+
+export async function addPersonToListSafe(listId: string, personId: string): Promise<ActionResult<ListItem>> {
+  return toActionResult(() => addPersonToList(listId, personId));
+}
+
+/** Creates a new person from a typed name and puts them on the list (the picker only offers this for new names). */
+export async function addNewPersonToListSafe(listId: string, fullName: string): Promise<ActionResult<ListItem>> {
+  return toActionResult(async () => {
+    const person = await createPersonRecord({ fullName });
+    return addPersonToList(listId, person.id);
+  });
+}
+
+/** From a profile: create a new group list with this name and put the person on it. */
+export async function createGroupWithPersonSafe(name: string, personId: string): Promise<ActionResult<List>> {
+  return toActionResult(async () => {
+    const list = await createList({ name, isGroup: true });
+    await addPersonToList(list.id, personId);
+    return list;
+  });
 }
 
 /**

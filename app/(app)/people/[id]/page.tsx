@@ -4,7 +4,8 @@ import { NO_BIRTH_YEAR } from "@/lib/parse-person-line";
 import { getPerson } from "@/lib/actions/people";
 import { getPersonTimeline } from "@/lib/actions/activity";
 import { listTasksForPerson } from "@/lib/actions/tasks";
-import { listListsForPerson } from "@/lib/actions/lists";
+import { listLists, listListsForPerson } from "@/lib/actions/lists";
+import { AddToListButton } from "@/components/people/AddToListButton";
 import { listNotesForPerson } from "@/lib/actions/notes";
 import { listCheckInsForPerson, listCheckInReasons } from "@/lib/actions/check-ins";
 import { PersonTimeline } from "@/components/people/PersonTimeline";
@@ -47,13 +48,14 @@ export default async function PersonProfilePage({
   const person = await getPerson(id);
   if (!person) notFound();
 
-  const [activity, tasks, lists, notes, checkIns, reasons] = await Promise.all([
+  const [activity, tasks, lists, notes, checkIns, reasons, allLists] = await Promise.all([
     getPersonTimeline(person.id),
     listTasksForPerson(person.id),
     listListsForPerson(person.id),
     listNotesForPerson(person.id),
     listCheckInsForPerson(person.id),
     listCheckInReasons(),
+    listLists(),
   ]);
 
   const openTasks = tasks.filter((t) => !t.completed);
@@ -184,21 +186,22 @@ export default async function PersonProfilePage({
       </Section>
 
       <Section title="Lists">
-        {lists.length === 0 ? (
-          <EmptyState message="Not on any lists." />
-        ) : (
-          <div className="flex flex-wrap gap-2">
-            {lists.map((list) => (
-              <Link
-                key={list.id}
-                href={`/lists/${list.id}`}
-                className="rounded border border-border px-2.5 py-1 text-sm text-text hover:border-accent hover:text-accent"
-              >
-                {list.name}
-              </Link>
-            ))}
-          </div>
-        )}
+        <div className="flex flex-wrap items-start gap-2">
+          {lists.map((list) => (
+            <Link
+              key={list.id}
+              href={`/lists/${list.id}`}
+              className="rounded border border-border px-2.5 py-1 text-sm text-text hover:border-accent hover:text-accent"
+            >
+              {list.name}
+            </Link>
+          ))}
+          <AddToListButton
+            personId={person.id}
+            lists={allLists.map((l) => ({ id: l.id, name: l.name, is_group: l.is_group }))}
+            memberOf={lists.map((l) => l.id)}
+          />
+        </div>
       </Section>
     </div>
   );

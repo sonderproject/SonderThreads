@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   addListItemSmartSafe,
+  addNewPersonToListSafe,
+  addPersonToListSafe,
   deleteList,
   duplicateList,
   removeListItem,
@@ -20,13 +22,23 @@ import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useUndo } from "@/components/ui/UndoToast";
-import type { List, ListItem } from "@/lib/types";
+import type { List, ListItem, Person } from "@/lib/types";
+import { SearchPicker } from "@/components/ui/SearchPicker";
 import { Dictate } from "@/components/voice/Dictate";
 import { ShareMenu } from "@/components/lists/ShareMenu";
 import { addListItemsToPeopleSafe } from "@/lib/actions/import";
 import { NAME_INPUT, PROSE_INPUT } from "@/lib/input-props";
 
-export function ListDetail({ list, items }: { list: List; items: ListItem[] }) {
+export function ListDetail({
+  list,
+  items,
+  people = [],
+}: {
+  list: List;
+  items: ListItem[];
+  /** Everyone, for the group-list person picker. */
+  people?: Pick<Person, "id" | "display_name">[];
+}) {
   const router = useRouter();
   const [localItems, setLocalItems] = useState(items);
   const [newLabel, setNewLabel] = useState("");
@@ -83,6 +95,28 @@ export function ListDetail({ list, items }: { list: List; items: ListItem[] }) {
     } else {
       setAddError(result.error);
     }
+  }
+
+  // Group lists: pick people instead of typing free text.
+  const onList = new Set(localItems.map((i) => i.person_id).filter(Boolean));
+  const pickable = people.filter((p) => !onList.has(p.id)).map((p) => ({ id: p.id, label: p.display_name }));
+
+  async function addPickedPerson(personId: string) {
+    setAddError(null);
+    const result = await addPersonToListSafe(list.id, personId);
+    if (result.ok) {
+      setLocalItems((prev) => [...prev, result.data]);
+      refresh();
+    } else setAddError(result.error);
+  }
+
+  async function addNewPerson(fullName: string) {
+    setAddError(null);
+    const result = await addNewPersonToListSafe(list.id, fullName);
+    if (result.ok) {
+      setLocalItems((prev) => [...prev, result.data]);
+      refresh();
+    } else setAddError(result.error);
   }
 
   async function handleToggle(item: ListItem) {
@@ -292,6 +326,16 @@ export function ListDetail({ list, items }: { list: List; items: ListItem[] }) {
         </p>
       )}
 
+      {list.is_group ? (
+        <SearchPicker
+          options={pickable}
+          onPick={(o) => addPickedPerson(o.id)}
+          onCreate={addNewPerson}
+          createLabel={(q) => `+ Add “${q}” as a new person`}
+          placeholder="Add a person… start typing a name"
+          emptyMessage={people.length ? "Everyone's already on this list" : "No people yet"}
+        />
+      ) : (
       <form onSubmit={handleAddItem} className="flex gap-2">
         <Dictate value={newLabel} onChange={setNewLabel}>
           <input
@@ -306,6 +350,7 @@ export function ListDetail({ list, items }: { list: List; items: ListItem[] }) {
           Add
         </Button>
       </form>
+      )}
       {addError && <p className="text-xs text-red-400">{addError}</p>}
 
       {localItems.length === 0 ? (
