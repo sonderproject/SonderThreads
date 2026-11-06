@@ -10,6 +10,8 @@ export type CalendarBirthday = { personId: string; displayName: string; day: num
 export async function getCalendarMonth(
   year: number,
   month: number,
+  /** Viewer's zone, so a task due late on the 31st doesn't land in next month. */
+  timeZone = "UTC",
 ): Promise<{ tasks: Task[]; birthdays: CalendarBirthday[] }> {
   const userId = await requireUserId();
   const tasks = await query<Task>(
@@ -17,10 +19,10 @@ export async function getCalendarMonth(
      where user_id = $1
        and deleted_at is null
        and due_at is not null
-       and extract(year from due_at) = $2
-       and extract(month from due_at) = $3
+       and extract(year from due_at at time zone $4) = $2
+       and extract(month from due_at at time zone $4) = $3
      order by due_at asc`,
-    [userId, year, month],
+    [userId, year, month, timeZone],
   );
 
   const birthdayRows = await query<{ id: string; display_name: string; day: number }>(

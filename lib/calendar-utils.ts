@@ -1,13 +1,15 @@
+import { dateParts } from "@/lib/tz";
 import type { Task } from "@/lib/types";
 import type { CalendarBirthday } from "@/lib/actions/calendar";
 
 export type CalendarDay = { dayNum: number | null; isToday: boolean };
 
-export function buildWeeks(year: number, month: number): CalendarDay[][] {
+/** `todayKey` is today's "YYYY-MM-DD" in the viewer's zone (lib/tz dayKey). */
+export function buildWeeks(year: number, month: number, todayKey: string): CalendarDay[][] {
   const daysInMonth = new Date(year, month, 0).getDate();
   const startWeekday = new Date(year, month - 1, 1).getDay();
   const totalCells = Math.ceil((startWeekday + daysInMonth) / 7) * 7;
-  const today = new Date();
+  const [ty, tm, td] = todayKey.split("-").map(Number);
 
   const days: CalendarDay[] = [];
   for (let i = 0; i < totalCells; i++) {
@@ -17,9 +19,9 @@ export function buildWeeks(year: number, month: number): CalendarDay[][] {
       dayNum: inMonth ? dayNum : null,
       isToday:
         inMonth &&
-        year === today.getFullYear() &&
-        month === today.getMonth() + 1 &&
-        dayNum === today.getDate(),
+        year === ty &&
+        month === tm &&
+        dayNum === td,
     });
   }
 
@@ -28,11 +30,11 @@ export function buildWeeks(year: number, month: number): CalendarDay[][] {
   return weeks;
 }
 
-export function groupTasksByDay(tasks: Task[]): Record<number, Task[]> {
+export function groupTasksByDay(tasks: Task[], timeZone: string): Record<number, Task[]> {
   const byDay: Record<number, Task[]> = {};
   for (const task of tasks) {
     if (!task.due_at) continue;
-    const day = new Date(task.due_at).getDate();
+    const day = dateParts(task.due_at, timeZone).day;
     (byDay[day] ??= []).push(task);
   }
   return byDay;

@@ -12,45 +12,34 @@ import { listTasks } from "@/lib/actions/tasks";
 import { listRecentNotes } from "@/lib/actions/notes";
 import { getCalendarMonth } from "@/lib/actions/calendar";
 import { buildWeeks } from "@/lib/calendar-utils";
-
-function isToday(iso: string): boolean {
-  const d = new Date(iso);
-  const now = new Date();
-  return (
-    d.getFullYear() === now.getFullYear() &&
-    d.getMonth() === now.getMonth() &&
-    d.getDate() === now.getDate()
-  );
-}
-
-function isOverdue(iso: string): boolean {
-  return new Date(iso).getTime() < new Date().setHours(0, 0, 0, 0);
-}
+import { getTimeZone } from "@/lib/timezone";
+import { dateParts, dayKey } from "@/lib/tz";
 
 export default async function DashboardPage() {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth() + 1;
+  // "Today" and this month in the viewer's zone, not the server's (UTC on Vercel).
+  const timeZone = await getTimeZone();
+  const todayKey = dayKey(new Date(), timeZone);
+  const { year, month } = dateParts(new Date(), timeZone);
 
   const [people, tasks, notes, needsAttention, { tasks: monthTasks, birthdays }] = await Promise.all([
     listPeople(),
     listTasks(),
     listRecentNotes(6),
     getPeopleNeedingAttention(),
-    getCalendarMonth(year, month),
+    getCalendarMonth(year, month, timeZone),
   ]);
 
   const peopleById = new Map(people.map((c) => [c.id, c]));
   const openTasks = tasks.filter((t) => !t.completed);
-  const todayTasks = openTasks.filter((t) => t.due_at && (isToday(t.due_at) || isOverdue(t.due_at)));
+  const todayTasks = openTasks.filter((t) => t.due_at && dayKey(t.due_at, timeZone) <= todayKey);
   const recentPeople = people.slice(0, 5);
 
   const eventDays = new Set<number>();
   for (const task of monthTasks) {
-    if (task.due_at) eventDays.add(new Date(task.due_at).getDate());
+    if (task.due_at) eventDays.add(dateParts(task.due_at, timeZone).day);
   }
   for (const b of birthdays) eventDays.add(b.day);
-  const weeks = buildWeeks(year, month);
+  const weeks = buildWeeks(year, month, todayKey);
 
   return (
     <div className="space-y-8">

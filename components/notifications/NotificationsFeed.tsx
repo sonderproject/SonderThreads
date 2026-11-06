@@ -17,6 +17,8 @@ import {
   type UpcomingBirthday,
 } from "@/lib/actions/notifications";
 import type { Person, Task } from "@/lib/types";
+import { useTimeZone } from "@/components/TimeZoneProvider";
+import { startOfDayIn } from "@/lib/tz";
 import { formatDue } from "@/lib/format-due";
 
 const DAY = 86_400_000;
@@ -35,12 +37,14 @@ function timeAgo(iso: string): string {
 }
 
 /** "MM-DD" → "Today", "Tomorrow", or "Fri, Oct 10" for the next occurrence. */
-function birthdayLabel(monthDay: string): { label: string; sort: number } {
+function birthdayLabel(monthDay: string, today: number, timeZone?: string): { label: string; sort: number } {
   const [m, d] = monthDay.split("-").map(Number);
-  const today = startOfDay(new Date());
-  const now = new Date();
-  let date = new Date(now.getFullYear(), m - 1, d).getTime();
-  if (date < today - DAY) date = new Date(now.getFullYear() + 1, m - 1, d).getTime();
+  // Midnight of that month/day in the viewer's zone (noon UTC picks the right calendar date).
+  const midnight = (year: number) =>
+    timeZone ? startOfDayIn(new Date(Date.UTC(year, m - 1, d, 12)), timeZone) : new Date(year, m - 1, d).getTime();
+  const thisYear = timeZone ? Number(new Intl.DateTimeFormat("en-US", { timeZone, year: "numeric" }).format(today)) : new Date(today).getFullYear();
+  let date = midnight(thisYear);
+  if (date < today - DAY) date = midnight(thisYear + 1);
   const diff = Math.round((date - today) / DAY);
   const label =
     diff === 0
@@ -49,7 +53,7 @@ function birthdayLabel(monthDay: string): { label: string; sort: number } {
         ? "Tomorrow"
         : diff === -1
           ? "Yesterday"
-          : new Date(date).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
+          : new Date(date).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric", timeZone });
   return { label, sort: date };
 }
 
@@ -66,6 +70,7 @@ export function NotificationsFeed({
   needsAttention: Person[];
   personNames: Record<string, string>;
 }) {
+  const timeZone = useTimeZone();
   const router = useRouter();
   const [hidden, setHidden] = useState<Set<string>>(new Set());
   const [, startTransition] = useTransition();
@@ -78,7 +83,8 @@ export function NotificationsFeed({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const today = startOfDay(new Date());
+  // Midnight in the viewer's zone, so the server (UTC) groups tasks the same as the browser.
+  const today = timeZone ? startOfDayIn(new Date(), timeZone) : startOfDay(new Date());
   const overdue = tasks.filter((t) => new Date(t.due_at!).getTime() < today);
   const dueToday = tasks.filter((t) => {
     const at = new Date(t.due_at!).getTime();
@@ -92,7 +98,7 @@ export function NotificationsFeed({
   const suggestions = shown.filter((n) => n.type === "task_suggestion");
   const visible = shown.filter((n) => n.type !== "task_suggestion");
   const upcomingBirthdays = birthdays
-    .map((b) => ({ ...b, ...birthdayLabel(b.month_day) }))
+    .map((b) => ({ ...b, ...birthdayLabel(b.month_day, today, timeZone) }))
     .filter((b) => b.sort >= today - DAY && b.sort <= today + 7 * DAY)
     .sort((a, b) => a.sort - b.sort);
 
@@ -144,7 +150,7 @@ export function NotificationsFeed({
                   <p className="mt-0.5 tabular-nums text-[11px] text-text-faint">
                     {[
                       n.person_id && personNames[n.person_id],
-                      n.payload?.dueAt && formatDue(n.payload.dueAt),
+                      n.payload?.dueAt && formatDue(n.payload.dueAt, timeZone),
                       timeAgo(n.created_at),
                     ]
                       .filter(Boolean)

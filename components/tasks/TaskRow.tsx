@@ -12,6 +12,7 @@ import { SnoozeIcon, TrashIcon } from "@/components/ui/icons";
 import type { Task, TaskRecurrence } from "@/lib/types";
 import { formatDue } from "@/lib/format-due";
 import { dueState } from "@/lib/urgency";
+import { useTimeZone } from "@/components/TimeZoneProvider";
 import { Dictate } from "@/components/voice/Dictate";
 import { PROSE_INPUT } from "@/lib/input-props";
 
@@ -44,6 +45,7 @@ export function TaskRow({
   const [now, setNow] = useState<Date | null>(null);
   useEffect(() => setNow(new Date()), []);
   const due = now ? dueState(task.due_at, completed, now) : null;
+  const timeZone = useTimeZone();
   const swipe = useRef<{ x: number; y: number; locked: boolean | null } | null>(null);
   const suppressClick = useRef(false);
   const [pending, startTransition] = useTransition();
@@ -247,7 +249,7 @@ export function TaskRow({
                 }
               >
                 {due === "overdue" && "Overdue · "}
-                {formatDue(task.due_at)}
+                {formatDue(task.due_at, timeZone)}
               </span>
             )}
             {task.recurrence && <span title={`Repeats ${task.recurrence}`}>↻ {task.recurrence}</span>}

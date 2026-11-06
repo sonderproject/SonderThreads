@@ -3,6 +3,8 @@ import { listPeople } from "@/lib/actions/people";
 import { CalendarGrid } from "@/components/calendar/CalendarGrid";
 import { NewCalendarEventButton } from "@/components/calendar/NewCalendarEventButton";
 import { buildWeeks, groupTasksByDay, groupBirthdaysByDay } from "@/lib/calendar-utils";
+import { getTimeZone } from "@/lib/timezone";
+import { dateParts, dayKey } from "@/lib/tz";
 
 const MONTH_NAMES = [
   "January", "February", "March", "April", "May", "June",
@@ -15,18 +17,22 @@ export default async function CalendarPage({
   searchParams: Promise<{ year?: string; month?: string }>;
 }) {
   const sp = await searchParams;
-  const now = new Date();
-  const year = sp.year ? parseInt(sp.year, 10) : now.getFullYear();
-  const month = sp.month ? parseInt(sp.month, 10) : now.getMonth() + 1;
+  const timeZone = await getTimeZone();
+  const now = dateParts(new Date(), timeZone);
+  // Ignore malformed ?year=/&month= rather than rendering "NaN".
+  const y = Number(sp.year);
+  const m = Number(sp.month);
+  const year = Number.isInteger(y) && y >= 1900 && y <= 2200 ? y : now.year;
+  const month = Number.isInteger(m) && m >= 1 && m <= 12 ? m : now.month;
 
   const [{ tasks, birthdays }, people] = await Promise.all([
-    getCalendarMonth(year, month),
+    getCalendarMonth(year, month, timeZone),
     listPeople(),
   ]);
 
-  const tasksByDay = groupTasksByDay(tasks);
+  const tasksByDay = groupTasksByDay(tasks, timeZone);
   const birthdaysByDay = groupBirthdaysByDay(birthdays);
-  const weeks = buildWeeks(year, month);
+  const weeks = buildWeeks(year, month, dayKey(new Date(), timeZone));
 
   const prevMonth = month === 1 ? { year: year - 1, month: 12 } : { year, month: month - 1 };
   const nextMonth = month === 12 ? { year: year + 1, month: 1 } : { year, month: month + 1 };

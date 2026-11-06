@@ -42,6 +42,12 @@ export const viewport: Viewport = {
 
 const THEME_INIT_SCRIPT = `
 try {
+  var z = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  if (z && document.cookie.indexOf('tz=' + encodeURIComponent(z)) === -1) {
+    document.cookie = 'tz=' + encodeURIComponent(z) + '; path=/; max-age=31536000; samesite=lax';
+  }
+} catch (e) {}
+try {
   var t = localStorage.getItem('theme');
   if (t === 'light' || t === 'dark') {
     document.documentElement.setAttribute('data-theme', t);
