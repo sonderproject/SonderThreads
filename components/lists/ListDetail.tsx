@@ -16,6 +16,7 @@ import {
   reorderListItems,
   toggleListItem,
   updateListDescription,
+  updateListItemNoteSafe,
   updateListItemSafe,
 } from "@/lib/actions/lists";
 import { Button } from "@/components/ui/Button";
@@ -28,6 +29,7 @@ import { Dictate } from "@/components/voice/Dictate";
 import { ShareMenu } from "@/components/lists/ShareMenu";
 import { addListItemsToPeopleSafe } from "@/lib/actions/import";
 import { NAME_INPUT, PROSE_INPUT } from "@/lib/input-props";
+import { NoteIcon } from "@/components/ui/icons";
 
 export function ListDetail({
   list,
@@ -53,6 +55,8 @@ export function ListDetail({
   const [addError, setAddError] = useState<string | null>(null);
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [editLabel, setEditLabel] = useState("");
+  const [notingItemId, setNotingItemId] = useState<string | null>(null);
+  const [noteText, setNoteText] = useState("");
   const [itemError, setItemError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const [toPeopleBusy, setToPeopleBusy] = useState(false);
@@ -158,6 +162,27 @@ export function ListDetail({
       setEditingItemId(null);
       refresh();
     } else {
+      setItemError(result.error);
+    }
+  }
+
+  function startNote(item: ListItem) {
+    setNotingItemId(item.id);
+    setNoteText(item.note ?? "");
+    setItemError(null);
+  }
+
+  async function saveNote(item: ListItem) {
+    setNotingItemId(null);
+    if (noteText.trim() === (item.note ?? "")) return;
+    const optimistic = noteText.trim() || null;
+    setLocalItems((prev) => prev.map((i) => (i.id === item.id ? { ...i, note: optimistic } : i)));
+    const result = await updateListItemNoteSafe(item.id, noteText);
+    if (result.ok) {
+      setLocalItems((prev) => prev.map((i) => (i.id === item.id ? result.data : i)));
+      refresh();
+    } else {
+      setLocalItems((prev) => prev.map((i) => (i.id === item.id ? item : i)));
       setItemError(result.error);
     }
   }
@@ -385,32 +410,71 @@ export function ListDetail({
                 onChange={() => handleToggle(item)}
                 className="h-5 w-5 accent-accent sm:h-4 sm:w-4"
               />
-              {editingItemId === item.id ? (
-                <Dictate value={editLabel} onChange={setEditLabel}>
+              <div className="min-w-0 flex-1 py-1">
+                {editingItemId === item.id ? (
+                  <Dictate value={editLabel} onChange={setEditLabel}>
+                    <input
+                      {...(list.is_group ? NAME_INPUT : PROSE_INPUT)}
+                      autoFocus
+                      value={editLabel}
+                      onChange={(e) => setEditLabel(e.target.value)}
+                      onBlur={() => saveItemLabel(item)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") saveItemLabel(item);
+                        if (e.key === "Escape") setEditingItemId(null);
+                      }}
+                      className="input flex-1 text-sm"
+                    />
+                  </Dictate>
+                ) : item.person_id ? (
+                  <Link
+                    href={`/people/${item.person_id}`}
+                    className={`text-sm hover:underline ${item.checked ? "text-text-faint line-through" : "text-accent"}`}
+                  >
+                    {item.label}
+                  </Link>
+                ) : (
+                  <span className={`text-sm ${item.checked ? "text-text-faint line-through" : "text-text"}`}>
+                    {item.label}
+                  </span>
+                )}
+                {notingItemId === item.id ? (
                   <input
-                    {...(list.is_group ? NAME_INPUT : PROSE_INPUT)}
+                    {...PROSE_INPUT}
                     autoFocus
-                    value={editLabel}
-                    onChange={(e) => setEditLabel(e.target.value)}
-                    onBlur={() => saveItemLabel(item)}
+                    value={noteText}
+                    maxLength={500}
+                    placeholder="Add a note…"
+                    onChange={(e) => setNoteText(e.target.value)}
+                    onBlur={() => saveNote(item)}
                     onKeyDown={(e) => {
-                      if (e.key === "Enter") saveItemLabel(item);
-                      if (e.key === "Escape") setEditingItemId(null);
+                      if (e.key === "Enter") saveNote(item);
+                      if (e.key === "Escape") setNotingItemId(null);
                     }}
-                    className="input flex-1 text-sm"
+                    className="input mt-1 py-1.5 text-sm sm:py-1"
                   />
-                </Dictate>
-              ) : item.person_id ? (
-                <Link
-                  href={`/people/${item.person_id}`}
-                  className={`flex-1 text-sm hover:underline ${item.checked ? "text-text-faint line-through" : "text-accent"}`}
+                ) : (
+                  item.note && (
+                    <button
+                      type="button"
+                      onClick={() => startNote(item)}
+                      className="block max-w-full text-left text-xs leading-snug text-text-muted hover:text-text"
+                      title="Edit note"
+                    >
+                      {item.note}
+                    </button>
+                  )
+                )}
+              </div>
+              {editingItemId !== item.id && notingItemId !== item.id && (
+                <button
+                  onClick={() => startNote(item)}
+                  className={`flex h-9 w-9 items-center justify-center rounded hover:text-accent ${item.note ? "text-accent" : "text-text-faint"}`}
+                  aria-label={item.note ? "Edit note" : "Add note"}
+                  title={item.note ? "Edit note" : "Add note"}
                 >
-                  {item.label}
-                </Link>
-              ) : (
-                <span className={`flex-1 text-sm ${item.checked ? "text-text-faint line-through" : "text-text"}`}>
-                  {item.label}
-                </span>
+                  <NoteIcon />
+                </button>
               )}
               {editingItemId !== item.id && (
                 <button

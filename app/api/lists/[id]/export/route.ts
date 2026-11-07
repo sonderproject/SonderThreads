@@ -10,6 +10,7 @@ export const runtime = "nodejs";
 
 type Row = {
   label: string;
+  note: string | null;
   checked: boolean;
   phone: string | null;
   email: string | null;
@@ -20,10 +21,10 @@ type Row = {
 /** Header + cell values for one table, shared by both formats. */
 function buildTable(list: List, rows: Row[]): { headers: string[]; body: string[][] } {
   const headers = list.is_group
-    ? ["#", "Name", "Done", "Phone", "Email", "Status", "Next action"]
-    : ["#", "Item", "Done"];
+    ? ["#", "Name", "Done", "Note", "Phone", "Email", "Status", "Next action"]
+    : ["#", "Item", "Done", "Note"];
   const body = rows.map((r, i) => {
-    const base = [String(i + 1), r.label, r.checked ? "✓" : "–"];
+    const base = [String(i + 1), r.label, r.checked ? "✓" : "–", r.note ?? ""];
     return list.is_group
       ? [...base, r.phone ?? "", r.email ?? "", r.status ?? "", r.next_action ?? ""]
       : base;
@@ -50,7 +51,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   if (!list) return NextResponse.json({ error: "List not found" }, { status: 404 });
 
   const rows = await query<Row>(
-    `select li.label, li.checked, p.phone, p.email,
+    `select li.label, li.note, li.checked, p.phone, p.email,
             coalesce(p.current_status, p.status) as status, p.next_action
        from list_items li
        left join people p on p.id = li.person_id and p.deleted_at is null

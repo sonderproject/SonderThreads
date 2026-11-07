@@ -125,3 +125,10 @@ export const SignOutIcon = ({ className = "h-5 w-5" }: IconProps) => (
     <path d="M10 12h10M16.5 8.5L20 12l-3.5 3.5" />
   </svg>
 );
+
+export const NoteIcon = ({ className = "h-4 w-4" }: IconProps) => (
+  <svg {...base} className={className} aria-hidden>
+    <path d="M5 5.5h14a1.5 1.5 0 011.5 1.5v8a1.5 1.5 0 01-1.5 1.5H10l-4.5 3.5v-3.5H5A1.5 1.5 0 013.5 15V7A1.5 1.5 0 015 5.5z" />
+    <path d="M8 10h8M8 13h5" />
+  </svg>
+);

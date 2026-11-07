@@ -8,7 +8,7 @@ function listAsText(list: List, items: ListItem[]): string {
   const lines = [list.name];
   if (list.description) lines.push(list.description);
   lines.push("");
-  for (const item of items) lines.push(`${item.checked ? "✓" : "•"} ${item.label}`);
+  for (const item of items) lines.push(`${item.checked ? "✓" : "•"} ${item.label}${item.note ? ` — ${item.note}` : ""}`);
   if (items.length === 0) lines.push("(empty)");
   return lines.join("\n");
 }

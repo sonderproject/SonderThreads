@@ -325,6 +325,9 @@ alter table people add column if not exists ethnicity text;
 alter table people add column if not exists income_level text;
 alter table people add column if not exists gender text;
 
+-- A short note on one entry of a list (e.g. "brought ID", "left early").
+alter table list_items add column if not exists note text;
+
 -- No silent fallback to the old single owner: an insert that forgets
 -- user_id now fails instead of landing in someone else's account.
 alter table people alter column user_id drop default;

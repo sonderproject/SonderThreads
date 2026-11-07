@@ -52,6 +52,8 @@ export type ListItem = {
   list_id: string;
   person_id: string | null;
   label: string;
+  /** Short note on this entry, shown under the name. */
+  note: string | null;
   checked: boolean;
   position: number;
   created_at: string;

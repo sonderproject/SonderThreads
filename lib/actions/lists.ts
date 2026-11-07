@@ -327,6 +327,21 @@ export async function updateListItemSafe(id: string, label: string): Promise<Act
   return toActionResult(() => updateListItem(id, label));
 }
 
+/** Sets (or clears, with an empty string) the short note on one list entry. */
+export async function updateListItemNoteSafe(id: string, note: string): Promise<ActionResult<ListItem>> {
+  return toActionResult(async () => {
+    const userId = await requireUserId();
+    const text = note.trim().slice(0, 500) || null;
+    const item = await queryOne<ListItem>(
+      `update list_items set note = $1, updated_at = now() where user_id = $2 and id = $3 returning *`,
+      [text, userId, id],
+    );
+    if (!item) throw new Error("Item not found");
+    revalidatePath(`/lists/${item.list_id}`);
+    return item;
+  });
+}
+
 export async function toggleListItem(id: string, checked: boolean): Promise<void> {
   const userId = await requireUserId();
   const item = await queryOne<{ list_id: string }>(
@@ -350,10 +365,10 @@ export async function removeListItem(id: string): Promise<ListItem | null> {
 export async function restoreListItem(item: ListItem): Promise<void> {
   const userId = await requireUserId();
   await query(
-    `insert into list_items (id, user_id, list_id, person_id, label, checked, position, created_at)
-     values ($1, $2, $3, $4, $5, $6, $7, $8)
+    `insert into list_items (id, user_id, list_id, person_id, label, checked, position, created_at, note)
+     values ($1, $2, $3, $4, $5, $6, $7, $8, $9)
      on conflict (id) do nothing`,
-    [item.id, userId, item.list_id, item.person_id, item.label, item.checked, item.position, item.created_at],
+    [item.id, userId, item.list_id, item.person_id, item.label, item.checked, item.position, item.created_at, item.note ?? null],
   );
   revalidatePath(`/lists/${item.list_id}`);
 }
