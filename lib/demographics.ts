@@ -19,7 +19,7 @@ export const ETHNICITIES = [
 
 export const INCOME_LEVELS = ["None", "Low", "Medium", "High", "Prefer not to say"] as const;
 
-export const GENDERS = ["Male", "Female", "Prefer not to say"] as const;
+export const GENDERS = ["Male", "Female", "Non-binary", "Another gender", "Prefer not to say"] as const;
 
 export type Ethnicity = (typeof ETHNICITIES)[number];
 export type IncomeLevel = (typeof INCOME_LEVELS)[number];
