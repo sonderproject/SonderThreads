@@ -14,6 +14,8 @@ export type Person = {
   next_action: string | null;
   summary: string | null;
   needs_followup: boolean;
+  ethnicity: string | null;
+  income_level: string | null;
   created_at: string;
   updated_at: string;
   last_activity_at: string;

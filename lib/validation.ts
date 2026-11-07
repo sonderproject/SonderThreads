@@ -1,4 +1,5 @@
 import { z, ZodError, type ZodType } from "zod";
+import { ETHNICITIES, INCOME_LEVELS } from "@/lib/demographics";
 
 const uuid = z.string().uuid();
 const recurrence = z.enum(["daily", "weekly", "monthly"]).nullable().optional();
@@ -22,6 +23,8 @@ export const updatePersonSchema = z
       .nullable()
       .optional(),
     display_name: z.string().trim().min(1).max(200).optional(),
+    ethnicity: z.enum(ETHNICITIES).nullable().optional(),
+    income_level: z.enum(INCOME_LEVELS).nullable().optional(),
   })
   .partial();
 

@@ -5,7 +5,7 @@ import type { Activity, CheckIn, Person, List, ListItem, Note, Task } from "@/li
 
 const COLUMNS = {
   people:
-    "id, first_name, last_name, display_name, phone, email, birthday, status, current_status, next_action, summary, needs_followup, created_at, updated_at, last_activity_at",
+    "id, first_name, last_name, display_name, phone, email, birthday, ethnicity, income_level, status, current_status, next_action, summary, needs_followup, created_at, updated_at, last_activity_at",
   notes: "id, person_id, content, category, created_at, updated_at",
   lists: "id, name, description, is_group, created_at, updated_at",
   list_items: "id, list_id, person_id, label, checked, position, created_at, updated_at",

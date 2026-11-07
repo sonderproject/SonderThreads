@@ -7,6 +7,8 @@ import { getPersonTimeline } from "@/lib/actions/activity";
 import { listTasksForPerson } from "@/lib/actions/tasks";
 import { listLists, listListsForPerson } from "@/lib/actions/lists";
 import { AddToListButton } from "@/components/people/AddToListButton";
+import { DemographicSelect } from "@/components/people/DemographicSelect";
+import { ETHNICITIES, INCOME_LEVELS } from "@/lib/demographics";
 import { listNotesForPerson } from "@/lib/actions/notes";
 import { listCheckInsForPerson, listCheckInReasons } from "@/lib/actions/check-ins";
 import { PersonTimeline } from "@/components/people/PersonTimeline";
@@ -119,6 +121,24 @@ export default async function PersonProfilePage({
               placeholder="Add email..."
               textClassName="break-all text-sm text-text"
               inputType="email"
+            />
+          </Detail>
+          <Detail label="Ethnicity">
+            <DemographicSelect
+              personId={person.id}
+              field="ethnicity"
+              value={person.ethnicity}
+              options={ETHNICITIES}
+              label="Ethnicity"
+            />
+          </Detail>
+          <Detail label="Income level">
+            <DemographicSelect
+              personId={person.id}
+              field="income_level"
+              value={person.income_level}
+              options={INCOME_LEVELS}
+              label="Income level"
             />
           </Detail>
         </div>
