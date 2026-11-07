@@ -6,6 +6,7 @@ import { NoteCard } from "@/components/notes/NoteCard";
 import { TaskRow } from "@/components/tasks/TaskRow";
 import { MiniCalendar } from "@/components/calendar/MiniCalendar";
 import { SkyCard } from "@/components/home/SkyCard";
+import { MetricsPanel } from "@/components/metrics/MetricsPanel";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { listPeople, getPeopleNeedingAttention } from "@/lib/actions/people";
 import { listTasks } from "@/lib/actions/tasks";
@@ -82,6 +83,10 @@ export default async function DashboardPage() {
             ))}
           </div>
         )}
+      </Section>
+
+      <Section title="Metrics">
+        <MetricsPanel />
       </Section>
 
       <Section title="Recent People" href="/people">

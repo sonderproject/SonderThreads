@@ -23,6 +23,8 @@
   --new: #1d5fbf;
   --new-soft: #e4eefd;
   --shadow-card: 0 1px 2px rgba(20, 32, 26, 0.05), 0 2px 8px rgba(20, 32, 26, 0.04);
+  /* Chart marks: brand green tuned to pass chart color checks (dataviz validator). */
+  --chart-1: #1a7f56;
   color-scheme: light;
 }
 
@@ -46,6 +48,8 @@
     --new: #7fb4ff;
     --new-soft: #172a45;
     --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --chart-1: #45a97f;
+    --chart-1: #45a97f;
     color-scheme: dark;
   }
 }
