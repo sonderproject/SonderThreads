@@ -22,7 +22,7 @@ const listPeopleCached = cache(async (): Promise<Person[]> => {
   const userId = await requireUserId();
   return query<Person>(
     `select id, user_id, first_name, last_name, display_name, phone, email, birthday, status,
-            current_status, next_action, summary, needs_followup, ethnicity, income_level, created_at, updated_at,
+            current_status, next_action, summary, needs_followup, ethnicity, income_level, gender, created_at, updated_at,
             last_activity_at, deleted_at
        from people where user_id = $1 and deleted_at is null order by last_activity_at desc`,
     [userId],
@@ -117,7 +117,7 @@ export async function updatePerson(
   patch: Partial<
     Pick<
       Person,
-      "current_status" | "next_action" | "status" | "phone" | "email" | "birthday" | "display_name" | "ethnicity" | "income_level"
+      "current_status" | "next_action" | "status" | "phone" | "email" | "birthday" | "display_name" | "ethnicity" | "income_level" | "gender"
     >
   >,
 ): Promise<Person> {

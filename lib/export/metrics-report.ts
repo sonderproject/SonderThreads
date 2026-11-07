@@ -21,6 +21,7 @@ const SECTIONS = (m: Metrics): [string, Point[]][] => [
   [`New people per ${m.bucket}`, m.newPeopleOverTime],
   ["Check-ins by day of week", m.byWeekday],
   ["Check-ins by reason", m.byReason],
+  ["Gender (people served)", m.byGender],
   ["Ethnicity (people served)", m.byEthnicity],
   ["Income level (people served)", m.byIncome],
   ["Most frequent visitors (top 10)", m.topVisitors],
@@ -64,7 +65,7 @@ export async function metricsXlsx(m: Metrics): Promise<Buffer> {
 
   for (const [title, points] of SECTIONS(m)) {
     const ws = wb.addWorksheet(title.replace(/[\\/?*[\]:]/g, " ").slice(0, 31));
-    ws.addRow([title.includes("visitors") ? "Person" : title.includes("reason") ? "Reason" : title.includes("Ethnicity") ? "Ethnicity" : title.includes("Income") ? "Income level" : title.includes("week") ? "Day" : "Period", "Count"]).font = { bold: true };
+    ws.addRow([title.includes("visitors") ? "Person" : title.includes("reason") ? "Reason" : title.includes("Gender") ? "Gender" : title.includes("Ethnicity") ? "Ethnicity" : title.includes("Income") ? "Income level" : title.includes("week") ? "Day" : "Period", "Count"]).font = { bold: true };
     for (const p of points) ws.addRow([p.label, p.value]);
     ws.addRow(["Total", points.reduce((s, p) => s + p.value, 0)]).font = { bold: true };
     ws.columns = [{ width: 30 }, { width: 10 }];

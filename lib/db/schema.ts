@@ -323,6 +323,7 @@ create index if not exists check_ins_person_id_idx on check_ins(person_id, check
 -- Demographics for funder reporting (labels from lib/demographics.ts; null = not recorded).
 alter table people add column if not exists ethnicity text;
 alter table people add column if not exists income_level text;
+alter table people add column if not exists gender text;
 
 -- No silent fallback to the old single owner: an insert that forgets
 -- user_id now fails instead of landing in someone else's account.

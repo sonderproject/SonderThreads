@@ -8,7 +8,7 @@ import { listTasksForPerson } from "@/lib/actions/tasks";
 import { listLists, listListsForPerson } from "@/lib/actions/lists";
 import { AddToListButton } from "@/components/people/AddToListButton";
 import { DemographicSelect } from "@/components/people/DemographicSelect";
-import { ETHNICITIES, INCOME_LEVELS } from "@/lib/demographics";
+import { ETHNICITIES, GENDERS, INCOME_LEVELS } from "@/lib/demographics";
 import { listNotesForPerson } from "@/lib/actions/notes";
 import { listCheckInsForPerson, listCheckInReasons } from "@/lib/actions/check-ins";
 import { PersonTimeline } from "@/components/people/PersonTimeline";
@@ -122,6 +122,9 @@ export default async function PersonProfilePage({
               textClassName="break-all text-sm text-text"
               inputType="email"
             />
+          </Detail>
+          <Detail label="Gender">
+            <DemographicSelect personId={person.id} field="gender" value={person.gender} options={GENDERS} label="Gender" />
           </Detail>
           <Detail label="Ethnicity">
             <DemographicSelect

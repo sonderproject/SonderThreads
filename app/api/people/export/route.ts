@@ -44,7 +44,7 @@ export async function GET(request: Request) {
   const q = params.get("q")?.trim() ?? "";
 
   const all = await query<Person>(
-    `select id, display_name, phone, email, birthday, ethnicity, income_level, current_status, next_action, needs_followup, last_activity_at, summary
+    `select id, display_name, phone, email, birthday, gender, ethnicity, income_level, current_status, next_action, needs_followup, last_activity_at, summary
        from people where user_id = $1 and deleted_at is null
       order by last_activity_at desc`,
     [user.id],
@@ -58,12 +58,13 @@ export async function GET(request: Request) {
       ])
     : all;
 
-  const headers = ["Name", "Phone", "Email", "Birthday", "Ethnicity", "Income", "Current", "Next", "Follow up"];
+  const headers = ["Name", "Phone", "Email", "Birthday", "Gender", "Ethnicity", "Income", "Current", "Next", "Follow up"];
   const body = people.map((p) => [
     p.display_name,
     p.phone ?? "",
     p.email ?? "",
     formatBirthday(p.birthday as string | Date | null),
+    p.gender ?? "",
     p.ethnicity ?? "",
     p.income_level ?? "",
     p.current_status ?? "",
@@ -88,7 +89,7 @@ export async function GET(request: Request) {
     headers,
     body,
     // Name, phone, birthday and follow-up are short; email/current/next share the rest.
-    fixedWidths: { 0: 95, 1: 75, 3: 65, 5: 50, 8: 45 },
+    fixedWidths: { 0: 90, 1: 72, 3: 62, 4: 48, 6: 46, 9: 42 },
     emptyMessage: "No people.",
   });
 

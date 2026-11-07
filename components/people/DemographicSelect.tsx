@@ -13,7 +13,7 @@ export function DemographicSelect({
   label,
 }: {
   personId: string;
-  field: "ethnicity" | "income_level";
+  field: "ethnicity" | "income_level" | "gender";
   value: string | null;
   options: readonly string[];
   label: string;

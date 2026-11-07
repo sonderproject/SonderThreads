@@ -179,6 +179,9 @@ export function MetricsPanel() {
             <ChartCard title="Reasons" subtitle="Why people checked in" table={data.byReason} unit="check-ins">
               {data.byReason.length ? <BarList data={data.byReason} unit="check-ins" /> : <Empty />}
             </ChartCard>
+            <ChartCard title="Gender" subtitle="People served, each counted once" table={data.byGender} unit="people" wide>
+              <Demographic data={data.byGender} />
+            </ChartCard>
             <ChartCard title="Ethnicity" subtitle="People served, each counted once" table={data.byEthnicity} unit="people">
               <Demographic data={data.byEthnicity} />
             </ChartCard>

@@ -31,6 +31,7 @@ export type Metrics = {
   /** Demographics of the people served in the period (each person once). */
   byEthnicity: Point[];
   byIncome: Point[];
+  byGender: Point[];
 };
 
 const DAY_MS = 86_400_000;

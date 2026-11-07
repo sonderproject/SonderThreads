@@ -1,5 +1,5 @@
 import { query } from "@/lib/db/client";
-import { ETHNICITIES, INCOME_LEVELS, NOT_RECORDED } from "@/lib/demographics";
+import { ETHNICITIES, GENDERS, INCOME_LEVELS, NOT_RECORDED } from "@/lib/demographics";
 
 /**
  * Metrics for the Command page and its exports. Plain server module (not
@@ -127,8 +127,8 @@ export async function computeMetrics(userId: string, tz: string, from: string, t
         limit 10`,
       range,
     ),
-    query<{ ethnicity: string | null; income_level: string | null }>(
-      `select p.ethnicity, p.income_level
+    query<{ ethnicity: string | null; income_level: string | null; gender: string | null }>(
+      `select p.ethnicity, p.income_level, p.gender
          from people p
         where p.user_id = $1 and p.deleted_at is null
           and exists (select 1 from check_ins c
@@ -175,6 +175,7 @@ export async function computeMetrics(userId: string, tz: string, from: string, t
     topVisitors: visitorRows.map((r) => ({ key: r.id, personId: r.id, label: r.label, value: r.n })),
     byEthnicity: tally(demoRows.map((r) => r.ethnicity), ETHNICITIES),
     byIncome: tally(demoRows.map((r) => r.income_level), INCOME_LEVELS),
+    byGender: tally(demoRows.map((r) => r.gender), GENDERS),
   };
 }
 
