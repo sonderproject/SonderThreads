@@ -29,8 +29,10 @@ function back(
 
 /**
  * This deployment's own origin, for links in auth emails, so a Vercel
- * preview sends links back to the preview (it must be in Supabase's
- * Redirect URLs list; see docs/auth-setup.md).
+ * preview sends links back to the preview. Every auth email's redirect is
+ * `<origin>/auth/confirm?next=...` (always with a "?"), because the email
+ * templates append `&token_hash=...&type=...` to {{ .RedirectTo }}. The
+ * origin must be in Supabase's Redirect URLs list (docs/auth-setup.md).
  */
 async function origin(): Promise<string> {
   const h = await headers();
@@ -110,7 +112,7 @@ export async function requestPasswordReset(formData: FormData): Promise<void> {
   await ensureSupabaseUser(email).catch((err) => console.error("[auth] reset prep failed", err));
   const supabase = await createSupabaseServer();
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${await origin()}/reset-password`,
+    redirectTo: `${await origin()}/auth/confirm?next=%2Freset-password`,
     captchaToken: captcha(formData),
   });
   if (error?.code === "captcha_failed") redirect("/forgot-password?error=captcha");
@@ -251,7 +253,7 @@ export async function resendConfirmation(formData: FormData): Promise<void> {
   const { error } = await supabase.auth.resend({
     type: "signup",
     email,
-    options: { emailRedirectTo: `${await origin()}/auth/confirm`, captchaToken: captcha(formData) },
+    options: { emailRedirectTo: `${await origin()}/auth/confirm?next=%2F`, captchaToken: captcha(formData) },
   });
   if (error?.code === "captcha_failed") params.set("error", "captcha");
   else if (error?.code === "over_email_send_rate_limit" || error?.code === "over_request_rate_limit" || error?.status === 429) {
