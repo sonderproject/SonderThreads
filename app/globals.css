@@ -378,3 +378,11 @@ select {
   -webkit-mask: url("/brand/sonder-project-mark.png") center / contain no-repeat;
   mask: url("/brand/sonder-project-mark.png") center / contain no-repeat;
 }
+
+/* Frosted glass for floating chrome (header, tab bar, sheets), Sonder Studio style. */
+.glass {
+  background-color: var(--glass);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  backdrop-filter: blur(18px) saturate(160%);
+  border-color: var(--glass-line);
+}

@@ -127,13 +127,13 @@ export function MobileNav({ people, showTeam = false }: { people: Pick<Person, "
         }}
         aria-label="New command, note, task or person (hold to talk)"
         style={{ WebkitTouchCallout: "none", touchAction: "none" }}
-        className="bottom-above-tabbar fixed right-4 z-30 flex h-14 w-14 select-none items-center justify-center rounded-full bg-accent text-bg shadow-lg shadow-black/40 active:scale-95 sm:hidden"
+        className="bottom-above-tabbar fixed right-4 z-30 flex h-14 w-14 select-none items-center justify-center rounded-full bg-accent text-bg shadow-lg shadow-black/30 ring-1 ring-white/20 transition-transform active:scale-95 sm:hidden"
       >
         <PlusIcon className="h-7 w-7" />
       </button>
 
       <nav
-        className="pb-safe fixed inset-x-0 bottom-0 z-30 border-t border-border bg-bg-raised sm:hidden"
+        className="glass pb-safe fixed inset-x-0 bottom-0 z-30 border-t sm:hidden"
         aria-label="Main"
       >
         <div className="grid grid-cols-5">
@@ -143,8 +143,8 @@ export function MobileNav({ people, showTeam = false }: { people: Pick<Person, "
               <Link
                 key={href}
                 href={href}
-                className={`flex h-16 flex-col items-center justify-center gap-0.5 tabular-nums text-xs ${
-                  active ? "text-accent" : "text-text-muted"
+                className={`flex h-16 flex-col items-center justify-center gap-0.5 tabular-nums text-[11px] ${
+                  active ? "font-medium text-accent" : "text-text-muted"
                 }`}
                 aria-current={active ? "page" : undefined}
               >
@@ -165,7 +165,7 @@ export function MobileNav({ people, showTeam = false }: { people: Pick<Person, "
         </div>
       </nav>
 
-      <Modal open={sheet === "command"} onClose={() => setSheet(null)} title="> command">
+      <Modal open={sheet === "command"} onClose={() => setSheet(null)} title="New">
         <CommandBar
           key={commandOpts.key}
           autoFocus

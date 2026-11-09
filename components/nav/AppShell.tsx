@@ -48,14 +48,14 @@ export function AppShell({
         <WakeOnReturn />
         <IdleSignOut minutes={idleMinutes} />
         <div className="min-h-screen bg-bg">
-          <header className="pt-safe sticky top-0 z-20 border-b border-border bg-bg-raised">
+          <header className="glass pt-safe sticky top-0 z-20 border-b">
             <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3 sm:px-6">
               <Link href="/" aria-label="Sonder Threads home" title="Sonder Threads" className="-ml-1 mr-6 flex shrink-0 items-center py-1 sm:-ml-2">
                 <span className="brand-mark h-7 w-[37px]" aria-hidden />
               </Link>
               <div className="flex items-center">
                 <div className="hidden items-center gap-2 sm:flex">
-                  <nav className="flex gap-2">
+                  <nav className="flex gap-1">
                     {[...NAV_ITEMS, ...(showTeam ? [{ href: "/team", label: "Team" }] : [])].map((item) => {
                       const isActive =
                         item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
@@ -63,10 +63,10 @@ export function AppShell({
                         <Link
                           key={item.href}
                           href={item.href}
-                          className={`whitespace-nowrap rounded px-2.5 py-1.5 text-sm transition-colors ${
+                          className={`whitespace-nowrap rounded-full px-3 py-1.5 text-sm transition-colors ${
                             isActive
-                              ? "bg-bg-hover text-text"
-                              : "text-text-muted hover:text-text hover:bg-bg-hover"
+                              ? "bg-accent-soft font-medium text-accent"
+                              : "text-text-muted hover:bg-bg-hover hover:text-text"
                           }`}
                         >
                           {item.label}
@@ -77,7 +77,7 @@ export function AppShell({
                   <button
                     onClick={() => window.dispatchEvent(new Event(OPEN_SEARCH_EVENT))}
                     title="Search (⌘K / Ctrl+K)"
-                    className="rounded border border-border px-2 py-1 tabular-nums text-xs text-text-muted transition-colors hover:border-accent hover:text-text"
+                    className="ml-1 rounded-full border border-border px-2.5 py-1 tabular-nums text-xs text-text-muted transition-colors hover:border-accent hover:text-text"
                   >
                     ⌘K
                   </button>
@@ -85,7 +85,7 @@ export function AppShell({
                     href="/api/export"
                     title="Download a full backup of your data (JSON)"
                     aria-label="Download backup"
-                    className="rounded p-2 text-text-muted transition-colors hover:bg-bg-hover hover:text-text"
+                    className="rounded-full p-2 text-text-muted transition-colors hover:bg-bg-hover hover:text-text"
                   >
                     <DownloadIcon />
                   </a>
@@ -94,7 +94,7 @@ export function AppShell({
                     href="/settings"
                     title="Settings"
                     aria-label="Settings"
-                    className="rounded p-2 text-text-muted transition-colors hover:bg-bg-hover hover:text-text"
+                    className="rounded-full p-2 text-text-muted transition-colors hover:bg-bg-hover hover:text-text"
                   >
                     <UserIcon />
                   </Link>
@@ -103,7 +103,7 @@ export function AppShell({
                       type="submit"
                       title="Sign out"
                       aria-label="Sign out"
-                      className="rounded p-2 text-text-muted transition-colors hover:bg-bg-hover hover:text-text"
+                      className="rounded-full p-2 text-text-muted transition-colors hover:bg-bg-hover hover:text-text"
                     >
                       <SignOutIcon />
                     </button>
@@ -114,7 +114,7 @@ export function AppShell({
                   title="Notifications"
                   aria-label={notificationCount ? `Notifications (${notificationCount})` : "Notifications"}
                   aria-current={pathname.startsWith("/notifications") ? "page" : undefined}
-                  className={`relative -mr-1 rounded p-2 transition-colors hover:bg-bg-hover sm:ml-1 ${
+                  className={`relative -mr-1 rounded-full p-2 transition-colors hover:bg-bg-hover sm:ml-1 ${
                     pathname.startsWith("/notifications") ? "text-accent" : "text-text-muted hover:text-text"
                   }`}
                 >
