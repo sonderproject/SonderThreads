@@ -283,14 +283,14 @@ export default async function SettingsPage({
             <span className="text-text">Version</span>
             <span className="tabular-nums text-text-muted">{packageJson.version}</span>
           </div>
-          <div className="flex items-center justify-between p-4">
+          <a href="/privacy" className="flex items-center justify-between p-4 hover:bg-bg-hover">
             <span className="text-text">Privacy policy</span>
-            <span className="text-xs text-text-faint">Coming soon</span>
-          </div>
-          <div className="flex items-center justify-between p-4">
+            <span className="text-text-muted" aria-hidden>→</span>
+          </a>
+          <a href="/terms" className="flex items-center justify-between p-4 hover:bg-bg-hover">
             <span className="text-text">Terms of service</span>
-            <span className="text-xs text-text-faint">Coming soon</span>
-          </div>
+            <span className="text-text-muted" aria-hidden>→</span>
+          </a>
           <div className="flex items-center justify-between gap-3 p-4">
             <span className="text-text">Contact support</span>
             <a href={`mailto:${SUPPORT_EMAIL}`} className="truncate text-accent hover:underline">

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SITE_DESCRIPTION } from "@/lib/site";
+import { LegalLinks } from "@/components/legal/LegalPage";
 
 // Signed-out visitors to "/" are shown this page (middleware rewrites to it),
 // so "/" is the canonical address search engines should index.
@@ -110,6 +111,10 @@ export default function WelcomePage() {
             </dl>
           </section>
         </div>
+
+        <footer className="lg:pt-6">
+          <LegalLinks />
+        </footer>
       </div>
     </div>
   );

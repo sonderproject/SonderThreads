@@ -92,6 +92,17 @@ export default async function SignupPage({
           Create account
         </button>
         <p className="text-center text-xs text-text-muted">
+          By creating an account you agree to the{" "}
+          <Link href="/terms" className="text-accent hover:underline">
+            Terms
+          </Link>{" "}
+          and{" "}
+          <Link href="/privacy" className="text-accent hover:underline">
+            Privacy Policy
+          </Link>
+          .
+        </p>
+        <p className="text-center text-xs text-text-muted">
           Already have an account?{" "}
           <Link href={loginHref} className="text-accent hover:underline">
             Sign in
