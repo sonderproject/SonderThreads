@@ -38,7 +38,7 @@ Sonder Threads (working name; branded "<name> by Sonder Project"): a client trac
 - [ ] 2FA with Supabase Auth MFA (TOTP): enroll with a QR code, a code step at sign-in when it's on, and turning it off requires a current code. Optional per user. *(Built; awaiting test.)*
 - [ ] Session timeout: auto sign-out after 30 minutes idle (one constant, a setting later). *(Built; awaiting test.)*
 - [ ] In-app account deletion that removes all the user's data, with a confirmation step, run server-side. The service role key never reaches the client. *(Built; awaiting test.)*
-- [ ] Sign-up CAPTCHA via Supabase's built-in support (Cloudflare Turnstile). *(Code built; Cloudflare and Supabase setup still to do, see `docs/auth-setup.md` section F.)*
+- [ ] Sign-up CAPTCHA via Supabase's built-in support (Cloudflare Turnstile). *(Code built, switched off. Deferred by the owner: turn on later via `docs/auth-setup.md` section F.)*
 
 ## Phase 2: Settings tab
 
