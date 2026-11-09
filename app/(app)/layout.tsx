@@ -7,6 +7,21 @@ import { SetupIssuePanel } from "@/components/diagnostics/SetupIssuePanel";
 import { listPeople } from "@/lib/actions/people";
 import { listLists } from "@/lib/actions/lists";
 import { getNotificationCount } from "@/lib/actions/notifications";
+import { requireUserId } from "@/lib/current-user";
+import { queryOne } from "@/lib/db/client";
+import { TwoFactorPrompt } from "@/components/settings/TwoFactorPrompt";
+
+/** Offer optional 2FA to people who don't have it on, at most once every 30 days. */
+async function shouldOfferTwoFactor(): Promise<boolean> {
+  const userId = await requireUserId();
+  const row = await queryOne<{ offer: boolean }>(
+    `select (not mfa_enabled
+             and (mfa_prompt_dismissed_at is null or mfa_prompt_dismissed_at < now() - interval '30 days')) as offer
+     from users where id = $1`,
+    [userId],
+  );
+  return Boolean(row?.offer);
+}
 
 // This whole route group is a live, per-user dashboard — never prerender it.
 export const dynamic = "force-dynamic";
@@ -16,7 +31,7 @@ export default async function AppGroupLayout({ children }: { children: React.Rea
   // (Checking first added a full database round trip before every page.)
   let data;
   try {
-    data = await Promise.all([listPeople(), listLists(), getNotificationCount(), getTimeZone()]);
+    data = await Promise.all([listPeople(), listLists(), getNotificationCount(), getTimeZone(), shouldOfferTwoFactor()]);
   } catch (err) {
     unstable_rethrow(err); // let Next's redirect-to-sign-in through
     const diagnostic = await checkSetup();
@@ -28,7 +43,7 @@ export default async function AppGroupLayout({ children }: { children: React.Rea
     );
   }
 
-  const [people, lists, notificationCount, timeZone] = data;
+  const [people, lists, notificationCount, timeZone, offerTwoFactor] = data;
   return (
     <TimeZoneProvider timeZone={timeZone}>
     <AppShell
@@ -37,6 +52,7 @@ export default async function AppGroupLayout({ children }: { children: React.Rea
       notificationCount={notificationCount}
     >
       {children}
+      {offerTwoFactor && <TwoFactorPrompt />}
     </AppShell>
     </TimeZoneProvider>
   );

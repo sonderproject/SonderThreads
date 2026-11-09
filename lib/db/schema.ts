@@ -343,6 +343,14 @@ alter table tasks alter column user_id drop default;
 alter table person_summaries alter column user_id drop default;
 alter table activity alter column user_id drop default;
 
+-- Optional 2FA prompt: when the person last tapped "Not now" (or "Set it
+-- up"). Null = never asked. The prompt comes back 30 days later while 2FA is off.
+alter table users add column if not exists mfa_prompt_dismissed_at timestamptz;
+
+-- app_meta is otherwise created after this script runs (lib/db/client.ts);
+-- create it here so enabling RLS on it below works on a fresh database.
+create table if not exists app_meta (key text primary key, value text not null);
+
 -- Row level security on every table, with no policies: Supabase's public
 -- API (anon/authenticated roles) gets no rows at all. The app connects
 -- directly as the table owner, which bypasses RLS, and scopes every query

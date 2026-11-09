@@ -47,7 +47,7 @@ export function TwoFactorCard({ enabled }: { enabled: boolean }) {
   }
 
   return (
-    <section className="card space-y-3 p-4">
+    <section id="two-factor" className="card scroll-mt-20 space-y-3 p-4">
       <div className="flex items-start justify-between gap-3">
         <div>
           <h2 className="text-sm font-semibold text-text">Two-factor authentication</h2>

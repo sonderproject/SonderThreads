@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { query } from "@/lib/db/client";
 import { safeNextPath } from "@/lib/auth";
 import { getAuthState } from "@/lib/session";
+import { requireUserId } from "@/lib/current-user";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { toActionResult, type ActionResult } from "@/lib/validation";
 
@@ -127,4 +128,10 @@ export async function verifyLogin2fa(formData: FormData): Promise<void> {
   const { error } = await supabase.auth.mfa.challengeAndVerify({ factorId, code });
   if (error) retry("code");
   redirect(next);
+}
+
+/** The optional 2FA prompt was answered ("Not now" or "Set it up"): don't ask again for 30 days. */
+export async function dismissTwoFactorPrompt(): Promise<void> {
+  const userId = await requireUserId();
+  await query(`update users set mfa_prompt_dismissed_at = now() where id = $1`, [userId]);
 }
