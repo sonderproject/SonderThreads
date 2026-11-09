@@ -346,19 +346,19 @@ export function impactPdf(
       const tx = PAGE.m + 2 * (tileW + tileGap);
       const ty = y + tileH + tileGap;
       const f = m.followThrough;
-      const useFollowUps = opts.followUps && f.due > 0;
+      const useFollowUps = opts.followUps && f.onTime + f.late > 0;
       const visits = m.kpis.peopleServed ? m.kpis.checkIns / m.kpis.peopleServed : 0;
       const prevVisits = m.prev.peopleServed ? m.prev.checkIns / m.prev.peopleServed : 0;
       doc.roundedRect(tx, ty, tileW, tileH, 10).fill(C.obsidian);
-      doc.font("body-medium").fontSize(7.5).fillColor(C.faint).text(useFollowUps ? "FOLLOW-UPS ON TIME" : "VISITS PER PERSON", tx + 14, ty + 13, { characterSpacing: 1.5, lineBreak: false });
+      doc.font("body-medium").fontSize(7.5).fillColor(C.faint).text(useFollowUps ? "FOLLOW-UPS DONE" : "VISITS PER PERSON", tx + 14, ty + 13, { characterSpacing: 1.5, lineBreak: false });
       doc.font("display").fontSize(28).fillColor(C.warmWhite).text(
-        useFollowUps ? `${Math.round((f.onTime / f.due) * 100)}%` : visits ? visits.toFixed(1) : "–",
+        useFollowUps ? `${f.onTime + f.late}` : visits ? visits.toFixed(1) : "–",
         tx + 14,
         ty + 26,
         { lineBreak: false },
       );
       doc.font("body").fontSize(7.5).fillColor(C.faint).text(
-        useFollowUps ? `${f.onTime} of ${f.due} due this period` : prevVisits ? `${prevVisits.toFixed(1)} the period before` : "Average check-ins per person",
+        useFollowUps ? `of ${f.due} due this period` : prevVisits ? `${prevVisits.toFixed(1)} the period before` : "Average check-ins per person",
         tx + 14,
         ty + 60,
         { lineBreak: false },
@@ -442,11 +442,10 @@ export function impactPdf(
         doc.font("body").fontSize(10).fillColor(C.muted).text("No follow-ups were due in this period.", PAGE.m, y);
         y = doc.y + 20;
       } else {
-        const pct = (n: number) => Math.round((n / f.due) * 100);
-        const big = `${pct(f.onTime)}%`;
+        const big = `${f.onTime + f.late}`;
         doc.font("display").fontSize(40).fillColor(C.ink).text(big, PAGE.m, y, { lineBreak: false });
         const bigW = doc.widthOfString(big);
-        doc.font("body").fontSize(11).fillColor(C.muted).text("done on time", PAGE.m + bigW + 10, y + 27, { lineBreak: false });
+        doc.font("body").fontSize(11).fillColor(C.muted).text(`of ${f.due} done`, PAGE.m + bigW + 10, y + 27, { lineBreak: false });
         y += 56;
         const parts = [
           { n: f.onTime, color: C.blue, label: "On time" },
@@ -465,12 +464,11 @@ export function impactPdf(
         }
         doc.restore();
         y += 24;
-        parts.forEach((p, i) => {
+        shownParts.forEach((p, i) => {
           const lx = PAGE.m + i * (CONTENT_W / 3);
           doc.roundedRect(lx, y + 1, 8, 8, 2).fill(p.color);
           doc.font("body").fontSize(8.5).fillColor(C.muted).text(p.label, lx + 13, y, { lineBreak: false });
-          doc.font("body-bold").fontSize(11).fillColor(C.ink).text(`${p.n}`, lx, y + 14, { lineBreak: false, continued: true })
-            .font("body").fontSize(9).fillColor(C.muted).text(`  (${pct(p.n)}%)`, { lineBreak: false });
+          doc.font("body-bold").fontSize(11).fillColor(C.ink).text(`${p.n}`, lx, y + 14, { lineBreak: false });
         });
         y += 46;
       }

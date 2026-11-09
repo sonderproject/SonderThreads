@@ -1,7 +1,8 @@
 import type { FollowThrough } from "@/lib/metrics-shared";
 
 /**
- * Follow-ups due in the period as one proportion bar: done on time (good),
+ * Follow-ups due in the period: a plain count ("12 of 15 done", never a
+ * percentage that can read as 0%) and one proportion bar: done on time (good),
  * done late (attention), not done yet (neutral). Status colors carry a label
  * and a number, never color alone; 2px surface gaps between segments.
  */
@@ -12,11 +13,10 @@ export function FollowThroughBar({ data }: { data: FollowThrough }) {
     { key: "late", label: "Late", n: data.late, color: "var(--warn)" },
     { key: "open", label: "Not done yet", n: data.open, color: "var(--line)" },
   ].filter((p) => p.n > 0);
-  const pct = (n: number) => Math.round((n / data.due) * 100);
   return (
     <div className="space-y-4">
       <p className="font-display text-4xl font-light tabular-nums text-text">
-        {pct(data.onTime)}%<span className="ml-2 align-middle font-sans text-sm text-text-muted">done on time</span>
+        {data.onTime + data.late} <span className="font-sans text-sm text-text-muted">of {data.due} done</span>
       </p>
       <div className="flex h-3.5 gap-[2px] overflow-hidden rounded-full" role="img" aria-label={parts.map((p) => `${p.label} ${p.n}`).join(", ")}>
         {parts.map((p) => (
@@ -28,14 +28,16 @@ export function FollowThroughBar({ data }: { data: FollowThrough }) {
           { label: "On time", n: data.onTime, color: "var(--accent)" },
           { label: "Late", n: data.late, color: "var(--warn)" },
           { label: "Not done yet", n: data.open, color: "var(--line)" },
-        ].map((p) => (
+        ]
+          .filter((p) => p.n > 0)
+          .map((p) => (
           <li key={p.label} className="space-y-0.5">
             <span className="flex items-center gap-1.5 text-text-muted">
               <span className="h-2.5 w-2.5 rounded-sm" style={{ background: p.color }} />
               {p.label}
             </span>
             <span className="block tabular-nums text-sm font-semibold text-text">
-              {p.n} <span className="font-normal text-text-muted">({pct(p.n)}%)</span>
+              {p.n}
             </span>
           </li>
         ))}

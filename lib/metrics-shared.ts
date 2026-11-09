@@ -98,7 +98,8 @@ export function buildStory(m: Metrics, opts: { followUps?: boolean } = {}): stri
   m.heatmap.forEach((row, d) => row.forEach((n, b) => n > best.n && (best = { d, b, n })));
   if (best.n >= 3) out.push(`The busiest time was ${WEEKDAY_NAMES[best.d]}s around ${HEATMAP_BLOCKS[best.b]}m.`);
   const f = m.followThrough;
-  if (opts.followUps && f.due > 0) out.push(`${pct(f.onTime, f.due)}% of the ${f.due.toLocaleString()} follow-ups due were done on time.`);
+  const done = f.onTime + f.late;
+  if (opts.followUps && done > 0) out.push(`${done.toLocaleString()} of the ${f.due.toLocaleString()} follow-ups due were done.`);
   return out;
 }
 
