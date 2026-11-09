@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BrandLockup } from "@/components/BrandLockup";
 import { Turnstile } from "@/components/auth/Turnstile";
 import { legacyDataUnclaimed, signup } from "@/app/login/actions";
 import { TimeZoneInput } from "@/components/notifications/TimeZoneInput";
@@ -29,7 +30,7 @@ export default async function SignupPage({
   return (
     <div className="flex min-h-screen items-start justify-center bg-bg px-4 pt-32">
       <form action={signup} className="w-full max-w-xs space-y-3">
-        <p className="font-display text-xl font-semibold text-accent">sonderthreads</p>
+        <BrandLockup className="mb-2" />
         {deleted && <p className="text-xs text-text-muted">Your account and data were deleted.</p>}
         {error && <p className="text-xs text-danger">{ERRORS[error] ?? "Something went wrong."}</p>}
         <input type="hidden" name="next" value={next ?? ""} />

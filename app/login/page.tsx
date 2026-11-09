@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BrandLockup } from "@/components/BrandLockup";
 import { Turnstile } from "@/components/auth/Turnstile";
 import { login } from "./actions";
 import { missingSupabaseConfig } from "@/lib/supabase/env";
@@ -24,7 +25,7 @@ export default async function LoginPage({
   return (
     <div className="flex min-h-screen items-start justify-center bg-bg px-4 pt-32">
       <form action={login} className="w-full max-w-xs space-y-3">
-        <p className="font-display text-xl font-semibold text-accent">sonderthreads</p>
+        <BrandLockup className="mb-2" />
         {missing.length > 0 && (
           <p className="flag text-xs">Sign-in isn&apos;t configured yet. Missing: {missing.join(", ")}.</p>
         )}

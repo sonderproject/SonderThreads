@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BrandLockup } from "@/components/BrandLockup";
 import { resetPassword } from "@/app/login/actions";
 import { getAuthState } from "@/lib/session";
 
@@ -21,7 +22,7 @@ export default async function ResetPasswordPage({ searchParams }: { searchParams
   return (
     <div className="flex min-h-screen items-start justify-center bg-bg px-4 pt-32">
       <div className="w-full max-w-xs space-y-3">
-        <p className="font-display text-xl font-semibold text-accent">sonderthreads</p>
+        <BrandLockup className="mb-2" />
         {error === "invalid" || !signedIn ? (
           <p className="text-sm text-danger">
             This reset link has expired or was already used.{" "}

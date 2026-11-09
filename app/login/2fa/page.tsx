@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { BrandLockup } from "@/components/BrandLockup";
 import { verifyLogin2fa } from "@/lib/actions/security";
 import { logout } from "@/app/login/actions";
 import { safeNextPath } from "@/lib/auth";
@@ -22,11 +23,11 @@ export default async function TwoFactorPage({ searchParams }: { searchParams: Pr
   return (
     <div className="flex min-h-screen items-start justify-center bg-bg px-4 pt-32">
       <div className="w-full max-w-xs space-y-3">
-        <p className="font-display text-xl font-semibold text-accent">sonderthreads</p>
+        <BrandLockup className="mb-2" />
         <form action={verifyLogin2fa} className="space-y-3">
           <h1 className="section-title">Enter your code</h1>
           <p className="text-sm text-text-muted">
-            Open your authenticator app and enter the 6-digit code for sonderthreads ({state.email}).
+            Open your authenticator app and enter the 6-digit code for Sonder Threads ({state.email}).
           </p>
           {error && <p className="text-xs text-danger">{ERRORS[error] ?? ERRORS.code}</p>}
           <input type="hidden" name="next" value={next} />

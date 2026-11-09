@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BrandLockup } from "@/components/BrandLockup";
 
 /** Shared frame for the public legal pages (privacy, terms, account deletion). */
 export function LegalPage({ title, updated, children }: { title: string; updated: string; children: React.ReactNode }) {
@@ -6,9 +7,7 @@ export function LegalPage({ title, updated, children }: { title: string; updated
     <div className="min-h-screen bg-bg">
       <div className="mx-auto max-w-[760px] space-y-8 px-4 py-8 sm:py-12">
         <header className="flex items-center justify-between gap-3 text-sm">
-          <Link href="/" className="font-display text-lg font-semibold text-accent">
-            sonderthreads
-          </Link>
+          <BrandLockup />
           <nav className="flex gap-3 text-text-muted">
             <Link href="/privacy" className="hover:text-accent">
               Privacy
@@ -39,7 +38,7 @@ export function LegalPage({ title, updated, children }: { title: string; updated
 export function LegalSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="space-y-2">
-      <h2 className="font-display text-[1.3rem] font-semibold text-text">{title}</h2>
+      <h2 className="section-title text-text">{title}</h2>
       {children}
     </section>
   );

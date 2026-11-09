@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BrandLockup } from "@/components/BrandLockup";
 import { Turnstile } from "@/components/auth/Turnstile";
 import { resendConfirmation } from "@/app/login/actions";
 
@@ -17,7 +18,7 @@ export default async function CheckEmailPage({
   return (
     <div className="flex min-h-screen items-start justify-center bg-bg px-4 pt-32">
       <div className="w-full max-w-xs space-y-3">
-        <p className="font-display text-xl font-semibold text-accent">sonderthreads</p>
+        <BrandLockup className="mb-2" />
         <h1 className="section-title">Check your email</h1>
         <p className="text-sm text-text-muted">
           We sent a confirmation link to {email ? <strong className="text-text">{email}</strong> : "your email"}. Open it
