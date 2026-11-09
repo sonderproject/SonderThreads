@@ -51,7 +51,7 @@ export function metricsCsv(m: Metrics): string {
 
 export async function metricsXlsx(m: Metrics): Promise<Buffer> {
   const wb = new ExcelJS.Workbook();
-  wb.creator = "Sonder Threads";
+  wb.creator = m.scope === "org" && m.orgName ? m.orgName : "Impact report";
   const summary = wb.addWorksheet("Summary");
   summary.addRow(["Metrics", periodLabel(m)]);
   summary.addRow(["Compared with", `${fmtDay(m.prevFrom)} – ${fmtDay(m.prevTo)}`]);

@@ -6,10 +6,13 @@ import { buildStory, HEATMAP_BLOCKS, WEEKDAY_NAMES, type Kpis, type Metrics, typ
  * The Impact report PDF: a dark cover page, an executive summary (the written
  * story + headline numbers), then one chapter per section with vector charts.
  * Set in Outfit (headings) and Inter (text), like the app. Paper has one
- * look, so colors are the light theme's values written out (the Sonder Studio
+ * look, so colors are the light theme's values written out (the app's
  * palette; chart blue/orange validated for color-blind readers).
  *
  * Client names never appear: a report like this gets shared with funders.
+ *
+ * White-label: no Sonder Threads or Sonder Project name or mark anywhere, so
+ * an agency can put it in front of funders and boards as its own report.
  */
 
 const C = {
@@ -36,8 +39,6 @@ const FONT = {
   bodyMedium: path.join(ASSETS, "fonts/inter-latin-500-normal.woff"),
   bodyBold: path.join(ASSETS, "fonts/inter-latin-600-normal.woff"),
 };
-const MARK = path.join(ASSETS, "brand/mark-surf.png");
-const MARK_BLUE = path.join(ASSETS, "brand/mark-blue.png");
 
 const KPI_TILES: [keyof Kpis, string][] = [
   ["peopleServed", "People served"],
@@ -86,7 +87,7 @@ export type ReportOrgInfo = { about: string | null; phone: string | null; email:
 
 export function impactPdf(m: Metrics, opts: { preparedFor: string; org?: ReportOrgInfo | null }): Promise<Buffer> {
   return new Promise((resolve, reject) => {
-    const doc = new PDFDocument({ size: "LETTER", margin: PAGE.m, bufferPages: true, info: { Title: "Impact report", Author: "Sonder Threads" } });
+    const doc = new PDFDocument({ size: "LETTER", margin: PAGE.m, bufferPages: true, info: { Title: "Impact report" } });
     const chunks: Buffer[] = [];
     doc.on("data", (c: Buffer) => chunks.push(c));
     doc.on("end", () => resolve(Buffer.concat(chunks)));
@@ -110,8 +111,12 @@ export function impactPdf(m: Metrics, opts: { preparedFor: string; org?: ReportO
 
     // ── Cover ────────────────────────────────────────────────────────────
     doc.rect(0, 0, PAGE.w, PAGE.h).fill(C.obsidian);
-    doc.image(MARK, PAGE.m, 64, { width: 40 });
-    doc.font("display").fontSize(11).fillColor(C.warmWhite).text("SONDER THREADS", PAGE.m + 54, 74, { characterSpacing: 3.5, lineBreak: false });
+    doc.font("display").fontSize(11).fillColor(C.warmWhite).text(who.toUpperCase(), PAGE.m, 74, {
+      characterSpacing: 3.5,
+      width: CONTENT_W,
+      lineBreak: false,
+      ellipsis: true,
+    });
     rainbow(PAGE.m, 128, CONTENT_W);
 
     doc.font("body-medium").fontSize(9).fillColor("#62b4e6").text("IMPACT REPORT", PAGE.m, 300, { characterSpacing: 3 });
@@ -135,7 +140,7 @@ export function impactPdf(m: Metrics, opts: { preparedFor: string; org?: ReportO
       : "";
     if (contact) doc.font("body").fontSize(9).fillColor(C.warmWhite).text(contact, PAGE.m, PAGE.h - 126, { width: CONTENT_W, lineBreak: false, ellipsis: true });
     doc.font("body").fontSize(9).fillColor(C.faint).text(
-      `Prepared with Sonder Threads by Sonder Project · ${new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}`,
+      `Prepared ${new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}`,
       PAGE.m,
       PAGE.h - 106,
       { width: CONTENT_W },
@@ -354,12 +359,11 @@ export function impactPdf(m: Metrics, opts: { preparedFor: string; org?: ReportO
     // About these numbers (on the summary page, where funders read first).
     rainbow(PAGE.m, y, CONTENT_W, 1);
     y += 14;
-    doc.image(MARK_BLUE, PAGE.m, y, { width: 22 });
     doc.font("body").fontSize(8).fillColor(C.muted).text(
-      "Numbers come straight from the records in Sonder Threads. Client names are never included in this report. Personal (non-client) records are never counted.",
-      PAGE.m + 32,
+      "Numbers come straight from case records. Client names are never included in this report, and staff members' personal (non-client) records are never counted.",
+      PAGE.m,
       y,
-      { width: CONTENT_W - 32 },
+      { width: CONTENT_W },
     );
 
     y = doc.y + 30;
@@ -461,7 +465,7 @@ export function impactPdf(m: Metrics, opts: { preparedFor: string; org?: ReportO
       doc.switchToPage(i);
       doc.page.margins.bottom = 0; // the footer sits in the margin; don't let it start a new page
       doc.rect(PAGE.m, FOOTER_Y - 8, CONTENT_W, 0.5).fill(C.line);
-      doc.font("body").fontSize(7.5).fillColor(C.muted).text(`Sonder Threads · Impact report · ${who} · ${period}`, PAGE.m, FOOTER_Y, {
+      doc.font("body").fontSize(7.5).fillColor(C.muted).text(`Impact report · ${who} · ${period}`, PAGE.m, FOOTER_Y, {
         width: CONTENT_W - 60,
         lineBreak: false,
         ellipsis: true,
