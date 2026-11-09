@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Turnstile } from "@/components/auth/Turnstile";
 import { login } from "./actions";
 import { missingSupabaseConfig } from "@/lib/supabase/env";
 
@@ -52,6 +53,7 @@ export default async function LoginPage({
           placeholder="Password"
           className="input tabular-nums"
         />
+        <Turnstile />
         <button
           type="submit"
           className="w-full rounded bg-accent px-3 py-1.5 text-sm font-medium text-bg hover:bg-accent-dim"

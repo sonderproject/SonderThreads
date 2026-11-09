@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Turnstile } from "@/components/auth/Turnstile";
 import { requestPasswordReset } from "@/app/login/actions";
 
 export const dynamic = "force-dynamic";
@@ -41,6 +42,7 @@ export default async function ForgotPasswordPage({
               placeholder="Email"
               className="input tabular-nums"
             />
+            <Turnstile />
             <button
               type="submit"
               className="w-full rounded bg-accent px-3 py-1.5 text-sm font-medium text-bg hover:bg-accent-dim"
