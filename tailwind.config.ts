@@ -53,7 +53,7 @@ const config: Config = {
         ],
       },
       borderRadius: {
-        DEFAULT: "6px",
+        DEFAULT: "10px",
       },
     },
   },

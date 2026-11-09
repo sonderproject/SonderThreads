@@ -1,18 +1,19 @@
 import type { Metadata, Viewport } from "next";
-import { Source_Sans_3, Source_Serif_4 } from "next/font/google";
+import { Inter, Outfit } from "next/font/google";
 import "./globals.css";
 import { SITE_DESCRIPTION, SITE_URL } from "@/lib/site";
 
-const sans = Source_Sans_3({
+// Sonder Studio type: Outfit for headings, Inter for everything else.
+const sans = Inter({
   subsets: ["latin"],
-  weight: ["400", "600", "700"],
+  weight: ["400", "500", "600", "700"],
   variable: "--font-sans",
   display: "swap",
 });
 
-const display = Source_Serif_4({
+const display = Outfit({
   subsets: ["latin"],
-  weight: "600",
+  weight: ["300", "400", "500", "600"],
   variable: "--font-display",
   display: "swap",
 });
@@ -35,8 +36,8 @@ export const viewport: Viewport = {
   // Lets the app draw under the notch/home bar; safe-area padding keeps content clear of them.
   viewportFit: "cover",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f7f8f6" },
-    { media: "(prefers-color-scheme: dark)", color: "#141917" },
+    { media: "(prefers-color-scheme: light)", color: "#f6f4ef" },
+    { media: "(prefers-color-scheme: dark)", color: "#0a0a09" },
   ],
 };
 

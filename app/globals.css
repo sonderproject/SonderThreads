@@ -3,76 +3,82 @@
 @tailwind utilities;
 
 :root {
-  /* Design tokens: docs/DESIGN.md. Light by default, dark follows the system
-     unless the user picked a theme (data-theme on <html>). */
-  --bg: #eef2ef;
+  /* Design tokens: docs/DESIGN.md (Sonder Studio palette). Light by default, dark
+     follows the system unless the user picked a theme (data-theme on <html>). */
+  --bg: #f6f4ef;
   --surface: #ffffff;
-  --fg: #1a211d;
-  --muted: #56635c;
-  --line: #d5ddd8;
-  --line-subtle: #e7ece9;
-  --accent: #1f6b4f;
-  --accent-soft: #e1efe8;
+  --fg: #141412;
+  --muted: #6e5f4d;
+  --line: #e2dbd0;
+  --line-subtle: #ece7dd;
+  --accent: #1c77b5;
+  --accent-soft: #eef6fc;
   --warn: #9a5b00;
   --warn-soft: #fbf0de;
-  --hover: #f1f5f2;
-  --accent-strong: #18573f;
+  --hover: #f3f0eb;
+  --accent-strong: #155c8c;
   --danger: #b42318;
   --urgent: #b93815;
   --urgent-soft: #fdebe4;
-  --new: #1d5fbf;
-  --new-soft: #e4eefd;
-  --shadow-card: 0 1px 2px rgba(20, 32, 26, 0.05), 0 2px 8px rgba(20, 32, 26, 0.04);
-  /* Chart marks: brand green tuned to pass chart color checks (dataviz validator). */
-  --chart-1: #1a7f56;
+  --new: #6a45b8;
+  --new-soft: #f1ecfa;
+  --glass: rgba(255, 255, 255, 0.72);
+  --glass-line: rgba(20, 20, 18, 0.08);
+  --shadow-card: 0 1px 2px rgba(20, 20, 18, 0.04), 0 10px 30px -18px rgba(20, 20, 18, 0.18);
+  /* Chart marks: the brand blue. */
+  --chart-1: #1c77b5;
   color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0b0f0d;
-    --surface: #1b2420;
-    --fg: #e7ece9;
-    --muted: #9eaca5;
-    --line: #303c36;
-    --line-subtle: #27312c;
-    --accent: #6cc39f;
-    --accent-soft: #1d3329;
+    --bg: #0a0a09;
+    --surface: #141412;
+    --fg: #f3f0eb;
+    --muted: #aea08d;
+    --line: #2a2926;
+    --line-subtle: #1e1d1b;
+    --accent: #62b4e6;
+    --accent-soft: #0b2236;
     --warn: #e8b25c;
     --warn-soft: #33281a;
-    --hover: #232d29;
-    --accent-strong: #8fd3b5;
+    --hover: #1e1d1b;
+    --accent-strong: #7cbce4;
     --danger: #f28b82;
     --urgent: #ff8f6b;
     --urgent-soft: #3a1f17;
-    --new: #7fb4ff;
-    --new-soft: #172a45;
-    --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.35);
-  --chart-1: #45a97f;
-    --chart-1: #45a97f;
+    --new: #b79cf0;
+    --new-soft: #241d38;
+    --glass: rgba(20, 20, 18, 0.68);
+    --glass-line: rgba(255, 255, 255, 0.08);
+    --shadow-card: inset 0 1px 0 rgba(255, 255, 255, 0.03), 0 10px 30px -18px rgba(0, 0, 0, 0.6);
+    --chart-1: #4fa4d9;
     color-scheme: dark;
   }
 }
 
 :root[data-theme="dark"] {
-  --bg: #0b0f0d;
-  --surface: #1b2420;
-  --fg: #e7ece9;
-  --muted: #9eaca5;
-  --line: #303c36;
-  --line-subtle: #27312c;
-  --accent: #6cc39f;
-  --accent-soft: #1d3329;
+  --bg: #0a0a09;
+  --surface: #141412;
+  --fg: #f3f0eb;
+  --muted: #aea08d;
+  --line: #2a2926;
+  --line-subtle: #1e1d1b;
+  --accent: #62b4e6;
+  --accent-soft: #0b2236;
   --warn: #e8b25c;
   --warn-soft: #33281a;
-  --hover: #232d29;
-  --accent-strong: #8fd3b5;
+  --hover: #1e1d1b;
+  --accent-strong: #7cbce4;
   --danger: #f28b82;
   --urgent: #ff8f6b;
   --urgent-soft: #3a1f17;
-  --new: #7fb4ff;
-  --new-soft: #172a45;
-  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --new: #b79cf0;
+  --new-soft: #241d38;
+  --glass: rgba(20, 20, 18, 0.68);
+  --glass-line: rgba(255, 255, 255, 0.08);
+  --shadow-card: inset 0 1px 0 rgba(255, 255, 255, 0.03), 0 10px 30px -18px rgba(0, 0, 0, 0.6);
+  --chart-1: #4fa4d9;
   color-scheme: dark;
 }
 
@@ -158,6 +164,7 @@ h1,
 h2,
 h3 {
   text-wrap: balance;
+  letter-spacing: -0.01em;
 }
 
 * {
@@ -165,7 +172,7 @@ h3 {
 }
 
 ::selection {
-  background-color: var(--accent-soft);
+  background-color: rgba(62, 155, 212, 0.22);
   color: var(--fg);
 }
 
@@ -208,30 +215,32 @@ textarea:focus-visible {
 
 @layer components {
   .page-title {
-    font-family: var(--font-display), Georgia, serif;
+    font-family: var(--font-display), system-ui, sans-serif;
     font-size: 2rem;
-    line-height: 1.15;
-    font-weight: 600;
+    line-height: 1.1;
+    font-weight: 400;
+    letter-spacing: -0.02em;
     color: var(--fg);
   }
   .section-title {
-    font-family: var(--font-display), Georgia, serif;
+    font-family: var(--font-display), system-ui, sans-serif;
     font-size: 1.3rem;
-    font-weight: 600;
+    font-weight: 500;
+    letter-spacing: -0.01em;
   }
   .eyebrow {
-    font-size: 0.78rem;
-    font-weight: 600;
+    font-size: 0.7rem;
+    font-weight: 500;
     text-transform: uppercase;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.22em;
   }
   .tag {
     display: inline-block;
-    font-size: 0.72rem;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    padding: 1px 6px;
-    border-radius: 3px;
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    padding: 2px 9px;
+    border-radius: 999px;
   }
   .tag-v {
     background: var(--accent-soft);
@@ -263,7 +272,7 @@ textarea:focus-visible {
     background: var(--warn-soft);
     border-left: 3px solid var(--warn);
     padding: 12px 14px;
-    border-radius: 4px;
+    border-radius: 12px;
     font-size: 0.95rem;
   }
   .progress-bar {
@@ -284,7 +293,7 @@ textarea:focus-visible {
   .card {
     background-color: var(--surface);
     border: 1px solid var(--line);
-    border-radius: 6px;
+    border-radius: 16px;
     box-shadow: var(--shadow-card);
   }
   /* Keep the card shadow when a status stripe is added. */
@@ -300,7 +309,7 @@ textarea:focus-visible {
 
   /* 16px on phones — iOS Safari zooms the page when focusing any smaller input. */
   .input {
-    @apply w-full rounded border border-border bg-bg-raised px-3 py-2.5 text-base text-text placeholder:text-text-faint focus:border-accent sm:py-2 sm:text-sm;
+    @apply w-full rounded-xl border border-border bg-bg-raised px-3.5 py-2.5 text-base text-text placeholder:text-text-faint focus:border-accent sm:py-2 sm:text-sm;
   }
 }
 

@@ -1,71 +1,52 @@
-# Sonder Threads — Design System
+# Sonder Threads — Design System (Sonder Studio style)
 
 Use this file as the visual source of truth for Sonder Threads. Match it exactly unless told otherwise. When building any UI, apply these tokens and components before inventing new ones.
 
 ## Feel
 
-Calm, utilitarian, organized. A working tool, not a marketing page. One readable column, clear hierarchy, quiet surfaces, one green accent. No gradients, no emoji as icons, no heavy shadows, no giant hero.
+Sonder Studio style, tuned for a tool people read all day: calm warm neutrals (sand by day, obsidian by night), one surf-blue accent, airy geometric headings, rounded surfaces with hairline borders, and frosted glass only on floating chrome (header, tab bar, sheets). No heavy shadows, no emoji as icons. Body text stays at a normal weight and size so lists scan fast.
 
 ## Tokens
 
-Define every color as a CSS variable on `:root`, then redefine for dark mode. Never hard-code a color in a component.
+Every color is a CSS variable in `app/globals.css` on `:root`, redefined for dark mode (under `prefers-color-scheme: dark` guarded by `:root:not([data-theme="light"])`, and under `:root[data-theme="dark"]`). Never hard-code a color in a component.
 
-```css
-/* Layout: single readable column; grouped sections; running progress */
-:root{
-  --bg:#eef2ef; --surface:#ffffff; --fg:#1a211d; --muted:#56635c; --line:#d5ddd8; --line-subtle:#e7ece9;
-  --accent:#1f6b4f; --accent-soft:#e1efe8; --warn:#9a5b00; --warn-soft:#fbf0de; --hover:#f1f5f2;
-  --urgent:#b93815; --urgent-soft:#fdebe4; --new:#1d5fbf; --new-soft:#e4eefd;
-  --shadow-card:0 1px 2px rgba(20,32,26,.05), 0 2px 8px rgba(20,32,26,.04);
-  --display:"Source Serif 4", Georgia, serif;
-  --body:"Source Sans 3", system-ui, -apple-system, "Segoe UI", sans-serif;
-}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#0b0f0d; --surface:#1b2420; --fg:#e7ece9; --muted:#9eaca5; --line:#303c36; --line-subtle:#27312c;
-  --accent:#6cc39f; --accent-soft:#1d3329; --warn:#e8b25c; --warn-soft:#33281a; --hover:#232d29;
-  --urgent:#ff8f6b; --urgent-soft:#3a1f17; --new:#7fb4ff; --new-soft:#172a45;
-  --shadow-card:0 1px 2px rgba(0,0,0,.35); color-scheme:dark}}
-:root[data-theme="dark"]{
-  --bg:#0b0f0d; --surface:#1b2420; --fg:#e7ece9; --muted:#9eaca5; --line:#303c36; --line-subtle:#27312c;
-  --accent:#6cc39f; --accent-soft:#1d3329; --warn:#e8b25c; --warn-soft:#33281a; --hover:#232d29;
-  --urgent:#ff8f6b; --urgent-soft:#3a1f17; --new:#7fb4ff; --new-soft:#172a45;
-  --shadow-card:0 1px 2px rgba(0,0,0,.35); color-scheme:dark}
-body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.5}
-```
+| Token | Light | Dark | Use |
+|---|---|---|---|
+| `--bg` | `#f6f4ef` sand | `#0a0a09` obsidian | Page background |
+| `--surface` | `#ffffff` | `#141412` charcoal | Cards, inputs, menus |
+| `--hover` | `#f3f0eb` | `#1e1d1b` stone | Hover and pressed rows |
+| `--fg` | `#141412` | `#f3f0eb` | Main text |
+| `--muted` | `#6e5f4d` | `#aea08d` | Secondary text, labels, dates |
+| `--line` / `--line-subtle` | `#e2dbd0` / `#ece7dd` | `#2a2926` / `#1e1d1b` | Borders / row dividers |
+| `--accent` / `--accent-strong` / `--accent-soft` | `#1c77b5` / `#155c8c` / `#eef6fc` | `#62b4e6` / `#7cbce4` / `#0b2236` | Links, primary actions, success |
+| `--warn` / `--warn-soft` | `#9a5b00` / `#fbf0de` | `#e8b25c` / `#33281a` | Attention: due today, follow up |
+| `--urgent` / `--urgent-soft` | `#b93815` / `#fdebe4` | `#ff8f6b` / `#3a1f17` | Overdue, unread count |
+| `--new` / `--new-soft` | `#6a45b8` / `#f1ecfa` | `#b79cf0` / `#241d38` | Added in the last 2 days, unread |
+| `--danger` | `#b42318` | `#f28b82` | Destructive actions |
+| `--glass` / `--glass-line` | translucent white | translucent charcoal | Frosted header, tab bar, sheets |
 
-| Token | Use |
-|---|---|
-| `--bg` | Page background — tinted so `--surface` cards clearly stand off it |
-| `--surface` | Cards, lists, tables, header and tab bar, inputs, menus |
-| `--fg` | Main text |
-| `--muted` | Secondary text, labels, dates |
-| `--line` | Card and input borders |
-| `--line-subtle` | Row dividers inside a card |
-| `--shadow-card` | The one soft shadow, on `.card` only |
-| `--accent` / `--accent-soft` | Links, checkboxes, progress, "verified"/success tags |
-| `--warn` / `--warn-soft` | **Attention**: due today, follow up, stale; callouts |
-| `--urgent` / `--urgent-soft` | **Urgent**: overdue, the unread-count bubble. Not for delete buttons (that's `--danger`) |
-| `--new` / `--new-soft` | **New**: people/notes added in the last 2 days, unread notifications |
+The accent is Sonder Studio's surf blue (`#3e9bd4`), darkened in light mode (`#1c77b5`) so text and buttons pass contrast on white.
 
 ## Typography
 
-Load from Google Fonts:
-
-```html
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,600&family=Source+Sans+3:wght@400;600;700&display=swap">
-```
+Loaded with `next/font` in `app/layout.tsx`.
 
 | Role | Font | Size | Weight |
 |---|---|---|---|
-| Page title (h1) | Source Serif 4 | 2rem, line-height 1.15 | 600 |
-| Section title (h2) | Source Serif 4 | 1.3rem | 600 |
-| Body | Source Sans 3 | 16px, line-height 1.5 | 400 |
-| Eyebrow / table header | Source Sans 3 | 0.78rem, uppercase, letter-spacing .06–.08em | 600, `--muted` |
-| Notes / small | Source Sans 3 | 0.88–0.9rem | 400, `--muted` |
+| Page title (`.page-title`) | Outfit | 2rem, line-height 1.1, letter-spacing -0.02em | 400 |
+| Section title (`.section-title`) | Outfit | 1.3rem | 500 |
+| Body | Inter | 16px, line-height 1.5 | 400 |
+| Eyebrow / labels (`.eyebrow`) | Inter | 0.7rem, uppercase, letter-spacing 0.22em | 500, `--muted` |
+| Tags (`.tag`) | Inter | 0.68rem, pill | 600 |
 
-- Serif is for headings only. Everything else is sans.
-- Headings use `text-wrap: balance`.
-- Any numbers in columns use `font-variant-numeric: tabular-nums`.
+- Outfit is for headings and the brand only; everything else is Inter.
+- Numbers in columns use `tabular-nums`.
+
+## Shape
+
+- Cards (`.card`): 16px radius, hairline `--line` border, `--shadow-card`.
+- Inputs (`.input`): 12px radius. Default `rounded` is 10px.
+- Tags and primary buttons: pill (fully rounded).
 
 ## Layout
 

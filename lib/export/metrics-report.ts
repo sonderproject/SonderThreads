@@ -74,10 +74,10 @@ export async function metricsXlsx(m: Metrics): Promise<Buffer> {
   return Buffer.from(await wb.xlsx.writeBuffer());
 }
 
-const INK = "#1a211d";
-const MUTED = "#56635c";
-const LINE = "#d5ddd8";
-const BAR = "#1a7f56";
+const INK = "#141412";
+const MUTED = "#6e5f4d";
+const LINE = "#e2dbd0";
+const BAR = "#1c77b5";
 
 export function metricsPdf(m: Metrics): Promise<Buffer> {
   return new Promise((resolve, reject) => {
