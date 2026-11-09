@@ -10,17 +10,25 @@ type Q = (text: string, params?: unknown[]) => Promise<unknown>;
  * leaving keeps no client names. Not a server action: callers check that the
  * signed-in person is allowed (an org admin, or the person leaving).
  */
-export async function transferOrgClients(q: Q, orgId: string, fromUser: string, toUser: string): Promise<void> {
-  const ids = `(select id from people where user_id = $1 and org_id = $2)`;
-  const move = [fromUser, orgId, toUser];
+export async function transferOrgClients(
+  q: Q,
+  orgId: string,
+  fromUser: string,
+  toUser: string,
+  /** Just this one client; omit for all of them. */
+  personId: string | null = null,
+): Promise<void> {
+  const ids = `(select id from people where user_id = $1 and org_id = $2 and ($4::uuid is null or id = $4))`;
+  const move = [fromUser, orgId, toUser, personId];
   await q(`update notes set user_id = $3 where user_id = $1 and person_id in ${ids}`, move);
   await q(`update tasks set user_id = $3, list_id = null where user_id = $1 and person_id in ${ids}`, move);
   await q(`update check_ins set user_id = $3 where user_id = $1 and person_id in ${ids}`, move);
   await q(`update activity set user_id = $3, list_id = null where user_id = $1 and person_id in ${ids}`, move);
   await q(`update person_summaries set user_id = $3 where user_id = $1 and person_id in ${ids}`, move);
-  await q(`delete from list_items where user_id = $1 and person_id in ${ids}`, [fromUser, orgId]);
-  await q(`delete from notifications where user_id = $1 and person_id in ${ids}`, [fromUser, orgId]);
-  await q(`update people set user_id = $3, updated_at = now() where user_id = $1 and org_id = $2`, move);
+  const idsForDelete = `(select id from people where user_id = $1 and org_id = $2 and ($3::uuid is null or id = $3))`;
+  await q(`delete from list_items where user_id = $1 and person_id in ${idsForDelete}`, [fromUser, orgId, personId]);
+  await q(`delete from notifications where user_id = $1 and person_id in ${idsForDelete}`, [fromUser, orgId, personId]);
+  await q(`update people set user_id = $3, updated_at = now() where user_id = $1 and org_id = $2 and ($4::uuid is null or id = $4)`, move);
 }
 
 /** Another active admin of the organization, to receive clients when an admin or member leaves. */

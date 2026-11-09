@@ -10,6 +10,7 @@ import { hashToken } from "@/lib/session";
 import { getMembership, isOrgRole, type OrgRole } from "@/lib/org";
 import { transferOrgClients } from "@/lib/org-admin";
 import { toActionResult, type ActionResult } from "@/lib/validation";
+import { notify } from "@/lib/notify";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const INVITE_DAYS = 14;
@@ -184,4 +185,36 @@ export async function renameOrganization(formData: FormData): Promise<void> {
   await asUser(userId, (q) => q(`update organizations set name = $1, updated_at = now() where id = $2`, [name, orgId]));
   revalidatePath("/", "layout");
   redirect("/organization?saved=name");
+}
+
+/**
+ * Supervisor or admin: hands one organization client (with everything
+ * attached) to another active staff member, who gets a notification.
+ */
+export async function reassignClient(formData: FormData): Promise<void> {
+  const userId = await requireUserId();
+  const m = await getMembership();
+  if (!m?.active || m.role === "case_manager") redirect("/");
+  const personId = formData.get("person_id")?.toString() ?? "";
+  const to = formData.get("to_user_id")?.toString() ?? "";
+  // Read through the access rules: only a client of this organization is visible here.
+  const [client] = await asUser(userId, (q) =>
+    q<{ user_id: string; display_name: string }>(
+      `select user_id, display_name from people where id = $1 and org_id = $2 and deleted_at is null`,
+      [personId, m!.orgId],
+    ),
+  ).catch(() => []);
+  if (!client) redirect("/team");
+  const target = await queryOne(`select 1 from memberships where org_id = $1 and user_id = $2 and active`, [m!.orgId, to]);
+  if (!target || to === client.user_id) redirect(`/team/client/${personId}?error=reassign`);
+
+  await transaction((q) => transferOrgClients(q, m!.orgId, client.user_id, to, personId));
+  await notify(to, {
+    type: "client_assigned",
+    title: `${client.display_name} was assigned to you`,
+    href: `/people/${personId}`,
+    personId,
+  }).catch((err) => console.error("[org] assignment notification failed", err));
+  revalidatePath("/", "layout");
+  redirect(`/team/client/${personId}?saved=reassigned`);
 }

@@ -113,6 +113,13 @@ async function main() {
   check("the new case manager sees them", names(await see(C2, "select display_name from people")).includes("Maria (C1 client)"));
   check("another admin is found for handovers", (await otherActiveAdmin(o1.id, A1)) === null && (await otherActiveAdmin(o2.id, D1)) === A2);
 
+  // Reassign one client (Phase 4): only that client and its records move.
+  const P3 = await person(C2, "Lee (C2 client)");
+  await query(`insert into notes (user_id, person_id, content) values ($1, $2, 'note on Lee')`, [C2, P3.id]);
+  await query(`update memberships set active = true where user_id = $1`, [C1]);
+  await transaction((q) => transferOrgClients(q, o1.id, C2, C1, P3.id));
+  check("reassigning one client moves just that client and its notes", (await queryOne<{ user_id: string }>(`select user_id from people where id = $1`, [P3.id]))?.user_id === C1 && (await queryOne<{ user_id: string }>(`select user_id from notes where content = 'note on Lee'`))?.user_id === C1 && (await queryOne<{ user_id: string }>(`select user_id from people where id = $1`, [P1.id]))?.user_id === C2);
+
   const appView = await query(`select id from people where user_id = $1`, [C2]);
   check("the app's normal queries are unchanged", appView.length >= 1);
   console.log(failures ? `${failures} FAILED` : "ALL PASSED");

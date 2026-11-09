@@ -4,6 +4,7 @@ import { asUser } from "@/lib/db/as-user";
 import { isUuid } from "@/lib/ids";
 import { getTimeZone } from "@/lib/timezone";
 import { requireTeamViewer, shortDate } from "@/lib/team";
+import { reassignClient } from "@/lib/actions/org";
 
 type Person = {
   id: string;
@@ -39,8 +40,15 @@ function Field({ label, value }: { label: string; value: string | null | undefin
 }
 
 /** A client's full record for a supervisor or admin. Read-only; access checked by the database. */
-export default async function TeamClientPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function TeamClientPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ saved?: string; error?: string }>;
+}) {
   const { id } = await params;
+  const { saved, error } = await searchParams;
   if (!isUuid(id)) notFound();
   const viewer = await requireTeamViewer();
   const tz = await getTimeZone();
@@ -55,7 +63,7 @@ export default async function TeamClientPage({ params }: { params: Promise<{ id:
       [id, viewer.orgId],
     );
     if (!person) return null;
-    const [notes, tasks, checkIns, activity] = await Promise.all([
+    const [notes, tasks, checkIns, activity, staff] = await Promise.all([
       q<Note>(`select id, content, created_at from notes where person_id = $1 and deleted_at is null order by created_at desc`, [id]),
       q<Task>(
         `select id, title, due_at, completed, completed_at from tasks where person_id = $1 and deleted_at is null
@@ -64,11 +72,17 @@ export default async function TeamClientPage({ params }: { params: Promise<{ id:
       ),
       q<CheckIn>(`select id, checked_in_at, reason from check_ins where person_id = $1 and deleted_at is null order by checked_in_at desc`, [id]),
       q<Activity>(`select id, description, created_at from activity where person_id = $1 order by created_at desc limit 30`, [id]),
+      q<{ user_id: string; label: string }>(
+        `select m.user_id, coalesce(u.name, u.email) as label from memberships m join users u on u.id = m.user_id
+          where m.org_id = $1 and m.active order by 2`,
+        [viewer.orgId],
+      ),
     ]);
-    return { person, notes, tasks, checkIns, activity };
+    return { person, notes, tasks, checkIns, activity, staff };
   });
   if (!data) notFound();
-  const { person, notes, tasks, checkIns, activity } = data;
+  const { person, notes, tasks, checkIns, activity, staff } = data;
+  const others = staff.filter((s) => s.user_id !== person.user_id);
   const open = tasks.filter((t) => !t.completed);
   const done = tasks.filter((t) => t.completed);
   const now = Date.now();
@@ -88,6 +102,29 @@ export default async function TeamClientPage({ params }: { params: Promise<{ id:
           Case manager: {person.owner_name || person.owner_email} · client since {shortDate(person.created_at, tz)}
         </p>
       </div>
+
+      {saved === "reassigned" && <p className="text-sm text-accent">Reassigned. The new case manager was notified.</p>}
+      {error === "reassign" && <p className="flag text-sm">Choose an active staff member other than the current one.</p>}
+
+      {others.length > 0 && (
+        <form action={reassignClient} className="card flex flex-wrap items-end gap-2 p-4">
+          <input type="hidden" name="person_id" value={person.id} />
+          <label className="min-w-0 flex-1 space-y-1">
+            <span className="text-xs text-text-muted">Reassign to</span>
+            <select name="to_user_id" required className="input">
+              {others.map((s) => (
+                <option key={s.user_id} value={s.user_id}>
+                  {s.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <button type="submit" className="rounded border border-border px-3 py-1.5 text-sm font-medium text-text hover:bg-bg-hover">
+            Reassign
+          </button>
+          <p className="w-full text-xs text-text-muted">Their notes, tasks and check-ins move with them.</p>
+        </form>
+      )}
 
       <section className="space-y-3">
         <h2 className="eyebrow text-text-faint">Details</h2>
