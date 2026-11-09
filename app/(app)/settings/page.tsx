@@ -176,6 +176,26 @@ export default async function SettingsPage({
         </section>
       )}
 
+      {!membership && (
+        <section id="organization" className="scroll-mt-20 space-y-3">
+          <h2 className="eyebrow text-text-faint">Organization</h2>
+          <div className="card flex flex-wrap items-center justify-between gap-3 p-4">
+            <div className="min-w-0">
+              <h3 className="text-sm font-semibold text-text">Run a team or agency?</h3>
+              <p className="text-xs text-text-muted">
+                Invite your staff and give supervisors a view of your clients. Personal tasks and notes stay private.
+              </p>
+            </div>
+            <Link
+              href="/organization/new"
+              className="shrink-0 rounded border border-border px-3 py-1.5 text-sm font-medium text-text hover:bg-bg-hover"
+            >
+              Set up an organization
+            </Link>
+          </div>
+        </section>
+      )}
+
       <section id="notifications" className="scroll-mt-20 space-y-3">
         <h2 className="eyebrow text-text-faint">Notifications</h2>
         <div className="card space-y-4 p-4">
@@ -334,14 +354,6 @@ export default async function SettingsPage({
         </div>
       </section>
 
-      {!membership && (
-        <p className="text-xs text-text-faint">
-          Run a team or agency?{" "}
-          <Link href="/organization/new" className="text-text-muted underline hover:text-accent">
-            Set up an organization
-          </Link>
-        </p>
-      )}
     </div>
   );
 }
