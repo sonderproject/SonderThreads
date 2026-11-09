@@ -50,7 +50,7 @@ export function AppShell({
         <div className="min-h-screen bg-bg">
           <header className="pt-safe sticky top-0 z-20 border-b border-border bg-bg-raised">
             <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3 sm:px-6">
-              <Link href="/" aria-label="Sonder Threads home" title="Sonder Threads" className="flex items-center py-1">
+              <Link href="/" aria-label="Sonder Threads home" title="Sonder Threads" className="-ml-1 mr-6 flex shrink-0 items-center py-1 sm:-ml-2">
                 <span className="brand-mark h-7 w-[37px]" aria-hidden />
               </Link>
               <div className="flex items-center">
