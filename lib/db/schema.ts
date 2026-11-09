@@ -373,6 +373,107 @@ alter table user_settings add constraint user_settings_idle_timeout_minutes_chec
 -- create it here so enabling RLS on it below works on a fresh database.
 create table if not exists app_meta (key text primary key, value text not null);
 
+-- ── Organizations (Phase 3; docs/ROADMAP.md) ──────────────────────────────
+-- An agency and its staff. Solo accounts have no membership and work exactly
+-- as before. One organization per person.
+create table if not exists organizations (
+  id uuid primary key default gen_random_uuid(),
+  name text not null check (length(name) between 1 and 200),
+  plan text not null default 'organization' check (plan in ('organization')),
+  created_by uuid references users(id) on delete set null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists memberships (
+  org_id uuid not null references organizations(id) on delete cascade,
+  user_id uuid not null references users(id) on delete cascade,
+  role text not null check (role in ('admin', 'supervisor', 'case_manager')),
+  active boolean not null default true,
+  created_at timestamptz not null default now(),
+  deactivated_at timestamptz,
+  primary key (org_id, user_id)
+);
+create unique index if not exists memberships_one_org_idx on memberships(user_id);
+
+-- Invite links. Only a SHA-256 of the token is stored; the invite is for
+-- one email address and expires.
+create table if not exists invitations (
+  id uuid primary key default gen_random_uuid(),
+  org_id uuid not null references organizations(id) on delete cascade,
+  email text not null,
+  role text not null check (role in ('admin', 'supervisor', 'case_manager')),
+  token_hash text not null unique,
+  invited_by uuid references users(id) on delete set null,
+  created_at timestamptz not null default now(),
+  expires_at timestamptz not null,
+  accepted_at timestamptz,
+  accepted_by uuid references users(id) on delete set null
+);
+create index if not exists invitations_org_idx on invitations(org_id, created_at desc);
+
+-- Which organization a record belongs to. Null = personal (owner only).
+-- A client (people row) gets one when it belongs to an agency; everything
+-- attached to that client inherits it automatically (triggers below), so the
+-- app can't forget. Records with no client attached stay null: personal.
+alter table people add column if not exists org_id uuid references organizations(id) on delete set null;
+alter table notes add column if not exists org_id uuid references organizations(id) on delete set null;
+alter table tasks add column if not exists org_id uuid references organizations(id) on delete set null;
+alter table check_ins add column if not exists org_id uuid references organizations(id) on delete set null;
+alter table list_items add column if not exists org_id uuid references organizations(id) on delete set null;
+alter table activity add column if not exists org_id uuid references organizations(id) on delete set null;
+alter table person_summaries add column if not exists org_id uuid references organizations(id) on delete set null;
+create index if not exists people_org_idx on people(org_id) where org_id is not null;
+create index if not exists notes_org_idx on notes(org_id) where org_id is not null;
+create index if not exists tasks_org_idx on tasks(org_id) where org_id is not null;
+create index if not exists check_ins_org_idx on check_ins(org_id) where org_id is not null;
+
+-- A new client created by an active member belongs to their organization.
+create or replace function people_set_org() returns trigger language plpgsql set search_path = public as $$
+begin
+  if new.org_id is null then
+    select m.org_id into new.org_id from memberships m where m.user_id = new.user_id and m.active;
+  end if;
+  return new;
+end $$;
+drop trigger if exists people_set_org on people;
+create trigger people_set_org before insert on people for each row execute function people_set_org();
+
+-- Attached records take their client's organization (null for personal ones).
+create or replace function inherit_person_org() returns trigger language plpgsql set search_path = public as $$
+begin
+  new.org_id := (select p.org_id from people p where p.id = new.person_id);
+  return new;
+end $$;
+drop trigger if exists notes_inherit_org on notes;
+create trigger notes_inherit_org before insert or update of person_id on notes for each row execute function inherit_person_org();
+drop trigger if exists tasks_inherit_org on tasks;
+create trigger tasks_inherit_org before insert or update of person_id on tasks for each row execute function inherit_person_org();
+drop trigger if exists check_ins_inherit_org on check_ins;
+create trigger check_ins_inherit_org before insert or update of person_id on check_ins for each row execute function inherit_person_org();
+drop trigger if exists list_items_inherit_org on list_items;
+create trigger list_items_inherit_org before insert or update of person_id on list_items for each row execute function inherit_person_org();
+drop trigger if exists activity_inherit_org on activity;
+create trigger activity_inherit_org before insert or update of person_id on activity for each row execute function inherit_person_org();
+drop trigger if exists person_summaries_inherit_org on person_summaries;
+create trigger person_summaries_inherit_org before insert or update of person_id on person_summaries for each row execute function inherit_person_org();
+
+-- When a client joins or leaves an organization, everything attached follows.
+create or replace function people_cascade_org() returns trigger language plpgsql set search_path = public as $$
+begin
+  if new.org_id is distinct from old.org_id then
+    update notes set org_id = new.org_id where person_id = new.id;
+    update tasks set org_id = new.org_id where person_id = new.id;
+    update check_ins set org_id = new.org_id where person_id = new.id;
+    update list_items set org_id = new.org_id where person_id = new.id;
+    update activity set org_id = new.org_id where person_id = new.id;
+    update person_summaries set org_id = new.org_id where person_id = new.id;
+  end if;
+  return new;
+end $$;
+drop trigger if exists people_cascade_org on people;
+create trigger people_cascade_org after update of org_id on people for each row execute function people_cascade_org();
+
 -- Row level security on every table, with no policies: Supabase's public
 -- API (anon/authenticated roles) gets no rows at all. The app connects
 -- directly as the table owner, which bypasses RLS, and scopes every query
@@ -392,6 +493,9 @@ alter table push_subscriptions enable row level security;
 alter table check_ins enable row level security;
 alter table app_meta enable row level security;
 alter table user_settings enable row level security;
+alter table organizations enable row level security;
+alter table memberships enable row level security;
+alter table invitations enable row level security;
 
 -- user_settings: each person can only ever reach their own row through
 -- Supabase's API (the app itself connects as the owner and scopes by
@@ -402,6 +506,102 @@ begin
     create policy "own settings" on user_settings for all to authenticated
       using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()));
   end if;
+exception when undefined_function or invalid_schema_name or undefined_object then
+  null; -- plain Postgres without Supabase's auth schema/roles: RLS stays on with no access
+end $$;
+
+-- ── Access rules (RLS) for organizations ────────────────────────────────────
+-- Enforced by the database for every query made as a signed-in user (the
+-- "authenticated" role: Supabase's API, and the app's asUser() in
+-- lib/db/as-user.ts). The core privacy rule:
+--   * Your own records: you, always.
+--   * A client's records (org_id set): also your organization's active
+--     admins and supervisors, read-only.
+--   * Personal records (org_id null): only you. Never supervisors or admins.
+do $$
+begin
+  create or replace function app_org_member(o uuid) returns boolean
+    language sql stable security definer set search_path = public as
+    'select o is not null and exists (select 1 from memberships m
+       where m.org_id = o and m.user_id = auth.uid() and m.active)';
+  create or replace function app_org_viewer(o uuid) returns boolean
+    language sql stable security definer set search_path = public as
+    'select o is not null and exists (select 1 from memberships m
+       where m.org_id = o and m.user_id = auth.uid() and m.active and m.role in (''admin'', ''supervisor''))';
+  create or replace function app_org_admin(o uuid) returns boolean
+    language sql stable security definer set search_path = public as
+    'select o is not null and exists (select 1 from memberships m
+       where m.org_id = o and m.user_id = auth.uid() and m.active and m.role = ''admin'')';
+  create or replace function app_shares_org(other uuid) returns boolean
+    language sql stable security definer set search_path = public as
+    'select exists (select 1 from memberships me join memberships them on them.org_id = me.org_id
+       where me.user_id = auth.uid() and me.active and them.user_id = other)';
+
+  -- Client data: owner full access; org admins/supervisors read.
+  drop policy if exists "owner" on people;
+  create policy "owner" on people for all to authenticated
+    using (user_id = (select auth.uid()))
+    with check (user_id = (select auth.uid()) and (org_id is null or app_org_member(org_id)));
+  drop policy if exists "org read" on people;
+  create policy "org read" on people for select to authenticated using (app_org_viewer(org_id));
+
+  drop policy if exists "owner" on notes;
+  create policy "owner" on notes for all to authenticated using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()));
+  drop policy if exists "org read" on notes;
+  create policy "org read" on notes for select to authenticated using (app_org_viewer(org_id));
+
+  drop policy if exists "owner" on tasks;
+  create policy "owner" on tasks for all to authenticated using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()));
+  drop policy if exists "org read" on tasks;
+  create policy "org read" on tasks for select to authenticated using (app_org_viewer(org_id));
+
+  drop policy if exists "owner" on check_ins;
+  create policy "owner" on check_ins for all to authenticated using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()));
+  drop policy if exists "org read" on check_ins;
+  create policy "org read" on check_ins for select to authenticated using (app_org_viewer(org_id));
+
+  drop policy if exists "owner" on list_items;
+  create policy "owner" on list_items for all to authenticated using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()));
+  drop policy if exists "org read" on list_items;
+  create policy "org read" on list_items for select to authenticated using (app_org_viewer(org_id));
+
+  drop policy if exists "owner" on activity;
+  create policy "owner" on activity for all to authenticated using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()));
+  drop policy if exists "org read" on activity;
+  create policy "org read" on activity for select to authenticated using (app_org_viewer(org_id));
+
+  drop policy if exists "owner" on person_summaries;
+  create policy "owner" on person_summaries for all to authenticated using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()));
+  drop policy if exists "org read" on person_summaries;
+  create policy "org read" on person_summaries for select to authenticated using (app_org_viewer(org_id));
+
+  -- Personal-only tables.
+  drop policy if exists "owner" on lists;
+  create policy "owner" on lists for all to authenticated using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()));
+  drop policy if exists "owner" on notifications;
+  create policy "owner" on notifications for all to authenticated using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()));
+  drop policy if exists "owner" on push_subscriptions;
+  create policy "owner" on push_subscriptions for all to authenticated using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()));
+
+  -- People: yourself; colleagues' names/emails within your organization.
+  drop policy if exists "self or colleague" on users;
+  create policy "self or colleague" on users for select to authenticated using (id = (select auth.uid()) or app_shares_org(id));
+  -- No update policy on users: mfa_enabled and the rest are changed only by the server.
+  drop policy if exists "self update" on users;
+
+  -- Organizations: members read; admins change.
+  drop policy if exists "member read" on organizations;
+  create policy "member read" on organizations for select to authenticated using (app_org_member(id));
+  drop policy if exists "admin update" on organizations;
+  create policy "admin update" on organizations for update to authenticated using (app_org_admin(id)) with check (app_org_admin(id));
+
+  drop policy if exists "member read" on memberships;
+  create policy "member read" on memberships for select to authenticated using (user_id = (select auth.uid()) or app_org_member(org_id));
+  drop policy if exists "admin write" on memberships;
+  create policy "admin write" on memberships for all to authenticated using (app_org_admin(org_id)) with check (app_org_admin(org_id));
+
+  drop policy if exists "admin" on invitations;
+  create policy "admin" on invitations for all to authenticated using (app_org_admin(org_id)) with check (app_org_admin(org_id));
 exception when undefined_function or invalid_schema_name or undefined_object then
   null; -- plain Postgres without Supabase's auth schema/roles: RLS stays on with no access
 end $$;
