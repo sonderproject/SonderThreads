@@ -1,11 +1,9 @@
 import ExcelJS from "exceljs";
-import PDFDocument from "pdfkit";
-import type { Kpis, Metrics, Point } from "@/lib/metrics-shared";
+import { buildStory, HEATMAP_BLOCKS, WEEKDAY_NAMES, type Kpis, type Metrics, type Point } from "@/lib/metrics-shared";
 
 /**
- * Metrics exports: a funder-ready PDF (headline numbers + bar charts), an
- * Excel workbook with one sheet per metric, and a CSV of the headline numbers.
- * The PDF uses fixed print colors (it's paper, not the app's themes).
+ * Metrics exports: an Excel workbook with one sheet per metric and a CSV of
+ * the headline numbers. The designed PDF report lives in ./impact-pdf.ts.
  */
 
 const KPI_ROWS: [keyof Kpis, string][] = [
@@ -53,7 +51,7 @@ export function metricsCsv(m: Metrics): string {
 
 export async function metricsXlsx(m: Metrics): Promise<Buffer> {
   const wb = new ExcelJS.Workbook();
-  wb.creator = "sonderthreads";
+  wb.creator = "Sonder Threads";
   const summary = wb.addWorksheet("Summary");
   summary.addRow(["Metrics", periodLabel(m)]);
   summary.addRow(["Compared with", `${fmtDay(m.prevFrom)} – ${fmtDay(m.prevTo)}`]);
@@ -64,6 +62,7 @@ export async function metricsXlsx(m: Metrics): Promise<Buffer> {
   summary.columns = [{ width: 32 }, { width: 16 }, { width: 16 }, { width: 10 }];
 
   for (const [title, points] of SECTIONS(m)) {
+    if (m.scope === "org" && title.includes("visitors")) continue; // no client names in an organization report
     const ws = wb.addWorksheet(title.replace(/[\\/?*[\]:]/g, " ").slice(0, 31));
     ws.addRow([title.includes("visitors") ? "Person" : title.includes("reason") ? "Reason" : title.includes("Gender") ? "Gender" : title.includes("Ethnicity") ? "Ethnicity" : title.includes("Income") ? "Income level" : title.includes("week") ? "Day" : "Period", "Count"]).font = { bold: true };
     for (const p of points) ws.addRow([p.label, p.value]);
@@ -71,95 +70,31 @@ export async function metricsXlsx(m: Metrics): Promise<Buffer> {
     ws.columns = [{ width: 30 }, { width: 10 }];
     ws.views = [{ state: "frozen", ySplit: 1 }];
   }
+  // Newer sections: the written story, first visits vs returning, busiest times, follow-through.
+  const story = wb.addWorksheet("Story");
+  story.addRow([m.scope === "org" && m.orgName ? `${m.orgName}: ${periodLabel(m)}` : periodLabel(m)]).font = { bold: true, size: 13 };
+  for (const line of buildStory(m)) story.addRow([line]);
+  story.columns = [{ width: 110 }];
+
+  const reach = wb.addWorksheet("People served");
+  reach.addRow(["Period", "Returning", "First visit", "Total"]).font = { bold: true };
+  for (const r of m.reach) reach.addRow([r.label, r.returning, r.first, r.returning + r.first]);
+  reach.columns = [{ width: 16 }, { width: 12 }, { width: 12 }, { width: 10 }];
+  reach.views = [{ state: "frozen", ySplit: 1 }];
+
+  const heat = wb.addWorksheet("Busiest times");
+  heat.addRow(["Day", ...HEATMAP_BLOCKS.map((b) => `${b}m`)]).font = { bold: true };
+  m.heatmap.forEach((row, d) => heat.addRow([WEEKDAY_NAMES[d], ...row]));
+  heat.columns = [{ width: 14 }, ...HEATMAP_BLOCKS.map(() => ({ width: 7 }))];
+
+  const follow = wb.addWorksheet("Follow-through");
+  follow.addRow(["Follow-ups due in the period", m.followThrough.due]).font = { bold: true };
+  follow.addRow(["Done on time", m.followThrough.onTime]);
+  follow.addRow(["Done late", m.followThrough.late]);
+  follow.addRow(["Not done yet", m.followThrough.open]);
+  follow.columns = [{ width: 32 }, { width: 10 }];
+
   return Buffer.from(await wb.xlsx.writeBuffer());
 }
 
-const INK = "#141412";
-const MUTED = "#6e5f4d";
-const LINE = "#e2dbd0";
-const BAR = "#1c77b5";
-
-export function metricsPdf(m: Metrics): Promise<Buffer> {
-  return new Promise((resolve, reject) => {
-    const doc = new PDFDocument({ size: "LETTER", margin: 48 });
-    const chunks: Buffer[] = [];
-    doc.on("data", (c: Buffer) => chunks.push(c));
-    doc.on("end", () => resolve(Buffer.concat(chunks)));
-    doc.on("error", reject);
-
-    const left = doc.page.margins.left;
-    const width = doc.page.width - left - doc.page.margins.right;
-    const bottomLimit = () => doc.page.height - doc.page.margins.bottom;
-    const ensure = (h: number) => {
-      if (doc.y + h > bottomLimit()) doc.addPage();
-    };
-
-    doc.fillColor(INK).font("Helvetica-Bold").fontSize(20).text("Metrics report", left, doc.y);
-    doc.font("Helvetica").fontSize(11).fillColor(MUTED).text(periodLabel(m));
-    doc.fontSize(9).text(`Compared with ${fmtDay(m.prevFrom)} – ${fmtDay(m.prevTo)} · Generated ${new Date().toISOString().slice(0, 10)}`);
-    doc.moveDown(1);
-
-    // Headline numbers: a row of tiles.
-    const tileW = (width - 4 * 8) / 5;
-    const tileY = doc.y;
-    KPI_ROWS.forEach(([k, label], i) => {
-      const x = left + i * (tileW + 8);
-      doc.roundedRect(x, tileY, tileW, 62, 4).lineWidth(0.75).strokeColor(LINE).stroke();
-      doc.font("Helvetica").fontSize(7.5).fillColor(MUTED).text(label, x + 8, tileY + 8, { width: tileW - 16 });
-      doc.font("Helvetica-Bold").fontSize(18).fillColor(INK).text(m.kpis[k].toLocaleString("en-US"), x + 8, tileY + 26, { width: tileW - 16 });
-      doc.font("Helvetica").fontSize(7.5).fillColor(MUTED).text(`${change(m.kpis[k], m.prev[k])} vs before (${m.prev[k]})`, x + 8, tileY + 48, { width: tileW - 16 });
-    });
-    doc.x = left;
-    doc.y = tileY + 62 + 22;
-
-    for (const [title, points] of SECTIONS(m)) {
-      const total = points.reduce((s, p) => s + p.value, 0);
-      // Columns for time series; horizontal bars for categories.
-      const horizontal = title.includes("reason") || title.includes("visitors") || title.includes("served");
-      const chartH = horizontal ? Math.max(1, points.length) * 16 + 4 : 120;
-      ensure(36 + chartH + 24);
-      doc.font("Helvetica-Bold").fontSize(11).fillColor(INK).text(title, left, doc.y, { continued: false });
-      doc.font("Helvetica").fontSize(8.5).fillColor(MUTED).text(`Total: ${total.toLocaleString("en-US")}`);
-      doc.moveDown(0.4);
-      const top = doc.y;
-      const max = Math.max(1, ...points.map((p) => p.value));
-
-      if (!points.length || total === 0) {
-        doc.fontSize(9).fillColor(MUTED).text("No data in this period.", left, top);
-        doc.moveDown(1.5);
-        continue;
-      }
-
-      if (horizontal) {
-        const labelW = 150;
-        const barMax = width - labelW - 40;
-        points.forEach((p, i) => {
-          const y = top + i * 16;
-          doc.font("Helvetica").fontSize(8.5).fillColor(INK).text(p.label, left, y + 2, { width: labelW - 8, ellipsis: true, lineBreak: false });
-          const w = Math.max(2, (p.value / max) * barMax);
-          doc.rect(left + labelW, y + 2, w, 10).fill(BAR);
-          doc.fontSize(8.5).fillColor(MUTED).text(String(p.value), left + labelW + w + 4, y + 2, { lineBreak: false });
-        });
-        doc.x = left;
-        doc.y = top + chartH + 14;
-      } else {
-        const plotH = chartH - 16;
-        const slot = width / points.length;
-        const barW = Math.max(1.5, Math.min(16, slot - 2));
-        doc.moveTo(left, top + plotH).lineTo(left + width, top + plotH).lineWidth(0.5).strokeColor(LINE).stroke();
-        const every = Math.max(1, Math.ceil(points.length / 10));
-        points.forEach((p, i) => {
-          const h = (p.value / max) * (plotH - 12);
-          const x = left + i * slot + (slot - barW) / 2;
-          if (p.value > 0) doc.rect(x, top + plotH - h, barW, h).fill(BAR);
-          if (p.value === max) doc.font("Helvetica-Bold").fontSize(7.5).fillColor(INK).text(String(p.value), x - 10, top + plotH - h - 10, { width: barW + 20, align: "center", lineBreak: false });
-          if (i % every === 0) doc.font("Helvetica").fontSize(7).fillColor(MUTED).text(p.label, left + i * slot - 10, top + plotH + 4, { width: slot + 20, align: "center", lineBreak: false });
-        });
-        doc.x = left;
-        doc.y = top + chartH + 16;
-      }
-    }
-
-    doc.end();
-  });
-}
+export { impactPdf as metricsPdf } from "./impact-pdf";

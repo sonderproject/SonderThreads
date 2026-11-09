@@ -16,6 +16,8 @@ const nextConfig = {
   // font files missing.
   outputFileTracingIncludes: {
     "/api/**/export": [
+      // Fonts and the logo for the Impact report PDF (lib/export/impact-pdf.ts).
+      "./assets/**",
       "./node_modules/pdfkit/js/standard-fonts/**",
       "./node_modules/pdfkit/js/data/**",
     ],

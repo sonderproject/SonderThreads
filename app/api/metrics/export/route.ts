@@ -25,14 +25,14 @@ export async function GET(request: Request) {
   const org = params.get("scope") === "org" ? await reportableOrg() : null;
   if (params.get("scope") === "org" && !org) return NextResponse.json({ error: "Not allowed" }, { status: 403 });
   const metrics = await computeMetrics(user.id, tz, from, to, org);
-  const disposition = `attachment; filename="metrics-${from}-to-${to}.${format}"`;
+  const disposition = `attachment; filename="${format === "pdf" ? "impact-report" : "metrics"}-${from}-to-${to}.${format}"`;
 
   if (format === "csv") {
     return new NextResponse(metricsCsv(metrics), {
       headers: { "Content-Type": "text/csv; charset=utf-8", "Content-Disposition": disposition },
     });
   }
-  const file = format === "pdf" ? await metricsPdf(metrics) : await metricsXlsx(metrics);
+  const file = format === "pdf" ? await metricsPdf(metrics, { preparedFor: user.name || user.email }) : await metricsXlsx(metrics);
   return new NextResponse(new Uint8Array(file), {
     headers: { "Content-Type": CONTENT_TYPES[format], "Content-Disposition": disposition },
   });
