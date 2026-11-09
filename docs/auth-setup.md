@@ -1,14 +1,14 @@
 # Auth setup (Supabase Auth): manual steps and test checklist
 
-Branch: `feature/auth-hardening`. Sign-in moved from the app's own code to **Supabase Auth**. Supabase now handles passwords, email confirmation, password reset, 2FA and CAPTCHA. The app's data queries are unchanged: the app's `users.id` is the Supabase user id.
+Sign-in moved from the app's own code to **Supabase Auth**. Supabase now handles passwords, email confirmation, password reset, 2FA and CAPTCHA. The app's data queries are unchanged: the app's `users.id` is the Supabase user id.
 
 > **Unverified:** the dashboard menu names below are from Supabase's and Cloudflare's dashboards as I know them. I couldn't open their docs from the build environment, so if a label differs slightly, look for the nearest match. The code doesn't depend on the labels.
 
 ## Order matters
 
-1. Do sections A–E on the **Preview** environment first and test on the branch's Vercel preview URL.
-2. Do F (CAPTCHA) **last**. Once CAPTCHA is on in Supabase, every sign-in needs a token, so the site key must already be deployed.
-3. Merge to `main` only after the checklist passes. Then **sign in once yourself first** to confirm your existing account migrates.
+1. Do section A (env vars) **first**: production sign-in needs them. Without them the sign-in page lists what's missing; no data is affected.
+2. Then sections B–E, and **sign in once yourself first** to confirm your existing account migrates with all its data.
+3. Do F (CAPTCHA) **last**. Once CAPTCHA is on in Supabase, every sign-in needs a token, so the site key must already be deployed.
 
 ---
 
@@ -114,14 +114,14 @@ There's no dashboard setting for this. It's `IDLE_TIMEOUT_MINUTES` in `lib/auth.
 
 ---
 
-## Test checklist (on the Preview URL)
+## Test checklist
 
 Use a real inbox you can open, and a phone with an authenticator app.
 
 **Sign up → confirm → log in**
 - [ ] Sign up with a new email. You land on **Check your email**, and the app isn't accessible.
 - [ ] Trying to sign in before confirming lands on **Check your email** again.
-- [ ] The email arrives from your custom sender. Its link opens the preview, not production, and signs you in.
+- [ ] The email arrives from your custom sender. Its link opens the app and signs you in.
 - [ ] Sign out, then sign in with email and password. It works.
 
 **Resend confirmation**
@@ -150,7 +150,7 @@ Use a real inbox you can open, and a phone with an authenticator app.
 - [ ] Settings → **Turn off**. A wrong code is rejected, a current code turns it off, and status shows **Off**.
 - [ ] Sign out and in again. No code is asked for.
 
-**Idle timeout** (temporarily set `IDLE_TIMEOUT_MINUTES = 2` on the branch to test quickly, then change it back)
+**Idle timeout** (to test quickly, temporarily set `IDLE_TIMEOUT_MINUTES = 2`, then change it back)
 - [ ] Leave the app untouched past the limit. It signs out to "signed out after … inactivity".
 - [ ] With two tabs open, activity in either tab keeps both signed in.
 - [ ] Close all tabs, wait past the limit, reopen the app. You're signed out (server backstop).
@@ -173,5 +173,5 @@ Use a real inbox you can open, and a phone with an authenticator app.
 
 **CAPTCHA** (after section F)
 - [ ] Normal sign-up, sign-in, reset and resend all still work, with no visible challenge most of the time.
-- [ ] Bots are blocked. Set `NEXT_PUBLIC_TURNSTILE_SITE_KEY` to Cloudflare's always-fail test key `2x00000000000000000000AB` on a preview and redeploy: sign-in shows "Please complete the security check". Restore the real key afterwards.
+- [ ] Bots are blocked. Set `NEXT_PUBLIC_TURNSTILE_SITE_KEY` to Cloudflare's always-fail test key `2x00000000000000000000AB` in Vercel's Preview environment only and open a preview deployment: sign-in shows "Please complete the security check". Restore the real key afterwards.
 - [ ] Supabase → **Authentication → Logs**: requests without a valid token are rejected.
