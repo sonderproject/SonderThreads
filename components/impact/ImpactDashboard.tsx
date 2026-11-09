@@ -69,6 +69,20 @@ export function ImpactDashboard({ orgName }: { orgName: string | null }) {
   const [preset, setPreset] = useState<Preset>("30");
   const [custom, setCustom] = useState({ from: "", to: "" });
   const [scope, setScope] = useState<MetricsScope>(orgName ? "org" : "me");
+  // Follow-ups are optional (tracking them is extra work): off unless turned on, remembered on this device.
+  const [followUps, setFollowUps] = useState(false);
+  useEffect(() => {
+    try {
+      setFollowUps(localStorage.getItem("impact-follow-ups") === "1");
+    } catch {}
+  }, []);
+  const toggleFollowUps = () =>
+    setFollowUps((on) => {
+      try {
+        localStorage.setItem("impact-follow-ups", on ? "0" : "1");
+      } catch {}
+      return !on;
+    });
   const [data, setData] = useState<Metrics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -96,9 +110,11 @@ export function ImpactDashboard({ orgName }: { orgName: string | null }) {
 
   const periodName = range ? `the previous ${daysBetween(range.from, range.to)} days` : "";
   const exportHref = (format: string) =>
-    range ? `/api/metrics/export?${new URLSearchParams({ format, from: range.from, to: range.to, scope })}` : "#";
+    range
+      ? `/api/metrics/export?${new URLSearchParams({ format, from: range.from, to: range.to, scope, ...(followUps ? { followups: "1" } : {}) })}`
+      : "#";
   const bucketWord = data?.bucket === "day" ? "day" : data?.bucket === "week" ? "week" : "month";
-  const story = data ? buildStory(data) : [];
+  const story = data ? buildStory(data, { followUps }) : [];
 
   return (
     <div className="space-y-10">
@@ -138,6 +154,17 @@ export function ImpactDashboard({ orgName }: { orgName: string | null }) {
               {label}
             </button>
           ))}
+          <button
+            type="button"
+            onClick={toggleFollowUps}
+            aria-pressed={followUps}
+            title="Include follow-ups (tasks with due dates) in the report"
+            className={`rounded-full border px-2.5 py-1 text-xs ${
+              followUps ? "border-accent bg-accent-soft text-accent" : "border-border bg-bg-raised text-text-muted hover:text-text"
+            }`}
+          >
+            Follow-ups {followUps ? "on" : "off"}
+          </button>
           <details className="relative ml-auto">
             <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 rounded-full bg-accent px-4 py-1.5 text-sm font-semibold text-bg transition-colors hover:bg-accent-dim [&::-webkit-details-marker]:hidden">
               Export report ▾
@@ -255,12 +282,16 @@ export function ImpactDashboard({ orgName }: { orgName: string | null }) {
             </div>
           </Chapter>
 
-          <Chapter n="05" title="Follow-through" lead="Follow-ups that were due in this period.">
-            <div className="grid gap-3 lg:grid-cols-2">
+          {followUps && (
+            <Chapter n="05" title="Follow-through" lead="Follow-ups (tasks with a due date) that were due in this period.">
               <section className="card p-5">
                 <FollowThroughBar data={data.followThrough} />
               </section>
-              {scope === "me" ? (
+            </Chapter>
+          )}
+
+          <Chapter n={followUps ? "06" : "05"} title="Regulars" lead="The people who came in most. Not included in exported reports.">
+            {scope === "me" ? (
                 <ChartCard title="Most frequent visitors" subtitle="Top 10 by check-ins" table={data.topVisitors} unit="check-ins">
                   {data.topVisitors.length ? <BarList data={data.topVisitors} unit="check-ins" hrefFor={(p) => `/people/${p.personId}`} /> : <Empty />}
                 </ChartCard>
@@ -269,7 +300,6 @@ export function ImpactDashboard({ orgName }: { orgName: string | null }) {
                   {data.topVisitors.length ? <BarList data={data.topVisitors} unit="check-ins" hrefFor={(p) => `/team/client/${p.personId}`} /> : <Empty />}
                 </ChartCard>
               )}
-            </div>
           </Chapter>
         </div>
       )}

@@ -73,8 +73,10 @@ function changePhrase(cur: number, prev: number): string {
 /**
  * The written summary at the top of the Impact page and the PDF: a few plain
  * sentences built from the numbers, so the report tells its own story.
+ * Follow-ups are optional (tracking them is extra work), so they're only
+ * mentioned when the viewer turns them on.
  */
-export function buildStory(m: Metrics): string[] {
+export function buildStory(m: Metrics, opts: { followUps?: boolean } = {}): string[] {
   const who = m.scope === "org" ? (m.orgName ?? "Your organization") : "You";
   const out: string[] = [];
   const k = m.kpis;
@@ -96,7 +98,7 @@ export function buildStory(m: Metrics): string[] {
   m.heatmap.forEach((row, d) => row.forEach((n, b) => n > best.n && (best = { d, b, n })));
   if (best.n >= 3) out.push(`The busiest time was ${WEEKDAY_NAMES[best.d]}s around ${HEATMAP_BLOCKS[best.b]}m.`);
   const f = m.followThrough;
-  if (f.due > 0) out.push(`${pct(f.onTime, f.due)}% of the ${f.due.toLocaleString()} follow-ups due were done on time.`);
+  if (opts.followUps && f.due > 0) out.push(`${pct(f.onTime, f.due)}% of the ${f.due.toLocaleString()} follow-ups due were done on time.`);
   return out;
 }
 

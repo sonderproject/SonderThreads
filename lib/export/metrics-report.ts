@@ -49,7 +49,7 @@ export function metricsCsv(m: Metrics): string {
   return [`Period,${esc(periodLabel(m))}`, `Previous period,${esc(`${fmtDay(m.prevFrom)} – ${fmtDay(m.prevTo)}`)}`, "", ...rows.map((r) => r.map(esc).join(","))].join("\n");
 }
 
-export async function metricsXlsx(m: Metrics): Promise<Buffer> {
+export async function metricsXlsx(m: Metrics, opts: { followUps?: boolean } = {}): Promise<Buffer> {
   const wb = new ExcelJS.Workbook();
   wb.creator = m.scope === "org" && m.orgName ? m.orgName : "Impact report";
   const summary = wb.addWorksheet("Summary");
@@ -73,7 +73,7 @@ export async function metricsXlsx(m: Metrics): Promise<Buffer> {
   // Newer sections: the written story, first visits vs returning, busiest times, follow-through.
   const story = wb.addWorksheet("Story");
   story.addRow([m.scope === "org" && m.orgName ? `${m.orgName}: ${periodLabel(m)}` : periodLabel(m)]).font = { bold: true, size: 13 };
-  for (const line of buildStory(m)) story.addRow([line]);
+  for (const line of buildStory(m, opts)) story.addRow([line]);
   story.columns = [{ width: 110 }];
 
   const reach = wb.addWorksheet("People served");
@@ -87,12 +87,14 @@ export async function metricsXlsx(m: Metrics): Promise<Buffer> {
   m.heatmap.forEach((row, d) => heat.addRow([WEEKDAY_NAMES[d], ...row]));
   heat.columns = [{ width: 14 }, ...HEATMAP_BLOCKS.map(() => ({ width: 7 }))];
 
-  const follow = wb.addWorksheet("Follow-through");
-  follow.addRow(["Follow-ups due in the period", m.followThrough.due]).font = { bold: true };
-  follow.addRow(["Done on time", m.followThrough.onTime]);
-  follow.addRow(["Done late", m.followThrough.late]);
-  follow.addRow(["Not done yet", m.followThrough.open]);
-  follow.columns = [{ width: 32 }, { width: 10 }];
+  if (opts.followUps) {
+    const follow = wb.addWorksheet("Follow-through");
+    follow.addRow(["Follow-ups due in the period", m.followThrough.due]).font = { bold: true };
+    follow.addRow(["Done on time", m.followThrough.onTime]);
+    follow.addRow(["Done late", m.followThrough.late]);
+    follow.addRow(["Not done yet", m.followThrough.open]);
+    follow.columns = [{ width: 32 }, { width: 10 }];
+  }
 
   return Buffer.from(await wb.xlsx.writeBuffer());
 }

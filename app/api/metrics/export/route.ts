@@ -24,6 +24,7 @@ export async function GET(request: Request) {
   }
   const tz = await getTimeZone();
   const { from, to } = normalizeRange(params.get("from"), params.get("to"), dayKey(new Date(), tz));
+  const followUps = params.get("followups") === "1"; // optional section, off unless asked for
   const org = params.get("scope") === "org" ? await reportableOrg() : null;
   if (params.get("scope") === "org" && !org) return NextResponse.json({ error: "Not allowed" }, { status: 403 });
   const metrics = await computeMetrics(user.id, tz, from, to, org);
@@ -43,7 +44,9 @@ export async function GET(request: Request) {
         )[0] ?? null
       : null;
   const file =
-    format === "pdf" ? await metricsPdf(metrics, { preparedFor: user.name || user.email, org: orgInfo }) : await metricsXlsx(metrics);
+    format === "pdf"
+      ? await metricsPdf(metrics, { preparedFor: user.name || user.email, org: orgInfo, followUps })
+      : await metricsXlsx(metrics, { followUps });
   return new NextResponse(new Uint8Array(file), {
     headers: { "Content-Type": CONTENT_TYPES[format], "Content-Disposition": disposition },
   });

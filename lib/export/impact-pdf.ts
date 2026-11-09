@@ -85,7 +85,10 @@ function rightRounded(x: number, y: number, w: number, h: number, r: number): st
 /** Organization details for the cover (admins edit them on the Organization page). */
 export type ReportOrgInfo = { about: string | null; phone: string | null; email: string | null; website: string | null; address: string | null };
 
-export function impactPdf(m: Metrics, opts: { preparedFor: string; org?: ReportOrgInfo | null }): Promise<Buffer> {
+export function impactPdf(
+  m: Metrics,
+  opts: { preparedFor: string; org?: ReportOrgInfo | null; /** Include follow-ups (optional; off unless asked for). */ followUps?: boolean },
+): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument({ size: "LETTER", margin: PAGE.m, bufferPages: true, info: { Title: "Impact report" } });
     const chunks: Buffer[] = [];
@@ -315,7 +318,7 @@ export function impactPdf(m: Metrics, opts: { preparedFor: string; org?: ReportO
     // ── Executive summary ────────────────────────────────────────────────
     newPage();
     marker(null, "The story");
-    const story = buildStory(m);
+    const story = buildStory(m, { followUps: opts.followUps });
     doc.font("display").fontSize(21).fillColor(C.ink).text(story[0] ?? "", PAGE.m, y, { width: CONTENT_W, lineGap: 2 });
     y = doc.y + 8;
     if (story.length > 1) {
@@ -338,15 +341,28 @@ export function impactPdf(m: Metrics, opts: { preparedFor: string; org?: ReportO
       doc.font("display").fontSize(28).fillColor(C.ink).text(m.kpis[key].toLocaleString("en-US"), tx + 14, ty + 26, { lineBreak: false });
       doc.font("body").fontSize(7.5).fillColor(C.muted).text(`${change(m.kpis[key], m.prev[key])} (${m.prev[key].toLocaleString("en-US")})`, tx + 14, ty + 60, { lineBreak: false });
     });
-    // Sixth tile: follow-through rate.
+    // Sixth tile: follow-ups on time if they're included, otherwise visits per person.
     {
       const tx = PAGE.m + 2 * (tileW + tileGap);
       const ty = y + tileH + tileGap;
       const f = m.followThrough;
+      const useFollowUps = opts.followUps && f.due > 0;
+      const visits = m.kpis.peopleServed ? m.kpis.checkIns / m.kpis.peopleServed : 0;
+      const prevVisits = m.prev.peopleServed ? m.prev.checkIns / m.prev.peopleServed : 0;
       doc.roundedRect(tx, ty, tileW, tileH, 10).fill(C.obsidian);
-      doc.font("body-medium").fontSize(7.5).fillColor(C.faint).text("FOLLOW-UPS ON TIME", tx + 14, ty + 13, { characterSpacing: 1.5, lineBreak: false });
-      doc.font("display").fontSize(28).fillColor(C.warmWhite).text(f.due ? `${Math.round((f.onTime / f.due) * 100)}%` : "–", tx + 14, ty + 26, { lineBreak: false });
-      doc.font("body").fontSize(7.5).fillColor(C.faint).text(f.due ? `${f.onTime} of ${f.due} due this period` : "None due this period", tx + 14, ty + 60, { lineBreak: false });
+      doc.font("body-medium").fontSize(7.5).fillColor(C.faint).text(useFollowUps ? "FOLLOW-UPS ON TIME" : "VISITS PER PERSON", tx + 14, ty + 13, { characterSpacing: 1.5, lineBreak: false });
+      doc.font("display").fontSize(28).fillColor(C.warmWhite).text(
+        useFollowUps ? `${Math.round((f.onTime / f.due) * 100)}%` : visits ? visits.toFixed(1) : "–",
+        tx + 14,
+        ty + 26,
+        { lineBreak: false },
+      );
+      doc.font("body").fontSize(7.5).fillColor(C.faint).text(
+        useFollowUps ? `${f.onTime} of ${f.due} due this period` : prevVisits ? `${prevVisits.toFixed(1)} the period before` : "Average check-ins per person",
+        tx + 14,
+        ty + 60,
+        { lineBreak: false },
+      );
     }
     y += tileH * 2 + tileGap + 18;
     doc.font("body").fontSize(8).fillColor(C.muted).text(
@@ -416,46 +432,49 @@ export function impactPdf(m: Metrics, opts: { preparedFor: string; org?: ReportO
     }
     y += 16;
 
-    // ── 05 Follow-through ────────────────────────────────────────────────
-    ensure(170);
-    marker("05", "Follow-through");
-    heading("Commitments kept", "Follow-ups that were due in this period, and how they turned out.");
-    const f = m.followThrough;
-    if (!f.due) {
-      doc.font("body").fontSize(10).fillColor(C.muted).text("No follow-ups were due in this period.", PAGE.m, y);
-      y = doc.y + 20;
-    } else {
-      const pct = (n: number) => Math.round((n / f.due) * 100);
-      const big = `${pct(f.onTime)}%`;
-      doc.font("display").fontSize(40).fillColor(C.ink).text(big, PAGE.m, y, { lineBreak: false });
-      const bigW = doc.widthOfString(big);
-      doc.font("body").fontSize(11).fillColor(C.muted).text("done on time", PAGE.m + bigW + 10, y + 27, { lineBreak: false });
-      y += 56;
-      const parts = [
-        { n: f.onTime, color: C.blue, label: "On time" },
-        { n: f.late, color: C.warn, label: "Late" },
-        { n: f.open, color: C.line, label: "Not done yet" },
-      ];
-      let bx = PAGE.m;
-      const shownParts = parts.filter((p) => p.n > 0);
-      const gaps = (shownParts.length - 1) * 2;
-      doc.save();
-      doc.roundedRect(PAGE.m, y, CONTENT_W, 12, 6).clip();
-      for (const p of shownParts) {
-        const w = (p.n / f.due) * (CONTENT_W - gaps);
-        doc.rect(bx, y, w, 12).fill(p.color);
-        bx += w + 2;
+    if (opts.followUps) {
+      // ── 05 Follow-through ────────────────────────────────────────────────
+      ensure(170);
+      marker("05", "Follow-through");
+      heading("Commitments kept", "Follow-ups that were due in this period, and how they turned out.");
+      const f = m.followThrough;
+      if (!f.due) {
+        doc.font("body").fontSize(10).fillColor(C.muted).text("No follow-ups were due in this period.", PAGE.m, y);
+        y = doc.y + 20;
+      } else {
+        const pct = (n: number) => Math.round((n / f.due) * 100);
+        const big = `${pct(f.onTime)}%`;
+        doc.font("display").fontSize(40).fillColor(C.ink).text(big, PAGE.m, y, { lineBreak: false });
+        const bigW = doc.widthOfString(big);
+        doc.font("body").fontSize(11).fillColor(C.muted).text("done on time", PAGE.m + bigW + 10, y + 27, { lineBreak: false });
+        y += 56;
+        const parts = [
+          { n: f.onTime, color: C.blue, label: "On time" },
+          { n: f.late, color: C.warn, label: "Late" },
+          { n: f.open, color: C.line, label: "Not done yet" },
+        ];
+        let bx = PAGE.m;
+        const shownParts = parts.filter((p) => p.n > 0);
+        const gaps = (shownParts.length - 1) * 2;
+        doc.save();
+        doc.roundedRect(PAGE.m, y, CONTENT_W, 12, 6).clip();
+        for (const p of shownParts) {
+          const w = (p.n / f.due) * (CONTENT_W - gaps);
+          doc.rect(bx, y, w, 12).fill(p.color);
+          bx += w + 2;
+        }
+        doc.restore();
+        y += 24;
+        parts.forEach((p, i) => {
+          const lx = PAGE.m + i * (CONTENT_W / 3);
+          doc.roundedRect(lx, y + 1, 8, 8, 2).fill(p.color);
+          doc.font("body").fontSize(8.5).fillColor(C.muted).text(p.label, lx + 13, y, { lineBreak: false });
+          doc.font("body-bold").fontSize(11).fillColor(C.ink).text(`${p.n}`, lx, y + 14, { lineBreak: false, continued: true })
+            .font("body").fontSize(9).fillColor(C.muted).text(`  (${pct(p.n)}%)`, { lineBreak: false });
+        });
+        y += 46;
       }
-      doc.restore();
-      y += 24;
-      parts.forEach((p, i) => {
-        const lx = PAGE.m + i * (CONTENT_W / 3);
-        doc.roundedRect(lx, y + 1, 8, 8, 2).fill(p.color);
-        doc.font("body").fontSize(8.5).fillColor(C.muted).text(p.label, lx + 13, y, { lineBreak: false });
-        doc.font("body-bold").fontSize(11).fillColor(C.ink).text(`${p.n}`, lx, y + 14, { lineBreak: false, continued: true })
-          .font("body").fontSize(9).fillColor(C.muted).text(`  (${pct(p.n)}%)`, { lineBreak: false });
-      });
-      y += 46;
+
     }
 
     // ── Footers (every page but the cover) ───────────────────────────────
