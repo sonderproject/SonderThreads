@@ -127,6 +127,8 @@ export function AppShell({
                 </Link>
               </div>
             </div>
+            <div className="nav-glow" aria-hidden />
+            <div className="nav-glow-line" aria-hidden />
           </header>
           <main className="pb-tabbar mx-auto max-w-4xl px-4 pt-5 sm:px-6 sm:py-6">{children}</main>
           <MobileNav people={people} showTeam={showTeam} />

@@ -92,6 +92,8 @@ export default function WelcomePage() {
             </Link>
           </nav>
         </div>
+        <div className="nav-glow" aria-hidden />
+        <div className="nav-glow-line" aria-hidden />
       </header>
 
       <main className="mx-auto max-w-6xl px-4 sm:px-8">
