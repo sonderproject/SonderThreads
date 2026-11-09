@@ -10,7 +10,8 @@ import { saveProfile } from "@/lib/actions/profile";
 import { getNotificationSettings, sendTestNotification } from "@/lib/actions/notifications";
 import { saveNotificationPrefs, saveSecurityPrefs } from "@/lib/actions/settings";
 import { getUserSettings } from "@/lib/settings";
-import { IDLE_TIMEOUT_OPTIONS, REMINDER_LEAD_OPTIONS, hourLabel } from "@/lib/settings-options";
+import { IDLE_TIMEOUT_OPTIONS, REMINDER_LEAD_OPTIONS, SUPPORT_EMAIL, hourLabel } from "@/lib/settings-options";
+import packageJson from "@/package.json";
 import { formatPhone } from "@/lib/notify/phone";
 
 /** Settings: account, notifications, security and data, in one place (was Account + Settings). */
@@ -21,6 +22,16 @@ const EMAIL_ERRORS: Record<string, string> = {
   "email-rate": "Too many emails sent. Try again in a little while.",
   "email-failed": "Couldn't start the change. Try again.",
 };
+
+const EXPORTS = [
+  { table: "people", label: "People" },
+  { table: "notes", label: "Notes" },
+  { table: "tasks", label: "Tasks" },
+  { table: "check_ins", label: "Check-ins" },
+  { table: "lists", label: "Lists" },
+  { table: "list_items", label: "List entries" },
+  { table: "activity", label: "Activity history" },
+];
 
 const HOURS = Array.from({ length: 24 }, (_, h) => h);
 
@@ -228,6 +239,52 @@ export default async function SettingsPage({
             <p className="text-xs text-text-muted">Unlock with your face or fingerprint instead of signing in again.</p>
           </div>
           <span className="tag shrink-0 bg-bg-hover text-text-muted">Coming with the mobile app</span>
+        </div>
+      </section>
+
+      <section id="data" className="scroll-mt-20 space-y-3">
+        <h2 className="eyebrow text-text-faint">Data</h2>
+        <div className="card space-y-3 p-4">
+          <div>
+            <h3 className="text-sm font-semibold text-text">Export my data</h3>
+            <p className="text-xs text-text-muted">Spreadsheet files (CSV), one per kind of record.</p>
+          </div>
+          <ul className="flex flex-wrap gap-2">
+            {EXPORTS.map((e) => (
+              <li key={e.table}>
+                <a href={`/api/export?format=csv&table=${e.table}`} className={`inline-block ${buttonClass}`}>
+                  {e.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+          <a href="/api/export" className="inline-block text-xs text-text-muted hover:text-accent">
+            Or download everything as one backup file (JSON)
+          </a>
+        </div>
+      </section>
+
+      <section id="about" className="scroll-mt-20 space-y-3">
+        <h2 className="eyebrow text-text-faint">About</h2>
+        <div className="card divide-y divide-border-subtle text-sm">
+          <div className="flex items-center justify-between p-4">
+            <span className="text-text">Version</span>
+            <span className="tabular-nums text-text-muted">{packageJson.version}</span>
+          </div>
+          <div className="flex items-center justify-between p-4">
+            <span className="text-text">Privacy policy</span>
+            <span className="text-xs text-text-faint">Coming soon</span>
+          </div>
+          <div className="flex items-center justify-between p-4">
+            <span className="text-text">Terms of service</span>
+            <span className="text-xs text-text-faint">Coming soon</span>
+          </div>
+          <div className="flex items-center justify-between gap-3 p-4">
+            <span className="text-text">Contact support</span>
+            <a href={`mailto:${SUPPORT_EMAIL}`} className="truncate text-accent hover:underline">
+              {SUPPORT_EMAIL}
+            </a>
+          </div>
         </div>
       </section>
     </div>

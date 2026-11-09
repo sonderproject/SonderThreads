@@ -59,14 +59,24 @@ export async function GET(request: Request) {
   const timestamp = new Date().toISOString().slice(0, 10);
 
   if (format === "csv") {
-    // A .zip would let us ship all six tables, but that's a real dependency
-    // for a "download your data" button — CSV export covers the one people
-    // actually ask for (a person roster to open in a spreadsheet).
-    const csv = toCsv(people as unknown as Record<string, unknown>[]);
+    // One table per CSV (Settings → Data lists a link for each); people by default.
+    const tables: Record<string, unknown[]> = {
+      people,
+      notes,
+      tasks,
+      lists,
+      list_items: listItems,
+      check_ins: checkIns,
+      activity,
+    };
+    const name = searchParams.get("table") ?? "people";
+    const rows = Object.hasOwn(tables, name) ? tables[name] : null;
+    if (!rows) return NextResponse.json({ error: "Unknown table" }, { status: 400 });
+    const csv = toCsv(rows as Record<string, unknown>[]);
     return new NextResponse(csv, {
       headers: {
         "Content-Type": "text/csv",
-        "Content-Disposition": `attachment; filename="people-${timestamp}.csv"`,
+        "Content-Disposition": `attachment; filename="sonderthreads-${name.replace("_", "-")}-${timestamp}.csv"`,
       },
     });
   }
