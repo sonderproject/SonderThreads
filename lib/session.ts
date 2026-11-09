@@ -79,6 +79,13 @@ export const getAuthState = cache(async (): Promise<AuthState> => {
     [claims.sub, (claims.email ?? "").toLowerCase()],
   );
   if (!row) return { status: "signed-out" };
+  // A confirmed email change reaches the app through the refreshed session.
+  const claimedEmail = (claims.email ?? "").toLowerCase();
+  if (claimedEmail && claimedEmail !== row.email) {
+    await queryOne(`update users set email = $1, updated_at = now() where id = $2 returning id`, [claimedEmail, row.id])
+      .then(() => { row.email = claimedEmail; })
+      .catch((err) => console.error("[auth] couldn't sync changed email", err instanceof Error ? err.message : err));
+  }
   if (row.mfa_enabled && claims.aal !== "aal2") return { status: "needs-2fa", id: row.id, email: row.email };
   return { status: "signed-in", user: { id: row.id, email: row.email, name: row.name } };
 });

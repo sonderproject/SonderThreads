@@ -31,6 +31,9 @@ export default async function LoginPage({
         {reason === "idle" && !error && (
           <p className="text-xs text-text-muted">You were signed out after 30 minutes of inactivity.</p>
         )}
+        {reason === "everywhere" && !error && (
+          <p className="text-xs text-text-muted">You were signed out on all your devices.</p>
+        )}
         {reset && !error && <p className="text-xs text-accent">Password updated. Sign in with your new password.</p>}
         {error && <p className="text-xs text-danger">{ERRORS[error] ?? ERRORS.invalid}</p>}
         <input type="hidden" name="next" value={next ?? ""} />

@@ -1,14 +1,13 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { query, queryOne } from "@/lib/db/client";
 import { requireUserId } from "@/lib/current-user";
 import { createTask, deleteTask } from "./tasks";
 import { deliver } from "@/lib/notify";
 import { pushConfigured } from "@/lib/notify/push";
 import { smsConfigured } from "@/lib/notify/sms";
-import { normalizePhone, validTimeZone } from "@/lib/notify/phone";
+import { validTimeZone } from "@/lib/notify/phone";
 import type { Person, Task } from "@/lib/types";
 
 export type AppNotification = {
@@ -180,17 +179,15 @@ export async function getNotificationSettings(): Promise<NotificationSettings> {
   };
 }
 
-/** Saves the phone number and text-message consent from the Account page. */
+/** Settings → Notifications: text-message consent (needs a number, set under Account) and time zone. */
 export async function saveContactSettings(formData: FormData): Promise<void> {
   const userId = await requireUserId();
-  const raw = formData.get("phone")?.toString() ?? "";
-  const phone = raw.trim() ? normalizePhone(raw) : null;
-  if (raw.trim() && !phone) redirect("/settings?error=phone#notifications");
-  const smsOptIn = formData.get("sms_opt_in") === "on" && !!phone;
+  const smsOptIn = formData.get("sms_opt_in") === "on";
   const tz = validTimeZone(formData.get("timezone")?.toString());
   await query(
-    `update users set phone = $1, sms_opt_in = $2, timezone = coalesce($3, timezone), updated_at = now() where id = $4`,
-    [phone, smsOptIn, tz, userId],
+    `update users set sms_opt_in = $1 and phone is not null, timezone = coalesce($2, timezone), updated_at = now()
+      where id = $3`,
+    [smsOptIn, tz, userId],
   );
   revalidatePath("/settings");
 }

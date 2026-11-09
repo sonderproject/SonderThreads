@@ -268,6 +268,39 @@ export async function logout(): Promise<void> {
   redirect("/login");
 }
 
+/** Settings → Account: signs this account out on every device (all sessions). */
+export async function signOutEverywhere(): Promise<void> {
+  const supabase = await createSupabaseServer();
+  await supabase.auth.signOut({ scope: "global" });
+  redirect("/login?reason=everywhere");
+}
+
+/**
+ * Settings → Account: change the sign-in email. Supabase emails a
+ * confirmation link (to both the old and new address, with its "secure email
+ * change" setting on); the change applies once confirmed. The app's
+ * users.email follows the next session refresh (lib/session.ts).
+ */
+export async function requestEmailChange(formData: FormData): Promise<void> {
+  const state = await getAuthState();
+  if (state.status !== "signed-in") redirect("/login");
+  const email = (formData.get("email")?.toString() ?? "").trim().toLowerCase();
+  if (!EMAIL_RE.test(email)) redirect("/settings?error=email-invalid#email");
+  if (email === state.user.email.toLowerCase()) redirect("/settings?error=email-same#email");
+  const supabase = await createSupabaseServer();
+  const { error } = await supabase.auth.updateUser(
+    { email },
+    { emailRedirectTo: `${await origin()}/auth/confirm?${new URLSearchParams({ next: "/settings?email=confirmed#email" })}` },
+  );
+  if (error) {
+    console.error("[auth] email change failed", error.code ?? error.message);
+    const code =
+      error.code === "email_exists" ? "email-taken" : error.code === "over_email_send_rate_limit" ? "email-rate" : "email-failed";
+    redirect(`/settings?error=${code}#email`);
+  }
+  redirect("/settings?email=sent#email");
+}
+
 /** Signs out after inactivity (called by the browser's idle timer). */
 export async function idleSignOut(): Promise<void> {
   const supabase = await createSupabaseServer();
