@@ -52,6 +52,12 @@ export async function createInvite(email: string, role: string): Promise<ActionR
       [orgId, clean],
     );
     if (member) throw new Error("That person is already in your organization.");
+    // Cap invite emails so a compromised admin account can't spam through our sender.
+    const recent = await queryOne<{ n: number }>(
+      `select count(*)::int n from invitations where org_id = $1 and created_at > now() - interval '1 hour'`,
+      [orgId],
+    );
+    if ((recent?.n ?? 0) >= 30) throw new Error("That's a lot of invites in one hour. Please try again a little later.");
     const token = randomBytes(32).toString("base64url");
     await asUser(userId, async (q) => {
       // A new invite replaces any earlier unused one for the same address.

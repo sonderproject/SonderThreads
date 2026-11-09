@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { csvCell } from "@/lib/csv";
 import { query } from "@/lib/db/client";
 import { getSessionUser } from "@/lib/session";
 import type { Activity, CheckIn, Person, List, ListItem, Note, Task } from "@/lib/types";
@@ -14,27 +15,12 @@ const COLUMNS = {
   check_ins: "id, person_id, checked_in_at, reason, created_at, updated_at",
 };
 
-function toCsvValue(value: unknown): string {
-  if (value === null || value === undefined) return "";
-  // pg returns timestamptz/timestamp/date columns as native JS Date objects
-  // (despite our TS types declaring them as string) — format those as plain
-  // ISO strings rather than JSON.stringify-ing them, which would wrap the
-  // already-quoted JSON string in a second layer of CSV quoting.
-  const s =
-    value instanceof Date
-      ? value.toISOString()
-      : typeof value === "object"
-        ? JSON.stringify(value)
-        : String(value);
-  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-}
-
 function toCsv<T extends Record<string, unknown>>(rows: T[]): string {
   if (rows.length === 0) return "";
   const headers = Object.keys(rows[0]);
   const lines = [headers.join(",")];
   for (const row of rows) {
-    lines.push(headers.map((h) => toCsvValue(row[h])).join(","));
+    lines.push(headers.map((h) => csvCell(row[h])).join(","));
   }
   return lines.join("\n");
 }

@@ -1,4 +1,5 @@
 import ExcelJS from "exceljs";
+import { csvCell } from "@/lib/csv";
 import { buildStory, HEATMAP_BLOCKS, WEEKDAY_NAMES, type Kpis, type Metrics, type Point } from "@/lib/metrics-shared";
 
 /**
@@ -45,7 +46,7 @@ export function metricsCsv(m: Metrics): string {
     ["Metric", "This period", "Previous period", "Change"],
     ...KPI_ROWS.map(([k, label]) => [label, String(m.kpis[k]), String(m.prev[k]), change(m.kpis[k], m.prev[k])]),
   ];
-  const esc = (s: string) => (/[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s);
+  const esc = csvCell;
   return [`Period,${esc(periodLabel(m))}`, `Previous period,${esc(`${fmtDay(m.prevFrom)} – ${fmtDay(m.prevTo)}`)}`, "", ...rows.map((r) => r.map(esc).join(","))].join("\n");
 }
 

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getSessionUser } from "@/lib/session";
 import { query } from "@/lib/db/client";
 import { supabaseAnonKey, supabaseServiceKey, supabaseUrl } from "@/lib/supabase/env";
 import { resolveConnectionString } from "@/lib/db/client";
@@ -8,10 +9,13 @@ export const dynamic = "force-dynamic";
 
 /**
  * Setup check for Supabase Auth on this deployment: open /api/auth/status.
- * Public (it must work while sign-in is broken), so it reports only
- * pass/fail and setting names, never values or any data.
+ * Signed-in only now that setup is done. Reports only pass/fail and
+ * setting names, never values or any data.
  */
 export async function GET() {
+  // Setup is done, so this is for signed-in people only: it makes calls to
+  // Supabase and the database on every request and lists which settings exist.
+  if (!(await getSessionUser())) return NextResponse.json({ error: "Not signed in" }, { status: 401 });
   const url = supabaseUrl();
   const anon = supabaseAnonKey();
   const service = supabaseServiceKey();

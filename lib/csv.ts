@@ -127,3 +127,17 @@ export function rowsToPeople(rows: string[][]): { people: ImportRow[]; columns: 
     : ["name"];
   return { people, columns };
 }
+
+/**
+ * One CSV cell, safe to open in Excel or Google Sheets. Text starting with
+ * = + - @ (or a tab/carriage return) would run as a formula there, so it's
+ * prefixed with an apostrophe, which spreadsheets read as "this is text".
+ * Numbers are written as-is.
+ */
+export function csvCell(value: unknown): string {
+  if (value === null || value === undefined) return "";
+  if (typeof value === "number" || typeof value === "bigint") return String(value);
+  let s = value instanceof Date ? value.toISOString() : typeof value === "object" ? JSON.stringify(value) : String(value);
+  if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`;
+  return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+}

@@ -597,6 +597,18 @@ exception when undefined_function or invalid_schema_name or undefined_object the
   null; -- plain Postgres without Supabase's auth schema/roles: RLS stays on with no access
 end $$;
 
+-- The access-rule helpers live in a schema Supabase's API doesn't expose, so
+-- signed-in users can't call them directly; the rules themselves still can.
+do $$
+begin
+  create schema if not exists app_private;
+  revoke all on schema app_private from public;
+  revoke all on schema app_private from anon;
+  grant usage on schema app_private to authenticated;
+exception when undefined_object then
+  null; -- plain Postgres without Supabase's roles
+end $$;
+
 -- ── Access rules (RLS) for organizations ────────────────────────────────────
 -- Enforced by the database for every query made as a signed-in user (the
 -- "authenticated" role: Supabase's API, and the app's asUser() in
@@ -607,19 +619,19 @@ end $$;
 --   * Personal records (org_id null): only you. Never supervisors or admins.
 do $$
 begin
-  create or replace function app_org_member(o uuid) returns boolean
+  create or replace function app_private.app_org_member(o uuid) returns boolean
     language sql stable security definer set search_path = public as
     'select o is not null and exists (select 1 from memberships m
        where m.org_id = o and m.user_id = auth.uid() and m.active)';
-  create or replace function app_org_viewer(o uuid) returns boolean
+  create or replace function app_private.app_org_viewer(o uuid) returns boolean
     language sql stable security definer set search_path = public as
     'select o is not null and exists (select 1 from memberships m
        where m.org_id = o and m.user_id = auth.uid() and m.active and m.role in (''admin'', ''supervisor''))';
-  create or replace function app_org_admin(o uuid) returns boolean
+  create or replace function app_private.app_org_admin(o uuid) returns boolean
     language sql stable security definer set search_path = public as
     'select o is not null and exists (select 1 from memberships m
        where m.org_id = o and m.user_id = auth.uid() and m.active and m.role = ''admin'')';
-  create or replace function app_shares_org(other uuid) returns boolean
+  create or replace function app_private.app_shares_org(other uuid) returns boolean
     language sql stable security definer set search_path = public as
     'select exists (select 1 from memberships me join memberships them on them.org_id = me.org_id
        where me.user_id = auth.uid() and me.active and them.user_id = other)';
@@ -628,39 +640,39 @@ begin
   drop policy if exists "owner" on people;
   create policy "owner" on people for all to authenticated
     using (user_id = (select auth.uid()))
-    with check (user_id = (select auth.uid()) and (org_id is null or app_org_member(org_id)));
+    with check (user_id = (select auth.uid()) and (org_id is null or app_private.app_org_member(org_id)));
   drop policy if exists "org read" on people;
-  create policy "org read" on people for select to authenticated using (app_org_viewer(org_id));
+  create policy "org read" on people for select to authenticated using (app_private.app_org_viewer(org_id));
 
   drop policy if exists "owner" on notes;
   create policy "owner" on notes for all to authenticated using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()));
   drop policy if exists "org read" on notes;
-  create policy "org read" on notes for select to authenticated using (app_org_viewer(org_id));
+  create policy "org read" on notes for select to authenticated using (app_private.app_org_viewer(org_id));
 
   drop policy if exists "owner" on tasks;
   create policy "owner" on tasks for all to authenticated using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()));
   drop policy if exists "org read" on tasks;
-  create policy "org read" on tasks for select to authenticated using (app_org_viewer(org_id));
+  create policy "org read" on tasks for select to authenticated using (app_private.app_org_viewer(org_id));
 
   drop policy if exists "owner" on check_ins;
   create policy "owner" on check_ins for all to authenticated using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()));
   drop policy if exists "org read" on check_ins;
-  create policy "org read" on check_ins for select to authenticated using (app_org_viewer(org_id));
+  create policy "org read" on check_ins for select to authenticated using (app_private.app_org_viewer(org_id));
 
   drop policy if exists "owner" on list_items;
   create policy "owner" on list_items for all to authenticated using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()));
   drop policy if exists "org read" on list_items;
-  create policy "org read" on list_items for select to authenticated using (app_org_viewer(org_id));
+  create policy "org read" on list_items for select to authenticated using (app_private.app_org_viewer(org_id));
 
   drop policy if exists "owner" on activity;
   create policy "owner" on activity for all to authenticated using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()));
   drop policy if exists "org read" on activity;
-  create policy "org read" on activity for select to authenticated using (app_org_viewer(org_id));
+  create policy "org read" on activity for select to authenticated using (app_private.app_org_viewer(org_id));
 
   drop policy if exists "owner" on person_summaries;
   create policy "owner" on person_summaries for all to authenticated using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()));
   drop policy if exists "org read" on person_summaries;
-  create policy "org read" on person_summaries for select to authenticated using (app_org_viewer(org_id));
+  create policy "org read" on person_summaries for select to authenticated using (app_private.app_org_viewer(org_id));
 
   -- Personal-only tables.
   drop policy if exists "owner" on lists;
@@ -672,49 +684,53 @@ begin
 
   -- People: yourself; colleagues' names/emails within your organization.
   drop policy if exists "self or colleague" on users;
-  create policy "self or colleague" on users for select to authenticated using (id = (select auth.uid()) or app_shares_org(id));
+  create policy "self or colleague" on users for select to authenticated using (id = (select auth.uid()) or app_private.app_shares_org(id));
+  -- Through the API, colleagues may read only id, name and email (never phone,
+  -- 2FA status or legacy password hashes); nobody writes users through it.
+  revoke all on table users from anon, authenticated;
+  grant select (id, email, name) on table users to authenticated;
   -- No update policy on users: mfa_enabled and the rest are changed only by the server.
   drop policy if exists "self update" on users;
 
   -- Organizations: members read; admins change.
   drop policy if exists "member read" on organizations;
-  create policy "member read" on organizations for select to authenticated using (app_org_member(id));
+  create policy "member read" on organizations for select to authenticated using (app_private.app_org_member(id));
   drop policy if exists "admin update" on organizations;
-  create policy "admin update" on organizations for update to authenticated using (app_org_admin(id)) with check (app_org_admin(id));
+  create policy "admin update" on organizations for update to authenticated using (app_private.app_org_admin(id)) with check (app_private.app_org_admin(id));
 
   drop policy if exists "member read" on memberships;
-  create policy "member read" on memberships for select to authenticated using (user_id = (select auth.uid()) or app_org_member(org_id));
+  create policy "member read" on memberships for select to authenticated using (user_id = (select auth.uid()) or app_private.app_org_member(org_id));
   drop policy if exists "admin write" on memberships;
-  create policy "admin write" on memberships for all to authenticated using (app_org_admin(org_id)) with check (app_org_admin(org_id));
+  create policy "admin write" on memberships for all to authenticated using (app_private.app_org_admin(org_id)) with check (app_private.app_org_admin(org_id));
 
-  create or replace function app_owns_person(pid uuid) returns boolean
+  create or replace function app_private.app_owns_person(pid uuid) returns boolean
     language sql stable security definer set search_path = public as
     'select exists (select 1 from people p where p.id = pid and p.user_id = auth.uid())';
-  create or replace function app_person_in_org(pid uuid, o uuid) returns boolean
+  create or replace function app_private.app_person_in_org(pid uuid, o uuid) returns boolean
     language sql stable security definer set search_path = public as
     'select exists (select 1 from people p where p.id = pid and p.org_id = o and p.deleted_at is null)';
 
   -- Comments: the client's case manager and org viewers read; viewers write as themselves.
   drop policy if exists "read" on client_comments;
   create policy "read" on client_comments for select to authenticated
-    using (app_org_viewer(org_id) or app_owns_person(person_id));
+    using (app_private.app_org_viewer(org_id) or app_private.app_owns_person(person_id));
   drop policy if exists "write" on client_comments;
   create policy "write" on client_comments for insert to authenticated
-    with check (author_id = (select auth.uid()) and app_org_viewer(org_id) and app_person_in_org(person_id, org_id));
+    with check (author_id = (select auth.uid()) and app_private.app_org_viewer(org_id) and app_private.app_person_in_org(person_id, org_id));
   drop policy if exists "delete own" on client_comments;
   create policy "delete own" on client_comments for delete to authenticated using (author_id = (select auth.uid()));
 
   -- Audit log: the organization's admins read it; nobody writes through the API.
   drop policy if exists "admin read" on audit_log;
-  create policy "admin read" on audit_log for select to authenticated using (app_org_admin(org_id));
+  create policy "admin read" on audit_log for select to authenticated using (app_private.app_org_admin(org_id));
 
   drop policy if exists "admin" on invitations;
-  create policy "admin" on invitations for all to authenticated using (app_org_admin(org_id)) with check (app_org_admin(org_id));
+  create policy "admin" on invitations for all to authenticated using (app_private.app_org_admin(org_id)) with check (app_private.app_org_admin(org_id));
   -- The access-rule helpers are only for the rules themselves: not callable by signed-out visitors.
-  revoke execute on function app_org_member(uuid), app_org_viewer(uuid), app_org_admin(uuid), app_shares_org(uuid),
-    app_owns_person(uuid), app_person_in_org(uuid, uuid) from public, anon;
-  grant execute on function app_org_member(uuid), app_org_viewer(uuid), app_org_admin(uuid), app_shares_org(uuid),
-    app_owns_person(uuid), app_person_in_org(uuid, uuid) to authenticated;
+  revoke execute on function app_private.app_org_member(uuid), app_private.app_org_viewer(uuid), app_private.app_org_admin(uuid), app_private.app_shares_org(uuid),
+    app_private.app_owns_person(uuid), app_private.app_person_in_org(uuid, uuid) from public, anon;
+  grant execute on function app_private.app_org_member(uuid), app_private.app_org_viewer(uuid), app_private.app_org_admin(uuid), app_private.app_shares_org(uuid),
+    app_private.app_owns_person(uuid), app_private.app_person_in_org(uuid, uuid) to authenticated;
   revoke execute on function audit_client_change(), people_set_org(), inherit_person_org(), people_cascade_org()
     from public, anon, authenticated;
 exception when undefined_function or invalid_schema_name or undefined_object then

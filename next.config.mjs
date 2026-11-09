@@ -9,6 +9,24 @@ const nextConfig = {
     // Settings → Data → Import backup sends the whole backup file to a server action.
     serverActions: { bodySizeLimit: "4mb" },
   },
+  // Browser security headers on every response.
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: [
+          // No other site may show this app inside a frame (clickjacking).
+          { key: "X-Frame-Options", value: "DENY" },
+          { key: "Content-Security-Policy", value: "frame-ancestors 'none'" },
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          // Microphone for voice notes on this site only; no camera or location access.
+          { key: "Permissions-Policy", value: "camera=(), geolocation=(), microphone=(self), payment=()" },
+          { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains" },
+        ],
+      },
+    ];
+  },
   // pdfkit loads its font metrics from its own package folder at runtime.
   serverExternalPackages: ["pdfkit"],
   // ...and loads them with a runtime require()/fs read the bundler can't

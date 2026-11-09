@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { safeEqual } from "@/lib/auth";
 import { query, queryOne } from "@/lib/db/client";
 import { deliver } from "@/lib/notify";
 import { inQuietHoursSql } from "@/lib/notify/quiet-hours";
@@ -23,7 +24,7 @@ export const dynamic = "force-dynamic";
  */
 export async function GET(request: NextRequest) {
   const secret = process.env.CRON_SECRET;
-  if (!secret || request.headers.get("authorization") !== `Bearer ${secret}`) {
+  if (!secret || !safeEqual(request.headers.get("authorization") ?? "", `Bearer ${secret}`)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

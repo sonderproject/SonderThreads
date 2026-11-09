@@ -48,7 +48,20 @@ export function safeEqual(a: string, b: string): boolean {
   return diff === 0;
 }
 
-/** Only allow redirecting back to a path on this site. */
+/**
+ * Only allow redirecting back to a path on this site. Browsers treat "\\" like
+ * "/" and drop tabs and newlines, so "/\\evil.com" or "/\t/evil.com" would
+ * leave the site: reject backslashes and control characters, then confirm the
+ * path resolves to this same origin.
+ */
 export function safeNextPath(next: string | null | undefined): string {
-  return next && next.startsWith("/") && !next.startsWith("//") ? next : "/";
+  if (!next || !next.startsWith("/") || next.startsWith("//")) return "/";
+  if (/[\\\u0000-\u001f\u007f]/.test(next)) return "/";
+  try {
+    const base = "https://app.invalid";
+    const url = new URL(next, base);
+    return url.origin === base ? `${url.pathname}${url.search}${url.hash}` : "/";
+  } catch {
+    return "/";
+  }
 }

@@ -149,6 +149,9 @@ async function main() {
   check("the other agency's admin can't", (await asUser(A2, (q) => q<{ id: string }>(`select id from audit_log where org_id = $1`, [o1.id]))).length === 0);
   check("nobody can write to the log through the API", await fails(() => asUser(A1, (q) => q(`insert into audit_log (org_id, action, table_name) values ($1, 'view', 'people')`, [o1.id]))));
 
+  check("colleagues can't read each other's phone or password fields", await fails(() => asUser(C1, (q) => q(`select phone, password_hash from users`))));
+  check("colleagues can still read names and emails", (await asUser(C1, (q) => q(`select id, name, email from users`))).length >= 1);
+
   const appView = await query(`select id from people where user_id = $1`, [C2]);
   check("the app's normal queries are unchanged", appView.length >= 1);
   console.log(failures ? `${failures} FAILED` : "ALL PASSED");

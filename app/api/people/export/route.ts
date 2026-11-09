@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { csvCell } from "@/lib/csv";
 import { query } from "@/lib/db/client";
 import { getSessionUser } from "@/lib/session";
 import { CONTENT_TYPES, renderTable } from "@/lib/export/table";
@@ -23,9 +24,6 @@ function formatBirthday(value: string | Date | null): string {
   return y === NO_BIRTH_YEAR ? base : `${base}, ${y}`;
 }
 
-function csvValue(s: string): string {
-  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-}
 
 /**
  * People roster as PDF, Excel or CSV, in the order the People page shows
@@ -76,7 +74,7 @@ export async function GET(request: Request) {
   const disposition = `attachment; filename="people-${exportedOn}.${format}"`;
 
   if (format === "csv") {
-    const csv = [headers, ...body].map((r) => r.map(csvValue).join(",")).join("\n");
+    const csv = [headers, ...body].map((r) => r.map(csvCell).join(",")).join("\n");
     return new NextResponse(csv, {
       headers: { "Content-Type": "text/csv; charset=utf-8", "Content-Disposition": disposition },
     });

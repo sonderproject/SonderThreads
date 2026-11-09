@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { csvCell } from "@/lib/csv";
 import { query } from "@/lib/db/client";
 import { getSessionUser } from "@/lib/session";
 import { CONTENT_TYPES, renderTable } from "@/lib/export/table";
@@ -26,9 +27,6 @@ function validInstant(value: string | null): string | null {
   return value && !Number.isNaN(Date.parse(value)) ? value : null;
 }
 
-function csvValue(s: string): string {
-  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-}
 
 /**
  * Check-in log as PDF, Excel or CSV. Takes the same filters as the
@@ -79,7 +77,7 @@ export async function GET(request: Request) {
   const disposition = `attachment; filename="${filename}"`;
 
   if (format === "csv") {
-    const csv = [headers, ...body].map((r) => r.map(csvValue).join(",")).join("\n");
+    const csv = [headers, ...body].map((r) => r.map(csvCell).join(",")).join("\n");
     return new NextResponse(csv, {
       headers: { "Content-Type": "text/csv; charset=utf-8", "Content-Disposition": disposition },
     });
