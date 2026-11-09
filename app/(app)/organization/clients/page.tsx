@@ -4,6 +4,7 @@ import { query } from "@/lib/db/client";
 import { requireUserId } from "@/lib/current-user";
 import { getMembership } from "@/lib/org";
 import { moveClientsToOrg } from "@/lib/actions/org";
+import { ClientPicker } from "@/components/org/ClientPicker";
 
 /** After creating or joining: choose which existing clients belong to the organization. */
 export default async function OrgClientsPage({
@@ -49,17 +50,7 @@ export default async function OrgClientsPage({
         <div className="card p-4 text-sm text-text-muted">You have no private clients left to move.</div>
       ) : (
         <form action={moveClientsToOrg} className="card space-y-3 p-4">
-          <p className="text-sm font-semibold text-text">Your private clients</p>
-          <ul className="max-h-[50vh] space-y-1 overflow-y-auto">
-            {personal.map((p) => (
-              <li key={p.id}>
-                <label className="flex items-center gap-2 py-1 text-sm text-text">
-                  <input type="checkbox" name="person_id" value={p.id} />
-                  {p.display_name}
-                </label>
-              </li>
-            ))}
-          </ul>
+          <ClientPicker people={personal} />
           <button type="submit" className="rounded bg-accent px-3 py-1.5 text-sm font-semibold text-bg hover:bg-accent-dim">
             Move selected to {m.orgName}
           </button>
