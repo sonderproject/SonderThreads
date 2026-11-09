@@ -15,6 +15,15 @@ export type Kpis = {
 
 export type Point = { key: string; label: string; value: number };
 
+/** People served in one bucket, split by whether it was their first visit ever. */
+export type ReachPoint = { key: string; label: string; first: number; returning: number };
+
+/** Tasks that were due in the period, and how they turned out. */
+export type FollowThrough = { due: number; onTime: number; late: number; open: number };
+
+/** Whose numbers: your own, or your whole organization (admins and supervisors). */
+export type MetricsScope = "me" | "org";
+
 export type Metrics = {
   from: string;
   to: string;
@@ -32,7 +41,64 @@ export type Metrics = {
   byEthnicity: Point[];
   byIncome: Point[];
   byGender: Point[];
+  scope: MetricsScope;
+  /** Organization name when scope is "org". */
+  orgName: string | null;
+  reach: ReachPoint[];
+  /** Check-ins by weekday (rows, Mon..Sun) and 2-hour block of the day (12 columns, from midnight). */
+  heatmap: number[][];
+  followThrough: FollowThrough;
 };
+
+export const HEATMAP_BLOCKS = ["12a", "2a", "4a", "6a", "8a", "10a", "12p", "2p", "4p", "6p", "8p", "10p"];
+export const WEEKDAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+
+const pct = (part: number, whole: number) => (whole > 0 ? Math.round((part / whole) * 100) : 0);
+
+function periodWord(m: Metrics): string {
+  const n = daysBetween(m.from, m.to);
+  if (n === 7) return "this week";
+  if (n >= 28 && n <= 31) return "this month";
+  if (n >= 365) return "this year";
+  return `in these ${n} days`;
+}
+
+function changePhrase(cur: number, prev: number): string {
+  if (prev === 0) return cur > 0 ? "" : "";
+  const c = Math.round(((cur - prev) / prev) * 100);
+  if (Math.abs(c) < 3) return ", about the same as the period before";
+  return `, ${c > 0 ? "up" : "down"} ${Math.abs(c)}% from the period before`;
+}
+
+/**
+ * The written summary at the top of the Impact page and the PDF: a few plain
+ * sentences built from the numbers, so the report tells its own story.
+ */
+export function buildStory(m: Metrics): string[] {
+  const who = m.scope === "org" ? (m.orgName ?? "Your organization") : "You";
+  const out: string[] = [];
+  const k = m.kpis;
+  if (k.peopleServed === 0) {
+    out.push(`${who} didn't record any check-ins ${periodWord(m)}.`);
+  } else {
+    out.push(
+      `${who} served ${k.peopleServed.toLocaleString()} ${k.peopleServed === 1 ? "person" : "people"} across ${k.checkIns.toLocaleString()} check-ins ${periodWord(m)}${changePhrase(k.peopleServed, m.prev.peopleServed)}.`,
+    );
+    const firsts = m.reach.reduce((s, r) => s + r.first, 0);
+    if (firsts > 0) out.push(`${firsts.toLocaleString()} of them came in for the first time.`);
+    const visits = k.checkIns / k.peopleServed;
+    if (visits >= 1.5) out.push(`On average, each person visited ${visits.toFixed(1)} times.`);
+  }
+  const reasons = m.byReason.filter((r) => r.key !== "__other" && r.label !== "No reason given");
+  const total = m.byReason.reduce((s, r) => s + r.value, 0);
+  if (reasons.length) out.push(`The most common need was ${reasons[0].label.toLowerCase()} (${pct(reasons[0].value, total)}% of check-ins).`);
+  let best = { d: -1, b: -1, n: 0 };
+  m.heatmap.forEach((row, d) => row.forEach((n, b) => n > best.n && (best = { d, b, n })));
+  if (best.n >= 3) out.push(`The busiest time was ${WEEKDAY_NAMES[best.d]}s around ${HEATMAP_BLOCKS[best.b]}m.`);
+  const f = m.followThrough;
+  if (f.due > 0) out.push(`${pct(f.onTime, f.due)}% of the ${f.due.toLocaleString()} follow-ups due were done on time.`);
+  return out;
+}
 
 const DAY_MS = 86_400_000;
 

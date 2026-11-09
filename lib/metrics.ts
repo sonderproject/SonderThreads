@@ -1,10 +1,17 @@
 import { query } from "@/lib/db/client";
+import { asUser, type UserQuery } from "@/lib/db/as-user";
 import { ETHNICITIES, GENDERS, INCOME_LEVELS, NOT_RECORDED } from "@/lib/demographics";
 
 /**
- * Metrics for the Command page and its exports. Plain server module (not
- * "use server"): callers pass a trusted user id. All days are calendar days
- * in the viewer's time zone; ranges are inclusive "YYYY-MM-DD".
+ * Metrics for the Impact page and its exports. Plain server module (not
+ * "use server"): callers pass a trusted user id (from requireUserId()). All
+ * days are calendar days in the viewer's time zone; ranges are inclusive
+ * "YYYY-MM-DD".
+ *
+ * Scope "me" counts the user's own records. Scope "org" counts the
+ * organization's client records and runs as the user through asUser(), so the
+ * database's access rules decide what's included: never anyone's personal
+ * records (they have no org_id), never another organization's.
  */
 
 import {
@@ -16,6 +23,9 @@ import {
   type Kpis,
   type Metrics,
   type Point,
+  type FollowThrough,
+  type MetricsScope,
+  type ReachPoint,
 } from "@/lib/metrics-shared";
 
 export type { Bucket, Kpis, Metrics, Point };
@@ -55,85 +65,144 @@ function bucketKeys(from: string, to: string, bucket: Bucket): string[] {
   return keys;
 }
 
-async function kpisFor(userId: string, tz: string, from: string, to: string): Promise<Kpis> {
-  const [row] = await query<Record<keyof Kpis, number>>(
+type Run = <T>(text: string, params?: unknown[]) => Promise<T[]>;
+/** The column that scopes a query: the owner for "me", the organization for "org". */
+type Col = "user_id" | "org_id";
+
+async function kpisFor(run: Run, col: Col, scopeId: string, tz: string, from: string, to: string): Promise<Kpis> {
+  const [row] = await run<Record<keyof Kpis, number>>(
     `select
        (select count(*) from check_ins c join people p on p.id = c.person_id and p.deleted_at is null
-         where c.user_id = $1 and c.deleted_at is null
+         where c.${col} = $1 and c.deleted_at is null
            and (c.checked_in_at at time zone $2)::date between $3::date and $4::date)::int as "checkIns",
        (select count(distinct c.person_id) from check_ins c join people p on p.id = c.person_id and p.deleted_at is null
-         where c.user_id = $1 and c.deleted_at is null
+         where c.${col} = $1 and c.deleted_at is null
            and (c.checked_in_at at time zone $2)::date between $3::date and $4::date)::int as "peopleServed",
-       (select count(*) from people where user_id = $1 and deleted_at is null
+       (select count(*) from people where ${col} = $1 and deleted_at is null
            and (created_at at time zone $2)::date between $3::date and $4::date)::int as "newPeople",
-       (select count(*) from notes where user_id = $1 and deleted_at is null
+       (select count(*) from notes where ${col} = $1 and deleted_at is null
            and (created_at at time zone $2)::date between $3::date and $4::date)::int as "notes",
-       (select count(*) from tasks where user_id = $1 and deleted_at is null and completed and completed_at is not null
+       (select count(*) from tasks where ${col} = $1 and deleted_at is null and completed and completed_at is not null
            and (completed_at at time zone $2)::date between $3::date and $4::date)::int as "tasksDone"`,
-    [userId, tz, from, to],
+    [scopeId, tz, from, to],
   );
   return row;
 }
 
-export async function computeMetrics(userId: string, tz: string, from: string, to: string): Promise<Metrics> {
+export async function computeMetrics(
+  userId: string,
+  tz: string,
+  from: string,
+  to: string,
+  org: { id: string; name: string } | null = null,
+): Promise<Metrics> {
+  if (org) return asUser(userId, (q: UserQuery) => compute(q as Run, "org_id", org.id, tz, from, to, "org", org.name));
+  return compute(query as Run, "user_id", userId, tz, from, to, "me", null);
+}
+
+async function compute(
+  run: Run,
+  col: Col,
+  scopeId: string,
+  tz: string,
+  from: string,
+  to: string,
+  scope: MetricsScope,
+  orgName: string | null,
+): Promise<Metrics> {
   const length = daysBetween(from, to);
   const prevTo = addDays(from, -1);
   const prevFrom = addDays(prevTo, -(length - 1));
   const bucket = bucketFor(from, to);
-  const range = [userId, tz, from, to];
-  const inRange = `user_id = $1 and deleted_at is null`;
+  const range = [scopeId, tz, from, to];
+  const inRange = `${col} = $1 and deleted_at is null`;
 
-  const [kpis, prev, checkInRows, newPeopleRows, reasonRows, weekdayRows, visitorRows, demoRows] = await Promise.all([
-    kpisFor(userId, tz, from, to),
-    kpisFor(userId, tz, prevFrom, prevTo),
-    query<{ k: string; n: number }>(
+  const [kpis, prev, checkInRows, newPeopleRows, reasonRows, weekdayRows, visitorRows, demoRows, reachRows, heatRows, followRows] = await Promise.all([
+    kpisFor(run, col, scopeId, tz, from, to),
+    kpisFor(run, col, scopeId, tz, prevFrom, prevTo),
+    run<{ k: string; n: number }>(
       `select to_char(date_trunc($5, c.checked_in_at at time zone $2), 'YYYY-MM-DD') as k, count(*)::int as n
          from check_ins c join people p on p.id = c.person_id and p.deleted_at is null
-        where c.user_id = $1 and c.deleted_at is null
+        where c.${col} = $1 and c.deleted_at is null
           and (c.checked_in_at at time zone $2)::date between $3::date and $4::date
         group by 1`,
       [...range, bucket],
     ),
-    query<{ k: string; n: number }>(
+    run<{ k: string; n: number }>(
       `select to_char(date_trunc($5, created_at at time zone $2), 'YYYY-MM-DD') as k, count(*)::int as n
          from people where ${inRange} and (created_at at time zone $2)::date between $3::date and $4::date
         group by 1`,
       [...range, bucket],
     ),
-    query<{ label: string; n: number }>(
+    run<{ label: string; n: number }>(
       `select coalesce(min(nullif(trim(c.reason), '')), 'No reason given') as label, count(*)::int as n
          from check_ins c join people p on p.id = c.person_id and p.deleted_at is null
-        where c.user_id = $1 and c.deleted_at is null
+        where c.${col} = $1 and c.deleted_at is null
           and (c.checked_in_at at time zone $2)::date between $3::date and $4::date
         group by lower(coalesce(nullif(trim(c.reason), ''), ''))
         order by n desc, label`,
       range,
     ),
-    query<{ d: number; n: number }>(
+    run<{ d: number; n: number }>(
       `select extract(isodow from c.checked_in_at at time zone $2)::int as d, count(*)::int as n
          from check_ins c join people p on p.id = c.person_id and p.deleted_at is null
-        where c.user_id = $1 and c.deleted_at is null
+        where c.${col} = $1 and c.deleted_at is null
           and (c.checked_in_at at time zone $2)::date between $3::date and $4::date
         group by 1`,
       range,
     ),
-    query<{ id: string; label: string; n: number }>(
+    run<{ id: string; label: string; n: number }>(
       `select p.id, p.display_name as label, count(*)::int as n
          from check_ins c join people p on p.id = c.person_id and p.deleted_at is null
-        where c.user_id = $1 and c.deleted_at is null
+        where c.${col} = $1 and c.deleted_at is null
           and (c.checked_in_at at time zone $2)::date between $3::date and $4::date
         group by p.id, p.display_name
         order by n desc, p.display_name
         limit 10`,
       range,
     ),
-    query<{ ethnicity: string | null; income_level: string | null; gender: string | null }>(
+    run<{ ethnicity: string | null; income_level: string | null; gender: string | null }>(
       `select p.ethnicity, p.income_level, p.gender
          from people p
-        where p.user_id = $1 and p.deleted_at is null
+        where p.${col} = $1 and p.deleted_at is null
           and exists (select 1 from check_ins c
-                       where c.person_id = p.id and c.user_id = $1 and c.deleted_at is null
+                       where c.person_id = p.id and c.${col} = $1 and c.deleted_at is null
                          and (c.checked_in_at at time zone $2)::date between $3::date and $4::date)`,
+      range,
+    ),
+    // Each person served per bucket, and whether that bucket holds their first check-in ever.
+    run<{ k: string; first: number; returning: number }>(
+      `with firsts as (
+         select c.person_id, min(c.checked_in_at) as f from check_ins c
+          where c.${col} = $1 and c.deleted_at is null group by c.person_id)
+       select k, count(*) filter (where is_first)::int as first, count(*) filter (where not is_first)::int as returning
+         from (
+           select distinct to_char(date_trunc($5, c.checked_in_at at time zone $2), 'YYYY-MM-DD') as k, c.person_id,
+                  date_trunc($5, f.f at time zone $2) = date_trunc($5, c.checked_in_at at time zone $2) as is_first
+             from check_ins c join people p on p.id = c.person_id and p.deleted_at is null
+             join firsts f on f.person_id = c.person_id
+            where c.${col} = $1 and c.deleted_at is null
+              and (c.checked_in_at at time zone $2)::date between $3::date and $4::date
+         ) x group by k`,
+      [...range, bucket],
+    ),
+    run<{ d: number; b: number; n: number }>(
+      `select extract(isodow from c.checked_in_at at time zone $2)::int as d,
+              (extract(hour from c.checked_in_at at time zone $2)::int / 2) as b, count(*)::int as n
+         from check_ins c join people p on p.id = c.person_id and p.deleted_at is null
+        where c.${col} = $1 and c.deleted_at is null
+          and (c.checked_in_at at time zone $2)::date between $3::date and $4::date
+        group by 1, 2`,
+      range,
+    ),
+    run<FollowThrough>(
+      `select count(*)::int as due,
+              count(*) filter (where completed and (completed_at at time zone $2)::date <= (due_at at time zone $2)::date)::int as "onTime",
+              count(*) filter (where completed and (completed_at at time zone $2)::date > (due_at at time zone $2)::date)::int as late,
+              count(*) filter (where not completed)::int as open
+         from tasks
+        where ${col} = $1 and deleted_at is null and due_at is not null
+          and (due_at at time zone $2)::date between $3::date and $4::date`,
       range,
     ),
   ]);
@@ -160,6 +229,18 @@ export async function computeMetrics(userId: string, tz: string, from: string, t
 
   const byDow = new Map(weekdayRows.map((r) => [r.d, r.n]));
 
+  const reach = (rows: { k: string; first: number; returning: number }[]): ReachPoint[] => {
+    const byKey = new Map(rows.map((r) => [r.k, r]));
+    return bucketKeys(from, to, bucket).map((key) => ({
+      key,
+      label: bucketLabel(key, bucket),
+      first: byKey.get(key)?.first ?? 0,
+      returning: byKey.get(key)?.returning ?? 0,
+    }));
+  };
+  const heatmap = Array.from({ length: 7 }, () => Array(12).fill(0) as number[]);
+  for (const r of heatRows) heatmap[r.d - 1][r.b] = r.n;
+
   return {
     from,
     to,
@@ -176,6 +257,11 @@ export async function computeMetrics(userId: string, tz: string, from: string, t
     byEthnicity: tally(demoRows.map((r) => r.ethnicity), ETHNICITIES),
     byIncome: tally(demoRows.map((r) => r.income_level), INCOME_LEVELS),
     byGender: tally(demoRows.map((r) => r.gender), GENDERS),
+    scope,
+    orgName,
+    reach: reach(reachRows),
+    heatmap,
+    followThrough: followRows[0] ?? { due: 0, onTime: 0, late: 0, open: 0 },
   };
 }
 

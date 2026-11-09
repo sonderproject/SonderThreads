@@ -5,11 +5,12 @@ import { dayKey } from "@/lib/tz";
 import { computeMetrics, normalizeRange } from "@/lib/metrics";
 import { metricsCsv, metricsPdf, metricsXlsx } from "@/lib/export/metrics-report";
 import { CONTENT_TYPES } from "@/lib/export/table";
+import { reportableOrg } from "@/lib/actions/metrics";
 
 // pdfkit and exceljs need Node APIs (fs, streams).
 export const runtime = "nodejs";
 
-/** Metrics for ?from=&to= (local days, inclusive) as a PDF report, Excel workbook or CSV. */
+/** Metrics for ?from=&to= (local days, inclusive; &scope=org for the organization) as a PDF report, Excel workbook or CSV. */
 export async function GET(request: Request) {
   const user = await getSessionUser();
   if (!user) return NextResponse.json({ error: "Not signed in" }, { status: 401 });
@@ -21,7 +22,9 @@ export async function GET(request: Request) {
   }
   const tz = await getTimeZone();
   const { from, to } = normalizeRange(params.get("from"), params.get("to"), dayKey(new Date(), tz));
-  const metrics = await computeMetrics(user.id, tz, from, to);
+  const org = params.get("scope") === "org" ? await reportableOrg() : null;
+  if (params.get("scope") === "org" && !org) return NextResponse.json({ error: "Not allowed" }, { status: 403 });
+  const metrics = await computeMetrics(user.id, tz, from, to, org);
   const disposition = `attachment; filename="metrics-${from}-to-${to}.${format}"`;
 
   if (format === "csv") {

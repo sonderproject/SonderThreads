@@ -18,7 +18,13 @@ export async function asUser<T>(userId: string, fn: (q: UserQuery) => Promise<T>
   return transaction(async (raw) => {
     await raw(`select set_config('request.jwt.claims', $1, true)`, [JSON.stringify({ sub: userId, role: "authenticated" })]);
     await raw(`set local role authenticated`);
-    const q: UserQuery = async (text, params = []) => ((await raw(text, params)) as { rows: never[] }).rows;
+    // One connection runs one query at a time; queue them so callers can still use Promise.all.
+    let chain: Promise<unknown> = Promise.resolve();
+    const q: UserQuery = (text, params = []) => {
+      const next = chain.then(() => raw(text, params)).then((r) => (r as { rows: never[] }).rows);
+      chain = next.catch(() => undefined);
+      return next;
+    };
     return fn(q);
   });
 }
