@@ -10,6 +10,7 @@ import { getNotificationCount } from "@/lib/actions/notifications";
 import { requireUserId } from "@/lib/current-user";
 import { queryOne } from "@/lib/db/client";
 import { TwoFactorPrompt } from "@/components/settings/TwoFactorPrompt";
+import { getUserSettings } from "@/lib/settings";
 
 /** Offer optional 2FA to people who don't have it on, at most once every 30 days. */
 async function shouldOfferTwoFactor(): Promise<boolean> {
@@ -31,7 +32,7 @@ export default async function AppGroupLayout({ children }: { children: React.Rea
   // (Checking first added a full database round trip before every page.)
   let data;
   try {
-    data = await Promise.all([listPeople(), listLists(), getNotificationCount(), getTimeZone(), shouldOfferTwoFactor()]);
+    data = await Promise.all([listPeople(), listLists(), getNotificationCount(), getTimeZone(), shouldOfferTwoFactor(), getUserSettings()]);
   } catch (err) {
     unstable_rethrow(err); // let Next's redirect-to-sign-in through
     const diagnostic = await checkSetup();
@@ -43,13 +44,14 @@ export default async function AppGroupLayout({ children }: { children: React.Rea
     );
   }
 
-  const [people, lists, notificationCount, timeZone, offerTwoFactor] = data;
+  const [people, lists, notificationCount, timeZone, offerTwoFactor, settings] = data;
   return (
     <TimeZoneProvider timeZone={timeZone}>
     <AppShell
       people={people.map((p) => ({ id: p.id, display_name: p.display_name }))}
       lists={lists.map((l) => ({ id: l.id, name: l.name }))}
       notificationCount={notificationCount}
+      idleMinutes={settings.idleTimeoutMinutes}
     >
       {children}
       {offerTwoFactor && <TwoFactorPrompt />}

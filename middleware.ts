@@ -1,13 +1,13 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
-import { IDLE_TIMEOUT_MINUTES, LAST_SEEN_COOKIE } from "@/lib/auth";
+import { IDLE_MINUTES_COOKIE, LAST_SEEN_COOKIE, idleMinutesFrom } from "@/lib/auth";
 import { supabaseAnonKey, supabaseUrl } from "@/lib/supabase/env";
 
 /**
  * Runs before every app page and API route:
  * 1. Refreshes the Supabase Auth session (Server Components can't write cookies).
  * 2. Idle timeout backstop: if the last request was more than
- *    IDLE_TIMEOUT_MINUTES ago, signs out (the browser also does this itself).
+ *    the person's idle timeout ago, signs out (the browser also does this itself).
  * 3. Sends signed-out visitors to sign-in (API routes get a 401).
  * The real authorization check (incl. 2FA) is requireUserId()/getSessionUser().
  */
@@ -36,7 +36,7 @@ export async function middleware(request: NextRequest) {
 
   const now = Date.now();
   const lastSeen = Number(request.cookies.get(LAST_SEEN_COOKIE)?.value);
-  if (Number.isFinite(lastSeen) && lastSeen > 0 && now - lastSeen > IDLE_TIMEOUT_MINUTES * 60_000) {
+  if (Number.isFinite(lastSeen) && lastSeen > 0 && now - lastSeen > idleMinutesFrom(request.cookies.get(IDLE_MINUTES_COOKIE)?.value) * 60_000) {
     await supabase.auth.signOut();
     const out = signedOut(request, response, "idle");
     out.cookies.delete(LAST_SEEN_COOKIE);

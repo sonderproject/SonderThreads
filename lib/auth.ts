@@ -3,11 +3,20 @@
  * APIs or database access here — see lib/session.ts for those).
  */
 /**
- * Sign out after this many minutes with no activity. One constant so it can
- * become a per-user setting later. Enforced in the browser (IdleSignOut) and
+ * Default sign-out after this many minutes with no activity; each person can
+ * pick 15, 30 or 60 in Settings (user_settings.idle_timeout_minutes). Enforced in the browser (IdleSignOut) and
  * on the server (middleware, via LAST_SEEN_COOKIE) as a backstop.
  */
 export const IDLE_TIMEOUT_MINUTES = 30;
+
+/** The user's chosen timeout (Settings → Privacy & security), for the middleware backstop. */
+export const IDLE_MINUTES_COOKIE = "st_idle_minutes";
+
+/** Allowed timeouts; anything else (or no cookie) means the default. Keep in sync with lib/settings-options.ts. */
+export function idleMinutesFrom(value: string | number | undefined | null): number {
+  const n = Number(value);
+  return n === 15 || n === 30 || n === 60 ? n : IDLE_TIMEOUT_MINUTES;
+}
 
 /** Server-side record of the last request, for the idle timeout backstop. */
 export const LAST_SEEN_COOKIE = "st_last_seen";

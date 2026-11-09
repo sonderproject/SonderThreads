@@ -8,9 +8,9 @@ import { queryOne } from "@/lib/db/client";
 import { logout, requestEmailChange, signOutEverywhere } from "@/app/login/actions";
 import { saveProfile } from "@/lib/actions/profile";
 import { getNotificationSettings, sendTestNotification } from "@/lib/actions/notifications";
-import { saveNotificationPrefs } from "@/lib/actions/settings";
+import { saveNotificationPrefs, saveSecurityPrefs } from "@/lib/actions/settings";
 import { getUserSettings } from "@/lib/settings";
-import { REMINDER_LEAD_OPTIONS, hourLabel } from "@/lib/settings-options";
+import { IDLE_TIMEOUT_OPTIONS, REMINDER_LEAD_OPTIONS, hourLabel } from "@/lib/settings-options";
 import { formatPhone } from "@/lib/notify/phone";
 
 /** Settings: account, notifications, security and data, in one place (was Account + Settings). */
@@ -204,6 +204,32 @@ export default async function SettingsPage({
         </div>
       </section>
 
+
+      <section id="security" className="scroll-mt-20 space-y-3">
+        <h2 className="eyebrow text-text-faint">Privacy &amp; security</h2>
+        <form action={saveSecurityPrefs} className="card space-y-3 p-4">
+          <label className="block space-y-1">
+            <span className="text-xs text-text-muted">Auto-lock: sign me out after no activity for</span>
+            <select name="idle_timeout_minutes" defaultValue={prefs.idleTimeoutMinutes} className="input">
+              {IDLE_TIMEOUT_OPTIONS.map((m) => (
+                <option key={m} value={m}>
+                  {m === 60 ? "1 hour" : `${m} minutes`}
+                </option>
+              ))}
+            </select>
+          </label>
+          <button type="submit" className={buttonClass}>
+            Save
+          </button>
+        </form>
+        <div className="card flex items-start justify-between gap-3 p-4">
+          <div>
+            <h3 className="text-sm font-semibold text-text">Face ID / fingerprint unlock</h3>
+            <p className="text-xs text-text-muted">Unlock with your face or fingerprint instead of signing in again.</p>
+          </div>
+          <span className="tag shrink-0 bg-bg-hover text-text-muted">Coming with the mobile app</span>
+        </div>
+      </section>
     </div>
   );
 }

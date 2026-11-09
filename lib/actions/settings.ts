@@ -1,9 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
+import { IDLE_MINUTES_COOKIE } from "@/lib/auth";
 import { query } from "@/lib/db/client";
 import { requireUserId } from "@/lib/current-user";
-import { REMINDER_LEAD_OPTIONS } from "@/lib/settings-options";
+import { IDLE_TIMEOUT_OPTIONS, REMINDER_LEAD_OPTIONS } from "@/lib/settings-options";
 import { validTimeZone } from "@/lib/notify/phone";
 
 function preset<T extends number>(raw: FormDataEntryValue | null, allowed: readonly T[], fallback: T): T {
@@ -50,4 +52,24 @@ export async function saveNotificationPrefs(formData: FormData): Promise<void> {
     [userId, ...values],
   );
   revalidatePath("/settings");
+}
+
+/** Settings → Privacy & security: sign out after 15, 30 or 60 idle minutes. */
+export async function saveSecurityPrefs(formData: FormData): Promise<void> {
+  const userId = await requireUserId();
+  const minutes = preset(formData.get("idle_timeout_minutes"), IDLE_TIMEOUT_OPTIONS, 30);
+  await query(
+    `insert into user_settings (user_id, idle_timeout_minutes) values ($1, $2)
+     on conflict (user_id) do update set idle_timeout_minutes = excluded.idle_timeout_minutes, updated_at = now()`,
+    [userId, minutes],
+  );
+  // The middleware's backstop reads this; set it now so it applies right away.
+  (await cookies()).set(IDLE_MINUTES_COOKIE, String(minutes), {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    maxAge: 60 * 60 * 24 * 30,
+  });
+  revalidatePath("/", "layout");
 }

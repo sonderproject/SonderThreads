@@ -28,8 +28,11 @@ export function AppShell({
   people = [],
   lists = [],
   notificationCount = 0,
+  idleMinutes = 30,
 }: {
   children: React.ReactNode;
+  /** Auto sign-out after this many idle minutes (Settings → Privacy & security). */
+  idleMinutes?: number;
   notificationCount?: number;
   people?: Pick<Person, "id" | "display_name">[];
   lists?: { id: string; name: string }[];
@@ -40,7 +43,7 @@ export function AppShell({
     <DirectoryProvider value={{ people, lists }}>
       <UndoProvider>
         <WakeOnReturn />
-        <IdleSignOut />
+        <IdleSignOut minutes={idleMinutes} />
         <div className="min-h-screen bg-bg">
           <header className="pt-safe sticky top-0 z-20 border-b border-border bg-bg-raised">
             <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3 sm:px-6">

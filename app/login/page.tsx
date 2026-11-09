@@ -29,7 +29,7 @@ export default async function LoginPage({
           <p className="flag text-xs">Sign-in isn&apos;t configured yet. Missing: {missing.join(", ")}.</p>
         )}
         {reason === "idle" && !error && (
-          <p className="text-xs text-text-muted">You were signed out after 30 minutes of inactivity.</p>
+          <p className="text-xs text-text-muted">You were signed out after a period of inactivity.</p>
         )}
         {reason === "everywhere" && !error && (
           <p className="text-xs text-text-muted">You were signed out on all your devices.</p>
