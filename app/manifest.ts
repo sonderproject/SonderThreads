@@ -3,13 +3,14 @@ import type { MetadataRoute } from "next";
 /** Lets "Add to Home Screen" install the app with its own icon and open it full-screen. */
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "sonderthreads",
-    short_name: "sonderthreads",
-    description: "Capture information quickly. Organize it automatically. See what matters.",
+    name: "Sonder Threads",
+    short_name: "Threads",
+    description: "Clients, tasks, notes and check-ins in one calm place. By Sonder Project.",
     start_url: "/",
     display: "standalone",
     orientation: "portrait",
-    background_color: "#f6f4ef",
+    // Splash screen behind the icon: obsidian, matching the icon.
+    background_color: "#0a0a09",
     theme_color: "#f6f4ef",
     // Long-press the app icon (Android) for these.
     shortcuts: [
@@ -17,7 +18,7 @@ export default function manifest(): MetadataRoute.Manifest {
       { name: "New task", short_name: "Task", url: "/?new=task", icons: [{ src: "/icon-192.png", sizes: "192x192" }] },
       { name: "New note", short_name: "Note", url: "/?new=note", icons: [{ src: "/icon-192.png", sizes: "192x192" }] },
     ],
-    // Shows sonderthreads in Android's share sheet; shared text lands in the command bar.
+    // Shows Sonder Threads in Android's share sheet; shared text lands in the command bar.
     share_target: {
       action: "/share",
       method: "GET",

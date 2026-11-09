@@ -20,12 +20,15 @@ const display = Outfit({
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: "sonderthreads",
+  title: "Sonder Threads",
   description: SITE_DESCRIPTION,
-  applicationName: "sonderthreads",
-  appleWebApp: { capable: true, title: "sonderthreads", statusBarStyle: "default" },
+  applicationName: "Sonder Threads",
+  appleWebApp: { capable: true, title: "Threads", statusBarStyle: "default" },
   icons: {
-    icon: [{ url: "/icon-192.png", sizes: "192x192", type: "image/png" }],
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+    ],
     apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
   },
 };
