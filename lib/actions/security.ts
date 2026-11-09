@@ -84,6 +84,28 @@ export async function disableTotp(code: string): Promise<ActionResult<true>> {
   });
 }
 
+/** Changes the password for the signed-in account (2FA passed if on) and signs out other devices. */
+export async function changePassword(password: string, confirm: string): Promise<ActionResult<true>> {
+  return toActionResult(async () => {
+    const userId = await signedInUserId();
+    if (password.length < 8) throw new Error("Password must be at least 8 characters.");
+    if (password !== confirm) throw new Error("The two passwords don't match.");
+    const supabase = await createSupabaseServer();
+    const { error } = await supabase.auth.updateUser({ password });
+    if (error) {
+      if (error.code === "weak_password") throw new Error("Choose a stronger password.");
+      if (error.code === "same_password") throw new Error("That's your current password. Choose a new one.");
+      if (error.code === "reauthentication_needed") {
+        throw new Error("For security, sign out and use “Forgot password?” to set a new password.");
+      }
+      throw new Error("Couldn't update your password. Please try again.");
+    }
+    await query(`update users set password_hash = null, updated_at = now() where id = $1`, [userId]);
+    await supabase.auth.signOut({ scope: "others" });
+    return true as const;
+  });
+}
+
 /** The code step at sign-in for accounts with 2FA on. */
 export async function verifyLogin2fa(formData: FormData): Promise<void> {
   const next = safeNextPath(formData.get("next")?.toString());
