@@ -12,6 +12,7 @@ export function InviteForm({ orgName }: { orgName: string }) {
   const [role, setRole] = useState("case_manager");
   const [link, setLink] = useState<string | null>(null);
   const [sentTo, setSentTo] = useState("");
+  const [emailed, setEmailed] = useState(false);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -25,6 +26,7 @@ export function InviteForm({ orgName }: { orgName: string }) {
       const result = await createInvite(email, role);
       if (!result.ok) return setError(result.error);
       setLink(`${window.location.origin}${result.data.link}`);
+      setEmailed(result.data.emailed);
       setSentTo(email.trim());
       setEmail("");
       router.refresh();
@@ -73,13 +75,22 @@ export function InviteForm({ orgName }: { orgName: string }) {
         </label>
         {error && <p className="text-xs text-danger">{error}</p>}
         <Button type="submit" disabled={pending}>
-          {pending ? "Creating…" : "Create invite link"}
+          {pending ? "Sending…" : "Send invite"}
         </Button>
       </form>
 
       {link && (
         <div className="space-y-2 rounded border border-border p-3">
-          <p className="text-sm text-text">Invite link for {sentTo}. Send it to them; it works once and expires in 14 days.</p>
+          {emailed ? (
+            <p className="text-sm text-text">
+              <span className="font-semibold text-accent">Invite emailed to {sentTo}.</span> If it doesn&apos;t arrive (check spam), share this
+              link with them yourself. It works once and expires in 14 days.
+            </p>
+          ) : (
+            <p className="text-sm text-text">
+              Copy this link and send it to {sentTo} (text, email or chat). It works once and expires in 14 days.
+            </p>
+          )}
           <code className="block select-all break-all rounded bg-bg-hover px-2 py-1 text-xs text-text">{link}</code>
           <div className="flex flex-wrap gap-2">
             <Button type="button" variant="ghost" onClick={copy}>

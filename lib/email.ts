@@ -9,7 +9,12 @@ export function emailConfigured(): boolean {
   return process.env.NODE_ENV !== "production";
 }
 
-export async function sendEmail(params: { to: string; subject: string; text: string }): Promise<void> {
+/** Escape text for an HTML email body. */
+export function escapeHtml(s: string): string {
+  return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
+}
+
+export async function sendEmail(params: { to: string; subject: string; text: string; html?: string; replyTo?: string }): Promise<void> {
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.EMAIL_FROM;
   if (!apiKey || !from) {
@@ -20,7 +25,14 @@ export async function sendEmail(params: { to: string; subject: string; text: str
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ from, to: params.to, subject: params.subject, text: params.text }),
+    body: JSON.stringify({
+      from,
+      to: params.to,
+      subject: params.subject,
+      text: params.text,
+      ...(params.html ? { html: params.html } : {}),
+      ...(params.replyTo ? { reply_to: params.replyTo } : {}),
+    }),
   });
   if (!res.ok) {
     throw new Error(`Resend error ${res.status}: ${await res.text().catch(() => "")}`);

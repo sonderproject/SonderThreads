@@ -11,6 +11,8 @@ import { getMembership, isOrgRole, type OrgRole } from "@/lib/org";
 import { transferOrgClients } from "@/lib/org-admin";
 import { toActionResult, type ActionResult } from "@/lib/validation";
 import { notify } from "@/lib/notify";
+import { appUrl, emailConfigured, escapeHtml, sendEmail } from "@/lib/email";
+import { ROLE_LABELS } from "@/lib/org-roles";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const INVITE_DAYS = 14;
@@ -38,8 +40,8 @@ export async function createOrganization(formData: FormData): Promise<void> {
   redirect("/organization/clients?new=1");
 }
 
-/** Admin: makes a one-time invite link for an email address and role. */
-export async function createInvite(email: string, role: string): Promise<ActionResult<{ link: string }>> {
+/** Admin: makes a one-time invite link for an email address and role, and emails it when email is set up. */
+export async function createInvite(email: string, role: string): Promise<ActionResult<{ link: string; emailed: boolean }>> {
   return toActionResult(async () => {
     const { userId, orgId } = await requireAdmin();
     const clean = email.trim().toLowerCase();
@@ -61,7 +63,9 @@ export async function createInvite(email: string, role: string): Promise<ActionR
       );
     });
     revalidatePath("/organization");
-    return { link: `/join/${token}` };
+    const link = `/join/${token}`;
+    const emailed = await sendInviteEmail(clean, `${appUrl()}${link}`, role, userId, orgId);
+    return { link, emailed };
   });
 }
 
@@ -255,4 +259,36 @@ export async function addClientComment(formData: FormData): Promise<void> {
   }
   revalidatePath(`/team/client/${personId}`);
   redirect(`/team/client/${personId}#comments`);
+}
+
+/** The invite email. Returns false (and the admin shares the link themselves) if email isn't set up or sending fails. */
+async function sendInviteEmail(to: string, url: string, role: OrgRole, inviterId: string, orgId: string): Promise<boolean> {
+  if (!emailConfigured()) return false;
+  const row = await queryOne<{ org: string; inviter: string; inviter_email: string }>(
+    `select o.name as org, coalesce(u.name, u.email) as inviter, u.email as inviter_email
+       from organizations o, users u where o.id = $1 and u.id = $2`,
+    [orgId, inviterId],
+  );
+  if (!row) return false;
+  const roleName = ROLE_LABELS[role].toLowerCase();
+  const subject = `${row.inviter} invited you to join ${row.org} on Sonder Threads`;
+  const text = [
+    `${row.inviter} invited you to join ${row.org} on Sonder Threads as a ${roleName}.`,
+    "",
+    `Accept the invite: ${url}`,
+    "",
+    `Sign up or sign in with this email address (${to}). The link works once and expires in 14 days.`,
+  ].join("\n");
+  const html = `<div style="font-family:Inter,Arial,sans-serif;line-height:1.5;color:#141412;max-width:480px">
+  <p>${escapeHtml(row.inviter)} invited you to join <strong>${escapeHtml(row.org)}</strong> on Sonder Threads as a ${escapeHtml(roleName)}.</p>
+  <p><a href="${escapeHtml(url)}" style="display:inline-block;background:#1c77b5;color:#ffffff;text-decoration:none;padding:10px 20px;border-radius:999px;font-weight:600">Accept the invite</a></p>
+  <p style="color:#6e5f4d;font-size:13px">Sign up or sign in with this email address (${escapeHtml(to)}). The link works once and expires in 14 days.</p>
+</div>`;
+  try {
+    await sendEmail({ to, subject, text, html, replyTo: row.inviter_email });
+    return true;
+  } catch (err) {
+    console.error("[org] invite email failed", err instanceof Error ? err.message : err);
+    return false;
+  }
 }

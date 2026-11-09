@@ -15,6 +15,7 @@ Mention these briefly when relevant while building (e.g. when touching sign-up, 
 - Have a lawyer review `/privacy` and `/terms` (drafts live; owner is a sole proprietor until the LLC forms in January — update the legal name then).
 - Google + Apple sign-in (see `docs/accounts-plan.md`). The public account-deletion page is live at `/account-deletion`.
 - Supabase Auth: turn on Turnstile CAPTCHA (`docs/auth-setup.md` section F). Custom SMTP via Resend, email templates, rate limits and redirect URLs are done.
+- Organization invite emails: set `RESEND_API_KEY` (a Resend API key with sending access) and `EMAIL_FROM` (`Sonder Threads <no-reply@sonderthreads.com>`) in Vercel, then redeploy. Until then the admin shares the invite link themselves.
 - Turn on push notifications: generate VAPID keys (`npx web-push generate-vapid-keys`) and set `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` in Vercel.
 - Turn on text reminders: Twilio account + A2P 10DLC registration, then set `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_MESSAGING_SERVICE_SID` in Vercel. The privacy policy's SMS section is written for 10DLC.
 - Set `CRON_SECRET` in Vercel. Reminders run once a day on Vercel Hobby (`vercel.json`); for on-time reminders, ping `/api/cron/reminders` every 5 min from an outside cron service or upgrade to Vercel Pro.
