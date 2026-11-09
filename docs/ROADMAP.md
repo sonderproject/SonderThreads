@@ -9,6 +9,24 @@ Sonder Threads (working name; branded "<name> by Sonder Project"): a client trac
 - **Business model:** organizations pay per user per month. Individuals can also use it solo.
 - **Deadlines:** app store submission by **Nov 20, 2026**. Conference pitch to organizations on **Dec 9, 2026**.
 
+## Plans: one app, two tiers
+
+One app and one codebase for everyone. No separate app or repo.
+
+- **Free (individuals):** the full personal organizer and client tracker. Solo users never see organization features (no Team tab, roles or invites).
+- **Organization (per seat per month):** everything in Free, plus org-only features that appear only for members of an organization, based on the organization's `plan`.
+
+Org-only features (later phases):
+- Team tab, caseload overview, client reassignment (Phase 4)
+- Audit log of who viewed or changed each client record (Phase 4)
+- Team-wide funder and outcome reports, rolling up today's personal metrics
+- HMIS-ready export
+- Admin controls: require 2FA, block "Stay signed in", set auto-lock, deactivate staff
+- Shared templates (intake, referrals, resources)
+- Later: SSO, priority support, and a dedicated database for large contracts
+
+Growth path: a case manager uses Free, then brings it to their agency, which buys seats. In one app, moving their clients into the agency is a button.
+
 ## Data we store (and don't)
 
 - **Client profiles:** name, DOB, phone, email, gender, income level, ethnicity.
@@ -65,7 +83,10 @@ Deferred by the owner (add later):
 - Admin invite flow: invite staff by email; invited users join that org. Solo sign-up still works.
 - Admins can deactivate users and reassign their clients.
 - Test with two fake orgs: neither sees the other's data, and supervisors can't see anyone's personal records.
-- Back up the database before running migrations.
+- Back up the database before running migrations. *(Done 2026-11-09: every table, plus Supabase's auth users, copied to the `backup_20261109` schema with row counts verified. The Supabase project is on the free plan, which has no automatic backups.)*
+- Data safety: changes only add tables and columns. No existing row is moved or deleted. Existing accounts stay solo until they create or join an org.
+- Database-enforced privacy goes behind one Vercel setting that can switch back to today's behavior instantly.
+- Decisions (owner can change): when joining an org, a member picks which existing clients move in; case managers see only their own clients; lists stay personal (client entries on them are org data).
 
 ## Phase 4: Supervisor layer
 
