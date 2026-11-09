@@ -2,6 +2,7 @@ import { query, queryOne } from "@/lib/db/client";
 import { appUrl } from "@/lib/email";
 import { sendPush } from "./push";
 import { sendSms } from "./sms";
+import { inQuietHours } from "./quiet-hours";
 
 export type NotifyChannel = "push" | "sms";
 
@@ -18,6 +19,8 @@ export type NotifyParams = {
   payload?: Record<string, unknown> | null;
   /** Where else to send it besides the Notifications page. Default: nowhere. */
   channels?: NotifyChannel[];
+  /** Send even during the user's quiet hours (only for a test they asked for). */
+  ignoreQuietHours?: boolean;
 };
 
 /**
@@ -48,6 +51,9 @@ export async function notify(userId: string, n: NotifyParams): Promise<void> {
 /** Sends by push/text without saving a row — for test messages. */
 export async function deliver(userId: string, n: Omit<NotifyParams, "type" | "payload">): Promise<void> {
   const channels = n.channels ?? [];
+  if (channels.length === 0) return;
+  // Quiet hours: nothing buzzes. It still shows on the Notifications page.
+  if (!n.ignoreQuietHours && (await inQuietHours(userId))) return;
   const url = n.href ?? "/notifications";
 
   if (channels.includes("push")) {

@@ -7,7 +7,10 @@ import { requireUserId } from "@/lib/current-user";
 import { queryOne } from "@/lib/db/client";
 import { logout, requestEmailChange, signOutEverywhere } from "@/app/login/actions";
 import { saveProfile } from "@/lib/actions/profile";
-import { getNotificationSettings, saveContactSettings, sendTestNotification } from "@/lib/actions/notifications";
+import { getNotificationSettings, sendTestNotification } from "@/lib/actions/notifications";
+import { saveNotificationPrefs } from "@/lib/actions/settings";
+import { getUserSettings } from "@/lib/settings";
+import { REMINDER_LEAD_OPTIONS, hourLabel } from "@/lib/settings-options";
 import { formatPhone } from "@/lib/notify/phone";
 
 /** Settings: account, notifications, security and data, in one place (was Account + Settings). */
@@ -19,6 +22,20 @@ const EMAIL_ERRORS: Record<string, string> = {
   "email-failed": "Couldn't start the change. Try again.",
 };
 
+const HOURS = Array.from({ length: 24 }, (_, h) => h);
+
+function HourSelect({ name, value, label }: { name: string; value: number; label: string }) {
+  return (
+    <select name={name} defaultValue={value} aria-label={label} className="input w-auto">
+      {HOURS.map((h) => (
+        <option key={h} value={h}>
+          {hourLabel(h)}
+        </option>
+      ))}
+    </select>
+  );
+}
+
 const buttonClass = "rounded border border-border px-3 py-1.5 text-sm font-medium text-text hover:bg-bg-hover";
 
 export default async function SettingsPage({
@@ -28,12 +45,13 @@ export default async function SettingsPage({
 }) {
   const { error, saved, email } = await searchParams;
   const userId = await requireUserId();
-  const [user, notify] = await Promise.all([
+  const [user, notify, prefs] = await Promise.all([
     queryOne<{ email: string; name: string | null; phone: string | null; mfa_enabled: boolean }>(
       `select email, name, phone, mfa_enabled from users where id = $1`,
       [userId],
     ),
     getNotificationSettings(),
+    getUserSettings(),
   ]);
 
   return (
@@ -117,27 +135,64 @@ export default async function SettingsPage({
       <section id="notifications" className="scroll-mt-20 space-y-3">
         <h2 className="eyebrow text-text-faint">Notifications</h2>
         <div className="card space-y-4 p-4">
-          <form action={saveContactSettings} className="space-y-2">
-            <TimeZoneInput />
-            <label className="flex items-start gap-2 text-xs text-text-muted">
-              <input type="checkbox" name="sms_opt_in" defaultChecked={notify.smsOptIn} disabled={!notify.phone} className="mt-0.5" />
-              <span>Text me task reminders. Message &amp; data rates may apply. Reply STOP to opt out, HELP for help.</span>
-            </label>
-            {!notify.phone && <p className="text-xs text-text-faint">Add a mobile number under Account to get texts.</p>}
-            {!notify.smsAvailable && <p className="text-xs text-text-faint">Texts aren&apos;t switched on for the app yet.</p>}
-            <button type="submit" className={buttonClass}>
-              Save
-            </button>
-          </form>
-
           <div className="space-y-1">
-            <p className="text-xs text-text-muted">Push notifications</p>
+            <p className="text-xs text-text-muted">Push notifications on this device</p>
             {notify.pushAvailable && notify.pushPublicKey ? (
               <PushToggle publicKey={notify.pushPublicKey} />
             ) : (
               <p className="text-xs text-text-faint">Push notifications aren&apos;t switched on for the app yet.</p>
             )}
           </div>
+
+          <form action={saveNotificationPrefs} className="space-y-4">
+            <TimeZoneInput />
+            <label className="block space-y-1">
+              <span className="text-xs text-text-muted">Remind me about tasks</span>
+              <select name="reminder_lead_minutes" defaultValue={prefs.reminderLeadMinutes} className="input">
+                {REMINDER_LEAD_OPTIONS.map((m) => (
+                  <option key={m} value={m}>
+                    {m === 60 ? "1 hour" : `${m} minutes`} before they&apos;re due
+                  </option>
+                ))}
+              </select>
+              <span className="block text-xs text-text-faint">All-day tasks are reminded at 8 AM.</span>
+            </label>
+
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-sm text-text">
+                <input type="checkbox" name="daily_summary_enabled" defaultChecked={prefs.dailySummaryEnabled} />
+                Daily summary of what&apos;s due
+              </label>
+              <div className="flex items-center gap-2 pl-6 text-xs text-text-muted">
+                <span>at</span>
+                <HourSelect name="daily_summary_hour" value={prefs.dailySummaryHour} label="Daily summary time" />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-sm text-text">
+                <input type="checkbox" name="quiet_hours_enabled" defaultChecked={prefs.quietHoursEnabled} />
+                Quiet hours: no push or texts
+              </label>
+              <div className="flex flex-wrap items-center gap-2 pl-6 text-xs text-text-muted">
+                <span>from</span>
+                <HourSelect name="quiet_start_hour" value={prefs.quietStartHour} label="Quiet hours start" />
+                <span>to</span>
+                <HourSelect name="quiet_end_hour" value={prefs.quietEndHour} label="Quiet hours end" />
+              </div>
+            </div>
+
+            <label className="flex items-start gap-2 text-xs text-text-muted">
+              <input type="checkbox" name="sms_opt_in" defaultChecked={notify.smsOptIn} disabled={!notify.phone} className="mt-0.5" />
+              <span>Text me reminders. Message &amp; data rates may apply. Reply STOP to opt out, HELP for help.</span>
+            </label>
+            {!notify.phone && <p className="text-xs text-text-faint">Add a mobile number under Account to get texts.</p>}
+            {!notify.smsAvailable && <p className="text-xs text-text-faint">Texts aren&apos;t switched on for the app yet.</p>}
+
+            <button type="submit" className={buttonClass}>
+              Save
+            </button>
+          </form>
 
           {(notify.pushAvailable || notify.smsAvailable) && (
             <form action={sendTestNotification}>

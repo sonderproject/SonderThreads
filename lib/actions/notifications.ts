@@ -179,19 +179,6 @@ export async function getNotificationSettings(): Promise<NotificationSettings> {
   };
 }
 
-/** Settings → Notifications: text-message consent (needs a number, set under Account) and time zone. */
-export async function saveContactSettings(formData: FormData): Promise<void> {
-  const userId = await requireUserId();
-  const smsOptIn = formData.get("sms_opt_in") === "on";
-  const tz = validTimeZone(formData.get("timezone")?.toString());
-  await query(
-    `update users set sms_opt_in = $1 and phone is not null, timezone = coalesce($2, timezone), updated_at = now()
-      where id = $3`,
-    [smsOptIn, tz, userId],
-  );
-  revalidatePath("/settings");
-}
-
 export async function savePushSubscription(sub: {
   endpoint: string;
   keys: { p256dh: string; auth: string };
@@ -221,5 +208,6 @@ export async function sendTestNotification(): Promise<void> {
     body: "Notifications are working.",
     href: "/notifications",
     channels: ["push", "sms"],
+    ignoreQuietHours: true,
   });
 }
