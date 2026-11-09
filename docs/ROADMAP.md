@@ -22,7 +22,7 @@ Sonder Threads (working name; branded "<name> by Sonder Project"): a client trac
 
 ## How we work
 
-- One phase at a time. Each phase gets its own git branch, with a commit after each item. The owner tests and approves before the next phase starts.
+- One phase at a time, all on `main` (see `CLAUDE.md`), with a commit after each item. The owner tests and approves before the next phase starts.
 - Use Supabase built-ins wherever they exist. Don't hand-roll auth or security.
 - Do only what the current phase asks: no unrelated refactors.
 - Keep the UI consistent with the existing design (`docs/DESIGN.md`).

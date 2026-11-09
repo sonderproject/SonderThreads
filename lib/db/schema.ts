@@ -342,4 +342,23 @@ alter table list_items alter column user_id drop default;
 alter table tasks alter column user_id drop default;
 alter table person_summaries alter column user_id drop default;
 alter table activity alter column user_id drop default;
+
+-- Row level security on every table, with no policies: Supabase's public
+-- API (anon/authenticated roles) gets no rows at all. The app connects
+-- directly as the table owner, which bypasses RLS, and scopes every query
+-- by requireUserId(). Per-row policies come with the organization layer.
+alter table people enable row level security;
+alter table notes enable row level security;
+alter table lists enable row level security;
+alter table list_items enable row level security;
+alter table tasks enable row level security;
+alter table person_summaries enable row level security;
+alter table activity enable row level security;
+alter table users enable row level security;
+alter table sessions enable row level security;
+alter table password_resets enable row level security;
+alter table notifications enable row level security;
+alter table push_subscriptions enable row level security;
+alter table check_ins enable row level security;
+alter table app_meta enable row level security;
 `;
