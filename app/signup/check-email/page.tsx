@@ -43,7 +43,7 @@ export default async function CheckEmailPage({
           <Turnstile />
           <button
             type="submit"
-            className="w-full rounded border border-border bg-bg-raised px-3 py-1.5 text-sm font-medium text-text hover:bg-bg-hover"
+            className="w-full rounded-full border border-border bg-bg-raised px-3 py-1.5 text-sm font-medium text-text hover:bg-bg-hover"
           >
             Resend confirmation email
           </button>

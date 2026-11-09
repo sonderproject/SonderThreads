@@ -89,7 +89,7 @@ export function ColumnChart({ data, unit, height = 180 }: { data: Point[]; unit:
       )}
       {h && hover !== null && (
         <div
-          className="pointer-events-none absolute top-0 z-10 -translate-x-1/2 whitespace-nowrap rounded border border-border bg-bg-raised px-2 py-1 text-xs shadow-lg"
+          className="pointer-events-none absolute top-0 z-10 -translate-x-1/2 whitespace-nowrap rounded-full border border-border bg-bg-raised px-2 py-1 text-xs shadow-lg"
           style={{ left: Math.min(Math.max(left + hover * slot + slot / 2, 60), width - 60) }}
         >
           <span className="text-text-muted">{h.label}</span> ·{" "}

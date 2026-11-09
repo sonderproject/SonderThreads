@@ -33,21 +33,21 @@ export function Modal({ open, onClose, title, children }: ModalProps) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 sm:items-start sm:px-4 sm:pt-32"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/45 backdrop-blur-sm sm:items-start sm:px-4 sm:pt-32"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <div
-        className="sheet-in max-h-[88dvh] w-full overflow-y-auto rounded-t-2xl border border-border bg-bg-raised p-5 pb-safe-5 shadow-xl sm:max-w-md sm:rounded sm:pb-5"
+        className="sheet-in max-h-[88dvh] w-full overflow-y-auto rounded-t-3xl border border-border bg-bg-raised p-5 pb-safe-5 shadow-2xl sm:max-w-md sm:rounded-2xl sm:pb-5"
         role="dialog"
         aria-modal="true"
         aria-label={title}
       >
         <div className="mx-auto -mt-2 mb-3 h-1 w-10 rounded-full bg-border sm:hidden" aria-hidden />
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="eyebrow text-text">{title}</h2>
+          <h2 className="section-title text-text">{title}</h2>
           <button
             onClick={onClose}
-            className="-mr-2 flex h-10 w-10 items-center justify-center rounded text-text-muted hover:bg-bg-hover hover:text-text"
+            className="-mr-2 flex h-10 w-10 items-center justify-center rounded-full text-text-muted hover:bg-bg-hover hover:text-text"
             aria-label="Close"
           >
             ✕

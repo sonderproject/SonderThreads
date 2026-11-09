@@ -50,7 +50,7 @@ function HourSelect({ name, value, label }: { name: string; value: number; label
   );
 }
 
-const buttonClass = "rounded border border-border px-3 py-1.5 text-sm font-medium text-text hover:bg-bg-hover";
+const buttonClass = "rounded-full border border-border px-3 py-1.5 text-sm font-medium text-text hover:bg-bg-hover";
 
 export default async function SettingsPage({
   searchParams,
@@ -188,7 +188,7 @@ export default async function SettingsPage({
             </div>
             <Link
               href="/organization/new"
-              className="shrink-0 rounded border border-border px-3 py-1.5 text-sm font-medium text-text hover:bg-bg-hover"
+              className="shrink-0 rounded-full border border-border px-3 py-1.5 text-sm font-medium text-text hover:bg-bg-hover"
             >
               Set up an organization
             </Link>

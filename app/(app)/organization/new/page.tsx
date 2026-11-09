@@ -27,10 +27,10 @@ export default async function NewOrganizationPage({ searchParams }: { searchPara
           don&apos;t choose stays private to you.
         </p>
         <div className="flex gap-2">
-          <button type="submit" className="rounded bg-accent px-3 py-1.5 text-sm font-semibold text-bg hover:bg-accent-dim">
+          <button type="submit" className="rounded-full bg-accent px-3 py-1.5 text-sm font-semibold text-bg hover:bg-accent-dim">
             Create organization
           </button>
-          <Link href="/settings" className="rounded border border-border px-3 py-1.5 text-sm font-medium text-text hover:bg-bg-hover">
+          <Link href="/settings" className="rounded-full border border-border px-3 py-1.5 text-sm font-medium text-text hover:bg-bg-hover">
             Cancel
           </Link>
         </div>

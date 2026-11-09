@@ -169,7 +169,7 @@ export function NotificationsFeed({
                   <button
                     onClick={() => act(n.id, () => acceptSuggestion(n.id))}
                     aria-label={`Add task: ${n.title}`}
-                    className="flex h-9 items-center rounded border border-accent/50 px-3 text-xs font-medium text-accent hover:bg-accent/10"
+                    className="flex h-9 items-center rounded-full border border-accent/50 px-3 text-xs font-medium text-accent hover:bg-accent/10"
                   >
                     ✓ Add
                   </button>

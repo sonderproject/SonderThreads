@@ -26,7 +26,7 @@ export default function RootError({
         </p>
         <button
           onClick={reset}
-          className="rounded bg-accent px-3 py-1.5 text-sm font-medium text-bg hover:bg-accent-dim"
+          className="rounded-full bg-accent px-3 py-1.5 text-sm font-medium text-bg hover:bg-accent-dim"
         >
           Try again
         </button>

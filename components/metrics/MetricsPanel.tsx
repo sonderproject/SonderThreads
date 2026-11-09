@@ -84,7 +84,7 @@ export function MetricsPanel() {
             key={key}
             type="button"
             onClick={() => setPreset(key)}
-            className={`rounded border px-2.5 py-1 text-xs ${
+            className={`rounded-full border px-2.5 py-1 text-xs ${
               preset === key
                 ? "border-accent bg-accent-soft text-accent"
                 : "border-border bg-bg-raised text-text-muted hover:border-accent hover:text-accent"
@@ -94,7 +94,7 @@ export function MetricsPanel() {
           </button>
         ))}
         <details className="relative ml-auto">
-          <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 rounded border border-border bg-bg-raised px-3 py-1.5 text-sm font-medium text-text transition-colors hover:bg-bg-hover [&::-webkit-details-marker]:hidden">
+          <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 rounded-full border border-border bg-bg-raised px-3 py-1.5 text-sm font-medium text-text transition-colors hover:bg-bg-hover [&::-webkit-details-marker]:hidden">
             Export ▾
           </summary>
           <div className="absolute right-0 z-20 mt-1 w-40 overflow-hidden rounded border border-border bg-bg-raised shadow-lg">

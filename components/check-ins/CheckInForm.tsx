@@ -133,7 +133,7 @@ export function CheckInForm({
               key={r}
               type="button"
               onClick={() => setReason(r)}
-              className={`rounded border px-2 py-0.5 text-xs ${
+              className={`rounded-full border px-2 py-0.5 text-xs ${
                 reason === r
                   ? "border-accent bg-accent-soft text-accent"
                   : "border-border text-text-muted hover:border-accent hover:text-accent"

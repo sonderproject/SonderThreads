@@ -42,7 +42,7 @@ export function AddToListButton({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="rounded border border-dashed border-border px-2.5 py-1 text-sm text-accent hover:border-accent"
+        className="rounded-full border border-dashed border-border px-2.5 py-1 text-sm text-accent hover:border-accent"
       >
         + Add to list
       </button>

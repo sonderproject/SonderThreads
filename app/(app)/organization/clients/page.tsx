@@ -51,7 +51,7 @@ export default async function OrgClientsPage({
       ) : (
         <form action={moveClientsToOrg} className="card space-y-3 p-4">
           <ClientPicker people={personal} />
-          <button type="submit" className="rounded bg-accent px-3 py-1.5 text-sm font-semibold text-bg hover:bg-accent-dim">
+          <button type="submit" className="rounded-full bg-accent px-3 py-1.5 text-sm font-semibold text-bg hover:bg-accent-dim">
             Move selected to {m.orgName}
           </button>
         </form>

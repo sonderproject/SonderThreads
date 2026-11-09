@@ -238,7 +238,7 @@ export default async function PersonProfilePage({
             <Link
               key={list.id}
               href={`/lists/${list.id}`}
-              className="rounded border border-border px-2.5 py-1 text-sm text-text hover:border-accent hover:text-accent"
+              className="rounded-full border border-border px-2.5 py-1 text-sm text-text hover:border-accent hover:text-accent"
             >
               {list.name}
             </Link>

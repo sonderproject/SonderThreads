@@ -59,7 +59,7 @@ export default async function LoginPage({
         <Turnstile />
         <button
           type="submit"
-          className="w-full rounded bg-accent px-3 py-1.5 text-sm font-medium text-bg hover:bg-accent-dim"
+          className="w-full rounded-full bg-accent px-3 py-1.5 text-sm font-medium text-bg hover:bg-accent-dim"
         >
           Sign in
         </button>

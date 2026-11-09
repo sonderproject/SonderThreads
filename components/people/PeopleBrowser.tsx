@@ -85,7 +85,7 @@ export function PeopleBrowser({ people }: { people: Person[] }) {
 
       <div className="flex items-center justify-between gap-2">
         <details className="relative">
-          <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 rounded border border-border bg-bg-raised px-3 py-1.5 text-sm font-medium text-text transition-colors hover:bg-bg-hover [&::-webkit-details-marker]:hidden">
+          <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 rounded-full border border-border bg-bg-raised px-3 py-1.5 text-sm font-medium text-text transition-colors hover:bg-bg-hover [&::-webkit-details-marker]:hidden">
             Export{query.trim() ? " results" : ""} ▾
           </summary>
           <div className="absolute left-0 z-20 mt-1 w-36 overflow-hidden rounded border border-border bg-bg-raised shadow-lg">

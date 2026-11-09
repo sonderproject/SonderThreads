@@ -313,7 +313,7 @@ function SnoozePicker({ onPick }: { onPick: (date: Date) => void }) {
             const [y, m, d] = custom.split("-").map(Number);
             onPick(new Date(y, m - 1, d, 9, 0, 0));
           }}
-          className="h-11 shrink-0 rounded bg-accent px-4 text-sm font-medium text-bg disabled:opacity-50 sm:h-9"
+          className="h-11 shrink-0 rounded-full bg-accent px-4 text-sm font-medium text-bg disabled:opacity-50 sm:h-9"
         >
           Set
         </button>

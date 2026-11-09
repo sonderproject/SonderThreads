@@ -95,7 +95,7 @@ export function ShareMenu({ list, items }: { list: List; items: ListItem[] }) {
 
   return (
     <details className="relative" onToggle={onToggle}>
-      <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 rounded border border-border px-3 py-1.5 text-sm font-medium text-text transition-colors hover:bg-bg-hover [&::-webkit-details-marker]:hidden">
+      <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-sm font-medium text-text transition-colors hover:bg-bg-hover [&::-webkit-details-marker]:hidden">
         {status ?? "Share ▾"}
       </summary>
       <div className="absolute left-0 z-20 mt-1 w-44 overflow-hidden sm:left-auto sm:right-0 rounded border border-border bg-bg-raised shadow-lg">

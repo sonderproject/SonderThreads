@@ -297,7 +297,7 @@ export function CommandBar({
               aria-selected={false}
               onMouseDown={(e) => e.preventDefault()}
               onClick={() => pick(name)}
-              className="h-9 rounded border border-border px-3 tabular-nums text-sm text-text hover:border-accent"
+              className="h-9 rounded-full border border-border px-3 tabular-nums text-sm text-text hover:border-accent"
             >
               {token?.sigil}
               {name}

@@ -65,7 +65,7 @@ export default async function JoinPage({
             and lists stay private to you.
           </p>
           {membership && <p className="text-xs text-text-muted">You&apos;re currently in {membership.orgName}.</p>}
-          <button type="submit" className="rounded bg-accent px-3 py-1.5 text-sm font-semibold text-bg hover:bg-accent-dim">
+          <button type="submit" className="rounded-full bg-accent px-3 py-1.5 text-sm font-semibold text-bg hover:bg-accent-dim">
             Join {invite!.org_name}
           </button>
         </form>

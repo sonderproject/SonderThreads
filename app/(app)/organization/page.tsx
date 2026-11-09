@@ -23,7 +23,7 @@ const SAVED: Record<string, string> = {
 type Member = { user_id: string; role: OrgRole; active: boolean; name: string | null; email: string; clients: number };
 type Invite = { id: string; email: string; role: OrgRole; expires_at: string; expired: boolean };
 
-const btn = "rounded border border-border px-3 py-1.5 text-sm font-medium text-text hover:bg-bg-hover";
+const btn = "rounded-full border border-border px-3 py-1.5 text-sm font-medium text-text hover:bg-bg-hover";
 
 /** Organization admin: staff, roles, invites and deactivation. Read through the database's access rules. */
 export default async function OrganizationPage({ searchParams }: { searchParams: Promise<{ error?: string; saved?: string }> }) {
@@ -124,7 +124,7 @@ export default async function OrganizationPage({ searchParams }: { searchParams:
                         <p className="text-xs text-text-muted">
                           They lose access to {m.orgName} right away. Their personal tasks and notes stay theirs.
                         </p>
-                        <button type="submit" className="rounded border border-danger px-3 py-1.5 text-sm font-medium text-danger hover:bg-bg-hover">
+                        <button type="submit" className="rounded-full border border-danger px-3 py-1.5 text-sm font-medium text-danger hover:bg-bg-hover">
                           Deactivate
                         </button>
                       </form>

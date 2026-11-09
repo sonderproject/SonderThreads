@@ -33,7 +33,7 @@ export function DeleteAccountCard({ error }: { error?: string }) {
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="rounded border border-danger/40 px-3 py-1.5 text-sm font-medium text-danger hover:bg-danger/10"
+          className="rounded-full border border-danger/40 px-3 py-1.5 text-sm font-medium text-danger hover:bg-danger/10"
         >
           Delete my account…
         </button>
@@ -66,7 +66,7 @@ export function DeleteAccountCard({ error }: { error?: string }) {
                 setOpen(false);
                 setConfirm("");
               }}
-              className="rounded border border-border px-3 py-1.5 text-sm text-text hover:bg-bg-hover"
+              className="rounded-full border border-border px-3 py-1.5 text-sm text-text hover:bg-bg-hover"
             >
               Cancel
             </button>

@@ -127,7 +127,7 @@ export default async function TeamClientPage({
               ))}
             </select>
           </label>
-          <button type="submit" className="rounded border border-border px-3 py-1.5 text-sm font-medium text-text hover:bg-bg-hover">
+          <button type="submit" className="rounded-full border border-border px-3 py-1.5 text-sm font-medium text-text hover:bg-bg-hover">
             Reassign
           </button>
           <p className="w-full text-xs text-text-muted">Their notes, tasks and check-ins move with them.</p>

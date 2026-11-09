@@ -47,7 +47,7 @@ export function ClientComments({
             className="input"
           />
           {error && <p className="text-xs text-danger">Write a comment first.</p>}
-          <button type="submit" className="rounded border border-border px-3 py-1.5 text-sm font-medium text-text hover:bg-bg-hover">
+          <button type="submit" className="rounded-full border border-border px-3 py-1.5 text-sm font-medium text-text hover:bg-bg-hover">
             Add comment
           </button>
           <p className="text-xs text-text-muted">The case manager is notified. Only your organization can see comments.</p>

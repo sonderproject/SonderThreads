@@ -31,7 +31,7 @@ export function QuickActions({ people }: { people: Pick<Person, "id" | "display_
           <button
             key={type}
             onClick={() => setActive(type)}
-            className="rounded border border-border px-2 py-1 hover:border-accent hover:text-text transition-colors"
+            className="rounded-full border border-border px-2 py-1 hover:border-accent hover:text-text transition-colors"
           >
             + {type}
           </button>

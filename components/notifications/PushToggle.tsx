@@ -100,7 +100,7 @@ export function PushToggle({ publicKey }: { publicKey: string }) {
         type="button"
         disabled={busy}
         onClick={state === "on" ? turnOff : turnOn}
-        className="rounded border border-border px-3 py-1.5 text-sm font-medium text-text hover:bg-bg-hover disabled:opacity-50"
+        className="rounded-full border border-border px-3 py-1.5 text-sm font-medium text-text hover:bg-bg-hover disabled:opacity-50"
       >
         {state === "on" ? "Turn off on this device" : "Turn on for this device"}
       </button>

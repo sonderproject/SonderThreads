@@ -43,7 +43,7 @@ export default async function TwoFactorPage({ searchParams }: { searchParams: Pr
           />
           <button
             type="submit"
-            className="w-full rounded bg-accent px-3 py-1.5 text-sm font-medium text-bg hover:bg-accent-dim"
+            className="w-full rounded-full bg-accent px-3 py-1.5 text-sm font-medium text-bg hover:bg-accent-dim"
           >
             Verify and continue
           </button>

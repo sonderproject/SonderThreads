@@ -299,7 +299,7 @@ export function ListDetail({
             {toPeopleBusy ? "Adding…" : "Add to People"}
           </Button>
           <details className="relative">
-            <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 rounded border border-border px-3 py-1.5 text-sm font-medium text-text transition-colors hover:bg-bg-hover [&::-webkit-details-marker]:hidden">
+            <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-sm font-medium text-text transition-colors hover:bg-bg-hover [&::-webkit-details-marker]:hidden">
               Export ▾
             </summary>
             <div className="absolute left-0 z-20 mt-1 w-36 overflow-hidden sm:left-auto sm:right-0 rounded border border-border bg-bg-raised shadow-lg">

@@ -85,7 +85,7 @@ export function InviteForm({ orgName }: { orgName: string }) {
             <Button type="button" variant="ghost" onClick={copy}>
               {copied ? "Copied" : "Copy link"}
             </Button>
-            <a href={mailto} className="inline-flex items-center rounded border border-border px-3 py-1.5 text-sm font-semibold text-text hover:bg-bg-hover">
+            <a href={mailto} className="inline-flex items-center rounded-full border border-border px-3 py-1.5 text-sm font-semibold text-text hover:bg-bg-hover">
               Email it
             </a>
           </div>

@@ -37,13 +37,13 @@ function AuthButtons() {
     <div className="flex flex-wrap gap-3">
       <Link
         href="/signup"
-        className="rounded bg-accent px-6 py-3 text-xl text-bg transition-colors hover:bg-accent-dim sm:text-2xl"
+        className="rounded-full bg-accent px-6 py-3 text-xl text-bg transition-colors hover:bg-accent-dim sm:text-2xl"
       >
         &gt; sign up
       </Link>
       <Link
         href="/login"
-        className="rounded border-2 border-accent px-6 py-3 text-xl text-accent transition-colors hover:bg-accent hover:text-bg sm:text-2xl"
+        className="rounded-full border-2 border-accent px-6 py-3 text-xl text-accent transition-colors hover:bg-accent hover:text-bg sm:text-2xl"
       >
         &gt; sign in
       </Link>
@@ -61,11 +61,11 @@ export default function WelcomePage() {
           <nav className="flex gap-2">
             <Link
               href="/login"
-              className="rounded border border-accent px-3 py-1 text-accent transition-colors hover:bg-accent hover:text-bg"
+              className="rounded-full border border-accent px-3 py-1 text-accent transition-colors hover:bg-accent hover:text-bg"
             >
               sign in
             </Link>
-            <Link href="/signup" className="rounded bg-accent px-3 py-1 text-bg transition-colors hover:bg-accent-dim">
+            <Link href="/signup" className="rounded-full bg-accent px-3 py-1 text-bg transition-colors hover:bg-accent-dim">
               sign up
             </Link>
           </nav>
