@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSessionUser } from "@/lib/session";
 import { deleteAccount, logout } from "@/app/login/actions";
@@ -21,6 +22,9 @@ export default async function AccountPage({
       <div className="space-y-1">
         <h1 className="page-title">Account</h1>
         <p className="text-sm text-text-muted">{user.email}</p>
+        <Link href="/settings" className="inline-block text-sm text-accent hover:underline">
+          Security &amp; account settings →
+        </Link>
       </div>
 
       <section className="space-y-4 card p-4">

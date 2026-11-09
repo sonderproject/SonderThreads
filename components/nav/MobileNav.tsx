@@ -25,6 +25,7 @@ const MORE_LINKS = [
   { href: "/notes", label: "Notes" },
   { href: "/calendar", label: "Calendar" },
   { href: "/account", label: "Account" },
+  { href: "/settings", label: "Settings" },
 ];
 
 function isActive(pathname: string, href: string) {
