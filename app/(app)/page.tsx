@@ -6,7 +6,7 @@ import { NoteCard } from "@/components/notes/NoteCard";
 import { TaskRow } from "@/components/tasks/TaskRow";
 import { MiniCalendar } from "@/components/calendar/MiniCalendar";
 import { SkyCard } from "@/components/home/SkyCard";
-import { MetricsPanel } from "@/components/metrics/MetricsPanel";
+import { ImpactTeaser } from "@/components/impact/ImpactTeaser";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { listPeople, getPeopleNeedingAttention } from "@/lib/actions/people";
 import { listTasks } from "@/lib/actions/tasks";
@@ -85,8 +85,8 @@ export default async function DashboardPage() {
         )}
       </Section>
 
-      <Section title="Metrics">
-        <MetricsPanel />
+      <Section title="Impact · last 30 days" href="/impact">
+        <ImpactTeaser />
       </Section>
 
       <Section title="Recent People" href="/people">

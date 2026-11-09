@@ -21,6 +21,7 @@ const NAV_ITEMS = [
   { href: "/notes", label: "Notes" },
   { href: "/check-ins", label: "Check-ins" },
   { href: "/calendar", label: "Calendar" },
+  { href: "/impact", label: "Impact" },
 ];
 
 export function AppShell({

@@ -25,8 +25,10 @@
   --glass: rgba(255, 255, 255, 0.72);
   --glass-line: rgba(20, 20, 18, 0.08);
   --shadow-card: 0 1px 2px rgba(20, 20, 18, 0.04), 0 10px 30px -18px rgba(20, 20, 18, 0.18);
-  /* Chart marks: the brand blue. */
+  /* Chart series (validated with the dataviz palette checker on --surface, light and dark):
+     1 = brand blue, 2 = orange. */
   --chart-1: #1c77b5;
+  --chart-2: #eb6834;
   color-scheme: light;
 }
 
@@ -52,7 +54,8 @@
     --glass: rgba(20, 20, 18, 0.68);
     --glass-line: rgba(255, 255, 255, 0.08);
     --shadow-card: inset 0 1px 0 rgba(255, 255, 255, 0.03), 0 10px 30px -18px rgba(0, 0, 0, 0.6);
-    --chart-1: #4fa4d9;
+    --chart-1: #3e9bd4;
+    --chart-2: #d95926;
     color-scheme: dark;
   }
 }
@@ -78,7 +81,8 @@
   --glass: rgba(20, 20, 18, 0.68);
   --glass-line: rgba(255, 255, 255, 0.08);
   --shadow-card: inset 0 1px 0 rgba(255, 255, 255, 0.03), 0 10px 30px -18px rgba(0, 0, 0, 0.6);
-  --chart-1: #4fa4d9;
+  --chart-1: #3e9bd4;
+  --chart-2: #d95926;
   color-scheme: dark;
 }
 
