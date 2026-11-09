@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSessionUser } from "@/lib/session";
-import { deleteAccount, logout } from "@/app/login/actions";
+import { logout } from "@/app/login/actions";
 import { getNotificationSettings, saveContactSettings, sendTestNotification } from "@/lib/actions/notifications";
 import { formatPhone } from "@/lib/notify/phone";
 import { PushToggle } from "@/components/notifications/PushToggle";
@@ -89,21 +89,13 @@ export default async function AccountPage({
         </button>
       </form>
 
-      <form action={deleteAccount} className="space-y-2 rounded border border-danger/40 p-4">
-        <p className="text-sm font-medium text-danger">Delete account</p>
-        <p className="text-xs text-text-muted">
-          Permanently deletes your account and everything in it: people, lists, tasks and notes. This
-          can&apos;t be undone. Type DELETE to confirm.
-        </p>
-        {error === "confirm" && <p className="text-xs text-danger">Type DELETE exactly to confirm.</p>}
-        <input name="confirm" autoComplete="off" placeholder="DELETE" className="input tabular-nums" />
-        <button
-          type="submit"
-          className="rounded border border-danger/40 px-3 py-1.5 text-sm font-medium text-danger hover:bg-danger/10"
-        >
-          Delete my account
-        </button>
-      </form>
+      <p className="text-xs text-text-muted">
+        To delete your account, go to{" "}
+        <Link href="/settings#delete" className="text-accent hover:underline">
+          Settings
+        </Link>
+        .
+      </p>
     </div>
   );
 }

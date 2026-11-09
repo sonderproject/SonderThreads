@@ -273,19 +273,46 @@ export async function idleSignOut(): Promise<void> {
   redirect("/login?reason=idle");
 }
 
-/** Permanently deletes the signed-in user's account and every row they own. */
+/** Every table holding a user's rows, children before parents. */
+const USER_TABLES = [
+  "notifications",
+  "activity",
+  "person_summaries",
+  "check_ins",
+  "list_items",
+  "tasks",
+  "notes",
+  "lists",
+  "people",
+  "push_subscriptions",
+  "password_resets",
+  "sessions",
+] as const;
+
+/**
+ * Permanently deletes the signed-in user's account: all their data in one
+ * transaction, then their Supabase login via the server-only admin API.
+ * Data goes first so that if the second step fails nothing personal is left
+ * (deleting again finishes the job). Requires a fully signed-in session (2FA
+ * passed if it's on) and typing DELETE.
+ */
 export async function deleteAccount(formData: FormData): Promise<void> {
   const state = await getAuthState();
+  if (state.status === "needs-2fa") redirect("/login/2fa?next=/settings");
   if (state.status !== "signed-in") redirect("/login");
   const user = state.user;
-  if (formData.get("confirm")?.toString().trim() !== "DELETE") redirect("/account?error=confirm");
+  if (formData.get("confirm")?.toString().trim() !== "DELETE") redirect("/settings?error=confirm#delete");
 
   await transaction(async (q) => {
-    for (const table of ["notifications", "activity", "person_summaries", "list_items", "tasks", "notes", "lists", "people"]) {
-      await q(`delete from ${table} where user_id = $1`, [user.id]);
-    }
-    await q(`delete from users where id = $1`, [user.id]); // sessions, push subscriptions cascade
+    for (const table of USER_TABLES) await q(`delete from ${table} where user_id = $1`, [user.id]);
+    await q(`delete from users where id = $1`, [user.id]);
   });
+
+  const { error } = await createSupabaseAdmin().auth.admin.deleteUser(user.id);
+  if (error && error.code !== "user_not_found") {
+    console.error("[auth] data deleted but removing the login failed", error.message);
+    redirect("/settings?error=delete-login#delete");
+  }
   const supabase = await createSupabaseServer();
   await supabase.auth.signOut();
   redirect("/signup?deleted=1");
