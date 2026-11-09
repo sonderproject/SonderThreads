@@ -172,6 +172,28 @@ async function createUserRow(id: string, email: string, phone: string | null, sm
   );
 }
 
+/**
+ * Sends the sign-up confirmation email again. Always lands on the same
+ * screen (whether or not the address is registered) so it can't be used to
+ * find out who has an account; Supabase limits how often it sends.
+ */
+export async function resendConfirmation(formData: FormData): Promise<void> {
+  const email = formData.get("email")?.toString().trim().toLowerCase() ?? "";
+  const params = new URLSearchParams({ email });
+  if (!EMAIL_RE.test(email)) redirect(`/signup/check-email?${params}`);
+  const supabase = await createSupabaseServer();
+  const { error } = await supabase.auth.resend({
+    type: "signup",
+    email,
+    options: { emailRedirectTo: `${await origin()}/auth/confirm`, captchaToken: captcha(formData) },
+  });
+  if (error?.code === "captcha_failed") params.set("error", "captcha");
+  else if (error?.code === "over_email_send_rate_limit" || error?.code === "over_request_rate_limit" || error?.status === 429) {
+    params.set("error", "rate");
+  } else params.set("resent", "1");
+  redirect(`/signup/check-email?${params}`);
+}
+
 export async function logout(): Promise<void> {
   const supabase = await createSupabaseServer();
   await supabase.auth.signOut();
