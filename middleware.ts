@@ -74,6 +74,9 @@ function signedOut(request: NextRequest, from?: NextResponse, reason?: "idle"): 
 }
 
 export const config = {
+  // Node runtime (stable in Next 15.5) so the Supabase settings are read the same way as on the server,
+  // including Vercel's prefixed variable names.
+  runtime: "nodejs",
   // Everything except sign-in/up/password pages, the email-link handler (/auth/...), the landing page, the sitemap
   // and static assets (icons and the manifest must load before sign-in so "Add to Home Screen" works).
   matcher: [

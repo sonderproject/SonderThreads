@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import { supabaseUrl } from "./env";
+import { supabaseServiceKey, supabaseUrl } from "./env";
 
 /**
  * Service-role client for the few server-side admin operations: the
@@ -10,7 +10,7 @@ import { supabaseUrl } from "./env";
 export function createSupabaseAdmin() {
   if (typeof window !== "undefined") throw new Error("The Supabase admin client is server-only.");
   const url = supabaseUrl();
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY;
+  const key = supabaseServiceKey();
   if (!url || !key) throw new Error("SUPABASE_SERVICE_ROLE_KEY isn't set on the server.");
   return createClient(url, key, { auth: { autoRefreshToken: false, persistSession: false } });
 }

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { query } from "@/lib/db/client";
-import { supabaseAnonKey, supabaseUrl } from "@/lib/supabase/env";
+import { supabaseAnonKey, supabaseServiceKey, supabaseUrl } from "@/lib/supabase/env";
+import { resolveConnectionString } from "@/lib/db/client";
 import { createSupabaseAdmin } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
@@ -13,9 +14,8 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   const url = supabaseUrl();
   const anon = supabaseAnonKey();
-  const service = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY;
-  const dbUrl =
-    process.env.POSTGRES_URL || process.env.DATABASE_URL || process.env.POSTGRES_PRISMA_URL || process.env.POSTGRES_URL_NON_POOLING || "";
+  const service = supabaseServiceKey();
+  const dbUrl = resolveConnectionString() ?? ""; // exactly what the app connects to
 
   const checks: Record<string, string> = {};
   const ok = (b: boolean, fix: string) => (b ? "✅" : `❌ ${fix}`);

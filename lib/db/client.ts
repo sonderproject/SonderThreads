@@ -10,7 +10,7 @@ import { SCHEMA_SQL } from "./schema";
  * a different integration already surprised us once by injecting a
  * variable under a name nothing would have guessed.
  */
-function resolveConnectionString(): string | undefined {
+export function resolveConnectionString(): string | undefined {
   const known =
     process.env.POSTGRES_URL ||
     process.env.DATABASE_URL ||
