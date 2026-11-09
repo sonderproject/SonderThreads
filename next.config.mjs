@@ -6,6 +6,8 @@ const nextConfig = {
     // to it, instead of refetching. Saving anything still refreshes at once
     // (server actions call revalidatePath / router.refresh).
     staleTimes: { dynamic: 30 },
+    // Settings → Data → Import backup sends the whole backup file to a server action.
+    serverActions: { bodySizeLimit: "4mb" },
   },
   // pdfkit loads its font metrics from its own package folder at runtime.
   serverExternalPackages: ["pdfkit"],

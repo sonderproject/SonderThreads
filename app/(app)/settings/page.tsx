@@ -7,6 +7,7 @@ import { requireUserId } from "@/lib/current-user";
 import { queryOne } from "@/lib/db/client";
 import { logout, requestEmailChange, signOutEverywhere } from "@/app/login/actions";
 import { saveProfile } from "@/lib/actions/profile";
+import { ImportBackupCard } from "@/components/settings/ImportBackupCard";
 import { getNotificationSettings, sendTestNotification } from "@/lib/actions/notifications";
 import { saveNotificationPrefs, saveSecurityPrefs } from "@/lib/actions/settings";
 import { getUserSettings } from "@/lib/settings";
@@ -274,6 +275,7 @@ export default async function SettingsPage({
             Or download everything as one backup file (JSON)
           </a>
         </div>
+        <ImportBackupCard />
       </section>
 
       <section id="about" className="scroll-mt-20 space-y-3">

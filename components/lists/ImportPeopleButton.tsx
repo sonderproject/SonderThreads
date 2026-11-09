@@ -37,7 +37,15 @@ function ImportForm({ onDone }: { onDone: () => void }) {
     setError(null);
     const file = e.target.files?.[0];
     if (!file) return;
-    const parsed = rowsToPeople(parseCsv(await file.text()));
+    const text = await file.text();
+    // A full backup (JSON) isn't a name list; it has its own restore in Settings.
+    if (/^\s*[{[]/.test(text)) {
+      setPeople([]);
+      setError("That's a full backup file. Import it from Settings → Data → Import backup.");
+      e.target.value = "";
+      return;
+    }
+    const parsed = rowsToPeople(parseCsv(text));
     setPeople(parsed.people);
     setColumns(parsed.columns);
     if (!listName) setListName(file.name.replace(/\.[^.]+$/, "").replace(/[_-]+/g, " ").trim());
