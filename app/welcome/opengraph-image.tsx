@@ -1,8 +1,9 @@
 import { ImageResponse } from "next/og";
 
-// The preview card shown when someone shares a sonderthreads link in a text,
-// email or social post.
-export const alt = "sonderthreads: lists, notes and dates in one place";
+// The preview card shown when someone shares a Sonder Threads link in a text,
+// email or social post. (Image rendering can't read CSS variables, so the
+// Sonder Studio palette is written out here: obsidian, warm white, surf blue.)
+export const alt = "Sonder Threads: clients, tasks and notes in one calm place";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -16,15 +17,20 @@ export default function OpengraphImage() {
           display: "flex",
           flexDirection: "column",
           justifyContent: "center",
-          padding: "80px",
-          background: "#0a0a0a",
-          color: "#e8e8e6",
-          fontFamily: "monospace",
+          padding: "90px",
+          background: "#0a0a09",
+          color: "#f3f0eb",
         }}
       >
-        <div style={{ fontSize: 64, color: "#5eead4" }}>&gt; sonderthreads</div>
-        <div style={{ fontSize: 44, marginTop: 32 }}>lists, notes and dates. one place.</div>
-        <div style={{ fontSize: 32, marginTop: 20, color: "#8a8a86" }}>type it or say it. it files itself.</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 18, fontSize: 24, letterSpacing: 8, color: "#aea08d" }}>
+          <span style={{ color: "#62b4e6" }}>SONDER THREADS</span>
+          <span style={{ width: 60, height: 2, background: "#3e9bd4" }} />
+          <span>BY SONDER PROJECT</span>
+        </div>
+        <div style={{ fontSize: 72, marginTop: 36, lineHeight: 1.05, maxWidth: 950 }}>
+          The daily tool for the people you serve.
+        </div>
+        <div style={{ fontSize: 30, marginTop: 28, color: "#aea08d" }}>Clients, tasks, notes and check-ins in one calm place.</div>
       </div>
     ),
     size,

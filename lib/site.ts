@@ -2,4 +2,4 @@
 export const SITE_URL = "https://www.sonderthreads.com";
 
 export const SITE_DESCRIPTION =
-  "Lists, notes and dates in one place. Type or say it and sonderthreads files it where it belongs.";
+  "Clients, tasks, notes and check-ins in one calm place, for case managers, agencies and anyone organizing their life. By Sonder Project.";
