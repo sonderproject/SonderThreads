@@ -363,6 +363,12 @@ create table if not exists user_settings (
   updated_at timestamptz not null default now()
 );
 
+-- Auto-lock: 5 minutes to 8 hours, or "stay signed in" (no idle sign-out).
+alter table user_settings add column if not exists stay_signed_in boolean not null default false;
+alter table user_settings drop constraint if exists user_settings_idle_timeout_minutes_check;
+alter table user_settings add constraint user_settings_idle_timeout_minutes_check
+  check (idle_timeout_minutes in (5, 15, 30, 60, 120, 240, 480));
+
 -- app_meta is otherwise created after this script runs (lib/db/client.ts);
 -- create it here so enabling RLS on it below works on a fresh database.
 create table if not exists app_meta (key text primary key, value text not null);

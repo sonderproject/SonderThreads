@@ -31,8 +31,8 @@ export function AppShell({
   idleMinutes = 30,
 }: {
   children: React.ReactNode;
-  /** Auto sign-out after this many idle minutes (Settings → Privacy & security). */
-  idleMinutes?: number;
+  /** Auto sign-out after this many idle minutes; null = stay signed in (Settings → Privacy & security). */
+  idleMinutes?: number | null;
   notificationCount?: number;
   people?: Pick<Person, "id" | "display_name">[];
   lists?: { id: string; name: string }[];

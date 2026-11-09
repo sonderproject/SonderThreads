@@ -1,10 +1,12 @@
+import { IDLE_TIMEOUT_OPTIONS } from "@/lib/settings-options";
+
 /**
  * Edge-safe auth constants and helpers (middleware imports this, so no Node
  * APIs or database access here — see lib/session.ts for those).
  */
 /**
  * Default sign-out after this many minutes with no activity; each person can
- * pick 15, 30 or 60 in Settings (user_settings.idle_timeout_minutes). Enforced in the browser (IdleSignOut) and
+ * pick 5 minutes to 8 hours, or stay signed in, in Settings (user_settings). Enforced in the browser (IdleSignOut) and
  * on the server (middleware, via LAST_SEEN_COOKIE) as a backstop.
  */
 export const IDLE_TIMEOUT_MINUTES = 30;
@@ -12,10 +14,17 @@ export const IDLE_TIMEOUT_MINUTES = 30;
 /** The user's chosen timeout (Settings → Privacy & security), for the middleware backstop. */
 export const IDLE_MINUTES_COOKIE = "st_idle_minutes";
 
-/** Allowed timeouts; anything else (or no cookie) means the default. Keep in sync with lib/settings-options.ts. */
-export function idleMinutesFrom(value: string | number | undefined | null): number {
+/** The cookie value meaning "stay signed in" (no idle sign-out). */
+export const STAY_SIGNED_IN = "0";
+
+/**
+ * The idle limit from the cookie: null = stay signed in; an allowed preset;
+ * anything else (or no cookie) = the default.
+ */
+export function idleMinutesFrom(value: string | number | undefined | null): number | null {
+  if (String(value) === STAY_SIGNED_IN) return null;
   const n = Number(value);
-  return n === 15 || n === 30 || n === 60 ? n : IDLE_TIMEOUT_MINUTES;
+  return (IDLE_TIMEOUT_OPTIONS as readonly number[]).includes(n) ? n : IDLE_TIMEOUT_MINUTES;
 }
 
 /** Server-side record of the last request, for the idle timeout backstop. */

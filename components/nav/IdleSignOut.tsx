@@ -14,11 +14,12 @@ const EVENTS = ["pointerdown", "keydown", "wheel", "touchstart", "scroll"] as co
  * minutes, so the middleware's own idle check (a backstop for closed tabs)
  * never signs out a person who's busy typing a long note.
  */
-export function IdleSignOut({ minutes }: { minutes: number }) {
+export function IdleSignOut({ minutes }: { minutes: number | null }) {
   useEffect(() => {
-    const limit = minutes * 60_000;
     // Tells the server this person's timeout for its own backstop check.
     fetch("/api/auth/heartbeat", { method: "POST", cache: "no-store" }).catch(() => {});
+    if (minutes === null) return; // "Stay signed in" is on
+    const limit = minutes * 60_000;
     let last = Date.now();
     let lastPing = Date.now();
     let signingOut = false;

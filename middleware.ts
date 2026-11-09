@@ -36,7 +36,8 @@ export async function middleware(request: NextRequest) {
 
   const now = Date.now();
   const lastSeen = Number(request.cookies.get(LAST_SEEN_COOKIE)?.value);
-  if (Number.isFinite(lastSeen) && lastSeen > 0 && now - lastSeen > idleMinutesFrom(request.cookies.get(IDLE_MINUTES_COOKIE)?.value) * 60_000) {
+  const idleLimit = idleMinutesFrom(request.cookies.get(IDLE_MINUTES_COOKIE)?.value); // null = stay signed in
+  if (idleLimit !== null && Number.isFinite(lastSeen) && lastSeen > 0 && now - lastSeen > idleLimit * 60_000) {
     await supabase.auth.signOut();
     const out = signedOut(request, response, "idle");
     out.cookies.delete(LAST_SEEN_COOKIE);

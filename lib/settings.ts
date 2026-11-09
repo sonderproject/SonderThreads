@@ -10,6 +10,7 @@ type Row = {
   quiet_start_hour: number;
   quiet_end_hour: number;
   idle_timeout_minutes: number;
+  stay_signed_in: boolean;
 };
 
 /** The signed-in user's settings, with defaults for anything never saved. */
@@ -17,7 +18,7 @@ export async function getUserSettings(): Promise<UserSettings> {
   const userId = await requireUserId();
   const row = await queryOne<Row>(
     `select reminder_lead_minutes, daily_summary_enabled, daily_summary_hour, quiet_hours_enabled,
-            quiet_start_hour, quiet_end_hour, idle_timeout_minutes
+            quiet_start_hour, quiet_end_hour, idle_timeout_minutes, stay_signed_in
        from user_settings where user_id = $1`,
     [userId],
   );
@@ -30,5 +31,6 @@ export async function getUserSettings(): Promise<UserSettings> {
     quietStartHour: row.quiet_start_hour,
     quietEndHour: row.quiet_end_hour,
     idleTimeoutMinutes: row.idle_timeout_minutes as UserSettings["idleTimeoutMinutes"],
+    staySignedIn: row.stay_signed_in,
   };
 }

@@ -10,7 +10,7 @@ import { saveProfile } from "@/lib/actions/profile";
 import { getNotificationSettings, sendTestNotification } from "@/lib/actions/notifications";
 import { saveNotificationPrefs, saveSecurityPrefs } from "@/lib/actions/settings";
 import { getUserSettings } from "@/lib/settings";
-import { IDLE_TIMEOUT_OPTIONS, REMINDER_LEAD_OPTIONS, SUPPORT_EMAIL, hourLabel } from "@/lib/settings-options";
+import { IDLE_TIMEOUT_OPTIONS, REMINDER_LEAD_OPTIONS, SUPPORT_EMAIL, durationLabel, hourLabel } from "@/lib/settings-options";
 import packageJson from "@/package.json";
 import { formatPhone } from "@/lib/notify/phone";
 
@@ -75,7 +75,7 @@ export default async function SettingsPage({
       <section id="account" className="scroll-mt-20 space-y-3">
         <h2 className="eyebrow text-text-faint">Account</h2>
 
-        <form action={saveProfile} className="card space-y-3 p-4">
+        <form key={`${user?.name}|${user?.phone}`} action={saveProfile} className="card space-y-3 p-4">
           <label className="block space-y-1">
             <span className="text-xs text-text-muted">Name</span>
             <input name="name" defaultValue={user?.name ?? ""} maxLength={80} autoComplete="name" className="input" />
@@ -155,7 +155,7 @@ export default async function SettingsPage({
             )}
           </div>
 
-          <form action={saveNotificationPrefs} className="space-y-4">
+          <form key={JSON.stringify(prefs)} action={saveNotificationPrefs} className="space-y-4">
             <TimeZoneInput />
             <label className="block space-y-1">
               <span className="text-xs text-text-muted">Remind me about tasks</span>
@@ -200,6 +200,7 @@ export default async function SettingsPage({
             {!notify.phone && <p className="text-xs text-text-faint">Add a mobile number under Account to get texts.</p>}
             {!notify.smsAvailable && <p className="text-xs text-text-faint">Texts aren&apos;t switched on for the app yet.</p>}
 
+            {saved === "notifications" && <p className="text-xs text-accent">Saved.</p>}
             <button type="submit" className={buttonClass}>
               Save
             </button>
@@ -218,17 +219,28 @@ export default async function SettingsPage({
 
       <section id="security" className="scroll-mt-20 space-y-3">
         <h2 className="eyebrow text-text-faint">Privacy &amp; security</h2>
-        <form action={saveSecurityPrefs} className="card space-y-3 p-4">
+        {/* key: React resets a form after its action runs; a new key shows the values just saved. */}
+        <form key={JSON.stringify(prefs)} action={saveSecurityPrefs} className="card space-y-3 p-4">
           <label className="block space-y-1">
             <span className="text-xs text-text-muted">Auto-lock: sign me out after no activity for</span>
             <select name="idle_timeout_minutes" defaultValue={prefs.idleTimeoutMinutes} className="input">
               {IDLE_TIMEOUT_OPTIONS.map((m) => (
                 <option key={m} value={m}>
-                  {m === 60 ? "1 hour" : `${m} minutes`}
+                  {durationLabel(m)}
                 </option>
               ))}
             </select>
           </label>
+          <label className="flex items-start gap-2 text-sm text-text">
+            <input type="checkbox" name="stay_signed_in" defaultChecked={prefs.staySignedIn} className="mt-1" />
+            <span>
+              Stay signed in
+              <span className="block text-xs text-text-muted">
+                Turns auto-lock off. Only use this on a device nobody else uses.
+              </span>
+            </span>
+          </label>
+          {saved === "security" && <p className="text-xs text-accent">Saved.</p>}
           <button type="submit" className={buttonClass}>
             Save
           </button>

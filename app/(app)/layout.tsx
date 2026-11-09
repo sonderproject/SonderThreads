@@ -51,7 +51,7 @@ export default async function AppGroupLayout({ children }: { children: React.Rea
       people={people.map((p) => ({ id: p.id, display_name: p.display_name }))}
       lists={lists.map((l) => ({ id: l.id, name: l.name }))}
       notificationCount={notificationCount}
-      idleMinutes={settings.idleTimeoutMinutes}
+      idleMinutes={settings.staySignedIn ? null : settings.idleTimeoutMinutes}
     >
       {children}
       {offerTwoFactor && <TwoFactorPrompt />}

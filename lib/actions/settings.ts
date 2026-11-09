@@ -2,7 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
-import { IDLE_MINUTES_COOKIE } from "@/lib/auth";
+import { redirect } from "next/navigation";
+import { IDLE_MINUTES_COOKIE, STAY_SIGNED_IN } from "@/lib/auth";
 import { query } from "@/lib/db/client";
 import { requireUserId } from "@/lib/current-user";
 import { IDLE_TIMEOUT_OPTIONS, REMINDER_LEAD_OPTIONS } from "@/lib/settings-options";
@@ -52,19 +53,22 @@ export async function saveNotificationPrefs(formData: FormData): Promise<void> {
     [userId, ...values],
   );
   revalidatePath("/settings");
+  redirect("/settings?saved=notifications#notifications");
 }
 
-/** Settings → Privacy & security: sign out after 15, 30 or 60 idle minutes. */
+/** Settings → Privacy & security: auto-lock after 5 minutes to 8 hours idle, or stay signed in. */
 export async function saveSecurityPrefs(formData: FormData): Promise<void> {
   const userId = await requireUserId();
   const minutes = preset(formData.get("idle_timeout_minutes"), IDLE_TIMEOUT_OPTIONS, 30);
+  const staySignedIn = formData.get("stay_signed_in") === "on";
   await query(
-    `insert into user_settings (user_id, idle_timeout_minutes) values ($1, $2)
-     on conflict (user_id) do update set idle_timeout_minutes = excluded.idle_timeout_minutes, updated_at = now()`,
-    [userId, minutes],
+    `insert into user_settings (user_id, idle_timeout_minutes, stay_signed_in) values ($1, $2, $3)
+     on conflict (user_id) do update set idle_timeout_minutes = excluded.idle_timeout_minutes,
+       stay_signed_in = excluded.stay_signed_in, updated_at = now()`,
+    [userId, minutes, staySignedIn],
   );
   // The middleware's backstop reads this; set it now so it applies right away.
-  (await cookies()).set(IDLE_MINUTES_COOKIE, String(minutes), {
+  (await cookies()).set(IDLE_MINUTES_COOKIE, staySignedIn ? STAY_SIGNED_IN : String(minutes), {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
@@ -72,4 +76,5 @@ export async function saveSecurityPrefs(formData: FormData): Promise<void> {
     maxAge: 60 * 60 * 24 * 30,
   });
   revalidatePath("/", "layout");
+  redirect("/settings?saved=security#security");
 }
