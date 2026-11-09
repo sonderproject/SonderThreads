@@ -81,7 +81,10 @@ function rightRounded(x: number, y: number, w: number, h: number, r: number): st
   return `M${x} ${y} H${x + w - rr} Q${x + w} ${y} ${x + w} ${y + rr} V${y + h - rr} Q${x + w} ${y + h} ${x + w - rr} ${y + h} H${x} Z`;
 }
 
-export function impactPdf(m: Metrics, opts: { preparedFor: string }): Promise<Buffer> {
+/** Organization details for the cover (admins edit them on the Organization page). */
+export type ReportOrgInfo = { about: string | null; phone: string | null; email: string | null; website: string | null; address: string | null };
+
+export function impactPdf(m: Metrics, opts: { preparedFor: string; org?: ReportOrgInfo | null }): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument({ size: "LETTER", margin: PAGE.m, bufferPages: true, info: { Title: "Impact report", Author: "Sonder Threads" } });
     const chunks: Buffer[] = [];
@@ -115,18 +118,26 @@ export function impactPdf(m: Metrics, opts: { preparedFor: string }): Promise<Bu
     doc.font("display").fontSize(46).fillColor(C.warmWhite).text(who, PAGE.m, 322, { width: CONTENT_W, lineGap: -4 });
     doc.moveDown(0.5);
     doc.font("display").fontSize(18).fillColor(C.faint).text(period, { width: CONTENT_W });
+    if (opts.org?.about) {
+      doc.moveDown(1.2);
+      doc.font("body").fontSize(10.5).fillColor(C.faint).text(opts.org.about, { width: CONTENT_W * 0.78, lineGap: 3 });
+    }
 
     const k = m.kpis;
     doc.font("display").fontSize(15).fillColor(C.warmWhite).text(
       `${k.peopleServed.toLocaleString("en-US")} people served · ${k.checkIns.toLocaleString("en-US")} check-ins`,
       PAGE.m,
-      PAGE.h - 150,
+      PAGE.h - 160,
       { width: CONTENT_W },
     );
+    const contact = opts.org
+      ? [opts.org.address?.replace(/\s*\n\s*/g, ", "), opts.org.phone, opts.org.email, opts.org.website?.replace(/^https?:\/\//, "")].filter(Boolean).join("  ·  ")
+      : "";
+    if (contact) doc.font("body").fontSize(9).fillColor(C.warmWhite).text(contact, PAGE.m, PAGE.h - 126, { width: CONTENT_W, lineBreak: false, ellipsis: true });
     doc.font("body").fontSize(9).fillColor(C.faint).text(
       `Prepared with Sonder Threads by Sonder Project · ${new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}`,
       PAGE.m,
-      PAGE.h - 110,
+      PAGE.h - 106,
       { width: CONTENT_W },
     );
 

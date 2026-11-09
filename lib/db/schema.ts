@@ -385,6 +385,13 @@ create table if not exists organizations (
   updated_at timestamptz not null default now()
 );
 
+-- Organization info, edited by admins (Organization page) and shown on the Impact report cover.
+alter table organizations add column if not exists phone text check (length(phone) <= 40);
+alter table organizations add column if not exists email text check (length(email) <= 254);
+alter table organizations add column if not exists website text check (length(website) <= 300);
+alter table organizations add column if not exists address text check (length(address) <= 500);
+alter table organizations add column if not exists about text check (length(about) <= 1000);
+
 create table if not exists memberships (
   org_id uuid not null references organizations(id) on delete cascade,
   user_id uuid not null references users(id) on delete cascade,

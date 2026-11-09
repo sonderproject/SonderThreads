@@ -6,6 +6,8 @@ import { computeMetrics, normalizeRange } from "@/lib/metrics";
 import { metricsCsv, metricsPdf, metricsXlsx } from "@/lib/export/metrics-report";
 import { CONTENT_TYPES } from "@/lib/export/table";
 import { reportableOrg } from "@/lib/actions/metrics";
+import { asUser } from "@/lib/db/as-user";
+import type { ReportOrgInfo } from "@/lib/export/impact-pdf";
 
 // pdfkit and exceljs need Node APIs (fs, streams).
 export const runtime = "nodejs";
@@ -32,7 +34,16 @@ export async function GET(request: Request) {
       headers: { "Content-Type": "text/csv; charset=utf-8", "Content-Disposition": disposition },
     });
   }
-  const file = format === "pdf" ? await metricsPdf(metrics, { preparedFor: user.name || user.email }) : await metricsXlsx(metrics);
+  const orgInfo =
+    format === "pdf" && org
+      ? (
+          await asUser(user.id, (q) =>
+            q<ReportOrgInfo>(`select about, phone, email, website, address from organizations where id = $1`, [org.id]),
+          )
+        )[0] ?? null
+      : null;
+  const file =
+    format === "pdf" ? await metricsPdf(metrics, { preparedFor: user.name || user.email, org: orgInfo }) : await metricsXlsx(metrics);
   return new NextResponse(new Uint8Array(file), {
     headers: { "Content-Type": CONTENT_TYPES[format], "Content-Disposition": disposition },
   });

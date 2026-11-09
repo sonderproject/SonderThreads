@@ -177,14 +177,25 @@ export async function reactivateMember(formData: FormData): Promise<void> {
   redirect("/organization?saved=reactivated");
 }
 
-/** Admin: renames the organization. */
-export async function renameOrganization(formData: FormData): Promise<void> {
+/** Admin: edits the organization's name and contact details. */
+export async function saveOrganizationInfo(formData: FormData): Promise<void> {
   const { userId, orgId } = await requireAdmin();
-  const name = (formData.get("name")?.toString() ?? "").trim().slice(0, 200);
-  if (!name) redirect("/organization?error=name");
-  await asUser(userId, (q) => q(`update organizations set name = $1, updated_at = now() where id = $2`, [name, orgId]));
+  const field = (key: string, max: number) => (formData.get(key)?.toString() ?? "").trim().slice(0, max) || null;
+  const name = field("name", 200);
+  if (!name) redirect("/organization?error=name#info");
+  const email = field("email", 254);
+  if (email && !EMAIL_RE.test(email)) redirect("/organization?error=org-email#info");
+  let website = field("website", 300);
+  if (website && !/^https?:\/\//i.test(website)) website = `https://${website}`;
+  await asUser(userId, (q) =>
+    q(
+      `update organizations set name = $1, phone = $2, email = $3, website = $4, address = $5, about = $6, updated_at = now()
+        where id = $7`,
+      [name, field("phone", 40), email, website, field("address", 500), field("about", 1000), orgId],
+    ),
+  );
   revalidatePath("/", "layout");
-  redirect("/organization?saved=name");
+  redirect("/organization?saved=info#info");
 }
 
 /**

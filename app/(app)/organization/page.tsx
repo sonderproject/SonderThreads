@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { asUser } from "@/lib/db/as-user";
 import { requireUserId } from "@/lib/current-user";
 import { getMembership, ORG_ROLES, ROLE_LABELS, type OrgRole } from "@/lib/org";
-import { changeRole, deactivateMember, reactivateMember, renameOrganization, revokeInvite } from "@/lib/actions/org";
+import { changeRole, deactivateMember, reactivateMember, revokeInvite, saveOrganizationInfo } from "@/lib/actions/org";
 import { InviteForm } from "@/components/org/InviteForm";
 
 const ERRORS: Record<string, string> = {
@@ -12,15 +12,18 @@ const ERRORS: Record<string, string> = {
   reassign: "Choose an active staff member to take over their clients.",
   role: "Choose a role.",
   name: "Enter a name.",
+  "org-email": "Enter a valid email address for the organization.",
 };
 const SAVED: Record<string, string> = {
   role: "Role updated.",
   deactivated: "Deactivated. Their clients were handed over.",
   reactivated: "Reactivated.",
   name: "Name updated.",
+  info: "Organization info saved.",
 };
 
 type Member = { user_id: string; role: OrgRole; active: boolean; name: string | null; email: string; clients: number };
+type OrgInfo = { name: string; phone: string | null; email: string | null; website: string | null; address: string | null; about: string | null };
 type Invite = { id: string; email: string; role: OrgRole; expires_at: string; expired: boolean };
 
 const btn = "rounded-full border border-border px-3 py-1.5 text-sm font-medium text-text hover:bg-bg-hover";
@@ -33,7 +36,7 @@ export default async function OrganizationPage({ searchParams }: { searchParams:
   if (!m.active || m.role !== "admin") redirect("/settings#organization");
   const { error, saved } = await searchParams;
 
-  const [members, invites] = await asUser(userId, async (q) => [
+  const [members, invites, info] = await asUser(userId, async (q) => [
     await q<Member>(
       `select m.user_id, m.role, m.active, u.name, u.email,
               (select count(*) from people p where p.user_id = m.user_id and p.org_id = m.org_id and p.deleted_at is null)::int as clients
@@ -47,6 +50,7 @@ export default async function OrganizationPage({ searchParams }: { searchParams:
         where org_id = $1 and accepted_at is null order by created_at desc`,
       [m.orgId],
     ),
+    (await q<OrgInfo>(`select name, phone, email, website, address, about from organizations where id = $1`, [m.orgId]))[0],
   ]);
   const active = members.filter((x) => x.active);
 
@@ -65,6 +69,42 @@ export default async function OrganizationPage({ searchParams }: { searchParams:
 
       {error && ERRORS[error] && <p className="flag text-sm">{ERRORS[error]}</p>}
       {saved && SAVED[saved] && <p className="text-sm text-accent">{SAVED[saved]}</p>}
+
+      <section id="info" className="scroll-mt-20 space-y-3">
+        <h2 className="section-label">Organization info</h2>
+        <form key={JSON.stringify(info)} action={saveOrganizationInfo} className="card grid gap-3 p-4 sm:grid-cols-2">
+          <label className="space-y-1 sm:col-span-2">
+            <span className="text-xs text-text-muted">Name</span>
+            <input name="name" defaultValue={info?.name ?? m.orgName} required maxLength={200} className="input" />
+          </label>
+          <label className="space-y-1">
+            <span className="text-xs text-text-muted">Phone</span>
+            <input name="phone" type="tel" defaultValue={info?.phone ?? ""} maxLength={40} autoComplete="off" className="input" />
+          </label>
+          <label className="space-y-1">
+            <span className="text-xs text-text-muted">Email</span>
+            <input name="email" type="email" defaultValue={info?.email ?? ""} maxLength={254} autoComplete="off" className="input" />
+          </label>
+          <label className="space-y-1 sm:col-span-2">
+            <span className="text-xs text-text-muted">Website</span>
+            <input name="website" defaultValue={info?.website ?? ""} maxLength={300} placeholder="hopehouse.org" className="input" />
+          </label>
+          <label className="space-y-1 sm:col-span-2">
+            <span className="text-xs text-text-muted">Address</span>
+            <textarea name="address" defaultValue={info?.address ?? ""} maxLength={500} rows={2} className="input" />
+          </label>
+          <label className="space-y-1 sm:col-span-2">
+            <span className="text-xs text-text-muted">About (one or two sentences, shown on Impact reports)</span>
+            <textarea name="about" defaultValue={info?.about ?? ""} maxLength={1000} rows={2} placeholder="Hope House helps families in San Diego find and keep stable housing." className="input" />
+          </label>
+          <div className="flex items-center gap-3 sm:col-span-2">
+            <button type="submit" className="rounded-full bg-accent px-4 py-1.5 text-sm font-semibold text-bg hover:bg-accent-dim">
+              Save
+            </button>
+            {saved === "info" && <span className="text-sm text-accent">Saved.</span>}
+          </div>
+        </form>
+      </section>
 
       <section className="space-y-3">
         <h2 className="section-label">Staff</h2>
@@ -169,15 +209,6 @@ export default async function OrganizationPage({ searchParams }: { searchParams:
         )}
       </section>
 
-      <section className="space-y-3">
-        <h2 className="section-label">Name</h2>
-        <form action={renameOrganization} className="card flex gap-2 p-4">
-          <input name="name" defaultValue={m.orgName} required maxLength={200} aria-label="Organization name" className="input" />
-          <button type="submit" className={btn}>
-            Save
-          </button>
-        </form>
-      </section>
     </div>
   );
 }
