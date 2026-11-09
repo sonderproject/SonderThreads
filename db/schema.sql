@@ -229,3 +229,6 @@ alter table people add column if not exists gender text;
 
 -- A short note on one entry of a list.
 alter table list_items add column if not exists note text;
+
+-- Supabase Auth: whether a session must pass 2FA, set server-side.
+alter table users add column if not exists mfa_enabled boolean not null default false;

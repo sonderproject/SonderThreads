@@ -12,6 +12,8 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@supabase/ssr": "^0.12.7",
+    "@supabase/supabase-js": "^2.119.0",
     "exceljs": "^4.4.0",
     "next": "^15.5.29",
     "pdfkit": "^0.20.2",

@@ -328,6 +328,11 @@ alter table people add column if not exists gender text;
 -- A short note on one entry of a list (e.g. "brought ID", "left early").
 alter table list_items add column if not exists note text;
 
+-- Supabase Auth: users.id is the Supabase auth user id. mfa_enabled is set
+-- by the server when a 2FA factor is verified or removed, and decides whether
+-- a session must have passed 2FA (aal2) to see data.
+alter table users add column if not exists mfa_enabled boolean not null default false;
+
 -- No silent fallback to the old single owner: an insert that forgets
 -- user_id now fails instead of landing in someone else's account.
 alter table people alter column user_id drop default;

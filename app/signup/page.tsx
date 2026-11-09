@@ -10,6 +10,10 @@ const ERRORS: Record<string, string> = {
   short: "Password must be at least 8 characters.",
   exists: "An account with that email already exists.",
   legacy: "That isn't the current shared password.",
+  captcha: "Please complete the security check and try again.",
+  weak: "Choose a stronger password.",
+  rate: "Too many sign-ups right now. Wait a minute and try again.",
+  failed: "Couldn't create the account. Please try again.",
 };
 
 export default async function SignupPage({

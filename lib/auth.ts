@@ -2,8 +2,15 @@
  * Edge-safe auth constants and helpers (middleware imports this, so no Node
  * APIs or database access here — see lib/session.ts for those).
  */
-export const SESSION_COOKIE = "st_sid";
-export const SESSION_MAX_AGE = 60 * 60 * 24 * 30; // 30 days
+/**
+ * Sign out after this many minutes with no activity. One constant so it can
+ * become a per-user setting later. Enforced in the browser (IdleSignOut) and
+ * on the server (middleware, via LAST_SEEN_COOKIE) as a backstop.
+ */
+export const IDLE_TIMEOUT_MINUTES = 30;
+
+/** Server-side record of the last request, for the idle timeout backstop. */
+export const LAST_SEEN_COOKIE = "st_last_seen";
 
 /**
  * The old shared password. Now only used once: whoever enters it while

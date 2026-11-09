@@ -1,36 +1,82 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { SESSION_COOKIE } from "@/lib/auth";
+import { createServerClient } from "@supabase/ssr";
+import { IDLE_TIMEOUT_MINUTES, LAST_SEEN_COOKIE } from "@/lib/auth";
+import { supabaseAnonKey, supabaseUrl } from "@/lib/supabase/env";
 
 /**
- * First-pass gate: sends anyone without a session cookie (or bearer token)
- * to sign-in. Middleware runs on the Edge and can't reach Postgres, so it
- * only checks that a token is present — requireUserId()/getSessionUser()
- * validate it against the sessions table on every data access.
+ * Runs before every app page and API route:
+ * 1. Refreshes the Supabase Auth session (Server Components can't write cookies).
+ * 2. Idle timeout backstop: if the last request was more than
+ *    IDLE_TIMEOUT_MINUTES ago, signs out (the browser also does this itself).
+ * 3. Sends signed-out visitors to sign-in (API routes get a 401).
+ * The real authorization check (incl. 2FA) is requireUserId()/getSessionUser().
  */
-export function middleware(request: NextRequest) {
-  const hasToken =
-    !!request.cookies.get(SESSION_COOKIE)?.value ||
-    !!request.headers.get("authorization")?.toLowerCase().startsWith("bearer ");
-  if (hasToken) return NextResponse.next();
+export async function middleware(request: NextRequest) {
+  // Native apps send a Supabase access token; it's verified in getSessionUser().
+  if (request.headers.get("authorization")?.toLowerCase().startsWith("bearer ")) return NextResponse.next();
 
+  const url = supabaseUrl();
+  const key = supabaseAnonKey();
+  if (!url || !key) return signedOut(request); // sign-in page explains what's missing
+
+  let response = NextResponse.next({ request });
+  const supabase = createServerClient(url, key, {
+    cookies: {
+      getAll: () => request.cookies.getAll(),
+      setAll: (list) => {
+        for (const { name, value } of list) request.cookies.set(name, value);
+        response = NextResponse.next({ request });
+        for (const { name, value, options } of list) response.cookies.set(name, value, options);
+      },
+    },
+  });
+
+  const { data } = await supabase.auth.getClaims();
+  if (!data?.claims?.sub) return signedOut(request, response);
+
+  const now = Date.now();
+  const lastSeen = Number(request.cookies.get(LAST_SEEN_COOKIE)?.value);
+  if (Number.isFinite(lastSeen) && lastSeen > 0 && now - lastSeen > IDLE_TIMEOUT_MINUTES * 60_000) {
+    await supabase.auth.signOut();
+    const out = signedOut(request, response, "idle");
+    out.cookies.delete(LAST_SEEN_COOKIE);
+    return out;
+  }
+  // Link prefetches aren't the person doing anything, so they don't count as activity.
+  if (!request.headers.get("next-router-prefetch")) {
+    response.cookies.set(LAST_SEEN_COOKIE, String(now), {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 30,
+    });
+  }
+  return response;
+}
+
+/** Signed-out handling, carrying over any auth cookies Supabase just cleared or refreshed. */
+function signedOut(request: NextRequest, from?: NextResponse, reason?: "idle"): NextResponse {
   const { pathname, search } = request.nextUrl;
+  let out: NextResponse;
   // Signed-out visitors to the home page get the public landing page, at the
   // same address, so search engines and shared links see what the app is.
-  if (pathname === "/") return NextResponse.rewrite(new URL("/welcome", request.url));
-
-  if (pathname.startsWith("/api/")) {
-    return NextResponse.json({ error: "Not signed in" }, { status: 401 });
+  if (pathname === "/" && !reason) out = NextResponse.rewrite(new URL("/welcome", request.url));
+  else if (pathname.startsWith("/api/")) out = NextResponse.json({ error: "Not signed in" }, { status: 401 });
+  else {
+    const loginUrl = new URL("/login", request.url);
+    if (pathname !== "/") loginUrl.searchParams.set("next", pathname + search);
+    if (reason) loginUrl.searchParams.set("reason", reason);
+    out = NextResponse.redirect(loginUrl);
   }
-
-  const loginUrl = new URL("/login", request.url);
-  loginUrl.searchParams.set("next", pathname + search);
-  return NextResponse.redirect(loginUrl);
+  for (const c of from?.cookies.getAll() ?? []) out.cookies.set(c);
+  return out;
 }
 
 export const config = {
-  // Everything except the sign-in/sign-up/password-reset pages, the landing page, the sitemap and static assets (icons and
-  // the manifest must load before sign-in so "Add to Home Screen" works).
+  // Everything except sign-in/up/password pages, the email-link handler (/auth/...), the landing page, the sitemap
+  // and static assets (icons and the manifest must load before sign-in so "Add to Home Screen" works).
   matcher: [
-    "/((?!login|signup|forgot-password|reset-password|welcome|sitemap.xml|sw.js|_next/static|_next/image|favicon.ico|robots.txt|manifest.webmanifest|icon-.*\\.png|apple-touch-icon.*\\.png).*)",
+    "/((?!login|signup|forgot-password|reset-password|auth/|welcome|sitemap.xml|sw.js|_next/static|_next/image|favicon.ico|robots.txt|manifest.webmanifest|icon-.*\\.png|apple-touch-icon.*\\.png).*)",
   ],
 };

@@ -1,19 +1,31 @@
 import { cache } from "react";
-import { cookies, headers } from "next/headers";
+import { headers } from "next/headers";
 import { createHash, randomBytes, scrypt, timingSafeEqual } from "crypto";
 import { promisify } from "util";
-import { query, queryOne } from "@/lib/db/client";
-import { SESSION_COOKIE, SESSION_MAX_AGE } from "@/lib/auth";
+import { queryOne } from "@/lib/db/client";
+import { createSupabaseServer } from "@/lib/supabase/server";
 
+/**
+ * Who is signed in. Identity comes from Supabase Auth (its session cookies,
+ * or an `Authorization: Bearer <access token>` header for native apps); the
+ * app's own `users` row has the same id as the Supabase user, so every
+ * existing query keyed by user_id keeps working.
+ */
 export interface SessionUser {
   id: string;
   email: string;
   name: string | null;
 }
 
+export type AuthState =
+  | { status: "signed-out" }
+  /** Password accepted, but the account has 2FA on and this session hasn't passed it yet. */
+  | { status: "needs-2fa"; id: string; email: string }
+  | { status: "signed-in"; user: SessionUser };
+
 const scryptAsync = promisify(scrypt) as (pw: string, salt: Buffer, len: number) => Promise<Buffer>;
 
-/** "scrypt$<salt>$<hash>", both base64url. Node's built-in scrypt, no dependency. */
+/** Pre-Supabase password format ("scrypt$<salt>$<hash>"); kept only to migrate those accounts. */
 export async function hashPassword(password: string): Promise<string> {
   const salt = randomBytes(16);
   const hash = await scryptAsync(password, salt, 64);
@@ -32,44 +44,47 @@ export function hashToken(token: string): string {
   return createHash("sha256").update(token).digest("hex");
 }
 
-/** Session token from the cookie (web) or an Authorization: Bearer header (native apps). */
-async function readToken(): Promise<string | null> {
+async function bearerToken(): Promise<string | undefined> {
   const auth = (await headers()).get("authorization");
-  if (auth?.toLowerCase().startsWith("bearer ")) return auth.slice(7).trim() || null;
-  return (await cookies()).get(SESSION_COOKIE)?.value ?? null;
+  return auth?.toLowerCase().startsWith("bearer ") ? auth.slice(7).trim() || undefined : undefined;
 }
 
-/** The signed-in user, or null. Cached so many queries in one request share one lookup. */
-export const getSessionUser = cache(async (): Promise<SessionUser | null> => {
-  const token = await readToken();
-  if (!token) return null;
-  return queryOne<SessionUser>(
-    `select u.id, u.email, u.name
-       from sessions s join users u on u.id = s.user_id
-      where s.id = $1 and s.expires_at > now()`,
-    [hashToken(token)],
+/**
+ * The verified auth state for this request (cached per request). getClaims()
+ * verifies the access token's signature, so a tampered cookie can't pass.
+ * Whether 2FA is required comes from the app's own users.mfa_enabled (set
+ * only by the server when a factor is verified or removed), never from the
+ * cookie, so it can't be skipped by editing the client's session.
+ */
+export const getAuthState = cache(async (): Promise<AuthState> => {
+  type Claims = { sub?: string; email?: string; aal?: string };
+  let claims: Claims | null = null;
+  try {
+    const supabase = await createSupabaseServer();
+    const { data, error } = await supabase.auth.getClaims(await bearerToken());
+    if (!error && data?.claims) claims = data.claims as unknown as Claims;
+  } catch (err) {
+    console.error("[auth] couldn't read session", err instanceof Error ? err.message : err);
+    return { status: "signed-out" };
+  }
+  if (!claims?.sub) return { status: "signed-out" };
+
+  type Row = { id: string; email: string; name: string | null; mfa_enabled: boolean };
+  let row = await queryOne<Row>(`select id, email, name, mfa_enabled from users where id = $1`, [claims.sub]);
+  // First request after confirming a new sign-up: create the app's row (same id as Supabase's).
+  row ??= await queryOne<Row>(
+    `insert into users (id, email) values ($1, $2)
+     on conflict (id) do update set email = users.email
+     returning id, email, name, mfa_enabled`,
+    [claims.sub, (claims.email ?? "").toLowerCase()],
   );
+  if (!row) return { status: "signed-out" };
+  if (row.mfa_enabled && claims.aal !== "aal2") return { status: "needs-2fa", id: row.id, email: row.email };
+  return { status: "signed-in", user: { id: row.id, email: row.email, name: row.name } };
 });
 
-/** Creates a session and sets the cookie. Only callable from a Server Action or Route Handler. */
-export async function startSession(userId: string): Promise<void> {
-  const token = randomBytes(32).toString("base64url");
-  await query(`delete from sessions where user_id = $1 and expires_at < now()`, [userId]);
-  await query(
-    `insert into sessions (id, user_id, expires_at) values ($1, $2, now() + make_interval(secs => $3))`,
-    [hashToken(token), userId, SESSION_MAX_AGE],
-  );
-  (await cookies()).set(SESSION_COOKIE, token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge: SESSION_MAX_AGE,
-  });
-}
-
-export async function endSession(): Promise<void> {
-  const token = await readToken();
-  if (token) await query(`delete from sessions where id = $1`, [hashToken(token)]);
-  (await cookies()).delete(SESSION_COOKIE);
+/** The fully signed-in user (2FA passed if it's on), or null. */
+export async function getSessionUser(): Promise<SessionUser | null> {
+  const state = await getAuthState();
+  return state.status === "signed-in" ? state.user : null;
 }
