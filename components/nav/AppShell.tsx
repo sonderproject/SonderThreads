@@ -29,7 +29,10 @@ export function AppShell({
   lists = [],
   notificationCount = 0,
   idleMinutes = 30,
+  showTeam = false,
 }: {
+  /** Organization admins and supervisors get a Team tab. */
+  showTeam?: boolean;
   children: React.ReactNode;
   /** Auto sign-out after this many idle minutes; null = stay signed in (Settings → Privacy & security). */
   idleMinutes?: number | null;
@@ -53,7 +56,7 @@ export function AppShell({
               <div className="flex items-center">
                 <div className="hidden items-center gap-2 sm:flex">
                   <nav className="flex gap-2">
-                    {NAV_ITEMS.map((item) => {
+                    {[...NAV_ITEMS, ...(showTeam ? [{ href: "/team", label: "Team" }] : [])].map((item) => {
                       const isActive =
                         item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
                       return (
@@ -126,7 +129,7 @@ export function AppShell({
             </div>
           </header>
           <main className="pb-tabbar mx-auto max-w-4xl px-4 pt-5 sm:px-6 sm:py-6">{children}</main>
-          <MobileNav people={people} />
+          <MobileNav people={people} showTeam={showTeam} />
           <SearchPalette />
         </div>
       </UndoProvider>
