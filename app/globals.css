@@ -360,3 +360,12 @@ select {
 .legal ul { list-style: disc; padding-left: 1.25rem; display: flex; flex-direction: column; gap: 0.25rem; }
 .legal a { color: var(--accent); text-decoration: underline; }
 .legal strong { font-weight: 600; }
+
+/* The Sonder Project mark (public/brand/sonder-project-mark.png) is a shape
+   only; it's drawn in the accent color so it shows in light and dark. */
+.brand-mark {
+  display: inline-block;
+  background-color: var(--accent);
+  -webkit-mask: url("/brand/sonder-project-mark.png") center / contain no-repeat;
+  mask: url("/brand/sonder-project-mark.png") center / contain no-repeat;
+}
