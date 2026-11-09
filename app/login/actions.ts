@@ -63,18 +63,84 @@ async function migrateLegacyAccount(email: string, password: string): Promise<bo
     [email],
   );
   if (!legacy || !(await verifyPassword(password, legacy.password_hash))) return false;
-  const { error } = await createSupabaseAdmin().auth.admin.createUser({
+  const admin = createSupabaseAdmin().auth.admin;
+  const { error } = await admin.createUser({
     id: legacy.id,
     email: legacy.email,
     password,
     email_confirm: true, // they signed up before confirmation existed; don't lock them out
   });
-  if (error && !/already|exists|registered/i.test(error.message)) {
-    console.error("[auth] migrating account failed", error.message);
-    return false;
+  if (error) {
+    // Already created by a password-reset request: set the password they just proved.
+    const { error: updateError } = await admin.updateUserById(legacy.id, { password, email_confirm: true });
+    if (updateError) {
+      console.error("[auth] migrating account failed", error.message, updateError.message);
+      return false;
+    }
   }
   await query(`update users set password_hash = null, updated_at = now() where id = $1`, [legacy.id]);
   return true;
+}
+
+/**
+ * Makes sure a pre-Supabase account has a Supabase user (same id, email
+ * confirmed) so a reset email can be sent to it. Its old password keeps
+ * working until a new one is set.
+ */
+async function ensureSupabaseUser(email: string): Promise<void> {
+  const legacy = await queryOne<{ id: string; email: string }>(
+    `select id, email from users where lower(email) = $1 and password_hash is not null`,
+    [email],
+  );
+  if (!legacy) return;
+  const { error } = await createSupabaseAdmin().auth.admin.createUser({ id: legacy.id, email: legacy.email, email_confirm: true });
+  if (error && error.code !== "email_exists" && error.code !== "user_already_exists") {
+    console.error("[auth] preparing account for reset failed", error.message);
+  }
+}
+
+/**
+ * "Forgot password?": Supabase emails a reset link. Always ends on the same
+ * "check your email" message, so the form can't be used to find out who has
+ * an account; Supabase limits how often it sends.
+ */
+export async function requestPasswordReset(formData: FormData): Promise<void> {
+  const email = formData.get("email")?.toString().trim().toLowerCase() ?? "";
+  if (!EMAIL_RE.test(email)) redirect("/forgot-password?error=email");
+  await ensureSupabaseUser(email).catch((err) => console.error("[auth] reset prep failed", err));
+  const supabase = await createSupabaseServer();
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${await origin()}/reset-password`,
+    captchaToken: captcha(formData),
+  });
+  if (error?.code === "captcha_failed") redirect("/forgot-password?error=captcha");
+  if (error && error.status !== 429) console.error("[auth] reset email failed", error.code ?? error.message);
+  redirect("/forgot-password?sent=1");
+}
+
+/** Sets a new password. The session comes from the emailed link (/auth/confirm, type=recovery). */
+export async function resetPassword(formData: FormData): Promise<void> {
+  const password = formData.get("password")?.toString() ?? "";
+  const confirm = formData.get("confirm")?.toString() ?? "";
+  if (password.length < MIN_PASSWORD_LENGTH) redirect("/reset-password?error=short");
+  if (password !== confirm) redirect("/reset-password?error=match");
+
+  const state = await getAuthState();
+  if (state.status === "signed-out") redirect("/reset-password?error=invalid");
+  if (state.status === "needs-2fa") redirect("/login/2fa?next=/reset-password");
+
+  const supabase = await createSupabaseServer();
+  const { error } = await supabase.auth.updateUser({ password });
+  if (error) {
+    if (error.code === "weak_password") redirect("/reset-password?error=weak");
+    if (error.code === "same_password") redirect("/reset-password?error=same");
+    console.error("[auth] setting new password failed", error.code ?? error.message);
+    redirect("/reset-password?error=failed");
+  }
+  // The old pre-Supabase password (if any) must stop working too, and other devices are signed out.
+  await query(`update users set password_hash = null, updated_at = now() where id = $1`, [state.user.id]);
+  await supabase.auth.signOut({ scope: "others" });
+  redirect("/");
 }
 
 export async function login(formData: FormData): Promise<void> {
