@@ -185,14 +185,14 @@ export async function saveContactSettings(formData: FormData): Promise<void> {
   const userId = await requireUserId();
   const raw = formData.get("phone")?.toString() ?? "";
   const phone = raw.trim() ? normalizePhone(raw) : null;
-  if (raw.trim() && !phone) redirect("/account?error=phone");
+  if (raw.trim() && !phone) redirect("/settings?error=phone#notifications");
   const smsOptIn = formData.get("sms_opt_in") === "on" && !!phone;
   const tz = validTimeZone(formData.get("timezone")?.toString());
   await query(
     `update users set phone = $1, sms_opt_in = $2, timezone = coalesce($3, timezone), updated_at = now() where id = $4`,
     [phone, smsOptIn, tz, userId],
   );
-  revalidatePath("/account");
+  revalidatePath("/settings");
 }
 
 export async function savePushSubscription(sub: {

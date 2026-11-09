@@ -347,6 +347,22 @@ alter table activity alter column user_id drop default;
 -- up"). Null = never asked. The prompt comes back 30 days later while 2FA is off.
 alter table users add column if not exists mfa_prompt_dismissed_at timestamptz;
 
+-- Settings: one row per user, every option a preset (CHECK-constrained so a
+-- bad value can't be saved). No row = all defaults. Missing rows are created
+-- on first save.
+create table if not exists user_settings (
+  user_id uuid primary key references users(id) on delete cascade,
+  reminder_lead_minutes smallint not null default 10 check (reminder_lead_minutes in (5, 10, 30, 60)),
+  daily_summary_enabled boolean not null default false,
+  daily_summary_hour smallint not null default 8 check (daily_summary_hour between 0 and 23),
+  daily_summary_sent_on date,
+  quiet_hours_enabled boolean not null default false,
+  quiet_start_hour smallint not null default 21 check (quiet_start_hour between 0 and 23),
+  quiet_end_hour smallint not null default 7 check (quiet_end_hour between 0 and 23),
+  idle_timeout_minutes smallint not null default 30 check (idle_timeout_minutes in (15, 30, 60)),
+  updated_at timestamptz not null default now()
+);
+
 -- app_meta is otherwise created after this script runs (lib/db/client.ts);
 -- create it here so enabling RLS on it below works on a fresh database.
 create table if not exists app_meta (key text primary key, value text not null);
@@ -369,4 +385,18 @@ alter table notifications enable row level security;
 alter table push_subscriptions enable row level security;
 alter table check_ins enable row level security;
 alter table app_meta enable row level security;
+alter table user_settings enable row level security;
+
+-- user_settings: each person can only ever reach their own row through
+-- Supabase's API (the app itself connects as the owner and scopes by
+-- requireUserId()).
+do $$
+begin
+  if not exists (select 1 from pg_policies where tablename = 'user_settings' and policyname = 'own settings') then
+    create policy "own settings" on user_settings for all to authenticated
+      using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()));
+  end if;
+exception when undefined_function or invalid_schema_name or undefined_object then
+  null; -- plain Postgres without Supabase's auth schema/roles: RLS stays on with no access
+end $$;
 `;

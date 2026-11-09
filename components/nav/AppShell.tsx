@@ -85,9 +85,9 @@ export function AppShell({
                   </a>
                   <ThemeToggle />
                   <Link
-                    href="/account"
-                    title="Account"
-                    aria-label="Account"
+                    href="/settings"
+                    title="Settings"
+                    aria-label="Settings"
                     className="rounded p-2 text-text-muted transition-colors hover:bg-bg-hover hover:text-text"
                   >
                     <UserIcon />

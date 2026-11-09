@@ -287,6 +287,7 @@ const USER_TABLES = [
   "lists",
   "people",
   "push_subscriptions",
+  "user_settings",
   "password_resets",
   "sessions",
 ] as const;
