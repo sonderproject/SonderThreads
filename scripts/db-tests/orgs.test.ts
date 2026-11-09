@@ -132,6 +132,23 @@ async function main() {
   const solo = await person(U, "Solo friend");
   check("nobody can comment on a personal client", await fails(() => asUser(S1, (q) => q(`insert into client_comments (org_id, person_id, author_id, body) values ($1, $2, $3, 'x')`, [o1.id, solo.id, S1]))));
 
+  // Audit log (Phase 4).
+  const logCount = async (where: string, params: unknown[] = []) =>
+    (await queryOne<{ n: number }>(`select count(*)::int n from audit_log where ${where}`, params))?.n ?? 0;
+  check("adding an org client's note is logged, with the owner as actor", (await logCount(`table_name = 'notes' and action = 'create' and actor_id = $1`, [C1])) >= 1);
+  check("personal records are never logged", (await logCount(`record_id in (select id from notes where person_id is null)`)) === 0);
+  const before = await logCount("true");
+  await query(`update people set last_activity_at = now() where id = $1`, [P1.id]);
+  check("bookkeeping updates (last activity) aren't logged", (await logCount("true")) === before);
+  check("reassignments are logged", (await logCount(`action = 'reassign' and table_name = 'people'`)) >= 2);
+  await asUser(C2, (q) => q(`update notes set content = 'edited' where content = 'note on Maria'`));
+  check("an edit made as a user names that user, with field names only", (await logCount(`action = 'update' and actor_id = $1 and fields = array['content']`, [C2])) === 1);
+  check("comments are logged with their author", (await logCount(`table_name = 'client_comments' and actor_id = $1`, [S1])) === 1);
+  check("admins can read the log", (await asUser(A1, (q) => q(`select id from audit_log`))).length > 0);
+  check("supervisors and case managers can't", (await asUser(S1, (q) => q(`select id from audit_log`))).length === 0 && (await asUser(C2, (q) => q(`select id from audit_log`))).length === 0);
+  check("the other agency's admin can't", (await asUser(A2, (q) => q<{ id: string }>(`select id from audit_log where org_id = $1`, [o1.id]))).length === 0);
+  check("nobody can write to the log through the API", await fails(() => asUser(A1, (q) => q(`insert into audit_log (org_id, action, table_name) values ($1, 'view', 'people')`, [o1.id]))));
+
   const appView = await query(`select id from people where user_id = $1`, [C2]);
   check("the app's normal queries are unchanged", appView.length >= 1);
   console.log(failures ? `${failures} FAILED` : "ALL PASSED");

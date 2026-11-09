@@ -98,6 +98,8 @@ Deferred by the owner (add later):
 - **Audit log:** Postgres triggers record who created, updated or deleted client records, and each time a supervisor views a client profile.
 - Supervisors never see personal (non-client) records.
 
+Built (awaiting test): Team tab (admins and supervisors only) with per-staff client counts, follow-ups, open and overdue tasks; read-only caseload and client views; reassign a client (supervisors and admins); supervisor comments (case manager notified, sees them on the client page); audit log written by database triggers (create/change/delete/reassign/comment, field names only) plus views of client records, readable by admins at Team → Activity log. Covered by `scripts/db-tests/orgs.test.ts` (53 checks).
+
 ## Later (not now)
 
 HMIS-ready export, Stripe billing, SSO, per-org custom templates.

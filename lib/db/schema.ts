@@ -486,6 +486,72 @@ create table if not exists client_comments (
 );
 create index if not exists client_comments_person_idx on client_comments(person_id, created_at desc);
 
+-- Audit log (Phase 4): who created, changed, deleted, reassigned, commented
+-- on or viewed an organization's client records. Changes are written by
+-- database triggers, so nothing can skip them; views by the app. Only field
+-- names are kept, never values, so the log isn't a second copy of client data.
+-- No foreign keys: entries outlive deleted people and records.
+create table if not exists audit_log (
+  id bigint generated always as identity primary key,
+  org_id uuid not null,
+  actor_id uuid,
+  action text not null,
+  table_name text not null,
+  record_id uuid,
+  person_id uuid,
+  fields text[],
+  at timestamptz not null default now()
+);
+create index if not exists audit_log_org_idx on audit_log(org_id, at desc);
+create index if not exists audit_log_person_idx on audit_log(person_id, at desc);
+
+create or replace function audit_client_change() returns trigger language plpgsql security definer set search_path = public as $$
+declare
+  rec jsonb := to_jsonb(coalesce(new, old));
+  org uuid := coalesce((to_jsonb(new)->>'org_id')::uuid, (to_jsonb(old)->>'org_id')::uuid);
+  -- The signed-in user when the change came through asUser()/Supabase's API; otherwise the row's owner
+  -- (the app only ever writes a user's own rows).
+  actor uuid := coalesce(
+    nullif(nullif(current_setting('request.jwt.claims', true), '')::jsonb->>'sub', '')::uuid,
+    (rec->>'author_id')::uuid,
+    (rec->>'user_id')::uuid);
+  act text;
+  changed text[];
+begin
+  if org is null then return null; end if;  -- personal records are never logged
+  if tg_op = 'INSERT' then
+    act := 'create';
+  elsif tg_op = 'DELETE' then
+    act := 'delete';
+  else
+    select array_agg(k order by k) into changed
+      from jsonb_each(to_jsonb(new)) n(k, v)
+     where k not in ('updated_at', 'last_activity_at', 'reminded_at', 'search_vector', 'org_id')
+       and v is distinct from to_jsonb(old)->k;
+    if changed is null then return null; end if;  -- only bookkeeping columns changed
+    act := case
+      when 'user_id' = any(changed) then 'reassign'
+      when 'deleted_at' = any(changed) and (to_jsonb(new)->>'deleted_at') is not null then 'delete'
+      when 'deleted_at' = any(changed) then 'restore'
+      else 'update' end;
+  end if;
+  insert into audit_log (org_id, actor_id, action, table_name, record_id, person_id, fields)
+  values (org, actor, act, tg_table_name, (rec->>'id')::uuid,
+          coalesce((rec->>'person_id')::uuid, case when tg_table_name = 'people' then (rec->>'id')::uuid end),
+          changed);
+  return null;
+end $$;
+drop trigger if exists people_audit on people;
+create trigger people_audit after insert or update or delete on people for each row execute function audit_client_change();
+drop trigger if exists notes_audit on notes;
+create trigger notes_audit after insert or update or delete on notes for each row execute function audit_client_change();
+drop trigger if exists tasks_audit on tasks;
+create trigger tasks_audit after insert or update or delete on tasks for each row execute function audit_client_change();
+drop trigger if exists check_ins_audit on check_ins;
+create trigger check_ins_audit after insert or update or delete on check_ins for each row execute function audit_client_change();
+drop trigger if exists client_comments_audit on client_comments;
+create trigger client_comments_audit after insert or delete on client_comments for each row execute function audit_client_change();
+
 -- Row level security on every table, with no policies: Supabase's public
 -- API (anon/authenticated roles) gets no rows at all. The app connects
 -- directly as the table owner, which bypasses RLS, and scopes every query
@@ -509,6 +575,7 @@ alter table organizations enable row level security;
 alter table memberships enable row level security;
 alter table invitations enable row level security;
 alter table client_comments enable row level security;
+alter table audit_log enable row level security;
 
 -- user_settings: each person can only ever reach their own row through
 -- Supabase's API (the app itself connects as the owner and scopes by
@@ -630,8 +697,19 @@ begin
   drop policy if exists "delete own" on client_comments;
   create policy "delete own" on client_comments for delete to authenticated using (author_id = (select auth.uid()));
 
+  -- Audit log: the organization's admins read it; nobody writes through the API.
+  drop policy if exists "admin read" on audit_log;
+  create policy "admin read" on audit_log for select to authenticated using (app_org_admin(org_id));
+
   drop policy if exists "admin" on invitations;
   create policy "admin" on invitations for all to authenticated using (app_org_admin(org_id)) with check (app_org_admin(org_id));
+  -- The access-rule helpers are only for the rules themselves: not callable by signed-out visitors.
+  revoke execute on function app_org_member(uuid), app_org_viewer(uuid), app_org_admin(uuid), app_shares_org(uuid),
+    app_owns_person(uuid), app_person_in_org(uuid, uuid) from public, anon;
+  grant execute on function app_org_member(uuid), app_org_viewer(uuid), app_org_admin(uuid), app_shares_org(uuid),
+    app_owns_person(uuid), app_person_in_org(uuid, uuid) to authenticated;
+  revoke execute on function audit_client_change(), people_set_org(), inherit_person_org(), people_cascade_org()
+    from public, anon, authenticated;
 exception when undefined_function or invalid_schema_name or undefined_object then
   null; -- plain Postgres without Supabase's auth schema/roles: RLS stays on with no access
 end $$;

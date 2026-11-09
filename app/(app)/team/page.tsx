@@ -45,6 +45,11 @@ export default async function TeamPage() {
           {staff.length} staff · {totals.clients} clients · {totals.followups} need follow-up · {totals.overdue} overdue
           tasks
         </p>
+        {viewer.role === "admin" && (
+          <Link href="/team/log" className="inline-block text-sm text-accent hover:underline">
+            Activity log →
+          </Link>
+        )}
       </div>
 
       <div className="card overflow-x-auto">

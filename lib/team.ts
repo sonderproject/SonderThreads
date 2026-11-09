@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { query } from "@/lib/db/client";
 import { requireUserId } from "@/lib/current-user";
 import { getMembership, type OrgRole } from "@/lib/org";
 
@@ -21,4 +22,12 @@ export function shortDate(value: string | Date | null, timeZone: string): string
   const d = new Date(value);
   const sameYear = d.getFullYear() === new Date().getFullYear();
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: sameYear ? undefined : "numeric", timeZone });
+}
+
+/** Records that a supervisor or admin opened a client's record (for the audit log). */
+export async function logClientView(orgId: string, viewerId: string, personId: string): Promise<void> {
+  await query(
+    `insert into audit_log (org_id, actor_id, action, table_name, record_id, person_id) values ($1, $2, 'view', 'people', $3, $3)`,
+    [orgId, viewerId, personId],
+  ).catch((err) => console.error("[audit] couldn't record a view", err instanceof Error ? err.message : err));
 }

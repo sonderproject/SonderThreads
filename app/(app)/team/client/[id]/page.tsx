@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { asUser } from "@/lib/db/as-user";
 import { isUuid } from "@/lib/ids";
 import { getTimeZone } from "@/lib/timezone";
-import { requireTeamViewer, shortDate } from "@/lib/team";
+import { logClientView, requireTeamViewer, shortDate } from "@/lib/team";
 import { reassignClient } from "@/lib/actions/org";
 import { ClientComments, type ClientComment } from "@/components/org/ClientComments";
 
@@ -88,6 +88,7 @@ export default async function TeamClientPage({
     return { person, notes, tasks, checkIns, activity, staff, comments };
   });
   if (!data) notFound();
+  await logClientView(viewer.orgId, viewer.userId, id);
   const { person, notes, tasks, checkIns, activity, staff, comments } = data;
   const others = staff.filter((s) => s.user_id !== person.user_id);
   const open = tasks.filter((t) => !t.completed);
