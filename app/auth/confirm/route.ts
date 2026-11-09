@@ -17,6 +17,20 @@ export async function GET(request: NextRequest) {
   const type = params.get("type") as EmailOtpType | null;
   const next = safeNextPath(params.get("next"));
 
+  // Supabase's default email templates (before they're switched to the token-hash
+  // links in docs/auth-setup.md) send a one-time ?code= instead. It works when the
+  // link is opened in the same browser that signed up or asked for the reset.
+  const code = params.get("code");
+  if (code && !tokenHash) {
+    const supabase = await createSupabaseServer();
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+    if (!error) {
+      void data;
+      return NextResponse.redirect(new URL(next, request.url));
+    }
+    console.error("[auth] email link (code) failed", error.code ?? error.message);
+  }
+
   if (tokenHash && type && TYPES.includes(type)) {
     const supabase = await createSupabaseServer();
     const { error } = await supabase.auth.verifyOtp({ type, token_hash: tokenHash });
