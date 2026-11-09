@@ -78,9 +78,9 @@ export const config = {
   // Node runtime (stable in Next 15.5) so the Supabase settings are read the same way as on the server,
   // including Vercel's prefixed variable names.
   runtime: "nodejs",
-  // Everything except sign-in/up/password pages, the email-link handler (/auth/...), the landing page, the sitemap
+  // Everything except sign-in/up/password pages, the public legal pages, the email-link handler (/auth/...), the landing page, the sitemap
   // and static assets (icons and the manifest must load before sign-in so "Add to Home Screen" works).
   matcher: [
-    "/((?!login|signup|forgot-password|reset-password|auth/|api/auth/status|welcome|sitemap.xml|sw.js|_next/static|_next/image|favicon.ico|robots.txt|manifest.webmanifest|icon-.*\\.png|apple-touch-icon.*\\.png).*)",
+    "/((?!login|signup|privacy|terms|account-deletion|forgot-password|reset-password|auth/|api/auth/status|welcome|sitemap.xml|sw.js|_next/static|_next/image|favicon.ico|robots.txt|manifest.webmanifest|icon-.*\\.png|apple-touch-icon.*\\.png).*)",
   ],
 };
