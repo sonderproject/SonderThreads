@@ -218,3 +218,30 @@ export async function reassignClient(formData: FormData): Promise<void> {
   revalidatePath("/", "layout");
   redirect(`/team/client/${personId}?saved=reassigned`);
 }
+
+/** Supervisor or admin: leaves a comment on a client; the case manager is notified. */
+export async function addClientComment(formData: FormData): Promise<void> {
+  const userId = await requireUserId();
+  const m = await getMembership();
+  if (!m?.active || m.role === "case_manager") redirect("/");
+  const personId = formData.get("person_id")?.toString() ?? "";
+  const body = (formData.get("body")?.toString() ?? "").trim().slice(0, 5000);
+  if (!body) redirect(`/team/client/${personId}?error=comment#comments`);
+  // As the user: the database checks they're a supervisor/admin of the client's organization.
+  const client = await asUser(userId, async (q) => {
+    await q(`insert into client_comments (org_id, person_id, author_id, body) values ($1, $2, $3, $4)`, [m!.orgId, personId, userId, body]);
+    return (await q<{ user_id: string; display_name: string }>(`select user_id, display_name from people where id = $1`, [personId]))[0];
+  }).catch(() => null);
+  if (!client) redirect("/team");
+  if (client.user_id !== userId) {
+    await notify(client.user_id, {
+      type: "client_comment",
+      title: `New comment on ${client.display_name}`,
+      body: body.length > 140 ? `${body.slice(0, 139)}…` : body,
+      href: `/people/${personId}#comments`,
+      personId,
+    }).catch((err) => console.error("[org] comment notification failed", err));
+  }
+  revalidatePath(`/team/client/${personId}`);
+  redirect(`/team/client/${personId}#comments`);
+}

@@ -120,6 +120,18 @@ async function main() {
   await transaction((q) => transferOrgClients(q, o1.id, C2, C1, P3.id));
   check("reassigning one client moves just that client and its notes", (await queryOne<{ user_id: string }>(`select user_id from people where id = $1`, [P3.id]))?.user_id === C1 && (await queryOne<{ user_id: string }>(`select user_id from notes where content = 'note on Lee'`))?.user_id === C1 && (await queryOne<{ user_id: string }>(`select user_id from people where id = $1`, [P1.id]))?.user_id === C2);
 
+  // Comments (Phase 4).
+  await query(`update memberships set active = true where user_id = $1`, [S1]);
+  await asUser(S1, (q) => q(`insert into client_comments (org_id, person_id, author_id, body) values ($1, $2, $3, 'Please call her this week')`, [o1.id, P1.id, S1]));
+  check("supervisor can comment on an org client", (await queryOne<{ n: number }>(`select count(*)::int n from client_comments`))?.n === 1);
+  check("the client's case manager sees the comment", (await asUser(C2, (q) => q(`select id from client_comments where person_id = $1`, [P1.id]))).length === 1);
+  check("another case manager doesn't", (await asUser(C1, (q) => q(`select id from client_comments`))).length === 0);
+  check("the other agency doesn't", (await asUser(A2, (q) => q(`select id from client_comments`))).length === 0);
+  check("case managers can't comment", await fails(() => asUser(C2, (q) => q(`insert into client_comments (org_id, person_id, author_id, body) values ($1, $2, $3, 'x')`, [o1.id, P1.id, C2]))));
+  check("the other agency can't comment on it", await fails(() => asUser(A2, (q) => q(`insert into client_comments (org_id, person_id, author_id, body) values ($1, $2, $3, 'x')`, [o2.id, P1.id, A2]))));
+  const solo = await person(U, "Solo friend");
+  check("nobody can comment on a personal client", await fails(() => asUser(S1, (q) => q(`insert into client_comments (org_id, person_id, author_id, body) values ($1, $2, $3, 'x')`, [o1.id, solo.id, S1]))));
+
   const appView = await query(`select id from people where user_id = $1`, [C2]);
   check("the app's normal queries are unchanged", appView.length >= 1);
   console.log(failures ? `${failures} FAILED` : "ALL PASSED");

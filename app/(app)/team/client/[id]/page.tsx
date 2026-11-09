@@ -5,6 +5,7 @@ import { isUuid } from "@/lib/ids";
 import { getTimeZone } from "@/lib/timezone";
 import { requireTeamViewer, shortDate } from "@/lib/team";
 import { reassignClient } from "@/lib/actions/org";
+import { ClientComments, type ClientComment } from "@/components/org/ClientComments";
 
 type Person = {
   id: string;
@@ -63,7 +64,7 @@ export default async function TeamClientPage({
       [id, viewer.orgId],
     );
     if (!person) return null;
-    const [notes, tasks, checkIns, activity, staff] = await Promise.all([
+    const [notes, tasks, checkIns, activity, staff, comments] = await Promise.all([
       q<Note>(`select id, content, created_at from notes where person_id = $1 and deleted_at is null order by created_at desc`, [id]),
       q<Task>(
         `select id, title, due_at, completed, completed_at from tasks where person_id = $1 and deleted_at is null
@@ -77,11 +78,17 @@ export default async function TeamClientPage({
           where m.org_id = $1 and m.active order by 2`,
         [viewer.orgId],
       ),
+      q<ClientComment>(
+        `select c.id, c.body, c.created_at, coalesce(u.name, u.email) as author
+           from client_comments c left join users u on u.id = c.author_id
+          where c.person_id = $1 order by c.created_at desc`,
+        [id],
+      ),
     ]);
-    return { person, notes, tasks, checkIns, activity, staff };
+    return { person, notes, tasks, checkIns, activity, staff, comments };
   });
   if (!data) notFound();
-  const { person, notes, tasks, checkIns, activity, staff } = data;
+  const { person, notes, tasks, checkIns, activity, staff, comments } = data;
   const others = staff.filter((s) => s.user_id !== person.user_id);
   const open = tasks.filter((t) => !t.completed);
   const done = tasks.filter((t) => t.completed);
@@ -125,6 +132,14 @@ export default async function TeamClientPage({
           <p className="w-full text-xs text-text-muted">Their notes, tasks and check-ins move with them.</p>
         </form>
       )}
+
+      <ClientComments
+        personId={person.id}
+        comments={comments}
+        canComment
+        formatDate={(iso) => shortDate(iso, tz)}
+        error={error === "comment"}
+      />
 
       <section className="space-y-3">
         <h2 className="eyebrow text-text-faint">Details</h2>

@@ -23,6 +23,24 @@ import { Badge } from "@/components/ui/Badge";
 import { isStale, STALE_DAYS } from "@/lib/stale";
 import { isNew } from "@/lib/urgency";
 import type { Activity } from "@/lib/types";
+import { asUser } from "@/lib/db/as-user";
+import { requireUserId } from "@/lib/current-user";
+import { getTimeZone } from "@/lib/timezone";
+import { shortDate } from "@/lib/team";
+import { ClientComments, type ClientComment } from "@/components/org/ClientComments";
+
+/** Supervisor comments on one of my clients (read through the database's access rules). */
+async function listCommentsForPerson(personId: string): Promise<ClientComment[]> {
+  const userId = await requireUserId();
+  return asUser(userId, (q) =>
+    q<ClientComment>(
+      `select c.id, c.body, c.created_at, coalesce(u.name, u.email) as author
+         from client_comments c left join users u on u.id = c.author_id
+        where c.person_id = $1 order by c.created_at desc`,
+      [personId],
+    ),
+  ).catch(() => []);
+}
 
 /** node-postgres returns `date` columns as a local-midnight Date; the date input wants YYYY-MM-DD. */
 function toDateString(value: string | Date | null): string | null {
@@ -50,7 +68,7 @@ export default async function PersonProfilePage({
   const { id } = await params;
   if (!isUuid(id)) notFound();
   // Everything loads at once (each query is scoped to the user, so a bad id just returns nothing).
-  const [person, activity, tasks, lists, notes, checkIns, reasons, allLists] = await Promise.all([
+  const [person, activity, tasks, lists, notes, checkIns, reasons, allLists, comments, tz] = await Promise.all([
     getPerson(id),
     getPersonTimeline(id),
     listTasksForPerson(id),
@@ -59,6 +77,8 @@ export default async function PersonProfilePage({
     listCheckInsForPerson(id),
     listCheckInReasons(),
     listLists(),
+    listCommentsForPerson(id),
+    getTimeZone(),
   ]);
   if (!person) notFound();
 
@@ -174,6 +194,8 @@ export default async function PersonProfilePage({
       <Section title="Summary">
         <p className="card px-3 py-2.5 text-sm text-text-muted">{person.summary ?? "No summary yet."}</p>
       </Section>
+
+      <ClientComments personId={person.id} comments={comments} canComment={false} formatDate={(iso) => shortDate(iso, tz)} />
 
       <Section title="Notes">
         <PersonNotes personId={person.id} personName={person.display_name} notes={notes} />

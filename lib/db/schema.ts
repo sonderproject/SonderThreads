@@ -474,6 +474,18 @@ end $$;
 drop trigger if exists people_cascade_org on people;
 create trigger people_cascade_org after update of org_id on people for each row execute function people_cascade_org();
 
+-- Supervisor/admin comments on a client (Phase 4). Visible to the client's
+-- case manager and the organization's supervisors and admins.
+create table if not exists client_comments (
+  id uuid primary key default gen_random_uuid(),
+  org_id uuid not null references organizations(id) on delete cascade,
+  person_id uuid not null references people(id) on delete cascade,
+  author_id uuid references users(id) on delete set null,
+  body text not null check (length(body) between 1 and 5000),
+  created_at timestamptz not null default now()
+);
+create index if not exists client_comments_person_idx on client_comments(person_id, created_at desc);
+
 -- Row level security on every table, with no policies: Supabase's public
 -- API (anon/authenticated roles) gets no rows at all. The app connects
 -- directly as the table owner, which bypasses RLS, and scopes every query
@@ -496,6 +508,7 @@ alter table user_settings enable row level security;
 alter table organizations enable row level security;
 alter table memberships enable row level security;
 alter table invitations enable row level security;
+alter table client_comments enable row level security;
 
 -- user_settings: each person can only ever reach their own row through
 -- Supabase's API (the app itself connects as the owner and scopes by
@@ -599,6 +612,23 @@ begin
   create policy "member read" on memberships for select to authenticated using (user_id = (select auth.uid()) or app_org_member(org_id));
   drop policy if exists "admin write" on memberships;
   create policy "admin write" on memberships for all to authenticated using (app_org_admin(org_id)) with check (app_org_admin(org_id));
+
+  create or replace function app_owns_person(pid uuid) returns boolean
+    language sql stable security definer set search_path = public as
+    'select exists (select 1 from people p where p.id = pid and p.user_id = auth.uid())';
+  create or replace function app_person_in_org(pid uuid, o uuid) returns boolean
+    language sql stable security definer set search_path = public as
+    'select exists (select 1 from people p where p.id = pid and p.org_id = o and p.deleted_at is null)';
+
+  -- Comments: the client's case manager and org viewers read; viewers write as themselves.
+  drop policy if exists "read" on client_comments;
+  create policy "read" on client_comments for select to authenticated
+    using (app_org_viewer(org_id) or app_owns_person(person_id));
+  drop policy if exists "write" on client_comments;
+  create policy "write" on client_comments for insert to authenticated
+    with check (author_id = (select auth.uid()) and app_org_viewer(org_id) and app_person_in_org(person_id, org_id));
+  drop policy if exists "delete own" on client_comments;
+  create policy "delete own" on client_comments for delete to authenticated using (author_id = (select auth.uid()));
 
   drop policy if exists "admin" on invitations;
   create policy "admin" on invitations for all to authenticated using (app_org_admin(org_id)) with check (app_org_admin(org_id));
