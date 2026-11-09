@@ -44,13 +44,17 @@ Sonder Threads (working name; branded "<name> by Sonder Project"): a client trac
 
 Every option is a preset or toggle stored in a `user_settings` table (one row per user; RLS so users see only their own). Users can't break the layout: no free-form styling.
 
-- **Account:** name and photo, email, phone, change password, 2FA on/off, sign out of all devices, delete account
-- **Appearance:** theme (light/dark/system), accent color (6 presets), text size (S/M/L), density (comfortable/compact), start screen (Today/Clients/Tasks), date format, week starts on
-- **Notifications:** push on/off, follow-up reminder timing, daily summary time, quiet hours
-- **Notes:** default save location for voice notes ("ask each time" or "my notes")
-- **Privacy & security:** auto-lock timeout, Face ID/fingerprint unlock (mobile)
-- **Data:** export my data (CSV)
-- **About:** app version, privacy policy, terms, contact support
+Built (awaiting test):
+- [ ] **Account:** name, email change, phone, change password, 2FA on/off, sign out of all devices, delete account
+- [ ] **Notifications:** push on/off, follow-up reminder timing, daily summary time, quiet hours
+- [ ] **Privacy & security:** auto-lock timeout. Face ID/fingerprint shows "Coming with the mobile app".
+- [ ] **Data:** export my data (CSV)
+- [ ] **About:** app version, privacy policy, terms, contact support
+
+Deferred by the owner (add later):
+- Profile photo
+- **Appearance:** theme, accent color (6 presets), text size, density, start screen, date format, week starts on
+- **Notes:** default save location for voice notes
 
 ## Phase 3: Organization layer (highest risk: touches every table)
 

@@ -62,6 +62,12 @@ Supabase → **Authentication → Emails → Templates**. The app verifies email
 <p><a href="{{ .RedirectTo }}&token_hash={{ .TokenHash }}&type=recovery">Set a new password</a></p>
 ```
 
+**Change email address.** Replace the link with:
+```html
+<h2>Confirm your new email</h2>
+<p><a href="{{ .RedirectTo }}&token_hash={{ .TokenHash }}&type=email_change">Confirm the change to {{ .NewEmail }}</a></p>
+```
+
 `{{ .RedirectTo }}` is always `<this deployment>/auth/confirm?next=...` (the app sets it), so the link returns to whichever deployment sent it: production, a preview, or localhost.
 
 ## E. Custom SMTP (required before real users)
