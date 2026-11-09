@@ -8,6 +8,8 @@ import { queryOne } from "@/lib/db/client";
 import { logout, requestEmailChange, signOutEverywhere } from "@/app/login/actions";
 import { saveProfile } from "@/lib/actions/profile";
 import { ImportBackupCard } from "@/components/settings/ImportBackupCard";
+import { getMembership, ROLE_LABELS } from "@/lib/org";
+import Link from "next/link";
 import { getNotificationSettings, sendTestNotification } from "@/lib/actions/notifications";
 import { saveNotificationPrefs, saveSecurityPrefs } from "@/lib/actions/settings";
 import { getUserSettings } from "@/lib/settings";
@@ -57,13 +59,14 @@ export default async function SettingsPage({
 }) {
   const { error, saved, email } = await searchParams;
   const userId = await requireUserId();
-  const [user, notify, prefs] = await Promise.all([
+  const [user, notify, prefs, membership] = await Promise.all([
     queryOne<{ email: string; name: string | null; phone: string | null; mfa_enabled: boolean }>(
       `select email, name, phone, mfa_enabled from users where id = $1`,
       [userId],
     ),
     getNotificationSettings(),
     getUserSettings(),
+    getMembership(),
   ]);
 
   return (
@@ -141,8 +144,37 @@ export default async function SettingsPage({
           </div>
         </div>
 
-        <DeleteAccountCard error={error === "confirm" || error === "delete-login" ? error : undefined} />
+        <DeleteAccountCard error={error === "confirm" || error === "delete-login" || error === "last-admin" ? error : undefined} />
       </section>
+
+      {membership && (
+        <section id="organization" className="scroll-mt-20 space-y-3">
+          <h2 className="eyebrow text-text-faint">Organization</h2>
+          <div className="card space-y-2 p-4">
+            <div className="flex items-start justify-between gap-3">
+              <p className="text-sm font-semibold text-text">{membership.orgName}</p>
+              <span className={`tag shrink-0 ${membership.active ? "tag-v" : "bg-bg-hover text-text-muted"}`}>
+                {membership.active ? ROLE_LABELS[membership.role] : "Deactivated"}
+              </span>
+            </div>
+            {membership.active ? (
+              <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
+                {membership.role === "admin" && (
+                  <Link href="/organization" className="text-accent hover:underline">
+                    Manage staff and invites
+                  </Link>
+                )}
+                <Link href="/organization/clients" className="text-accent hover:underline">
+                  Bring clients in
+                </Link>
+              </div>
+            ) : (
+              <p className="text-xs text-text-muted">Your access to this organization was turned off by an admin.</p>
+            )}
+            <p className="text-xs text-text-faint">Your tasks, notes and lists that aren&apos;t about a client are always private.</p>
+          </div>
+        </section>
+      )}
 
       <section id="notifications" className="scroll-mt-20 space-y-3">
         <h2 className="eyebrow text-text-faint">Notifications</h2>
@@ -301,6 +333,15 @@ export default async function SettingsPage({
           </div>
         </div>
       </section>
+
+      {!membership && (
+        <p className="text-xs text-text-faint">
+          Run a team or agency?{" "}
+          <Link href="/organization/new" className="text-text-muted underline hover:text-accent">
+            Set up an organization
+          </Link>
+        </p>
+      )}
     </div>
   );
 }

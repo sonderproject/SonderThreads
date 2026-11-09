@@ -7,6 +7,8 @@
  */
 import { query, queryOne } from "@/lib/db/client";
 import { asUser } from "@/lib/db/as-user";
+import { transaction } from "@/lib/db/client";
+import { transferOrgClients, otherActiveAdmin } from "@/lib/org-admin";
 
 let failures = 0;
 const check = (name: string, ok: boolean, detail?: unknown) => {
@@ -75,8 +77,44 @@ async function main() {
   await query(`update people set org_id = $1 where id = $2`, [o1.id, UP.id]);
   check("moving a client into an org brings their notes along", (await queryOne<{ org_id: string }>(`select org_id from notes where content = 'note on friend'`))?.org_id === o1.id);
 
-  const appView = await query(`select id from people where user_id = $1`, [C1]);
-  check("the app's normal queries are unchanged", appView.length === 1);
+  // ── Screens' database operations ──
+  await query(`update memberships set active = true where user_id = $1`, [S1]);
+  const adminInvite = await asUser(A1, (q) => q(`insert into invitations (org_id, email, role, token_hash, expires_at) values ($1, 'x@t.dev', 'supervisor', 'h2', now() + interval '14 days') returning id`, [o1.id]));
+  check("admin can create an invite", adminInvite.length === 1);
+  check("case manager can't create an invite", await fails(() => asUser(C1, (q) => q(`insert into invitations (org_id, email, role, token_hash, expires_at) values ($1, 'y@t.dev', 'admin', 'h3', now())`, [o1.id]))));
+  const staff = await asUser(A1, (q) => q<{ user_id: string; clients: number }>(`select m.user_id, (select count(*) from people p where p.user_id = m.user_id and p.org_id = m.org_id)::int clients from memberships m join users u on u.id = m.user_id where m.org_id = $1`, [o1.id]));
+  check("admin's staff list shows each member's client count", staff.length === 4 && staff.find((x) => x.user_id === C1)?.clients === 1, staff);
+  check("admin can change a role", (await asUser(A1, (q) => q(`update memberships set role = 'supervisor' where org_id = $1 and user_id = $2 returning user_id`, [o1.id, C2]))).length === 1);
+  await query(`update memberships set role = 'case_manager' where user_id = $1`, [C2]);
+
+  // A member moves a private client in (as themselves; the database checks membership).
+  const priv = await person(U, "temp");
+  await query(`delete from people where id = $1`, [priv.id]);
+  const c1Private = (await query<{ id: string }>(`insert into people (user_id, first_name, display_name, org_id) values ($1, 'Pat', 'Pat (C1 private)', null) returning id`, [C1]))[0];
+  await query(`update people set org_id = null where id = $1`, [c1Private.id]);
+  check("supervisor can't see a member's private client", !(await see(S1, "select display_name from people")).some((r) => r.display_name === "Pat (C1 private)"));
+  await asUser(C1, (q) => q(`update people set org_id = $1 where user_id = $2 and org_id is null and id = any($3::uuid[])`, [o1.id, C1, [c1Private.id]]));
+  check("after moving it in, the supervisor can see it", (await see(S1, "select display_name from people")).some((r) => r.display_name === "Pat (C1 private)"));
+  check("a non-member can't move a client into the org", (await asUser(U, (q) => q(`update people set org_id = $1 where user_id = $2 returning id`, [o1.id, U])).catch(() => [])).length === 0);
+
+  // Deactivate C1, handing clients to C2.
+  const c1PersonalNote = await queryOne<{ user_id: string }>(`select user_id from notes where content = 'C1 personal note'`);
+  await query(`insert into list_items (user_id, list_id, person_id, label) values ($1, (select id from lists where user_id = $1 limit 1), $2, 'Maria on C1 list')`, [C1, P1.id]);
+  await transaction(async (q) => {
+    await transferOrgClients(q, o1.id, C1, C2);
+    await q(`update memberships set active = false where org_id = $1 and user_id = $2`, [o1.id, C1]);
+  });
+  const maria = await queryOne<{ user_id: string }>(`select user_id from people where id = $1`, [P1.id]);
+  const mariaNotes = await query<{ user_id: string }>(`select user_id from notes where person_id = $1`, [P1.id]);
+  check("deactivation hands the clients and their notes to the chosen colleague", maria?.user_id === C2 && mariaNotes.every((n) => n.user_id === C2));
+  check("the departing person's personal note stays theirs", (await queryOne<{ user_id: string }>(`select user_id from notes where content = 'C1 personal note'`))?.user_id === c1PersonalNote?.user_id);
+  check("the departing person keeps no client names on their lists", !(await query(`select 1 from list_items where label = 'Maria on C1 list'`)).length);
+  check("the departing person can no longer see the clients", (await see(C1, "select display_name from people")).length === 0);
+  check("the new case manager sees them", names(await see(C2, "select display_name from people")).includes("Maria (C1 client)"));
+  check("another admin is found for handovers", (await otherActiveAdmin(o1.id, A1)) === null && (await otherActiveAdmin(o2.id, D1)) === A2);
+
+  const appView = await query(`select id from people where user_id = $1`, [C2]);
+  check("the app's normal queries are unchanged", appView.length >= 1);
   console.log(failures ? `${failures} FAILED` : "ALL PASSED");
   process.exit(failures ? 1 : 0);
 }

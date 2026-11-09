@@ -86,6 +86,7 @@ Deferred by the owner (add later):
 - Back up the database before running migrations. *(Done 2026-11-09: every table, plus Supabase's auth users, copied to the `backup_20261109` schema with row counts verified. The Supabase project is on the free plan, which has no automatic backups.)*
 - Data safety: changes only add tables and columns. No existing row is moved or deleted. Existing accounts stay solo until they create or join an org.
 - Database-enforced privacy goes behind one Vercel setting that can switch back to today's behavior instantly.
+- Built (awaiting test): Settings → "Set up an organization" (only link solo users see); /organization for admins (staff, roles, invite links, deactivate with client handover, reactivate, rename); /join/<token> invite links (one-time, 14 days, must match the invited email); /organization/clients to bring existing clients in. Deleting an account hands that member's organization clients to another admin (or asks for one first). Invites are links the admin sends; automated invite emails can come later.
 - Decisions (owner can change): when joining an org, a member picks which existing clients move in; case managers see only their own clients; lists stay personal (client entries on them are org data).
 
 ## Phase 4: Supervisor layer

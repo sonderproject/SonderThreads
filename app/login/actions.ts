@@ -9,6 +9,7 @@ import { getAuthState, verifyPassword } from "@/lib/session";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { createSupabaseAdmin } from "@/lib/supabase/admin";
 import { normalizePhone, validTimeZone } from "@/lib/notify/phone";
+import { otherActiveAdmin, transferOrgClients } from "@/lib/org-admin";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MIN_PASSWORD_LENGTH = 8;
@@ -340,9 +341,26 @@ export async function deleteAccount(formData: FormData): Promise<void> {
   const user = state.user;
   if (formData.get("confirm")?.toString().trim() !== "DELETE") redirect("/settings?error=confirm#delete");
 
+  // An organization's clients outlive a member who leaves: they go to another
+  // admin. If others remain but no other admin does, they must name one first.
+  const membership = await queryOne<{ org_id: string; others: number }>(
+    `select m.org_id, (select count(*)::int from memberships o where o.org_id = m.org_id and o.active and o.user_id <> m.user_id) as others
+       from memberships m where m.user_id = $1 and m.active`,
+    [user.id],
+  );
+  const heir = membership && membership.others > 0 ? await otherActiveAdmin(membership.org_id, user.id) : null;
+  if (membership && membership.others > 0 && !heir) redirect("/settings?error=last-admin#delete");
+
   await transaction(async (q) => {
+    if (membership && heir) await transferOrgClients(q, membership.org_id, user.id, heir);
     for (const table of USER_TABLES) await q(`delete from ${table} where user_id = $1`, [user.id]);
     await q(`delete from users where id = $1`, [user.id]);
+    // The last member out takes the (now empty) organization with them.
+    if (membership && membership.others === 0) {
+      await q(`delete from organizations o where o.id = $1 and not exists (select 1 from memberships where org_id = o.id and active)`, [
+        membership.org_id,
+      ]);
+    }
   });
 
   const { error } = await createSupabaseAdmin().auth.admin.deleteUser(user.id);

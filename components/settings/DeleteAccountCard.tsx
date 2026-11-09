@@ -18,6 +18,12 @@ export function DeleteAccountCard({ error }: { error?: string }) {
           This can&apos;t be undone.
         </p>
       </div>
+      {error === "last-admin" && (
+        <p className="text-xs text-danger">
+          You&apos;re the only admin of your organization. Make someone else an admin first, so your organization&apos;s
+          clients have someone to go to.
+        </p>
+      )}
       {error === "delete-login" && (
         <p className="text-xs text-danger">
           Your data was deleted, but removing your sign-in didn&apos;t finish. Please try once more.
