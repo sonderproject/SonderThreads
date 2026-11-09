@@ -143,7 +143,7 @@ export default async function TeamClientPage({
       />
 
       <section className="space-y-3">
-        <h2 className="eyebrow text-text-faint">Details</h2>
+        <h2 className="section-label">Details</h2>
         <dl className="card space-y-2 p-4">
           <Field label="Current status" value={person.current_status} />
           <Field label="Next step" value={person.next_action} />
@@ -158,7 +158,7 @@ export default async function TeamClientPage({
       </section>
 
       <section className="space-y-3">
-        <h2 className="eyebrow text-text-faint">Open tasks ({open.length})</h2>
+        <h2 className="section-label">Open tasks ({open.length})</h2>
         {open.length === 0 ? (
           <p className="text-sm text-text-muted">No open tasks.</p>
         ) : (
@@ -182,7 +182,7 @@ export default async function TeamClientPage({
       </section>
 
       <section className="space-y-3">
-        <h2 className="eyebrow text-text-faint">Notes ({notes.length})</h2>
+        <h2 className="section-label">Notes ({notes.length})</h2>
         {notes.length === 0 ? (
           <p className="text-sm text-text-muted">No notes.</p>
         ) : (
@@ -198,7 +198,7 @@ export default async function TeamClientPage({
       </section>
 
       <section className="space-y-3">
-        <h2 className="eyebrow text-text-faint">Check-ins ({checkIns.length})</h2>
+        <h2 className="section-label">Check-ins ({checkIns.length})</h2>
         {checkIns.length === 0 ? (
           <p className="text-sm text-text-muted">No check-ins.</p>
         ) : (
@@ -215,7 +215,7 @@ export default async function TeamClientPage({
 
       {done.length > 0 && (
         <section className="space-y-3">
-          <h2 className="eyebrow text-text-faint">Completed tasks ({done.length})</h2>
+          <h2 className="section-label">Completed tasks ({done.length})</h2>
           <ul className="card divide-y divide-border-subtle">
             {done.map((t) => (
               <li key={t.id} className="flex items-center justify-between gap-3 p-3 text-sm">
@@ -229,7 +229,7 @@ export default async function TeamClientPage({
 
       {activity.length > 0 && (
         <section className="space-y-3">
-          <h2 className="eyebrow text-text-faint">History</h2>
+          <h2 className="section-label">History</h2>
           <ul className="card divide-y divide-border-subtle">
             {activity.map((a) => (
               <li key={a.id} className="flex items-center justify-between gap-3 p-3 text-sm">

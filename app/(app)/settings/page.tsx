@@ -77,7 +77,7 @@ export default async function SettingsPage({
       </div>
 
       <section id="account" className="scroll-mt-20 space-y-3">
-        <h2 className="eyebrow text-text-faint">Account</h2>
+        <h2 className="section-label">Account</h2>
 
         <form key={`${user?.name}|${user?.phone}`} action={saveProfile} className="card space-y-3 p-4">
           <label className="block space-y-1">
@@ -149,7 +149,7 @@ export default async function SettingsPage({
 
       {membership && (
         <section id="organization" className="scroll-mt-20 space-y-3">
-          <h2 className="eyebrow text-text-faint">Organization</h2>
+          <h2 className="section-label">Organization</h2>
           <div className="card space-y-2 p-4">
             <div className="flex items-start justify-between gap-3">
               <p className="text-sm font-semibold text-text">{membership.orgName}</p>
@@ -178,7 +178,7 @@ export default async function SettingsPage({
 
       {!membership && (
         <section id="organization" className="scroll-mt-20 space-y-3">
-          <h2 className="eyebrow text-text-faint">Organization</h2>
+          <h2 className="section-label">Organization</h2>
           <div className="card flex flex-wrap items-center justify-between gap-3 p-4">
             <div className="min-w-0">
               <h3 className="text-sm font-semibold text-text">Run a team or agency?</h3>
@@ -197,7 +197,7 @@ export default async function SettingsPage({
       )}
 
       <section id="notifications" className="scroll-mt-20 space-y-3">
-        <h2 className="eyebrow text-text-faint">Notifications</h2>
+        <h2 className="section-label">Notifications</h2>
         <div className="card space-y-4 p-4">
           <div className="space-y-1">
             <p className="text-xs text-text-muted">Push notifications on this device</p>
@@ -271,7 +271,7 @@ export default async function SettingsPage({
 
 
       <section id="security" className="scroll-mt-20 space-y-3">
-        <h2 className="eyebrow text-text-faint">Privacy &amp; security</h2>
+        <h2 className="section-label">Privacy &amp; security</h2>
         {/* key: React resets a form after its action runs; a new key shows the values just saved. */}
         <form key={JSON.stringify(prefs)} action={saveSecurityPrefs} className="card space-y-3 p-4">
           <label className="block space-y-1">
@@ -308,7 +308,7 @@ export default async function SettingsPage({
       </section>
 
       <section id="data" className="scroll-mt-20 space-y-3">
-        <h2 className="eyebrow text-text-faint">Data</h2>
+        <h2 className="section-label">Data</h2>
         <div className="card space-y-3 p-4">
           <div>
             <h3 className="text-sm font-semibold text-text">Export my data</h3>
@@ -331,7 +331,7 @@ export default async function SettingsPage({
       </section>
 
       <section id="about" className="scroll-mt-20 space-y-3">
-        <h2 className="eyebrow text-text-faint">About</h2>
+        <h2 className="section-label">About</h2>
         <div className="card divide-y divide-border-subtle text-sm">
           <div className="flex items-center justify-between p-4">
             <span className="text-text">Version</span>

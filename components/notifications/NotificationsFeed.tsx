@@ -317,7 +317,7 @@ function Section({
   return (
     <section>
       <div className="mb-2 flex items-center justify-between gap-2">
-        <h2 className={`eyebrow ${titleClassName}`}>{title}</h2>
+        <h2 className={`section-label ${titleClassName}`}>{title}</h2>
         {action}
       </div>
       {children}

@@ -94,7 +94,7 @@ export function TasksBrowser({
         return (
           <section key={title}>
             <div className="mb-2 flex items-center justify-between">
-              <h2 className="eyebrow text-text-faint">{title}</h2>
+              <h2 className="section-label">{title}</h2>
               {selecting && ids.length > 0 && (
                 <button onClick={() => toggle(ids, !all)} className="text-xs text-text-muted hover:text-accent">
                   {all ? "Select none" : "Select all"}

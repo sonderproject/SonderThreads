@@ -22,7 +22,7 @@ export function ClientComments({
   if (!canComment && comments.length === 0) return null;
   return (
     <section id="comments" className="scroll-mt-20 space-y-3">
-      <h2 className="eyebrow text-text-faint">Supervisor comments ({comments.length})</h2>
+      <h2 className="section-label">Supervisor comments ({comments.length})</h2>
       {comments.length > 0 && (
         <ul className="space-y-2">
           {comments.map((c) => (

@@ -266,7 +266,7 @@ function Detail({ label, children }: { label: string; children: React.ReactNode 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section>
-      <h2 className="mb-2 eyebrow text-text-faint">{title}</h2>
+      <h2 className="section-label mb-3">{title}</h2>
       {children}
     </section>
   );

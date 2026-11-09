@@ -386,3 +386,25 @@ select {
   backdrop-filter: blur(18px) saturate(160%);
   border-color: var(--glass-line);
 }
+
+@layer components {
+/* Section heading, Sonder Studio's signature marker: a short accent hairline,
+   then the label in wide-tracked capitals.  ──  ACCOUNT */
+.section-label {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.7rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  color: var(--muted);
+}
+.section-label::before {
+  content: "";
+  flex: none;
+  width: 1.5rem;
+  height: 1px;
+  background: color-mix(in srgb, var(--accent) 55%, transparent);
+}
+}

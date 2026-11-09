@@ -202,7 +202,7 @@ function MobileMonth({
 
       <div>
         <div className="mb-2 flex items-center justify-between">
-          <h2 className="eyebrow text-text-faint">{label}</h2>
+          <h2 className="section-label">{label}</h2>
           <button onClick={onAdd} className="h-10 rounded px-3 tabular-nums text-sm text-accent">
             + add
           </button>

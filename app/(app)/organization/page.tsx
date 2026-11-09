@@ -67,7 +67,7 @@ export default async function OrganizationPage({ searchParams }: { searchParams:
       {saved && SAVED[saved] && <p className="text-sm text-accent">{SAVED[saved]}</p>}
 
       <section className="space-y-3">
-        <h2 className="eyebrow text-text-faint">Staff</h2>
+        <h2 className="section-label">Staff</h2>
         <ul className="card divide-y divide-border-subtle">
           {members.map((x) => (
             <li key={x.user_id} className="space-y-3 p-4">
@@ -145,7 +145,7 @@ export default async function OrganizationPage({ searchParams }: { searchParams:
       </section>
 
       <section className="space-y-3">
-        <h2 className="eyebrow text-text-faint">Invites</h2>
+        <h2 className="section-label">Invites</h2>
         <InviteForm orgName={m.orgName} />
         {invites.length > 0 && (
           <ul className="card divide-y divide-border-subtle">
@@ -170,7 +170,7 @@ export default async function OrganizationPage({ searchParams }: { searchParams:
       </section>
 
       <section className="space-y-3">
-        <h2 className="eyebrow text-text-faint">Name</h2>
+        <h2 className="section-label">Name</h2>
         <form action={renameOrganization} className="card flex gap-2 p-4">
           <input name="name" defaultValue={m.orgName} required maxLength={200} aria-label="Organization name" className="input" />
           <button type="submit" className={btn}>
