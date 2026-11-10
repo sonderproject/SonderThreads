@@ -39,6 +39,23 @@ const AGENCY = [
   "HMIS stays your system of record. Threads is the system of work that makes entry a quick batch job.",
 ];
 
+/** [feature, included in Individual]. Organization includes everything. */
+const COMPARE: [string, boolean][] = [
+  ["Clients, tasks, notes, lists and check-ins", true],
+  ["Voice notes, smart command box and reminders", true],
+  ["Personal stats dashboard", true],
+  ["Export everything (Excel, full backup)", true],
+  ["Shared caseload: everyone works every client", false],
+  ["Roles: admin, supervisor, case manager", false],
+  ["Team dashboard: caseloads, follow-ups, overdue", false],
+  ["Activity log of who changed what", false],
+  ["Funder-ready Impact PDF reports with your logo", false],
+  ["Referral link and referral log", false],
+  ["Front-desk check-in kiosk", false],
+  ["Client reassignment and supervisor comments", false],
+  ["Onboarding help and data import", false],
+];
+
 /** Studio-style section marker: number, hairline, wide-tracked label. */
 function Marker({ n, children }: { n: string; children: React.ReactNode }) {
   return (
@@ -185,7 +202,7 @@ export default function WelcomePage() {
               </p>
               <p className="-mt-2 text-xs text-text-muted">7-day free trial. Cancel any time.</p>
               <ul className="flex-1 space-y-2 text-sm">
-                {["Clients, check-ins, notes, tasks and lists", "Voice notes and smart command box", "Impact dashboard and PDF reports", "Export everything, any time"].map((f) => (
+                {["Clients, check-ins, notes, tasks and lists", "Voice notes, smart command box and reminders", "Personal stats dashboard", "Export everything, any time"].map((f) => (
                   <li key={f} className="flex gap-2">
                     <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" aria-hidden />
                     {f}
@@ -213,11 +230,11 @@ export default function WelcomePage() {
               <ul className="flex-1 space-y-2 text-sm">
                 {[
                   "Everything in Individual",
-                  "Team view of every caseload, with supervisor comments",
-                  "Organization-wide Impact reports, with your logo",
+                  "One shared caseload the whole team works from",
+                  "Funder-ready Impact reports, with your logo",
+                  "Referral link for partner departments",
                   "Front-desk check-in kiosk",
-                  "Roles, invites, client reassignment and an audit log",
-                  "Personal notes stay private, enforced by the database",
+                  "Roles, Team dashboard and an activity log",
                 ].map((f) => (
                   <li key={f} className="flex gap-2">
                     <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" aria-hidden />
@@ -233,6 +250,30 @@ export default function WelcomePage() {
               </a>
             </div>
           </div>
+
+          <div className="card overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="eyebrow border-b border-border text-left text-text-faint">
+                  <th className="px-4 py-3 font-semibold">Compare plans</th>
+                  <th className="px-3 py-3 text-center font-semibold">Individual</th>
+                  <th className="px-4 py-3 text-center font-semibold text-accent">Organization</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border-subtle">
+                {COMPARE.map(([label, solo]) => (
+                  <tr key={label}>
+                    <td className="px-4 py-2.5">{label}</td>
+                    <td className="px-3 py-2.5 text-center text-text-muted">{solo ? "✓" : "—"}</td>
+                    <td className="px-4 py-2.5 text-center text-accent">✓</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="text-sm text-text-muted">
+            For an agency, $15 a seat is less than one hour of staff time a month, and the reports alone save more than that.
+          </p>
         </section>
 
         <section className="space-y-6 border-t border-border py-16">

@@ -28,6 +28,8 @@ export async function GET(request: Request) {
   }
   const tz = await getTimeZone();
   const { from, to } = normalizeRange(params.get("from"), params.get("to"), dayKey(new Date(), tz));
+  // The designed PDF report is an Organization-plan feature.
+  if (format === "pdf" && !m?.active) return NextResponse.json({ error: "PDF reports come with Organization plans" }, { status: 403 });
   const followUps = params.get("followups") === "1"; // optional section, off unless asked for
   const org = params.get("scope") === "org" ? await reportableOrg() : null;
   if (params.get("scope") === "org" && !org) return NextResponse.json({ error: "Not allowed" }, { status: 403 });

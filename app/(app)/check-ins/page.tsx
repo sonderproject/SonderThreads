@@ -1,6 +1,7 @@
 import { CheckInsBrowser } from "@/components/check-ins/CheckInsBrowser";
 import { listCheckIns, listCheckInReasons } from "@/lib/actions/check-ins";
 import { listPeople } from "@/lib/actions/people";
+import { getMembership } from "@/lib/org";
 import { DEFAULT_RANGE_DAYS, addDays, isDayKey } from "@/components/check-ins/range";
 
 /**
@@ -19,6 +20,7 @@ export default async function CheckInsPage({
   const from = isDayKey(sp.from) ? sp.from : addDays(to, -(DEFAULT_RANGE_DAYS - 1));
 
   // One extra day on each side covers every time zone; the browser trims to exact local days.
+  const membership = await getMembership();
   const [checkIns, people, reasons] = await Promise.all([
     listCheckIns(all ? {} : { from: `${addDays(from, -1)}T00:00:00Z`, to: `${addDays(to, 2)}T00:00:00Z` }),
     listPeople(),
@@ -32,9 +34,11 @@ export default async function CheckInsPage({
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="page-title">Check-ins</h1>
-        <a href="/kiosk" className="rounded-full border border-border px-4 py-1.5 text-sm font-medium text-text hover:bg-bg-hover">
-          Front-desk kiosk
-        </a>
+        {membership?.active && (
+          <a href="/kiosk" className="rounded-full border border-border px-4 py-1.5 text-sm font-medium text-text hover:bg-bg-hover">
+            Front-desk kiosk
+          </a>
+        )}
       </div>
       <CheckInsBrowser
         checkIns={checkIns}

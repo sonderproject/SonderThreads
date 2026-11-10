@@ -171,7 +171,7 @@ export function ImpactDashboard({ orgName }: { orgName: string | null }) {
             </summary>
             <div className="absolute right-0 z-20 mt-1 w-44 overflow-hidden rounded-xl border border-border bg-bg-raised shadow-lg">
               {[
-                ["pdf", "PDF report"],
+                ...(orgName ? [["pdf", "PDF report"]] : []),
                 ["xlsx", "Excel (.xlsx)"],
                 ["csv", "CSV"],
               ].map(([format, label]) => (
@@ -185,6 +185,11 @@ export function ImpactDashboard({ orgName }: { orgName: string | null }) {
                   {label}
                 </a>
               ))}
+              {!orgName && (
+                <p className="border-t border-border-subtle px-3 py-2 text-xs text-text-muted">
+                  PDF reports with your logo come with Organization plans.
+                </p>
+              )}
             </div>
           </details>
         </div>

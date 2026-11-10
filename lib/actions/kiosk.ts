@@ -8,6 +8,13 @@ import { requireUserId } from "@/lib/current-user";
 import { KIOSK_COOKIE } from "@/lib/auth";
 import { hashPassword, verifyPassword } from "@/lib/session";
 import { createPersonRecord } from "./people";
+import { getMembership } from "@/lib/org";
+
+/** The front-desk kiosk is an Organization-plan feature. */
+async function requireOrg(): Promise<void> {
+  const m = await getMembership();
+  if (!m?.active) redirect("/kiosk");
+}
 import { createCheckIn } from "./check-ins";
 import { toActionResult, type ActionResult } from "@/lib/validation";
 import { DEFAULT_KIOSK_REASONS } from "@/lib/kiosk-shared";
@@ -16,6 +23,7 @@ import { DEFAULT_KIOSK_REASONS } from "@/lib/kiosk-shared";
 /** Kiosk setup: the 4-digit PIN that exits kiosk mode, and the reason buttons. */
 export async function saveKioskSetup(formData: FormData): Promise<void> {
   const userId = await requireUserId();
+  await requireOrg();
   const pin = formData.get("pin")?.toString() ?? "";
   const confirmPin = formData.get("confirm")?.toString() ?? "";
   const reasons = (formData.get("reasons")?.toString() ?? "")
@@ -41,6 +49,7 @@ export async function saveKioskSetup(formData: FormData): Promise<void> {
 /** Lock this device to the kiosk screen. */
 export async function startKiosk(): Promise<void> {
   const userId = await requireUserId();
+  await requireOrg();
   const row = await queryOne<{ kiosk_pin_hash: string | null }>(`select kiosk_pin_hash from user_settings where user_id = $1`, [userId]);
   if (!row?.kiosk_pin_hash) redirect("/kiosk?error=no-pin");
   (await cookies()).set(KIOSK_COOKIE, "1", {

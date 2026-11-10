@@ -45,6 +45,27 @@ export default async function KioskPage({ searchParams }: { searchParams: Promis
     return <KioskScreen reasons={reasons} orgName={org} logoVersion={logo} wrongPin={error === "wrong-pin"} />;
   }
 
+  if (!org) {
+    return (
+      <div className="min-h-screen bg-bg px-4 py-10">
+        <div className="mx-auto max-w-md space-y-6">
+          <BrandLockup />
+          <div className="card space-y-3 p-6">
+            <p className="eyebrow text-text-faint">Organization plan</p>
+            <h1 className="page-title">Front-desk kiosk</h1>
+            <p className="text-sm text-text-muted">
+              Turn a tablet into a self check-in screen for your front desk. Clients type their name and pick a reason, and
+              the visit lands in your team&apos;s caseload and reports. The kiosk comes with Organization plans.
+            </p>
+            <Link href="/check-ins" className="inline-block text-sm text-accent hover:underline">
+              ← Back to check-ins
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const hasPin = Boolean(settings?.kiosk_pin_hash);
   return (
     <div className="min-h-screen bg-bg px-4 py-10">
