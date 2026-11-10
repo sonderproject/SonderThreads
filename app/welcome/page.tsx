@@ -178,7 +178,7 @@ export default function WelcomePage() {
             <div className="card flex flex-col gap-4 p-6">
               <div>
                 <h2 className="font-display text-2xl font-light">Individual</h2>
-                <p className="mt-1 text-sm text-text-muted">For case managers on their own, and anyone organizing their life.</p>
+                <p className="mt-1 text-sm text-text-muted">For anyone with clients, projects or a busy life to keep straight: entrepreneurs, freelancers, coaches, case managers and more.</p>
               </div>
               <p className="font-display text-5xl font-light tabular-nums">
                 $5<span className="ml-1 font-sans text-base text-text-muted">/ month</span>

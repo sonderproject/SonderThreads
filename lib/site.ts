@@ -2,4 +2,4 @@
 export const SITE_URL = "https://www.sonderthreads.com";
 
 export const SITE_DESCRIPTION =
-  "Clients, tasks, notes and check-ins in one calm place, for case managers, agencies and anyone organizing their life. By Sonder Project.";
+  "Clients, tasks, notes and check-ins in one calm place, for entrepreneurs, freelancers, case managers, agencies and anyone organizing their work or life. By Sonder Project.";
