@@ -8,6 +8,8 @@ import { MiniCalendar } from "@/components/calendar/MiniCalendar";
 import { SkyCard } from "@/components/home/SkyCard";
 import { ImpactTeaser } from "@/components/impact/ImpactTeaser";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { WelcomeChecklist } from "@/components/home/WelcomeChecklist";
+import { getWelcome } from "@/lib/onboarding";
 import { listPeople, getPeopleNeedingAttention } from "@/lib/actions/people";
 import { listTasks } from "@/lib/actions/tasks";
 import { listRecentNotes } from "@/lib/actions/notes";
@@ -22,12 +24,13 @@ export default async function DashboardPage() {
   const todayKey = dayKey(new Date(), timeZone);
   const { year, month } = dateParts(new Date(), timeZone);
 
-  const [people, tasks, notes, needsAttention, { tasks: monthTasks, birthdays }] = await Promise.all([
+  const [people, tasks, notes, needsAttention, { tasks: monthTasks, birthdays }, welcome] = await Promise.all([
     listPeople(),
     listTasks(),
     listRecentNotes(6),
     getPeopleNeedingAttention(),
     getCalendarMonth(year, month, timeZone),
+    getWelcome(),
   ]);
 
   const peopleById = new Map(people.map((c) => [c.id, c]));
@@ -44,6 +47,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-8">
+      {welcome && <WelcomeChecklist steps={welcome} />}
       <section>
         <CommandBar />
         <QuickActions people={people.map((c) => ({ id: c.id, display_name: c.display_name }))} />

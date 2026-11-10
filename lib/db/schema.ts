@@ -347,6 +347,10 @@ alter table activity alter column user_id drop default;
 -- up"). Null = never asked. The prompt comes back 30 days later while 2FA is off.
 alter table users add column if not exists mfa_prompt_dismissed_at timestamptz;
 
+-- First-run welcome checklist on Home: dismissed, and the "on your phone" step (can't be detected).
+alter table users add column if not exists welcome_dismissed_at timestamptz;
+alter table users add column if not exists welcome_phone_done boolean not null default false;
+
 -- Settings: one row per user, every option a preset (CHECK-constrained so a
 -- bad value can't be saved). No row = all defaults. Missing rows are created
 -- on first save.

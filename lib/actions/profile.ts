@@ -23,3 +23,17 @@ export async function saveProfile(formData: FormData): Promise<void> {
   revalidatePath("/settings");
   redirect("/settings?saved=profile#account");
 }
+
+/** Home welcome checklist: hide it for good. */
+export async function dismissWelcome(): Promise<void> {
+  const userId = await requireUserId();
+  await query(`update users set welcome_dismissed_at = now() where id = $1`, [userId]);
+  revalidatePath("/");
+}
+
+/** Home welcome checklist: the "put it on your phone" step is done. */
+export async function markWelcomePhoneDone(): Promise<void> {
+  const userId = await requireUserId();
+  await query(`update users set welcome_phone_done = true where id = $1`, [userId]);
+  revalidatePath("/");
+}
