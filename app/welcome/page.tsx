@@ -81,6 +81,9 @@ export default function WelcomePage() {
             <span className="hidden text-[11px] uppercase tracking-[0.25em] text-text-muted sm:block">by Sonder Project</span>
           </Link>
           <nav className="flex items-center gap-2">
+            <a href="#pricing" className="hidden rounded-full px-4 py-2 text-sm text-text-muted transition-colors hover:text-text sm:inline-block">
+              Pricing
+            </a>
             <Link href="/login" className="rounded-full px-4 py-2 text-sm text-text-muted transition-colors hover:text-text">
               Sign in
             </Link>
@@ -169,8 +172,68 @@ export default function WelcomePage() {
           </ul>
         </section>
 
+        <section id="pricing" className="scroll-mt-20 space-y-8 border-t border-border py-16">
+          <Marker n="04">Pricing</Marker>
+          <div className="grid gap-4 lg:grid-cols-2">
+            <div className="card flex flex-col gap-4 p-6">
+              <div>
+                <h2 className="font-display text-2xl font-light">Individual</h2>
+                <p className="mt-1 text-sm text-text-muted">For case managers on their own, and anyone organizing their life.</p>
+              </div>
+              <p className="font-display text-5xl font-light tabular-nums">
+                $0<span className="ml-1 font-sans text-base text-text-muted">forever</span>
+              </p>
+              <ul className="flex-1 space-y-2 text-sm">
+                {["Clients, check-ins, notes, tasks and lists", "Voice notes and smart command box", "Impact dashboard and PDF reports", "Export everything, any time"].map((f) => (
+                  <li key={f} className="flex gap-2">
+                    <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" aria-hidden />
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <Link href="/signup" className="rounded-full border border-border bg-bg-raised px-6 py-3 text-center text-sm font-semibold hover:bg-bg-hover">
+                Create a free account
+              </Link>
+            </div>
+            <div className="card flex flex-col gap-4 border-accent p-6" style={{ borderColor: "var(--accent)" }}>
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <h2 className="font-display text-2xl font-light">Organization</h2>
+                  <p className="mt-1 text-sm text-text-muted">For agencies and teams that work together.</p>
+                </div>
+                <span className="tag tag-v">Most agencies</span>
+              </div>
+              <p className="font-display text-5xl font-light tabular-nums">
+                $15<span className="ml-1 font-sans text-base text-text-muted">per staff member / month</span>
+              </p>
+              <p className="-mt-2 text-xs text-text-muted">Or $150 per staff member a year (two months free).</p>
+              <ul className="flex-1 space-y-2 text-sm">
+                {[
+                  "Everything in Individual",
+                  "Team view of every caseload, with supervisor comments",
+                  "Organization-wide Impact reports, with your logo",
+                  "Front-desk check-in kiosk",
+                  "Roles, invites, client reassignment and an audit log",
+                  "Personal notes stay private, enforced by the database",
+                ].map((f) => (
+                  <li key={f} className="flex gap-2">
+                    <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" aria-hidden />
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <a
+                href={`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent("Sonder Threads for our agency")}`}
+                className="rounded-full bg-accent px-6 py-3 text-center text-sm font-semibold text-bg hover:bg-accent-dim"
+              >
+                Talk to us about your team
+              </a>
+            </div>
+          </div>
+        </section>
+
         <section className="space-y-6 border-t border-border py-16">
-          <Marker n="04">Put it on your phone</Marker>
+          <Marker n="05">Put it on your phone</Marker>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="card space-y-1 p-5">
               <h2 className="font-display text-lg font-normal">iPhone</h2>

@@ -12,7 +12,7 @@ const mail = <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a>;
 
 export default function TermsPage() {
   return (
-    <LegalPage title="Terms of service" updated="November 9, 2026">
+    <LegalPage title="Terms of service" updated="November 10, 2026">
       <p>
         These terms are an agreement between you and Sonder Project, a sole proprietorship based in California
         (&quot;we&quot;, &quot;us&quot;), for your use of Sonder Threads at sonderthreads.com and in its mobile apps
@@ -79,8 +79,9 @@ export default function TermsPage() {
 
       <LegalSection title="Fees">
         <p>
-          The app is currently free for individuals. If we introduce paid plans, we&apos;ll show the price and terms
-          before you&apos;re charged, and nothing will be charged without your agreement.
+          Individual accounts are free. Organization plans are billed per staff member at the price agreed with the
+          organization before any charge. If prices change, we&apos;ll tell you in advance, and nothing is charged without
+          your agreement.
         </p>
       </LegalSection>
 
