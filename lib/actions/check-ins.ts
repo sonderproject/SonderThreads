@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { actorQuery, actorQueryOne, mineOrOrg } from "@/lib/db/scope";
 import { query, queryOne } from "@/lib/db/client";
 import { requireUserId } from "@/lib/current-user";
 import { logActivity } from "./activity";
@@ -67,12 +68,12 @@ export async function updateCheckIn(
 ): Promise<CheckIn> {
   const userId = await requireUserId();
   const params = validate(updateCheckInSchema, patch);
-  const checkIn = await queryOne<CheckIn>(
+  const checkIn = await actorQueryOne<CheckIn>(userId, 
     `update check_ins
      set checked_in_at = coalesce($3::timestamptz, checked_in_at),
          reason = case when $4 then $5 else reason end,
          updated_at = now()
-     where user_id = $1 and id = $2 and deleted_at is null
+     where ${mineOrOrg("$1")} and id = $2 and deleted_at is null
      returning *`,
     [
       userId,
@@ -106,9 +107,9 @@ export async function restoreCheckIn(id: string): Promise<void> {
 
 async function setCheckInDeleted(id: string, deleted: boolean): Promise<void> {
   const userId = await requireUserId();
-  const row = await queryOne<CheckIn>(
+  const row = await actorQueryOne<CheckIn>(userId, 
     `update check_ins set deleted_at = ${deleted ? "now()" : "null"}
-     where user_id = $1 and id = $2 and deleted_at is ${deleted ? "null" : "not null"}
+     where ${mineOrOrg("$1")} and id = $2 and deleted_at is ${deleted ? "null" : "not null"}
      returning *`,
     [userId, id],
   );
@@ -127,7 +128,7 @@ export async function listCheckIns(range: { from?: string | null; to?: string | 
     `select c.*, p.display_name
      from check_ins c
      join people p on p.id = c.person_id and p.deleted_at is null
-     where c.user_id = $1 and c.deleted_at is null
+     where ${mineOrOrg("$1", "c.")} and c.deleted_at is null
        and ($2::timestamptz is null or c.checked_in_at >= $2::timestamptz)
        and ($3::timestamptz is null or c.checked_in_at < $3::timestamptz)
      order by c.checked_in_at desc
@@ -142,7 +143,7 @@ export async function listCheckInsForPerson(personId: string): Promise<CheckInWi
     `select c.*, p.display_name
      from check_ins c
      join people p on p.id = c.person_id
-     where c.user_id = $1 and c.person_id = $2 and c.deleted_at is null
+     where ${mineOrOrg("$1", "c.")} and c.person_id = $2 and c.deleted_at is null
      order by c.checked_in_at desc`,
     [userId, personId],
   );
@@ -154,7 +155,7 @@ export async function listCheckInReasons(limit = 8): Promise<string[]> {
   const rows = await query<{ reason: string }>(
     `select min(reason) as reason
      from check_ins
-     where user_id = $1 and deleted_at is null and reason is not null and reason <> ''
+     where ${mineOrOrg("$1")} and deleted_at is null and reason is not null and reason <> ''
      group by lower(reason)
      order by count(*) desc, max(checked_in_at) desc
      limit $2`,

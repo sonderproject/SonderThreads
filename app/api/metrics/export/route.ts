@@ -6,6 +6,7 @@ import { computeMetrics, normalizeRange } from "@/lib/metrics";
 import { metricsCsv, metricsPdf, metricsXlsx } from "@/lib/export/metrics-report";
 import { CONTENT_TYPES } from "@/lib/export/table";
 import { reportableOrg } from "@/lib/actions/metrics";
+import { getMembership } from "@/lib/org";
 import { asUser } from "@/lib/db/as-user";
 import type { ReportOrgInfo } from "@/lib/export/impact-pdf";
 
@@ -16,6 +17,9 @@ export const runtime = "nodejs";
 export async function GET(request: Request) {
   const user = await getSessionUser();
   if (!user) return NextResponse.json({ error: "Not signed in" }, { status: 401 });
+
+  const m = await getMembership();
+  if (m?.active && m.role === "case_manager") return NextResponse.json({ error: "Not allowed" }, { status: 403 });
 
   const params = new URL(request.url).searchParams;
   const format = params.get("format");

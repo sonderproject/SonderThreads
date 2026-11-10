@@ -37,13 +37,22 @@ function isActive(pathname: string, href: string) {
  * the thumb zone. Hidden from the sm breakpoint up, where the header nav is
  * shown instead.
  */
-export function MobileNav({ people, showTeam = false }: { people: Pick<Person, "id" | "display_name">[]; showTeam?: boolean }) {
+export function MobileNav({
+  people,
+  showTeam = false,
+  showImpact = true,
+}: {
+  people: Pick<Person, "id" | "display_name">[];
+  showTeam?: boolean;
+  showImpact?: boolean;
+}) {
   const pathname = usePathname();
   const [sheet, setSheet] = useState<"command" | "more" | null>(null);
   const [commandOpts, setCommandOpts] = useState<OpenCommandDetail & { key: number }>({ key: 0 });
   const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const holding = useRef(false);
-  const moreLinks = showTeam ? [{ href: "/team", label: "Team" }, ...MORE_LINKS] : MORE_LINKS;
+  const baseLinks = showImpact ? MORE_LINKS : MORE_LINKS.filter((l) => l.href !== "/impact");
+  const moreLinks = showTeam ? [{ href: "/team", label: "Team" }, ...baseLinks] : baseLinks;
   const moreActive = moreLinks.some((l) => isActive(pathname, l.href));
 
   function openCommand(opts: OpenCommandDetail = {}) {

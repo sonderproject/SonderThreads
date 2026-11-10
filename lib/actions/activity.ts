@@ -1,5 +1,6 @@
 "use server";
 
+import { mineOrOrg } from "@/lib/db/scope";
 import { query } from "@/lib/db/client";
 import { requireUserId } from "@/lib/current-user";
 import type { Activity, ActivityType } from "@/lib/types";
@@ -33,7 +34,7 @@ export async function logActivity(params: LogActivityParams): Promise<void> {
 export async function getPersonTimeline(personId: string): Promise<Activity[]> {
   const userId = await requireUserId();
   return query<Activity>(
-    `select * from activity where user_id = $1 and person_id = $2 order by created_at desc`,
+    `select * from activity where ${mineOrOrg("$1")} and person_id = $2 order by created_at desc`,
     [userId, personId],
   );
 }

@@ -2,6 +2,7 @@
 
 import { cache } from "react";
 import { revalidatePath } from "next/cache";
+import { actorQuery, actorQueryOne, mineOrOrg } from "@/lib/db/scope";
 import { query, queryOne } from "@/lib/db/client";
 import { requireUserId } from "@/lib/current-user";
 import { asUser } from "@/lib/db/as-user";
@@ -26,7 +27,7 @@ const listPeopleCached = cache(async (): Promise<Person[]> => {
     `select id, user_id, first_name, last_name, display_name, phone, email, birthday, status,
             current_status, next_action, summary, needs_followup, ethnicity, income_level, gender, created_at, updated_at,
             last_activity_at, deleted_at
-       from people where user_id = $1 and deleted_at is null order by last_activity_at desc`,
+       from people where ${mineOrOrg("$1")} and deleted_at is null order by last_activity_at desc`,
     [userId],
   );
 });
@@ -38,7 +39,7 @@ export async function listPeople(): Promise<Person[]> {
 export async function getPerson(id: string): Promise<Person | null> {
   const userId = await requireUserId();
   return queryOne<Person>(
-    `select * from people where user_id = $1 and id = $2 and deleted_at is null`,
+    `select * from people where ${mineOrOrg("$1")} and id = $2 and deleted_at is null`,
     [userId, id],
   );
 }
@@ -108,7 +109,7 @@ export async function findPersonByName(fullName: string): Promise<Person | null>
 
   return queryOne<Person>(
     `select * from people
-     where user_id = $1
+     where ${mineOrOrg("$1")}
        and deleted_at is null
        and (lower(display_name) = $2 or lower(first_name) = $2 or lower(display_name) like $2 || '%')
      order by (lower(display_name) = $2) desc
@@ -146,9 +147,9 @@ export async function updatePerson(
   const setClauses = fields.map((field, i) => `${field} = $${i + 3}`);
   const values = fields.map((field) => columns[field]);
 
-  const person = await queryOne<Person>(
+  const person = await actorQueryOne<Person>(userId, 
     `update people set ${[...setClauses, "last_activity_at = now()"].join(", ")}
-     where user_id = $1 and id = $2 and deleted_at is null
+     where ${mineOrOrg("$1")} and id = $2 and deleted_at is null
      returning *`,
     [userId, id, ...values],
   );
@@ -157,7 +158,7 @@ export async function updatePerson(
 
   if (before && patch.display_name && before.display_name !== patch.display_name) {
     // List items keep a copy of the name as their label — keep linked ones in sync.
-    await query(`update list_items set label = $1 where user_id = $2 and person_id = $3`, [
+    await actorQuery(userId, `update list_items set label = $1 where ${mineOrOrg("$2")} and person_id = $3`, [
       person.display_name,
       userId,
       id,
@@ -204,8 +205,8 @@ export async function updatePersonSafe(
 /** Soft-deletes a person — the row stays in the database (recoverable) but disappears from every view. */
 export async function deletePersonRecord(id: string): Promise<void> {
   const userId = await requireUserId();
-  const person = await queryOne<Person>(
-    `update people set deleted_at = now() where user_id = $1 and id = $2 and deleted_at is null returning *`,
+  const person = await actorQueryOne<Person>(userId, 
+    `update people set deleted_at = now() where ${mineOrOrg("$1")} and id = $2 and deleted_at is null returning *`,
     [userId, id],
   );
 
@@ -231,9 +232,9 @@ export async function restorePersonRecord(id: string): Promise<void> {
 export async function deletePeople(ids: string[]): Promise<number> {
   const userId = await requireUserId();
   if (ids.length === 0) return 0;
-  const deleted = await query<{ id: string }>(
+  const deleted = await actorQuery<{ id: string }>(userId, 
     `update people set deleted_at = now()
-     where user_id = $1 and id = any($2::uuid[]) and deleted_at is null
+     where ${mineOrOrg("$1")} and id = any($2::uuid[]) and deleted_at is null
      returning id`,
     [userId, ids],
   );
@@ -254,8 +255,8 @@ export async function deletePeople(ids: string[]): Promise<number> {
 export async function restorePeople(ids: string[]): Promise<void> {
   const userId = await requireUserId();
   if (ids.length === 0) return;
-  await query(
-    `update people set deleted_at = null where user_id = $1 and id = any($2::uuid[]) and deleted_at is not null`,
+  await actorQuery(userId, 
+    `update people set deleted_at = null where ${mineOrOrg("$1")} and id = any($2::uuid[]) and deleted_at is not null`,
     [userId, ids],
   );
   revalidatePath("/people");
@@ -266,7 +267,7 @@ export async function restorePeople(ids: string[]): Promise<void> {
 export async function touchPersonActivity(id: string): Promise<void> {
   const userId = await requireUserId();
   await query(
-    `update people set last_activity_at = now() where user_id = $1 and id = $2 and deleted_at is null`,
+    `update people set last_activity_at = now() where ${mineOrOrg("$1")} and id = $2 and deleted_at is null`,
     [userId, id],
   );
 }
@@ -291,12 +292,12 @@ export async function getPeopleNeedingAttention(): Promise<Person[]> {
   return query<Person>(
     `select distinct c.* from people c
      left join tasks t on t.person_id = c.id
-       and t.user_id = $1
+       and ${mineOrOrg("$1", "t.")}
        and t.completed = false
        and t.due_at is not null
        and t.due_at < now()
        and t.deleted_at is null
-     where c.user_id = $1
+     where ${mineOrOrg("$1", "c.")}
        and c.deleted_at is null
        and (c.needs_followup = true or c.last_activity_at < $2 or t.id is not null)
      order by c.last_activity_at asc

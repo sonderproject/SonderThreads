@@ -1,3 +1,4 @@
+import { mineOrOrg } from "@/lib/db/scope";
 import { query, queryOne } from "@/lib/db/client";
 import { generatePersonSummary } from "@/lib/ai/person-summary";
 import type { Person } from "@/lib/types";
@@ -13,7 +14,7 @@ import type { Person } from "@/lib/types";
  */
 export async function regenerateSummaryFor(userId: string, personId: string): Promise<void> {
   const person = await queryOne<Person>(
-    `select * from people where user_id = $1 and id = $2 and deleted_at is null`,
+    `select * from people where ${mineOrOrg("$1")} and id = $2 and deleted_at is null`,
     [userId, personId],
   );
 
@@ -22,14 +23,14 @@ export async function regenerateSummaryFor(userId: string, personId: string): Pr
   const [notes, tasks] = await Promise.all([
     query<{ content: string; created_at: string }>(
     `select content, created_at from notes
-     where user_id = $1 and person_id = $2 and deleted_at is null
+     where ${mineOrOrg("$1")} and person_id = $2 and deleted_at is null
      order by created_at desc
      limit 5`,
     [userId, personId],
     ),
     query<{ title: string; due_at: string | null }>(
     `select title, due_at from tasks
-     where user_id = $1 and person_id = $2 and completed = false and deleted_at is null
+     where ${mineOrOrg("$1")} and person_id = $2 and completed = false and deleted_at is null
      order by due_at asc nulls last
      limit 5`,
     [userId, personId],
@@ -48,7 +49,7 @@ export async function regenerateSummaryFor(userId: string, personId: string): Pr
 
   await query(
     `update people set summary = $1, current_status = $2, next_action = $3
-     where user_id = $4 and id = $5 and deleted_at is null`,
+     where ${mineOrOrg("$4")} and id = $5 and deleted_at is null`,
     [
       result.summary || person.summary,
       result.currentStatus ?? person.current_status,

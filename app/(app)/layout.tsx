@@ -54,6 +54,7 @@ export default async function AppGroupLayout({ children }: { children: React.Rea
       notificationCount={notificationCount}
       idleMinutes={settings.staySignedIn ? null : settings.idleTimeoutMinutes}
       showTeam={Boolean(membership?.active && membership.role !== "case_manager")}
+      showImpact={!(membership?.active && membership.role === "case_manager")}
     >
       {children}
       {offerTwoFactor && <TwoFactorPrompt />}

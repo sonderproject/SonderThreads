@@ -69,6 +69,7 @@ export default async function PersonProfilePage({
 }) {
   const { id } = await params;
   if (!isUuid(id)) notFound();
+  const me = await requireUserId();
   // Everything loads at once (each query is scoped to the user, so a bad id just returns nothing).
   const [person, activity, tasks, lists, notes, checkIns, reasons, allLists, comments, tz, membership] = await Promise.all([
     getPerson(id),
@@ -111,7 +112,7 @@ export default async function PersonProfilePage({
           )}
           <DeletePersonButton personId={person.id} name={person.display_name} />
         </div>
-        {membership?.active && (
+        {membership?.active && person.user_id === me && (
           <div className="mt-2">
             <ShareToggle personId={person.id} shared={Boolean(person.org_id)} orgName={membership.orgName} />
           </div>

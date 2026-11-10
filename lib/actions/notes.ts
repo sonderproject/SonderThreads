@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { actorQuery, actorQueryOne, mineOrOrg } from "@/lib/db/scope";
 import { query, queryOne } from "@/lib/db/client";
 import { requireUserId } from "@/lib/current-user";
 import { truncate } from "./helpers";
@@ -81,7 +82,7 @@ export async function createNote(params: {
  */
 async function tasksFromNote(userId: string, note: Note, tzOffset = 0): Promise<void> {
   const people = await query<{ id: string; display_name: string; first_name: string; last_name: string | null }>(
-    `select id, display_name, first_name, last_name from people where user_id = $1 and deleted_at is null`,
+    `select id, display_name, first_name, last_name from people where ${mineOrOrg("$1")} and deleted_at is null`,
     [userId],
   );
   const found = extractNoteTasks(note.content, {
@@ -131,7 +132,7 @@ export async function createNoteSafe(params: Parameters<typeof createNote>[0]): 
 export async function listRecentNotes(limit = 10): Promise<Note[]> {
   const userId = await requireUserId();
   return query<Note>(
-    `select * from notes where user_id = $1 and deleted_at is null order by created_at desc limit $2`,
+    `select * from notes where ${mineOrOrg("$1")} and deleted_at is null order by created_at desc limit $2`,
     [userId, limit],
   );
 }
@@ -139,7 +140,7 @@ export async function listRecentNotes(limit = 10): Promise<Note[]> {
 export async function listAllNotes(): Promise<Note[]> {
   const userId = await requireUserId();
   return query<Note>(
-    `select * from notes where user_id = $1 and deleted_at is null order by created_at desc limit 200`,
+    `select * from notes where ${mineOrOrg("$1")} and deleted_at is null order by created_at desc limit 200`,
     [userId],
   );
 }
@@ -147,7 +148,7 @@ export async function listAllNotes(): Promise<Note[]> {
 export async function listStandaloneNotes(): Promise<Note[]> {
   const userId = await requireUserId();
   return query<Note>(
-    `select * from notes where user_id = $1 and person_id is null and deleted_at is null order by created_at desc`,
+    `select * from notes where ${mineOrOrg("$1")} and person_id is null and deleted_at is null order by created_at desc`,
     [userId],
   );
 }
@@ -155,7 +156,7 @@ export async function listStandaloneNotes(): Promise<Note[]> {
 export async function listNotesForPerson(personId: string): Promise<Note[]> {
   const userId = await requireUserId();
   return query<Note>(
-    `select * from notes where user_id = $1 and person_id = $2 and deleted_at is null order by created_at desc`,
+    `select * from notes where ${mineOrOrg("$1")} and person_id = $2 and deleted_at is null order by created_at desc`,
     [userId, personId],
   );
 }
@@ -163,8 +164,8 @@ export async function listNotesForPerson(personId: string): Promise<Note[]> {
 export async function updateNote(id: string, content: string): Promise<Note> {
   const userId = await requireUserId();
   const params = validate(updateNoteSchema, { content });
-  const note = await queryOne<Note>(
-    `update notes set content = $1 where user_id = $2 and id = $3 and deleted_at is null returning *`,
+  const note = await actorQueryOne<Note>(userId, 
+    `update notes set content = $1 where ${mineOrOrg("$2")} and id = $3 and deleted_at is null returning *`,
     [params.content, userId, id],
   );
 
@@ -194,9 +195,9 @@ export async function restoreNote(id: string): Promise<void> {
 
 async function setNoteDeleted(id: string, deleted: boolean): Promise<void> {
   const userId = await requireUserId();
-  const note = await queryOne<Note>(
+  const note = await actorQueryOne<Note>(userId, 
     `update notes set deleted_at = ${deleted ? "now()" : "null"}
-     where user_id = $1 and id = $2 and deleted_at is ${deleted ? "null" : "not null"}
+     where ${mineOrOrg("$1")} and id = $2 and deleted_at is ${deleted ? "null" : "not null"}
      returning *`,
     [userId, id],
   );
@@ -209,7 +210,7 @@ export async function searchNotes(searchQuery: string): Promise<Note[]> {
   const userId = await requireUserId();
   // Typo-tolerant ranking in JS over the most recent notes.
   const notes = await query<Note>(
-    `select * from notes where user_id = $1 and deleted_at is null order by created_at desc limit 1000`,
+    `select * from notes where ${mineOrOrg("$1")} and deleted_at is null order by created_at desc limit 1000`,
     [userId],
   );
   return fuzzyFilter(notes, searchQuery, (n) => [n.content], 20);

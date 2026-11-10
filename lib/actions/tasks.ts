@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { actorQuery, actorQueryOne, mineOrOrg } from "@/lib/db/scope";
 import { query, queryOne } from "@/lib/db/client";
 import { requireUserId } from "@/lib/current-user";
 import { logActivity } from "./activity";
@@ -19,7 +20,7 @@ import { fuzzyFilter } from "@/lib/fuzzy";
 export async function listTasks(): Promise<Task[]> {
   const userId = await requireUserId();
   return query<Task>(
-    `select * from tasks where user_id = $1 and deleted_at is null order by due_at asc nulls last`,
+    `select * from tasks where ${mineOrOrg("$1")} and deleted_at is null order by due_at asc nulls last`,
     [userId],
   );
 }
@@ -28,7 +29,7 @@ export async function listTasksForPerson(personId: string): Promise<Task[]> {
   const userId = await requireUserId();
   return query<Task>(
     `select * from tasks
-     where user_id = $1 and person_id = $2 and deleted_at is null
+     where ${mineOrOrg("$1")} and person_id = $2 and deleted_at is null
      order by completed asc, due_at asc nulls last`,
     [userId, personId],
   );
@@ -88,9 +89,9 @@ export async function createTaskSafe(params: Parameters<typeof createTask>[0]): 
 
 export async function setTaskCompleted(id: string, completed: boolean): Promise<void> {
   const userId = await requireUserId();
-  const task = await queryOne<Task>(
+  const task = await actorQueryOne<Task>(userId, 
     `update tasks set completed = $1, completed_at = $2
-     where user_id = $3 and id = $4 and deleted_at is null
+     where ${mineOrOrg("$3")} and id = $4 and deleted_at is null
      returning *`,
     [completed, completed ? new Date().toISOString() : null, userId, id],
   );
@@ -111,9 +112,9 @@ export async function setTaskCompleted(id: string, completed: boolean): Promise<
   } else if (task.recurrence) {
     // Un-completing means the next occurrence isn't due after all — drop it
     // unless it's already been worked on.
-    await query(
+    await actorQuery(userId, 
       `update tasks set deleted_at = now()
-       where user_id = $1 and recurs_from = $2 and completed = false and deleted_at is null`,
+       where ${mineOrOrg("$1")} and recurs_from = $2 and completed = false and deleted_at is null`,
       [userId, task.id],
     );
   }
@@ -133,7 +134,7 @@ async function spawnNextOccurrence(task: Task): Promise<void> {
   if (!task.recurrence) return;
 
   const existing = await queryOne<{ id: string }>(
-    `select id from tasks where user_id = $1 and recurs_from = $2 and deleted_at is null limit 1`,
+    `select id from tasks where ${mineOrOrg("$1")} and recurs_from = $2 and deleted_at is null limit 1`,
     [userId, task.id],
   );
   if (existing) return;
@@ -177,9 +178,9 @@ export async function restoreTasks(ids: string[]): Promise<void> {
 async function setTasksDeleted(ids: string[], deleted: boolean): Promise<void> {
   const userId = await requireUserId();
   if (ids.length === 0) return;
-  await query(
+  await actorQuery(userId, 
     `update tasks set deleted_at = ${deleted ? "now()" : "null"}
-     where user_id = $1 and id = any($2::uuid[]) and deleted_at is ${deleted ? "null" : "not null"}`,
+     where ${mineOrOrg("$1")} and id = any($2::uuid[]) and deleted_at is ${deleted ? "null" : "not null"}`,
     [userId, ids],
   );
   revalidatePath("/tasks");
@@ -190,9 +191,9 @@ async function setTasksDeleted(ids: string[], deleted: boolean): Promise<void> {
 
 async function setTaskDeleted(id: string, deleted: boolean): Promise<void> {
   const userId = await requireUserId();
-  const task = await queryOne<Task>(
+  const task = await actorQueryOne<Task>(userId, 
     `update tasks set deleted_at = ${deleted ? "now()" : "null"}
-     where user_id = $1 and id = $2 and deleted_at is ${deleted ? "null" : "not null"}
+     where ${mineOrOrg("$1")} and id = $2 and deleted_at is ${deleted ? "null" : "not null"}
      returning *`,
     [userId, id],
   );
@@ -210,7 +211,7 @@ export async function updateTask(
   patch = validate(updateTaskSchema, patch);
   const fields = Object.keys(patch) as (keyof typeof patch)[];
   if (fields.length === 0) {
-    const task = await queryOne<Task>(`select * from tasks where user_id = $1 and id = $2`, [
+    const task = await actorQueryOne<Task>(userId, `select * from tasks where ${mineOrOrg("$1")} and id = $2`, [
       userId,
       id,
     ]);
@@ -223,9 +224,9 @@ export async function updateTask(
   if (fields.includes("due_at")) setClauses.push("reminded_at = null");
   const values = fields.map((field) => patch[field]);
 
-  const task = await queryOne<Task>(
+  const task = await actorQueryOne<Task>(userId, 
     `update tasks set ${setClauses.join(", ")}
-     where user_id = $1 and id = $2 and deleted_at is null
+     where ${mineOrOrg("$1")} and id = $2 and deleted_at is null
      returning *`,
     [userId, id, ...values],
   );
@@ -253,7 +254,7 @@ export async function searchTasks(searchQuery: string): Promise<Task[]> {
   // Typo-tolerant ranking in JS over open tasks plus the most recent completed ones.
   const tasks = await query<Task>(
     `select * from tasks
-     where user_id = $1 and deleted_at is null
+     where ${mineOrOrg("$1")} and deleted_at is null
      order by completed asc, coalesce(due_at, created_at) desc
      limit 2000`,
     [userId],

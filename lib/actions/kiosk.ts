@@ -2,6 +2,7 @@
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { mineOrOrg } from "@/lib/db/scope";
 import { query, queryOne } from "@/lib/db/client";
 import { requireUserId } from "@/lib/current-user";
 import { KIOSK_COOKIE } from "@/lib/auth";
@@ -82,7 +83,7 @@ export async function kioskCheckIn(firstName: string, lastName: string, reason: 
     const why = allowed.includes(reason) ? reason : null;
     const fullName = `${first} ${last}`;
     const match = await queryOne<{ id: string }>(
-      `select id from people where user_id = $1 and deleted_at is null and lower(display_name) = lower($2)
+      `select id from people where ${mineOrOrg("$1")} and deleted_at is null and lower(display_name) = lower($2)
         order by last_activity_at desc limit 1`,
       [userId, fullName],
     );

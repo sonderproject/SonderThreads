@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { asUser } from "@/lib/db/as-user";
 import { isUuid } from "@/lib/ids";
 import { getTimeZone } from "@/lib/timezone";
@@ -52,7 +52,9 @@ export default async function TeamClientPage({
   const { saved, error } = await searchParams;
   if (!isUuid(id)) notFound();
   const viewer = await requireOrgMember();
-  const canManage = viewer.role !== "case_manager";
+  // Case managers work in the normal (fully editable) client profile.
+  if (viewer.role === "case_manager") redirect(`/people/${id}`);
+  const canManage = true; // admins and supervisors only reach this page
   const tz = await getTimeZone();
 
   const data = await asUser(viewer.userId, async (q) => {
@@ -99,7 +101,7 @@ export default async function TeamClientPage({
   return (
     <div className="space-y-8">
       <div className="space-y-1">
-        <Link href={canManage ? `/team/${person.user_id}` : "/people?view=org"} className="text-sm text-accent hover:underline">
+        <Link href={canManage ? `/team/${person.user_id}` : "/people"} className="text-sm text-accent hover:underline">
           ← {canManage ? `${person.owner_name || person.owner_email}'s caseload` : "All clients"}
         </Link>
         <div className="flex flex-wrap items-center gap-2">

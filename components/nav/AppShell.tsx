@@ -31,7 +31,10 @@ export function AppShell({
   notificationCount = 0,
   idleMinutes = 30,
   showTeam = false,
+  showImpact = true,
 }: {
+  /** Case managers in an organization don't get reports. */
+  showImpact?: boolean;
   /** Organization admins and supervisors get a Team tab. */
   showTeam?: boolean;
   children: React.ReactNode;
@@ -57,7 +60,7 @@ export function AppShell({
               <div className="flex items-center">
                 <div className="hidden items-center gap-2 sm:flex">
                   <nav className="flex gap-1">
-                    {[...NAV_ITEMS, ...(showTeam ? [{ href: "/team", label: "Team" }] : [])].map((item) => {
+                    {[...NAV_ITEMS.filter((i) => showImpact || i.href !== "/impact"), ...(showTeam ? [{ href: "/team", label: "Team" }] : [])].map((item) => {
                       const isActive =
                         item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
                       return (
@@ -132,7 +135,7 @@ export function AppShell({
             <div className="nav-glow-line" aria-hidden />
           </header>
           <main className="pb-tabbar mx-auto max-w-4xl px-4 pt-5 sm:px-6 sm:py-6">{children}</main>
-          <MobileNav people={people} showTeam={showTeam} />
+          <MobileNav people={people} showTeam={showTeam} showImpact={showImpact} />
           <SearchPalette />
         </div>
       </UndoProvider>
