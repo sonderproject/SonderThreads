@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { asUser } from "@/lib/db/as-user";
 import { requireUserId } from "@/lib/current-user";
 import { getMembership, ORG_ROLES, ROLE_LABELS, type OrgRole } from "@/lib/org";
-import { changeRole, deactivateMember, reactivateMember, revokeInvite, saveOrganizationInfo } from "@/lib/actions/org";
+import { changeRole, deactivateMember, reactivateMember, removeOrgLogo, revokeInvite, saveOrganizationInfo, uploadOrgLogo } from "@/lib/actions/org";
 import { InviteForm } from "@/components/org/InviteForm";
 
 const ERRORS: Record<string, string> = {
@@ -13,6 +13,9 @@ const ERRORS: Record<string, string> = {
   role: "Choose a role.",
   name: "Enter a name.",
   "org-email": "Enter a valid email address for the organization.",
+  "logo-missing": "Choose an image file first.",
+  "logo-size": "That logo is over 1 MB. Try a smaller PNG or JPG.",
+  "logo-type": "The logo must be a PNG or JPG image.",
 };
 const SAVED: Record<string, string> = {
   role: "Role updated.",
@@ -20,10 +23,20 @@ const SAVED: Record<string, string> = {
   reactivated: "Reactivated.",
   name: "Name updated.",
   info: "Organization info saved.",
+  logo: "Logo updated.",
+  "logo-removed": "Logo removed.",
 };
 
 type Member = { user_id: string; role: OrgRole; active: boolean; name: string | null; email: string; clients: number };
-type OrgInfo = { name: string; phone: string | null; email: string | null; website: string | null; address: string | null; about: string | null };
+type OrgInfo = {
+  name: string;
+  phone: string | null;
+  email: string | null;
+  website: string | null;
+  address: string | null;
+  about: string | null;
+  logo_version: string | null;
+};
 type Invite = { id: string; email: string; role: OrgRole; expires_at: string; expired: boolean };
 
 const btn = "rounded-full border border-border px-3 py-1.5 text-sm font-medium text-text hover:bg-bg-hover";
@@ -50,7 +63,7 @@ export default async function OrganizationPage({ searchParams }: { searchParams:
         where org_id = $1 and accepted_at is null order by created_at desc`,
       [m.orgId],
     ),
-    (await q<OrgInfo>(`select name, phone, email, website, address, about from organizations where id = $1`, [m.orgId]))[0],
+    (await q<OrgInfo>(`select name, phone, email, website, address, about, extract(epoch from logo_updated_at)::bigint::text as logo_version from organizations where id = $1`, [m.orgId]))[0],
   ]);
   const active = members.filter((x) => x.active);
 
@@ -72,6 +85,36 @@ export default async function OrganizationPage({ searchParams }: { searchParams:
 
       <section id="info" className="scroll-mt-20 space-y-3">
         <h2 className="section-label">Organization info</h2>
+        <div className="card flex flex-wrap items-center gap-4 p-4">
+          <div className="flex h-16 w-32 items-center justify-center overflow-hidden rounded-xl border border-border bg-white">
+            {info?.logo_version ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={`/api/org-logo?v=${info.logo_version}`} alt={`${m.orgName} logo`} className="max-h-14 max-w-28 object-contain" />
+            ) : (
+              <span className="text-xs text-text-muted">No logo</span>
+            )}
+          </div>
+          <form action={uploadOrgLogo} className="flex flex-wrap items-center gap-2">
+            <input
+              type="file"
+              name="logo"
+              accept="image/png,image/jpeg"
+              required
+              className="max-w-56 text-xs text-text-muted file:mr-2 file:rounded-full file:border file:border-border file:bg-transparent file:px-3 file:py-1 file:text-xs file:text-text"
+            />
+            <button type="submit" className={btn}>
+              Upload logo
+            </button>
+          </form>
+          {info?.logo_version && (
+            <form action={removeOrgLogo}>
+              <button type="submit" className="text-xs text-text-muted hover:text-danger">
+                Remove
+              </button>
+            </form>
+          )}
+          <p className="w-full text-xs text-text-muted">PNG or JPG, up to 1 MB. Shown on your Team page and on Impact report covers.</p>
+        </div>
         <form key={JSON.stringify(info)} action={saveOrganizationInfo} className="card grid gap-3 p-4 sm:grid-cols-2">
           <label className="space-y-1 sm:col-span-2">
             <span className="text-xs text-text-muted">Name</span>

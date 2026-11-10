@@ -39,7 +39,7 @@ export async function GET(request: Request) {
     format === "pdf" && org
       ? (
           await asUser(user.id, (q) =>
-            q<ReportOrgInfo>(`select about, phone, email, website, address from organizations where id = $1`, [org.id]),
+            q<ReportOrgInfo>(`select about, phone, email, website, address, logo from organizations where id = $1`, [org.id]),
           )
         )[0] ?? null
       : null;

@@ -83,7 +83,15 @@ function rightRounded(x: number, y: number, w: number, h: number, r: number): st
 }
 
 /** Organization details for the cover (admins edit them on the Organization page). */
-export type ReportOrgInfo = { about: string | null; phone: string | null; email: string | null; website: string | null; address: string | null };
+export type ReportOrgInfo = {
+  about: string | null;
+  phone: string | null;
+  email: string | null;
+  website: string | null;
+  address: string | null;
+  /** PNG or JPEG bytes (the organization's own logo). */
+  logo?: Buffer | null;
+};
 
 export function impactPdf(
   m: Metrics,
@@ -114,12 +122,26 @@ export function impactPdf(
 
     // ── Cover ────────────────────────────────────────────────────────────
     doc.rect(0, 0, PAGE.w, PAGE.h).fill(C.obsidian);
-    doc.font("display").fontSize(11).fillColor(C.warmWhite).text(who.toUpperCase(), PAGE.m, 74, {
-      characterSpacing: 3.5,
-      width: CONTENT_W,
-      lineBreak: false,
-      ellipsis: true,
-    });
+    let logoDrawn = false;
+    if (opts.org?.logo) {
+      // The organization's own logo on a white tile (most logos are dark on white).
+      try {
+        doc.roundedRect(PAGE.m, 50, 190, 64, 10).fill("#ffffff");
+        doc.image(opts.org.logo, PAGE.m + 14, 58, { fit: [162, 48], align: "center", valign: "center" });
+        logoDrawn = true;
+      } catch {
+        logoDrawn = false; // unreadable image: fall back to the name
+      }
+    }
+    if (!logoDrawn) {
+      doc.rect(PAGE.m, 50, 200, 70).fill(C.obsidian);
+      doc.font("display").fontSize(11).fillColor(C.warmWhite).text(who.toUpperCase(), PAGE.m, 74, {
+        characterSpacing: 3.5,
+        width: CONTENT_W,
+        lineBreak: false,
+        ellipsis: true,
+      });
+    }
     rainbow(PAGE.m, 128, CONTENT_W);
 
     doc.font("body-medium").fontSize(9).fillColor("#62b4e6").text("IMPACT REPORT", PAGE.m, 300, { characterSpacing: 3 });

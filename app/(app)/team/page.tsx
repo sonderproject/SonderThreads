@@ -17,8 +17,8 @@ type Row = {
 /** Team: each staff member's caseload at a glance (admins and supervisors). */
 export default async function TeamPage() {
   const viewer = await requireTeamViewer();
-  const staff = await asUser(viewer.userId, (q) =>
-    q<Row>(
+  const [staff, logo] = await asUser(viewer.userId, async (q) => [
+    await q<Row>(
       `select m.user_id, u.name, u.email, m.role,
               (select count(*) from people p where p.user_id = m.user_id and p.org_id = m.org_id and p.deleted_at is null)::int as clients,
               (select count(*) from people p where p.user_id = m.user_id and p.org_id = m.org_id and p.deleted_at is null and p.needs_followup)::int as followups,
@@ -30,7 +30,12 @@ export default async function TeamPage() {
         order by coalesce(u.name, u.email)`,
       [viewer.orgId],
     ),
-  );
+    (
+      await q<{ v: string | null }>(`select extract(epoch from logo_updated_at)::bigint::text as v from organizations where id = $1`, [
+        viewer.orgId,
+      ])
+    )[0]?.v ?? null,
+  ]);
   const totals = staff.reduce(
     (a, r) => ({ clients: a.clients + r.clients, overdue: a.overdue + r.overdue, followups: a.followups + r.followups }),
     { clients: 0, overdue: 0, followups: 0 },
@@ -39,6 +44,10 @@ export default async function TeamPage() {
   return (
     <div className="space-y-6">
       <div className="space-y-1">
+        {logo && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={`/api/org-logo?v=${logo}`} alt={`${viewer.orgName} logo`} className="mb-2 max-h-12 max-w-40 object-contain" />
+        )}
         <p className="eyebrow text-text-faint">{viewer.orgName}</p>
         <h1 className="page-title">Team</h1>
         <p className="text-sm text-text-muted">

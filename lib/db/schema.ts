@@ -396,6 +396,11 @@ alter table organizations add column if not exists website text check (length(we
 alter table organizations add column if not exists address text check (length(address) <= 500);
 alter table organizations add column if not exists about text check (length(about) <= 1000);
 
+-- Organization logo (admins upload it; PNG or JPEG up to 1 MB, the formats the PDF can embed).
+alter table organizations add column if not exists logo bytea check (octet_length(logo) <= 1048576);
+alter table organizations add column if not exists logo_type text check (logo_type in ('image/png', 'image/jpeg'));
+alter table organizations add column if not exists logo_updated_at timestamptz;
+
 create table if not exists memberships (
   org_id uuid not null references organizations(id) on delete cascade,
   user_id uuid not null references users(id) on delete cascade,
