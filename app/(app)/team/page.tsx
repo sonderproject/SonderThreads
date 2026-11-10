@@ -66,7 +66,7 @@ export default async function TeamPage() {
           <thead>
             <tr className="eyebrow border-b border-border text-left text-text-faint">
               <th className="px-4 py-2 font-semibold">Staff</th>
-              <th className="px-3 py-2 text-right font-semibold">Clients</th>
+              <th className="px-3 py-2 text-right font-semibold">Clients added</th>
               <th className="px-3 py-2 text-right font-semibold">Follow-up</th>
               <th className="px-3 py-2 text-right font-semibold">Open tasks</th>
               <th className="px-4 py-2 text-right font-semibold">Overdue</th>
@@ -96,7 +96,7 @@ export default async function TeamPage() {
         </table>
       </div>
       <p className="text-xs text-text-faint">
-        Only clients that belong to {viewer.orgName} are counted. Staff members&apos; personal tasks and notes are never
+        Everyone at {viewer.orgName} can see and work on all {totals.clients} clients; &quot;Clients added&quot; shows who entered each one. Only clients that belong to {viewer.orgName} are counted. Staff members&apos; personal tasks and notes are never
         shown here.
       </p>
     </div>
