@@ -4,7 +4,7 @@ import { query, queryOne } from "@/lib/db/client";
 import { requireUserId } from "@/lib/current-user";
 
 /**
- * Billing. Individuals: $5/month after a 7-day free trial. Organizations:
+ * Billing. Individuals: $9/month after a 7-day free trial. Organizations:
  * $15 per staff member, or Team ($249/month with 20 staff included, $10 each
  * after), after a 30-day free trial. Accounts that existed before billing
  * started are "comp" (free for life). When a trial ends or payment fails for

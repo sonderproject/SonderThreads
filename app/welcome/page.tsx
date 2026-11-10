@@ -198,7 +198,7 @@ export default function WelcomePage() {
                 <p className="mt-1 text-sm text-text-muted">For anyone with clients, projects or a busy life to keep straight: entrepreneurs, freelancers, coaches, case managers and more.</p>
               </div>
               <p className="font-display text-5xl font-light tabular-nums">
-                $5<span className="ml-1 font-sans text-base text-text-muted">/ month</span>
+                $9<span className="ml-1 font-sans text-base text-text-muted">/ month</span>
               </p>
               <p className="-mt-2 text-xs text-text-muted">7-day free trial. Cancel any time.</p>
               <ul className="flex-1 space-y-2 text-sm">
@@ -219,13 +219,14 @@ export default function WelcomePage() {
                   <h2 className="font-display text-2xl font-light">Organization</h2>
                   <p className="mt-1 text-sm text-text-muted">For agencies and teams that work together.</p>
                 </div>
-                <span className="tag tag-v">Most agencies</span>
+                <span className="tag tag-v">Founding pricing</span>
               </div>
               <p className="font-display text-5xl font-light tabular-nums">
                 $15<span className="ml-1 font-sans text-base text-text-muted">per staff member / month</span>
               </p>
               <p className="-mt-2 text-xs text-text-muted">
-                Or Team: $249 / month for up to 20 staff, $10 for each one after. 30-day free trial.
+                Or Team: $249 / month for up to 20 staff, $10 for each one after. 30-day free trial. Founding agencies
+                keep this price for 12 months.
               </p>
               <ul className="flex-1 space-y-2 text-sm">
                 {[

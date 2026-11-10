@@ -82,7 +82,7 @@ export default async function BillingPage({ searchParams }: { searchParams: Prom
               <input type="hidden" name="plan" value="individual" />
               <p className="font-display text-2xl font-light">Individual</p>
               <p className="font-display text-4xl font-light tabular-nums">
-                $5<span className="ml-1 font-sans text-base text-text-muted">/ month</span>
+                $9<span className="ml-1 font-sans text-base text-text-muted">/ month</span>
               </p>
               <p className="text-sm text-text-muted">Everything for one person. Cancel any time.</p>
               <button type="submit" className={primary} disabled={!billingEnabled()}>
