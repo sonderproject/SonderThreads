@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { asUser } from "@/lib/db/as-user";
 import { isUuid } from "@/lib/ids";
 import { getTimeZone } from "@/lib/timezone";
-import { logClientView, requireTeamViewer, shortDate } from "@/lib/team";
+import { logClientView, requireOrgMember, shortDate } from "@/lib/team";
 import { reassignClient } from "@/lib/actions/org";
 import { ClientComments, type ClientComment } from "@/components/org/ClientComments";
 
@@ -51,7 +51,8 @@ export default async function TeamClientPage({
   const { id } = await params;
   const { saved, error } = await searchParams;
   if (!isUuid(id)) notFound();
-  const viewer = await requireTeamViewer();
+  const viewer = await requireOrgMember();
+  const canManage = viewer.role !== "case_manager";
   const tz = await getTimeZone();
 
   const data = await asUser(viewer.userId, async (q) => {
@@ -98,8 +99,8 @@ export default async function TeamClientPage({
   return (
     <div className="space-y-8">
       <div className="space-y-1">
-        <Link href={`/team/${person.user_id}`} className="text-sm text-accent hover:underline">
-          ← {person.owner_name || person.owner_email}&apos;s caseload
+        <Link href={canManage ? `/team/${person.user_id}` : "/people?view=org"} className="text-sm text-accent hover:underline">
+          ← {canManage ? `${person.owner_name || person.owner_email}'s caseload` : "All clients"}
         </Link>
         <div className="flex flex-wrap items-center gap-2">
           <h1 className="page-title">{person.display_name}</h1>
@@ -114,7 +115,7 @@ export default async function TeamClientPage({
       {saved === "reassigned" && <p className="text-sm text-accent">Reassigned. The new case manager was notified.</p>}
       {error === "reassign" && <p className="flag text-sm">Choose an active staff member other than the current one.</p>}
 
-      {others.length > 0 && (
+      {canManage && others.length > 0 && (
         <form action={reassignClient} className="card flex flex-wrap items-end gap-2 p-4">
           <input type="hidden" name="person_id" value={person.id} />
           <label className="min-w-0 flex-1 space-y-1">
@@ -137,7 +138,7 @@ export default async function TeamClientPage({
       <ClientComments
         personId={person.id}
         comments={comments}
-        canComment
+        canComment={canManage}
         formatDate={(iso) => shortDate(iso, tz)}
         error={error === "comment"}
       />

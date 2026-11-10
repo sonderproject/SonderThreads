@@ -7,15 +7,15 @@ import { requireUserId } from "@/lib/current-user";
 import { asUser } from "@/lib/db/as-user";
 
 /**
- * People. Admins and supervisors also get "Everyone at <org>": every agency
- * client with their case manager, read through the database's access rules
+ * People. Organization members also get "Everyone at <org>": every agency
+ * client with their case manager (a shared caseload), read through the database's access rules
  * (others' clients open read-only in the Team view).
  */
 export default async function PeoplePage({ searchParams }: { searchParams: Promise<{ view?: string }> }) {
   const { view } = await searchParams;
   const userId = await requireUserId();
   const [people, membership] = await Promise.all([listPeople(), getMembership()]);
-  const canSeeOrg = Boolean(membership?.active && membership.role !== "case_manager");
+  const canSeeOrg = Boolean(membership?.active);
   const showOrg = canSeeOrg && view === "org";
 
   const orgClients = showOrg

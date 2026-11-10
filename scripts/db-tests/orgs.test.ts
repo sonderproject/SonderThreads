@@ -50,7 +50,9 @@ async function main() {
 
   const see = (who: string, sql: string) => asUser(who, (q) => q<{ display_name?: string; content?: string; title?: string }>(sql));
 
-  check("case manager sees only their own clients", JSON.stringify(names(await see(C1, "select display_name from people"))) === JSON.stringify(["Maria (C1 client)"]), names(await see(C1, "select display_name from people")));
+  check("case managers see every client in their organization (shared caseload)", JSON.stringify(names(await see(C1, "select display_name from people"))) === JSON.stringify(["Jo (C2 client)", "Maria (C1 client)"]), names(await see(C1, "select display_name from people")));
+  check("case managers can't see a colleague's personal notes", !(await see(C2, "select content from notes")).some((r) => r.content === "C1 personal note"));
+  check("case managers can't edit a colleague's client", (await asUser(C2, (q) => q(`update people set display_name = 'x' where id = $1 returning id`, [P1.id]))).length === 0);
   check("case manager sees their personal notes", names(await see(C1, "select content from notes")).includes("C1 personal note"));
   check("supervisor sees every client in their organization", JSON.stringify(names(await see(S1, "select display_name from people"))) === JSON.stringify(["Jo (C2 client)", "Maria (C1 client)"]), names(await see(S1, "select display_name from people")));
   check("supervisor sees client notes and tasks", JSON.stringify(names(await see(S1, "select content from notes"))) === JSON.stringify(["note on Maria"]) && JSON.stringify(names(await see(S1, "select title from tasks"))) === JSON.stringify(["call Maria"]), { n: names(await see(S1, "select content from notes")), t: names(await see(S1, "select title from tasks")) });
@@ -125,9 +127,9 @@ async function main() {
   await asUser(S1, (q) => q(`insert into client_comments (org_id, person_id, author_id, body) values ($1, $2, $3, 'Please call her this week')`, [o1.id, P1.id, S1]));
   check("supervisor can comment on an org client", (await queryOne<{ n: number }>(`select count(*)::int n from client_comments`))?.n === 1);
   check("the client's case manager sees the comment", (await asUser(C2, (q) => q(`select id from client_comments where person_id = $1`, [P1.id]))).length === 1);
-  check("another case manager doesn't", (await asUser(C1, (q) => q(`select id from client_comments`))).length === 0);
+  check("colleagues in the organization see the comment too", (await asUser(C1, (q) => q(`select id from client_comments`))).length === 1);
   check("the other agency doesn't", (await asUser(A2, (q) => q(`select id from client_comments`))).length === 0);
-  check("case managers can't comment", await fails(() => asUser(C2, (q) => q(`insert into client_comments (org_id, person_id, author_id, body) values ($1, $2, $3, 'x')`, [o1.id, P1.id, C2]))));
+  check("a deactivated member can't comment", await fails(() => asUser(D1, (q) => q(`insert into client_comments (org_id, person_id, author_id, body) values ($1, $2, $3, 'x')`, [o1.id, P1.id, D1]))));
   check("the other agency can't comment on it", await fails(() => asUser(A2, (q) => q(`insert into client_comments (org_id, person_id, author_id, body) values ($1, $2, $3, 'x')`, [o2.id, P1.id, A2]))));
   const solo = await person(U, "Solo friend");
   check("nobody can comment on a personal client", await fails(() => asUser(S1, (q) => q(`insert into client_comments (org_id, person_id, author_id, body) values ($1, $2, $3, 'x')`, [o1.id, solo.id, S1]))));

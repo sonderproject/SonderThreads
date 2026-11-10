@@ -630,8 +630,8 @@ end $$;
 -- "authenticated" role: Supabase's API, and the app's asUser() in
 -- lib/db/as-user.ts). The core privacy rule:
 --   * Your own records: you, always.
---   * A client's records (org_id set): also your organization's active
---     admins and supervisors, read-only.
+--   * A client's records (org_id set): also every active member of your
+--     organization, read-only (shared caseload).
 --   * Personal records (org_id null): only you. Never supervisors or admins.
 do $$
 begin
@@ -639,10 +639,11 @@ begin
     language sql stable security definer set search_path = public as
     'select o is not null and exists (select 1 from memberships m
        where m.org_id = o and m.user_id = auth.uid() and m.active)';
+  -- Any active member of the organization can read its client records (shared caseload).
   create or replace function app_private.app_org_viewer(o uuid) returns boolean
     language sql stable security definer set search_path = public as
     'select o is not null and exists (select 1 from memberships m
-       where m.org_id = o and m.user_id = auth.uid() and m.active and m.role in (''admin'', ''supervisor''))';
+       where m.org_id = o and m.user_id = auth.uid() and m.active)';
   create or replace function app_private.app_org_admin(o uuid) returns boolean
     language sql stable security definer set search_path = public as
     'select o is not null and exists (select 1 from memberships m
