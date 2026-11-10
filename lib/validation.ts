@@ -9,6 +9,8 @@ export const createPersonSchema = z.object({
   fullName: z.string().trim().min(1, "Name is required").max(200, "Name is too long"),
   currentStatus: optionalText(500),
   nextAction: optionalText(500),
+  /** Keep this person out of the user's organization. */
+  personal: z.boolean().optional(),
 });
 
 export const updatePersonSchema = z

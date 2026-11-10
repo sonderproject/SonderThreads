@@ -28,6 +28,8 @@ import { requireUserId } from "@/lib/current-user";
 import { getTimeZone } from "@/lib/timezone";
 import { shortDate } from "@/lib/team";
 import { ClientComments, type ClientComment } from "@/components/org/ClientComments";
+import { ShareToggle } from "@/components/people/ShareToggle";
+import { getMembership } from "@/lib/org";
 
 /** Supervisor comments on one of my clients (read through the database's access rules). */
 async function listCommentsForPerson(personId: string): Promise<ClientComment[]> {
@@ -68,7 +70,7 @@ export default async function PersonProfilePage({
   const { id } = await params;
   if (!isUuid(id)) notFound();
   // Everything loads at once (each query is scoped to the user, so a bad id just returns nothing).
-  const [person, activity, tasks, lists, notes, checkIns, reasons, allLists, comments, tz] = await Promise.all([
+  const [person, activity, tasks, lists, notes, checkIns, reasons, allLists, comments, tz, membership] = await Promise.all([
     getPerson(id),
     getPersonTimeline(id),
     listTasksForPerson(id),
@@ -79,6 +81,7 @@ export default async function PersonProfilePage({
     listLists(),
     listCommentsForPerson(id),
     getTimeZone(),
+    getMembership(),
   ]);
   if (!person) notFound();
 
@@ -108,6 +111,11 @@ export default async function PersonProfilePage({
           )}
           <DeletePersonButton personId={person.id} name={person.display_name} />
         </div>
+        {membership?.active && (
+          <div className="mt-2">
+            <ShareToggle personId={person.id} shared={Boolean(person.org_id)} orgName={membership.orgName} />
+          </div>
+        )}
       </div>
 
       <Section title="Details">

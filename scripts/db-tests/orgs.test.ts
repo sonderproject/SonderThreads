@@ -152,6 +152,14 @@ async function main() {
   check("colleagues can't read each other's phone or password fields", await fails(() => asUser(C1, (q) => q(`select phone, password_hash from users`))));
   check("colleagues can still read names and emails", (await asUser(C1, (q) => q(`select id, name, email from users`))).length >= 1);
 
+  // Keep private (personal flag).
+  const friend = (await query<{ id: string; org_id: string | null }>(`insert into people (user_id, first_name, display_name, personal) values ($1, 'Mom', 'Mom', true) returning id, org_id`, [C2]))[0];
+  check("a person kept private never joins the organization", friend.org_id === null && !(await see(S1, "select display_name from people")).some((r) => r.display_name === "Mom"));
+  await asUser(C2, (q) => q(`update people set org_id = null, personal = true where id = $1 and user_id = $2`, [P1.id, C2]));
+  check("making a client private hides it from the supervisor", !(await see(S1, "select display_name from people")).some((r) => r.display_name === "Maria (C1 client)"));
+  check("making a client private is recorded in the organization's log", (await logCount(`table_name = 'people' and record_id = $1 and 'personal' = any(fields)`, [P1.id])) === 1);
+  await asUser(C2, (q) => q(`update people set org_id = $1, personal = false where id = $2 and user_id = $3`, [o1.id, P1.id, C2]));
+
   const appView = await query(`select id from people where user_id = $1`, [C2]);
   check("the app's normal queries are unchanged", appView.length >= 1);
   console.log(failures ? `${failures} FAILED` : "ALL PASSED");

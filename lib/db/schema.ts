@@ -435,10 +435,13 @@ create index if not exists notes_org_idx on notes(org_id) where org_id is not nu
 create index if not exists tasks_org_idx on tasks(org_id) where org_id is not null;
 create index if not exists check_ins_org_idx on check_ins(org_id) where org_id is not null;
 
--- A new client created by an active member belongs to their organization.
+-- "Keep private": a person the owner marked personal never joins the organization.
+alter table people add column if not exists personal boolean not null default false;
+
+-- A new client created by an active member belongs to their organization (unless kept private).
 create or replace function people_set_org() returns trigger language plpgsql set search_path = public as $$
 begin
-  if new.org_id is null then
+  if new.org_id is null and not coalesce(new.personal, false) then
     select m.org_id into new.org_id from memberships m where m.user_id = new.user_id and m.active;
   end if;
   return new;

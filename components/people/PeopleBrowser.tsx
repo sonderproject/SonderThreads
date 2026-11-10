@@ -14,7 +14,7 @@ import { Dictate } from "@/components/voice/Dictate";
 import { NAME_INPUT, PROSE_INPUT, SEARCH_INPUT } from "@/lib/input-props";
 import { fuzzyFilter } from "@/lib/fuzzy";
 
-export function PeopleBrowser({ people }: { people: Person[] }) {
+export function PeopleBrowser({ people, orgName = null }: { people: Person[]; orgName?: string | null }) {
   const [query, setQuery] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [selecting, setSelecting] = useState(false);
@@ -172,14 +172,15 @@ export function PeopleBrowser({ people }: { people: Person[] }) {
       )}
 
       <Modal open={modalOpen} onClose={() => setModalOpen(false)} title="New person">
-        <NewPersonForm onDone={() => setModalOpen(false)} />
+        <NewPersonForm orgName={orgName} onDone={() => setModalOpen(false)} />
       </Modal>
     </div>
   );
 }
 
-function NewPersonForm({ onDone }: { onDone: () => void }) {
+function NewPersonForm({ onDone, orgName }: { onDone: () => void; orgName: string | null }) {
   const [fullName, setFullName] = useState("");
+  const [keepPrivate, setKeepPrivate] = useState(false);
   const [currentStatus, setCurrentStatus] = useState("");
   const [nextAction, setNextAction] = useState("");
   const [saving, setSaving] = useState(false);
@@ -197,6 +198,7 @@ function NewPersonForm({ onDone }: { onDone: () => void }) {
         fullName,
         currentStatus: currentStatus || null,
         nextAction: nextAction || null,
+        personal: orgName ? keepPrivate : undefined,
       });
       setSaving(false);
       if (result.ok) {
@@ -248,6 +250,17 @@ function NewPersonForm({ onDone }: { onDone: () => void }) {
           />
         </Dictate>
       </div>
+      {orgName && (
+        <label className="flex items-start gap-2 text-sm text-text">
+          <input type="checkbox" checked={keepPrivate} onChange={(e) => setKeepPrivate(e.target.checked)} className="mt-1" />
+          <span>
+            Keep private
+            <span className="block text-xs text-text-muted">
+              Not a client: {orgName} won&apos;t see this person or anything about them.
+            </span>
+          </span>
+        </label>
+      )}
       <Button type="submit" disabled={saving || pending || !fullName.trim()} className="w-full">
         {saving || pending ? "Saving..." : "Add person"}
       </Button>

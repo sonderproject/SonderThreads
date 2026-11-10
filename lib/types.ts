@@ -1,6 +1,10 @@
 export type PersonStatus = "active" | "inactive" | "alumni";
 
 export type Person = {
+  /** Organization this client belongs to (null = private to its owner). */
+  org_id?: string | null;
+  /** Owner chose "keep private": never joins the organization. */
+  personal?: boolean;
   id: string;
   user_id: string;
   first_name: string;

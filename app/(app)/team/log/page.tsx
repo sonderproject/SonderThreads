@@ -83,7 +83,9 @@ export default async function AuditLogPage() {
                     )}
                   </>
                 )}
-                {e.action === "update" && e.fields?.length ? (
+                {e.action === "update" && e.fields?.includes("personal") ? (
+                  <span className="text-text-muted"> (changed who can see it)</span>
+                ) : e.action === "update" && e.fields?.length ? (
                   <span className="text-text-muted"> ({e.fields.join(", ").replaceAll("_", " ")})</span>
                 ) : null}
               </p>

@@ -4,6 +4,8 @@ import { cache } from "react";
 import { revalidatePath } from "next/cache";
 import { query, queryOne } from "@/lib/db/client";
 import { requireUserId } from "@/lib/current-user";
+import { asUser } from "@/lib/db/as-user";
+import { getMembership } from "@/lib/org";
 import { logActivity } from "./activity";
 import { createPersonSchema, updatePersonSchema, validate, toActionResult, type ActionResult } from "@/lib/validation";
 import type { Person } from "@/lib/types";
@@ -45,14 +47,16 @@ export async function createPersonRecord(params: {
   fullName: string;
   currentStatus?: string | null;
   nextAction?: string | null;
+  /** Keep private: never shared with the user's organization. */
+  personal?: boolean;
 }): Promise<Person> {
   const userId = await requireUserId();
   params = validate(createPersonSchema, params);
   const { firstName, lastName } = splitName(params.fullName);
 
   const person = await queryOne<Person>(
-    `insert into people (user_id, first_name, last_name, display_name, current_status, next_action)
-     values ($1, $2, $3, $4, $5, $6)
+    `insert into people (user_id, first_name, last_name, display_name, current_status, next_action, personal)
+     values ($1, $2, $3, $4, $5, $6, $7)
      returning *`,
     [
       userId,
@@ -61,6 +65,7 @@ export async function createPersonRecord(params: {
       params.fullName.trim(),
       params.currentStatus ?? null,
       params.nextAction ?? null,
+      params.personal ?? false,
     ],
   );
 
@@ -298,4 +303,26 @@ export async function getPeopleNeedingAttention(): Promise<Person[]> {
      limit 10`,
     [userId, quietSince.toISOString()],
   );
+}
+
+/**
+ * Org members: share a person with the organization, or keep them private.
+ * Runs as the user, so the database checks they own the person and belong to
+ * the organization. Making a client private is recorded in the
+ * organization's activity log, so it's never silent.
+ */
+export async function setPersonShared(personId: string, shared: boolean): Promise<ActionResult<true>> {
+  return toActionResult(async () => {
+    const userId = await requireUserId();
+    const m = await getMembership();
+    if (!m?.active) throw new Error("You're not in an organization.");
+    await asUser(userId, (q) =>
+      q(
+        `update people set org_id = $1, personal = $2, updated_at = now() where id = $3 and user_id = $4`,
+        [shared ? m.orgId : null, !shared, personId, userId],
+      ),
+    );
+    revalidatePath(`/people/${personId}`);
+    return true as const;
+  });
 }
