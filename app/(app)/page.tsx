@@ -10,6 +10,8 @@ import { ImpactTeaser } from "@/components/impact/ImpactTeaser";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { WelcomeChecklist } from "@/components/home/WelcomeChecklist";
 import { getWelcome } from "@/lib/onboarding";
+import { getPendingInvites } from "@/lib/org";
+import { PendingInvites } from "@/components/org/PendingInvites";
 import { listPeople, getPeopleNeedingAttention } from "@/lib/actions/people";
 import { listTasks } from "@/lib/actions/tasks";
 import { listRecentNotes } from "@/lib/actions/notes";
@@ -18,19 +20,21 @@ import { buildWeeks } from "@/lib/calendar-utils";
 import { getTimeZone } from "@/lib/timezone";
 import { dateParts, dayKey } from "@/lib/tz";
 
-export default async function DashboardPage() {
+export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ invite?: string }> }) {
+  const { invite: inviteError } = await searchParams;
   // "Today" and this month in the viewer's zone, not the server's (UTC on Vercel).
   const timeZone = await getTimeZone();
   const todayKey = dayKey(new Date(), timeZone);
   const { year, month } = dateParts(new Date(), timeZone);
 
-  const [people, tasks, notes, needsAttention, { tasks: monthTasks, birthdays }, welcome] = await Promise.all([
+  const [people, tasks, notes, needsAttention, { tasks: monthTasks, birthdays }, welcome, invites] = await Promise.all([
     listPeople(),
     listTasks(),
     listRecentNotes(6),
     getPeopleNeedingAttention(),
     getCalendarMonth(year, month, timeZone),
     getWelcome(),
+    getPendingInvites(),
   ]);
 
   const peopleById = new Map(people.map((c) => [c.id, c]));
@@ -47,6 +51,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-8">
+      <PendingInvites invites={invites} error={inviteError} />
       {welcome && <WelcomeChecklist steps={welcome} />}
       <section>
         <CommandBar />

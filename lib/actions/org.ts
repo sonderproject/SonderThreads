@@ -333,3 +333,59 @@ export async function removeOrgLogo(): Promise<void> {
   revalidatePath("/", "layout");
   redirect("/organization?saved=logo-removed#info");
 }
+
+/**
+ * Accept an invite from inside the app (no email link needed): the invite
+ * must be for the signed-in person's own email address.
+ */
+export async function acceptInviteInApp(formData: FormData): Promise<void> {
+  const userId = await requireUserId();
+  const id = formData.get("invite_id")?.toString() ?? "";
+  const me = await queryOne<{ email: string }>(`select email from users where id = $1`, [userId]);
+  const invite = await queryOne<{ id: string; org_id: string; role: OrgRole }>(
+    `select id, org_id, role from invitations
+      where id = $1 and lower(email) = lower($2) and accepted_at is null and expires_at > now()`,
+    [id, me?.email ?? ""],
+  );
+  if (!invite) redirect("/?invite=invalid");
+  const existing = await getMembership();
+  if (existing && existing.active && existing.orgId !== invite!.org_id) redirect("/?invite=other-org");
+  await transaction(async (q) => {
+    await q(
+      `insert into memberships (org_id, user_id, role) values ($1, $2, $3)
+       on conflict (org_id, user_id) do update set role = excluded.role, active = true, deactivated_at = null`,
+      [invite!.org_id, userId, invite!.role],
+    );
+    await q(`update invitations set accepted_at = now(), accepted_by = $2 where id = $1`, [invite!.id, userId]);
+  });
+  revalidatePath("/", "layout");
+  redirect("/organization/clients?joined=1");
+}
+
+/** Decline an in-app invite (it's removed; the admin can invite again). */
+export async function declineInviteInApp(formData: FormData): Promise<void> {
+  const userId = await requireUserId();
+  const id = formData.get("invite_id")?.toString() ?? "";
+  const me = await queryOne<{ email: string }>(`select email from users where id = $1`, [userId]);
+  await queryOne(`delete from invitations where id = $1 and lower(email) = lower($2) and accepted_at is null returning id`, [id, me?.email ?? ""]);
+  revalidatePath("/", "layout");
+  redirect("/");
+}
+
+/** Admin: makes a fresh link for a pending invite (the old link stops working), to copy and send yourself. */
+export async function newInviteLink(inviteId: string): Promise<ActionResult<{ link: string }>> {
+  return toActionResult(async () => {
+    const { userId, orgId } = await requireAdmin();
+    const token = randomBytes(32).toString("base64url");
+    const rows = await asUser(userId, (q) =>
+      q(
+        `update invitations set token_hash = $1, expires_at = now() + make_interval(days => $2)
+          where id = $3 and org_id = $4 and accepted_at is null returning id`,
+        [hashToken(token), INVITE_DAYS, inviteId, orgId],
+      ),
+    );
+    if (!rows.length) throw new Error("That invite was already used or removed.");
+    revalidatePath("/organization");
+    return { link: `/join/${token}` };
+  });
+}

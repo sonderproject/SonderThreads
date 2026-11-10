@@ -8,7 +8,8 @@ import { queryOne } from "@/lib/db/client";
 import { logout, requestEmailChange, signOutEverywhere } from "@/app/login/actions";
 import { saveProfile } from "@/lib/actions/profile";
 import { ImportBackupCard } from "@/components/settings/ImportBackupCard";
-import { getMembership, ROLE_LABELS } from "@/lib/org";
+import { getMembership, getPendingInvites, ROLE_LABELS } from "@/lib/org";
+import { PendingInvites } from "@/components/org/PendingInvites";
 import Link from "next/link";
 import { getNotificationSettings, sendTestNotification } from "@/lib/actions/notifications";
 import { saveNotificationPrefs, saveSecurityPrefs } from "@/lib/actions/settings";
@@ -68,6 +69,7 @@ export default async function SettingsPage({
     getUserSettings(),
     getMembership(),
   ]);
+  const invites = await getPendingInvites();
 
   return (
     <div className="max-w-md space-y-8">
@@ -176,6 +178,7 @@ export default async function SettingsPage({
         </section>
       )}
 
+      {invites.length > 0 && <PendingInvites invites={invites} />}
       {!membership && (
         <section id="organization" className="scroll-mt-20 space-y-3">
           <h2 className="section-label">Organization</h2>

@@ -5,6 +5,7 @@ import { requireUserId } from "@/lib/current-user";
 import { getMembership, ORG_ROLES, ROLE_LABELS, type OrgRole } from "@/lib/org";
 import { changeRole, deactivateMember, reactivateMember, removeOrgLogo, revokeInvite, saveOrganizationInfo, uploadOrgLogo } from "@/lib/actions/org";
 import { InviteForm } from "@/components/org/InviteForm";
+import { CopyInviteLink } from "@/components/org/CopyInviteLink";
 
 const ERRORS: Record<string, string> = {
   "last-admin": "An organization needs at least one active admin. Make someone else an admin first.",
@@ -237,15 +238,18 @@ export default async function OrganizationPage({ searchParams }: { searchParams:
                 <div className="min-w-0">
                   <p className="truncate text-sm text-text">{i.email}</p>
                   <p className="text-xs text-text-muted">
-                    {ROLE_LABELS[i.role]} · {i.expired ? "expired" : "waiting to be accepted"}
+                    {ROLE_LABELS[i.role]} · {i.expired ? "expired (copy a new link)" : "waiting. They'll also see it in the app when they sign in."}
                   </p>
                 </div>
-                <form action={revokeInvite}>
-                  <input type="hidden" name="id" value={i.id} />
-                  <button type="submit" className="text-xs text-text-muted hover:text-danger">
-                    Cancel
-                  </button>
-                </form>
+                <div className="flex shrink-0 items-start gap-3">
+                  <CopyInviteLink inviteId={i.id} />
+                  <form action={revokeInvite}>
+                    <input type="hidden" name="id" value={i.id} />
+                    <button type="submit" className="text-xs text-text-muted hover:text-danger">
+                      Cancel
+                    </button>
+                  </form>
+                </div>
               </li>
             ))}
           </ul>

@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { query, queryOne, transaction } from "@/lib/db/client";
 import { LEGACY_OWNER_ID } from "@/lib/db/constants";
 import { getAppPassword, safeEqual, safeNextPath } from "@/lib/auth";
-import { getAuthState, verifyPassword } from "@/lib/session";
+import { getAuthState, hashToken, verifyPassword } from "@/lib/session";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { createSupabaseAdmin } from "@/lib/supabase/admin";
 import { normalizePhone, validTimeZone } from "@/lib/notify/phone";
@@ -191,6 +191,28 @@ export async function signup(formData: FormData): Promise<void> {
 
   const emailRedirectTo = `${await origin()}/auth/confirm?${new URLSearchParams({ next })}`;
   let userId: string;
+
+  // Signing up from an organization invite link: the link (sent by the admin,
+  // by email or text) proves this person got the invite, so skip the
+  // confirmation email, which work inboxes often hold back, and sign them in.
+  const inviteToken = next.match(/^\/join\/([A-Za-z0-9_-]{20,})$/)?.[1];
+  if (inviteToken && !legacyCode) {
+    const invite = await queryOne<{ email: string }>(
+      `select email from invitations where token_hash = $1 and accepted_at is null and expires_at > now()`,
+      [hashToken(inviteToken)],
+    );
+    if (invite && invite.email.toLowerCase() === email) {
+      const { data, error } = await createSupabaseAdmin().auth.admin.createUser({ email, password, email_confirm: true });
+      if (error || !data.user) {
+        console.error("[auth] invite sign-up failed", error?.message);
+        back("/signup", "failed", email, next, rawPhone);
+      }
+      await createUserRow(data.user!.id, email, phone, smsOptIn, timeZone);
+      const supabase = await createSupabaseServer();
+      await supabase.auth.signInWithPassword({ email, password });
+      redirect(next);
+    }
+  }
 
   if (legacyCode) {
     // Entering the old shared password claims everything created before
