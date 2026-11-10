@@ -30,7 +30,12 @@ export default async function CheckInsPage({
 
   return (
     <div className="space-y-4">
-      <h1 className="page-title">Check-ins</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="page-title">Check-ins</h1>
+        <a href="/kiosk" className="rounded-full border border-border px-4 py-1.5 text-sm font-medium text-text hover:bg-bg-hover">
+          Front-desk kiosk
+        </a>
+      </div>
       <CheckInsBrowser
         checkIns={checkIns}
         people={sortedPeople}

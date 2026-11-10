@@ -373,6 +373,10 @@ alter table user_settings drop constraint if exists user_settings_idle_timeout_m
 alter table user_settings add constraint user_settings_idle_timeout_minutes_check
   check (idle_timeout_minutes in (5, 15, 30, 60, 120, 240, 480));
 
+-- Front-desk kiosk: the PIN that unlocks it (scrypt hash) and the reason buttons clients see.
+alter table user_settings add column if not exists kiosk_pin_hash text;
+alter table user_settings add column if not exists kiosk_reasons text[];
+
 -- app_meta is otherwise created after this script runs (lib/db/client.ts);
 -- create it here so enabling RLS on it below works on a fresh database.
 create table if not exists app_meta (key text primary key, value text not null);

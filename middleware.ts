@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
-import { IDLE_MINUTES_COOKIE, LAST_SEEN_COOKIE, idleMinutesFrom } from "@/lib/auth";
+import { IDLE_MINUTES_COOKIE, KIOSK_COOKIE, LAST_SEEN_COOKIE, idleMinutesFrom } from "@/lib/auth";
 import { supabaseAnonKey, supabaseUrl } from "@/lib/supabase/env";
 
 /**
@@ -36,7 +36,17 @@ export async function middleware(request: NextRequest) {
 
   const now = Date.now();
   const lastSeen = Number(request.cookies.get(LAST_SEEN_COOKIE)?.value);
-  const idleLimit = idleMinutesFrom(request.cookies.get(IDLE_MINUTES_COOKIE)?.value); // null = stay signed in
+  // Front-desk kiosk: the tablet stays on the check-in screen and stays signed in while it waits.
+  const kiosk = request.cookies.get(KIOSK_COOKIE)?.value === "1";
+  if (kiosk) {
+    const p = request.nextUrl.pathname;
+    if (!p.startsWith("/kiosk") && p !== "/api/auth/heartbeat") {
+      const out = NextResponse.redirect(new URL("/kiosk", request.url));
+      for (const c of response.cookies.getAll()) out.cookies.set(c);
+      return out;
+    }
+  }
+  const idleLimit = kiosk ? null : idleMinutesFrom(request.cookies.get(IDLE_MINUTES_COOKIE)?.value); // null = no idle sign-out
   if (idleLimit !== null && Number.isFinite(lastSeen) && lastSeen > 0 && now - lastSeen > idleLimit * 60_000) {
     await supabase.auth.signOut();
     const out = signedOut(request, response, "idle");

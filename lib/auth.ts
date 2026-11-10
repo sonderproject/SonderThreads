@@ -27,6 +27,9 @@ export function idleMinutesFrom(value: string | number | undefined | null): numb
   return (IDLE_TIMEOUT_OPTIONS as readonly number[]).includes(n) ? n : IDLE_TIMEOUT_MINUTES;
 }
 
+/** Set while a tablet is locked to the front-desk kiosk (app/kiosk); every other page redirects there. */
+export const KIOSK_COOKIE = "st_kiosk";
+
 /** Server-side record of the last request, for the idle timeout backstop. */
 export const LAST_SEEN_COOKIE = "st_last_seen";
 
