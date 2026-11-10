@@ -806,4 +806,13 @@ create table if not exists billing_accounts (
   check ((user_id is null) <> (org_id is null))
 );
 alter table billing_accounts enable row level security;
+
+-- One free trial per card: Stripe card fingerprints that already started an individual trial.
+create table if not exists trial_cards (
+  fingerprint text primary key,
+  user_id uuid,
+  subscription_id text not null,
+  created_at timestamptz not null default now()
+);
+alter table trial_cards enable row level security;
 `;

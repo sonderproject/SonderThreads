@@ -67,8 +67,11 @@ export type BillingRow = {
 };
 
 export type Access = {
-  /** ok: full use · trial: full use, free trial running · grace: payment failed, still full use · readonly: view-only */
-  state: "ok" | "trial" | "grace" | "readonly";
+  /**
+   * ok: full use · trial: full use, free trial running · grace: payment failed, still full use ·
+   * readonly: view-only · setup: new individual who hasn't started their trial (card first) yet
+   */
+  state: "ok" | "trial" | "grace" | "readonly" | "setup";
   scope: "individual" | "org";
   orgId: string | null;
   orgName: string | null;
@@ -99,12 +102,23 @@ async function computeAccess(userId: string): Promise<Access> {
     const trialEnd = new Date(new Date(m.org_created).getTime() + ORG_TRIAL_DAYS * DAY);
     return { ...decide(row, trialEnd), scope: "org", orgId: m.org_id, orgName: m.name, canManage: m.role === "admin", seats, row };
   }
-  const [row, user] = await Promise.all([
+  const [row, invited] = await Promise.all([
     queryOne<BillingRow>(`select * from billing_accounts where user_id = $1`, [userId]),
-    queryOne<{ created_at: string }>(`select created_at from users where id = $1`, [userId]),
+    // Someone invited to an organization joins it instead of starting a personal trial.
+    queryOne(
+      `select 1 from invitations i join users u on lower(u.email) = lower(i.email)
+        where u.id = $1 and i.accepted_at is null and i.expires_at > now() limit 1`,
+      [userId],
+    ),
   ]);
-  const trialEnd = new Date(new Date(user?.created_at ?? Date.now()).getTime() + INDIVIDUAL_TRIAL_DAYS * DAY);
-  return { ...decide(row, trialEnd), scope: "individual", orgId: null, orgName: null, canManage: true, seats: 1, row };
+  const base = { scope: "individual" as const, orgId: null, orgName: null, canManage: true, seats: 1, row };
+  if (invited && !row?.stripe_subscription_id && row?.plan !== "comp") {
+    return { ...base, state: "ok", plan: row?.plan ?? null, status: row?.status ?? null, endsAt: null };
+  }
+  // Individuals start their 7-day trial with a card on Stripe, so no subscription yet means "set up first".
+  const decided = decide(row, new Date(0));
+  if (decided.state === "readonly" && !row?.stripe_subscription_id) return { ...base, ...decided, state: "setup" };
+  return { ...base, ...decided };
 }
 
 function decide(row: BillingRow | null, trialEnd: Date): Pick<Access, "state" | "plan" | "status" | "endsAt"> {
@@ -127,7 +141,7 @@ function decide(row: BillingRow | null, trialEnd: Date): Pick<Access, "state" | 
 export const getAccess = cache(async (): Promise<Access> => {
   const userId = await requireUserId();
   const access = await computeAccess(userId);
-  if (!billingEnabled() && access.state === "readonly") return { ...access, state: "ok" };
+  if (!billingEnabled() && (access.state === "readonly" || access.state === "setup")) return { ...access, state: "ok" };
   return access;
 });
 
@@ -136,7 +150,7 @@ export class ReadOnlyError extends Error {}
 /** Every add/edit/delete calls this first. View-only accounts get a clear message instead. */
 export async function assertCanWrite(): Promise<void> {
   const a = await getAccess();
-  if (a.state !== "readonly") return;
+  if (a.state !== "readonly" && a.state !== "setup") return;
   throw new ReadOnlyError(
     a.scope === "org" && !a.canManage
       ? `${a.orgName}'s subscription has ended, so Threads is view-only. Ask your organization admin to renew it.`
@@ -215,4 +229,28 @@ export async function customerFor(kind: "user" | "org", ownerId: string, email: 
     [ownerId, kind === "user" ? "individual" : "seat", c.id],
   );
   return c.id;
+}
+
+/**
+ * One free trial per card: if a new individual trial uses a card that already
+ * had one (under any account), the trial ends now and billing starts today.
+ * Stripe gives every card number the same fingerprint, whatever email is used.
+ */
+export async function enforceOneTrialPerCard(sub: Stripe.Subscription): Promise<void> {
+  const s = stripe();
+  if (!s || sub.status !== "trialing" || sub.metadata?.kind !== "user") return;
+  const pmId = typeof sub.default_payment_method === "string" ? sub.default_payment_method : sub.default_payment_method?.id;
+  if (!pmId) return;
+  const pm = await s.paymentMethods.retrieve(pmId);
+  const fingerprint = pm.card?.fingerprint;
+  if (!fingerprint) return;
+  await query(
+    `insert into trial_cards (fingerprint, user_id, subscription_id) values ($1, $2, $3) on conflict (fingerprint) do nothing`,
+    [fingerprint, sub.metadata.owner_id, sub.id],
+  );
+  const first = await queryOne<{ subscription_id: string }>(`select subscription_id from trial_cards where fingerprint = $1`, [fingerprint]);
+  if (first && first.subscription_id !== sub.id) {
+    const ended = await s.subscriptions.update(sub.id, { trial_end: "now", proration_behavior: "none" });
+    await saveSubscription(ended);
+  }
 }

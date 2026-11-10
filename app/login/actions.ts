@@ -9,6 +9,7 @@ import { getAuthState, hashToken, verifyPassword } from "@/lib/session";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { createSupabaseAdmin } from "@/lib/supabase/admin";
 import { normalizePhone, validTimeZone } from "@/lib/notify/phone";
+import { phoneTaken } from "@/lib/phone-unique";
 import { otherActiveAdmin, transferOrgClients } from "@/lib/org-admin";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -184,6 +185,7 @@ export async function signup(formData: FormData): Promise<void> {
 
   if (!EMAIL_RE.test(email) || email.length > 254) back("/signup", "email", email, next, rawPhone);
   if (!phone) back("/signup", "phone", email, next, rawPhone);
+  if (await phoneTaken(phone!)) back("/signup", "phone-used", email, next, rawPhone);
   if (password.length < MIN_PASSWORD_LENGTH) back("/signup", "short", email, next, rawPhone);
   if (await queryOne(`select 1 from users where lower(email) = $1`, [email])) {
     back("/signup", "exists", email, next, rawPhone);

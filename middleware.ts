@@ -19,6 +19,8 @@ export async function middleware(request: NextRequest) {
   const key = supabaseAnonKey();
   if (!url || !key) return signedOut(request); // sign-in page explains what's missing
 
+  // Lets server layouts know the path (e.g. to skip the start-your-trial step on the billing page itself).
+  request.headers.set("x-pathname", request.nextUrl.pathname);
   let response = NextResponse.next({ request });
   const supabase = createServerClient(url, key, {
     cookies: {

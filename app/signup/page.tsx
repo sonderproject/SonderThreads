@@ -9,6 +9,7 @@ export const dynamic = "force-dynamic";
 const ERRORS: Record<string, string> = {
   email: "Enter a valid email address.",
   phone: "Enter a valid mobile number.",
+  "phone-used": "That mobile number is already on another account. Sign in to that account instead.",
   short: "Password must be at least 8 characters.",
   exists: "An account with that email already exists.",
   legacy: "That isn't the current shared password.",

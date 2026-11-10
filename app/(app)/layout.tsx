@@ -1,4 +1,5 @@
-import { unstable_rethrow } from "next/navigation";
+import { redirect, unstable_rethrow } from "next/navigation";
+import { headers } from "next/headers";
 import { AppShell } from "@/components/nav/AppShell";
 import { TimeZoneProvider } from "@/components/TimeZoneProvider";
 import { getTimeZone } from "@/lib/timezone";
@@ -50,6 +51,12 @@ export default async function AppGroupLayout({ children }: { children: React.Rea
 
   const [people, lists, notificationCount, timeZone, offerTwoFactor, settings, membership] = data;
   const access = await getAccess().catch(() => null);
+  // New individual accounts start their free trial (card on Stripe) before using the app.
+  if (access?.state === "setup") {
+    const path = (await headers()).get("x-pathname") ?? "";
+    const open = ["/billing", "/settings", "/organization/new", "/join", "/invites"].some((p) => path.startsWith(p));
+    if (!open) redirect("/billing");
+  }
   const referralCount =
     membership?.active && membership.role === "admin" ? await countNewReferrals(membership.orgId).catch(() => 0) : null;
   return (

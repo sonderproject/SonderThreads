@@ -4,7 +4,17 @@ import { redirect } from "next/navigation";
 import { queryOne } from "@/lib/db/client";
 import { requireUserId } from "@/lib/current-user";
 import { appUrl } from "@/lib/email";
-import { activeSeats, customerFor, getAccess, priceId, saveSubscription, stripe, type PaidPlan } from "@/lib/billing";
+import {
+  INDIVIDUAL_TRIAL_DAYS,
+  activeSeats,
+  customerFor,
+  enforceOneTrialPerCard,
+  getAccess,
+  priceId,
+  saveSubscription,
+  stripe,
+  type PaidPlan,
+} from "@/lib/billing";
 
 /** Settings → Billing → Subscribe: sends the person to Stripe Checkout. */
 export async function startCheckout(formData: FormData): Promise<void> {
@@ -22,18 +32,25 @@ export async function startCheckout(formData: FormData): Promise<void> {
   const customer = await customerFor(kind, ownerId, me?.email ?? "", kind === "org" ? access.orgName! : me?.name || me?.email || "");
   const quantity = kind === "org" ? await activeSeats(ownerId) : 1;
 
-  // Keep any free-trial days left (Stripe needs a trial end at least 2 days out).
+  // Organizations keep any free-trial days left (Stripe needs a trial end at least 2 days out).
+  // Individuals start their 7-day trial here, with a card, the first time they subscribe.
   const trialEnd =
-    access.state === "trial" && access.endsAt && access.endsAt.getTime() - Date.now() > 2 * 86_400_000
+    kind === "org" && access.state === "trial" && access.endsAt && access.endsAt.getTime() - Date.now() > 2 * 86_400_000
       ? Math.floor(access.endsAt.getTime() / 1000)
       : undefined;
+  const firstTrial = kind === "user" && !access.row?.stripe_subscription_id;
   const metadata = { kind, owner_id: ownerId, plan };
 
   const session = await s.checkout.sessions.create({
     mode: "subscription",
     customer,
     line_items: [{ price: await priceId(plan), quantity }],
-    subscription_data: { metadata, ...(trialEnd ? { trial_end: trialEnd } : {}) },
+    subscription_data: {
+      metadata,
+      ...(trialEnd ? { trial_end: trialEnd } : {}),
+      ...(firstTrial ? { trial_period_days: INDIVIDUAL_TRIAL_DAYS } : {}),
+    },
+    payment_method_collection: "always",
     metadata,
     allow_promotion_codes: true,
     success_url: `${appUrl()}/billing?checkout={CHECKOUT_SESSION_ID}`,
@@ -50,7 +67,10 @@ export async function confirmCheckout(sessionId: string): Promise<void> {
   const session = await s.checkout.sessions.retrieve(sessionId, { expand: ["subscription"] });
   const ownerId = access.scope === "org" ? access.orgId : await requireUserId();
   if (session.metadata?.owner_id !== ownerId) return; // someone else's checkout
-  if (session.subscription && typeof session.subscription !== "string") await saveSubscription(session.subscription);
+  if (session.subscription && typeof session.subscription !== "string") {
+    await saveSubscription(session.subscription);
+    await enforceOneTrialPerCard(session.subscription);
+  }
 }
 
 /** Settings → Billing → Manage: Stripe's billing portal (card, invoices, plan, cancel). */

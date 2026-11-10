@@ -100,6 +100,9 @@ export default async function SettingsPage({
             />
           </label>
           {error === "phone" && <p className="text-xs text-danger">Enter a valid mobile number.</p>}
+          {error === "phone-used" && (
+            <p className="text-xs text-danger">That mobile number is already on another account.</p>
+          )}
           {saved === "profile" && <p className="text-xs text-accent">Saved.</p>}
           <button type="submit" className={buttonClass}>
             Save

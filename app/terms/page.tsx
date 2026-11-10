@@ -79,7 +79,7 @@ export default function TermsPage() {
 
       <LegalSection title="Fees">
         <p>
-          Individual accounts are $9 a month after a 7-day free trial. Organization plans are $15 per staff member a
+          Individual accounts are $9 a month after a 7-day free trial. Starting the trial needs a payment card; you're charged when the trial ends unless you cancel first. Free trials are limited to one per person, card and mobile number. Organization plans are $15 per staff member a
           month, or $249 a month for up to 20 staff and $10 for each additional staff member, after a 30-day free trial.
           Subscriptions renew monthly until cancelled, and organization charges adjust when staff are added or removed.
           Payments are processed by Stripe. You can cancel any time in Settings → Billing; you keep access until the end

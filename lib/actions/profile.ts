@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { query } from "@/lib/db/client";
 import { requireUserId } from "@/lib/current-user";
 import { normalizePhone } from "@/lib/notify/phone";
+import { phoneTaken } from "@/lib/phone-unique";
 
 const MAX_NAME_LENGTH = 80;
 
@@ -15,6 +16,7 @@ export async function saveProfile(formData: FormData): Promise<void> {
   const raw = formData.get("phone")?.toString() ?? "";
   const phone = raw.trim() ? normalizePhone(raw) : null;
   if (raw.trim() && !phone) redirect("/settings?error=phone#account");
+  if (phone && (await phoneTaken(phone, userId))) redirect("/settings?error=phone-used#account");
   await query(
     `update users set name = $1, phone = $2, sms_opt_in = sms_opt_in and $2::text is not null, updated_at = now()
       where id = $3`,

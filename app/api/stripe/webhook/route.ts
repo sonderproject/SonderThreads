@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import type Stripe from "stripe";
-import { saveSubscription, stripe } from "@/lib/billing";
+import { enforceOneTrialPerCard, saveSubscription, stripe } from "@/lib/billing";
 
 export const runtime = "nodejs";
 
@@ -22,6 +22,9 @@ export async function POST(request: Request) {
     const obj = event.data.object as { subscription?: string | { id: string } | null };
     switch (event.type) {
       case "customer.subscription.created":
+        await saveSubscription(event.data.object as Stripe.Subscription);
+        await enforceOneTrialPerCard(event.data.object as Stripe.Subscription);
+        break;
       case "customer.subscription.updated":
       case "customer.subscription.deleted":
         await saveSubscription(event.data.object as Stripe.Subscription);
