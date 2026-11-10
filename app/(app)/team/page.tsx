@@ -50,10 +50,6 @@ export default async function TeamPage() {
         )}
         <p className="eyebrow text-text-faint">{viewer.orgName}</p>
         <h1 className="page-title">Team</h1>
-        <p className="text-sm text-text-muted">
-          {staff.length} staff · {totals.clients} clients · {totals.followups} need follow-up · {totals.overdue} overdue
-          tasks
-        </p>
         {viewer.role === "admin" && (
           <Link href="/team/log" className="inline-block text-sm text-accent hover:underline">
             Activity log →
@@ -61,12 +57,30 @@ export default async function TeamPage() {
         )}
       </div>
 
+      <div className="grid gap-3 sm:grid-cols-4">
+        <div className="card p-4 sm:col-span-2" style={{ borderColor: "var(--accent)" }}>
+          <p className="eyebrow text-text-faint">Organization clients</p>
+          <p className="font-display text-4xl font-light tabular-nums">{totals.clients}</p>
+          <p className="text-xs text-text-muted">
+            Shared with all {staff.length} staff. Everyone can see, add to and edit every one.
+          </p>
+        </div>
+        <div className="card p-4">
+          <p className="eyebrow text-text-faint">Need follow-up</p>
+          <p className="font-display text-4xl font-light tabular-nums">{totals.followups}</p>
+        </div>
+        <div className="card p-4">
+          <p className="eyebrow text-text-faint">Overdue tasks</p>
+          <p className="font-display text-4xl font-light tabular-nums">{totals.overdue}</p>
+        </div>
+      </div>
+
       <div className="card overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="eyebrow border-b border-border text-left text-text-faint">
               <th className="px-4 py-2 font-semibold">Staff</th>
-              <th className="px-3 py-2 text-right font-semibold">Clients added</th>
+              <th className="px-3 py-2 text-right font-semibold">Clients they added</th>
               <th className="px-3 py-2 text-right font-semibold">Follow-up</th>
               <th className="px-3 py-2 text-right font-semibold">Open tasks</th>
               <th className="px-4 py-2 text-right font-semibold">Overdue</th>
@@ -96,8 +110,8 @@ export default async function TeamPage() {
         </table>
       </div>
       <p className="text-xs text-text-faint">
-        Everyone at {viewer.orgName} can see and work on all {totals.clients} clients; &quot;Clients added&quot; shows who entered each one. Only clients that belong to {viewer.orgName} are counted. Staff members&apos; personal tasks and notes are never
-        shown here.
+        &quot;Clients they added&quot; is who entered each client, not who can see it. Staff members&apos; personal tasks
+        and notes are never shown here.
       </p>
     </div>
   );
