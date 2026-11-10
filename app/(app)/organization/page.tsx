@@ -3,7 +3,16 @@ import { redirect } from "next/navigation";
 import { asUser } from "@/lib/db/as-user";
 import { requireUserId } from "@/lib/current-user";
 import { getMembership, ORG_ROLES, ROLE_LABELS, type OrgRole } from "@/lib/org";
-import { changeRole, deactivateMember, reactivateMember, removeOrgLogo, revokeInvite, saveOrganizationInfo, uploadOrgLogo } from "@/lib/actions/org";
+import {
+  changeRole,
+  deactivateMember,
+  reactivateMember,
+  reassignAllClients,
+  removeOrgLogo,
+  revokeInvite,
+  saveOrganizationInfo,
+  uploadOrgLogo,
+} from "@/lib/actions/org";
 import { InviteForm } from "@/components/org/InviteForm";
 import { CopyInviteLink } from "@/components/org/CopyInviteLink";
 
@@ -26,6 +35,7 @@ const SAVED: Record<string, string> = {
   info: "Organization info saved.",
   logo: "Logo updated.",
   "logo-removed": "Logo removed.",
+  moved: "Clients moved. The new case manager was notified.",
 };
 
 type Member = { user_id: string; role: OrgRole; active: boolean; name: string | null; email: string; clients: number };
@@ -186,6 +196,30 @@ export default async function OrganizationPage({ searchParams }: { searchParams:
                       Save role
                     </button>
                   </form>
+                  {x.clients > 0 && active.length > 1 && (
+                    <details className="w-full">
+                      <summary className="cursor-pointer text-xs text-text-muted hover:text-text">Move all {x.clients} clients…</summary>
+                      <form action={reassignAllClients} className="mt-2 flex flex-wrap items-end gap-2">
+                        <input type="hidden" name="user_id" value={x.user_id} />
+                        <label className="space-y-1">
+                          <span className="block text-xs text-text-muted">To</span>
+                          <select name="to_user_id" required className="input py-1 text-sm">
+                            {active
+                              .filter((o) => o.user_id !== x.user_id)
+                              .map((o) => (
+                                <option key={o.user_id} value={o.user_id}>
+                                  {o.name || o.email}
+                                </option>
+                              ))}
+                          </select>
+                        </label>
+                        <button type="submit" className={btn}>
+                          Move clients
+                        </button>
+                        <p className="w-full text-xs text-text-muted">Notes, tasks and check-ins move with them. Personal records stay put.</p>
+                      </form>
+                    </details>
+                  )}
                   {x.user_id !== userId && (
                     <details className="w-full">
                       <summary className="cursor-pointer text-xs text-text-muted hover:text-danger">Deactivate…</summary>

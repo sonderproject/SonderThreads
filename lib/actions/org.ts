@@ -408,3 +408,26 @@ async function notifyInvitee(email: string, orgId: string, inviterId: string): P
     channels: ["push"],
   }).catch((err) => console.error("[org] invite notification failed", err));
 }
+
+/** Admin: moves every organization client (and everything attached) from one active member to another, without deactivating anyone. */
+export async function reassignAllClients(formData: FormData): Promise<void> {
+  const { orgId } = await requireAdmin();
+  const from = formData.get("user_id")?.toString() ?? "";
+  const to = formData.get("to_user_id")?.toString() ?? "";
+  const valid = await queryOne<{ ok: boolean }>(
+    `select exists (select 1 from memberships where org_id = $1 and user_id = $2) and
+            exists (select 1 from memberships where org_id = $1 and user_id = $3 and active) and $2 <> $3 as ok`,
+    [orgId, from, to],
+  );
+  if (!valid?.ok) redirect("/organization?error=reassign");
+  await transaction((q) => transferOrgClients(q, orgId, from, to));
+  const toRow = await queryOne<{ n: number }>(`select count(*)::int n from people where user_id = $1 and org_id = $2`, [to, orgId]);
+  await notify(to, {
+    type: "client_assigned",
+    title: "Clients were assigned to you",
+    body: `You now have ${toRow?.n ?? 0} clients.`,
+    href: "/people",
+  }).catch(() => {});
+  revalidatePath("/", "layout");
+  redirect("/organization?saved=moved");
+}
