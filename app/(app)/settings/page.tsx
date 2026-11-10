@@ -7,6 +7,7 @@ import { requireUserId } from "@/lib/current-user";
 import { queryOne } from "@/lib/db/client";
 import { logout, requestEmailChange, signOutEverywhere } from "@/app/login/actions";
 import { saveProfile } from "@/lib/actions/profile";
+import { clearMyData } from "@/lib/actions/clear-data";
 import { ImportBackupCard } from "@/components/settings/ImportBackupCard";
 import { getMembership, getPendingInvites, ROLE_LABELS } from "@/lib/org";
 import { PendingInvites } from "@/components/org/PendingInvites";
@@ -331,6 +332,27 @@ export default async function SettingsPage({
           </a>
         </div>
         <ImportBackupCard />
+        <form id="clear" action={clearMyData} className="card scroll-mt-20 space-y-3 border-danger/40 p-4">
+          <div>
+            <h3 className="text-sm font-semibold text-danger">Clear my data</h3>
+            <p className="text-xs text-text-muted">
+              Deletes all your people, notes, tasks, lists, check-ins and history, for a fresh start (for example after a messy import).
+              Your account and settings stay.{membership?.active ? ` ${membership.orgName}'s clients are not affected.` : ""} This
+              can&apos;t be undone, so download a backup above first.
+            </p>
+          </div>
+          <label className="block space-y-1">
+            <span className="text-xs text-text-muted">
+              Type <strong className="text-text">CLEAR</strong> to confirm
+            </span>
+            <input name="confirm" autoComplete="off" className="input w-40" />
+          </label>
+          {error === "clear-confirm" && <p className="text-xs text-danger">Type CLEAR exactly to confirm.</p>}
+          {saved === "cleared" && <p className="text-xs text-accent">Your data was cleared.</p>}
+          <button type="submit" className="rounded-full border border-danger px-4 py-1.5 text-sm font-medium text-danger hover:bg-bg-hover">
+            Clear my data
+          </button>
+        </form>
       </section>
 
       <section id="about" className="scroll-mt-20 space-y-3">

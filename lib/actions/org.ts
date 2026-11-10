@@ -70,6 +70,7 @@ export async function createInvite(email: string, role: string): Promise<ActionR
     });
     revalidatePath("/organization");
     const link = `/join/${token}`;
+    await notifyInvitee(clean, orgId, userId);
     const emailed = await sendInviteEmail(clean, `${appUrl()}${link}`, role, userId, orgId);
     return { link, emailed };
   });
@@ -388,4 +389,22 @@ export async function newInviteLink(inviteId: string): Promise<ActionResult<{ li
     revalidatePath("/organization");
     return { link: `/join/${token}` };
   });
+}
+
+/** If the invited email already has an account, put the invite in their Notifications (no email needed). */
+async function notifyInvitee(email: string, orgId: string, inviterId: string): Promise<void> {
+  const row = await queryOne<{ invitee: string; org: string; inviter: string }>(
+    `select u.id as invitee, o.name as org, coalesce(me.name, me.email) as inviter
+       from users u, organizations o, users me
+      where lower(u.email) = lower($1) and o.id = $2 and me.id = $3`,
+    [email, orgId, inviterId],
+  );
+  if (!row) return;
+  await notify(row.invitee, {
+    type: "org_invite",
+    title: `${row.inviter} invited you to join ${row.org}`,
+    body: "Tap to see the invite and join.",
+    href: "/invites",
+    channels: ["push"],
+  }).catch((err) => console.error("[org] invite notification failed", err));
 }
