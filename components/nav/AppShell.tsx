@@ -32,7 +32,10 @@ export function AppShell({
   idleMinutes = 30,
   showTeam = false,
   showImpact = true,
+  referralCount = null,
 }: {
+  /** Admins get a Referrals tab; the number waiting (null = no tab). */
+  referralCount?: number | null;
   /** Case managers in an organization don't get reports. */
   showImpact?: boolean;
   /** Organization admins and supervisors get a Team tab. */
@@ -60,7 +63,7 @@ export function AppShell({
               <div className="flex items-center">
                 <div className="hidden items-center gap-2 sm:flex">
                   <nav className="flex gap-1">
-                    {[...NAV_ITEMS.filter((i) => showImpact || i.href !== "/impact"), ...(showTeam ? [{ href: "/team", label: "Team" }] : [])].map((item) => {
+                    {[...NAV_ITEMS.filter((i) => showImpact || i.href !== "/impact"), ...(showTeam ? [{ href: "/team", label: "Team" }] : []), ...(referralCount !== null ? [{ href: "/referrals", label: referralCount ? `Referrals (${referralCount})` : "Referrals" }] : [])].map((item) => {
                       const isActive =
                         item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
                       return (
@@ -135,7 +138,7 @@ export function AppShell({
             <div className="nav-glow-line" aria-hidden />
           </header>
           <main className="pb-tabbar mx-auto max-w-4xl px-4 pt-5 sm:px-6 sm:py-6">{children}</main>
-          <MobileNav people={people} showTeam={showTeam} showImpact={showImpact} />
+          <MobileNav people={people} showTeam={showTeam} showImpact={showImpact} referralCount={referralCount} />
           <SearchPalette />
         </div>
       </UndoProvider>

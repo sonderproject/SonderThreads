@@ -15,6 +15,9 @@ import {
 } from "@/lib/actions/org";
 import { InviteForm } from "@/components/org/InviteForm";
 import { CopyInviteLink } from "@/components/org/CopyInviteLink";
+import { CopyText } from "@/components/org/CopyText";
+import { newReferralLink, setReferralLink } from "@/lib/actions/referrals";
+import { appUrl } from "@/lib/email";
 
 const ERRORS: Record<string, string> = {
   "last-admin": "An organization needs at least one active admin. Make someone else an admin first.",
@@ -36,6 +39,9 @@ const SAVED: Record<string, string> = {
   logo: "Logo updated.",
   "logo-removed": "Logo removed.",
   moved: "Clients moved. The new case manager was notified.",
+  "referral-on": "Referral link is on.",
+  "referral-off": "Referral link is off. It won't accept referrals until you turn it back on.",
+  "referral-new": "New referral link made. The old one no longer works.",
 };
 
 type Member = { user_id: string; role: OrgRole; active: boolean; name: string | null; email: string; clients: number };
@@ -47,6 +53,8 @@ type OrgInfo = {
   address: string | null;
   about: string | null;
   logo_version: string | null;
+  referral_code: string | null;
+  referral_enabled: boolean;
 };
 type Invite = { id: string; email: string; role: OrgRole; expires_at: string; expired: boolean };
 
@@ -74,7 +82,7 @@ export default async function OrganizationPage({ searchParams }: { searchParams:
         where org_id = $1 and accepted_at is null order by created_at desc`,
       [m.orgId],
     ),
-    (await q<OrgInfo>(`select name, phone, email, website, address, about, extract(epoch from logo_updated_at)::bigint::text as logo_version from organizations where id = $1`, [m.orgId]))[0],
+    (await q<OrgInfo>(`select name, phone, email, website, address, about, extract(epoch from logo_updated_at)::bigint::text as logo_version, referral_code, referral_enabled from organizations where id = $1`, [m.orgId]))[0],
   ]);
   const active = members.filter((x) => x.active);
 
@@ -260,6 +268,46 @@ export default async function OrganizationPage({ searchParams }: { searchParams:
             </li>
           ))}
         </ul>
+      </section>
+
+      <section id="referrals" className="scroll-mt-20 space-y-3">
+        <h2 className="section-label">Referral link</h2>
+        <div className="card space-y-3 p-4">
+          <p className="text-sm text-text-muted">
+            Send this link to other departments. They fill in the client&apos;s name, phone and date of birth, plus
+            their own name and department, with no account needed. Referrals land in{" "}
+            <Link href="/referrals" className="text-accent hover:underline">
+              Referrals
+            </Link>{" "}
+            and admins get a notification.
+          </p>
+          {info?.referral_enabled && info.referral_code ? (
+            <>
+              <CopyText value={`${appUrl()}/refer/${info.referral_code}`} />
+              <div className="flex flex-wrap gap-2">
+                <form action={setReferralLink}>
+                  <input type="hidden" name="enabled" value="0" />
+                  <button type="submit" className={btn}>
+                    Turn off
+                  </button>
+                </form>
+                <form action={newReferralLink}>
+                  <button type="submit" className={btn}>
+                    Make a new link
+                  </button>
+                </form>
+              </div>
+              <p className="text-xs text-text-faint">Making a new link stops the old one from working.</p>
+            </>
+          ) : (
+            <form action={setReferralLink}>
+              <input type="hidden" name="enabled" value="1" />
+              <button type="submit" className="rounded-full bg-accent px-4 py-2 text-sm font-semibold text-bg hover:bg-accent-dim">
+                Turn on referral link
+              </button>
+            </form>
+          )}
+        </div>
       </section>
 
       <section className="space-y-3">

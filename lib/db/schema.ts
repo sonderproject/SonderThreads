@@ -753,4 +753,37 @@ begin
 exception when undefined_function or invalid_schema_name or undefined_object then
   null; -- plain Postgres without Supabase's auth schema/roles: RLS stays on with no access
 end $$;
+
+-- Referrals: a public form (one link per organization) other departments use
+-- to send clients in. Admins review each one in the Referrals inbox. Every
+-- submission is kept as the referral log.
+alter table organizations add column if not exists referral_code text unique;
+alter table organizations add column if not exists referral_enabled boolean not null default false;
+create table if not exists referrals (
+  id uuid primary key default gen_random_uuid(),
+  org_id uuid not null references organizations(id) on delete cascade,
+  first_name text not null check (length(first_name) between 1 and 80),
+  last_name text not null check (length(last_name) between 1 and 80),
+  phone text check (length(phone) <= 40),
+  dob date,
+  referrer_name text not null check (length(referrer_name) between 1 and 120),
+  referrer_department text not null check (length(referrer_department) between 1 and 120),
+  status text not null default 'new' check (status in ('new', 'accepted', 'matched', 'declined')),
+  person_id uuid references people(id) on delete set null,
+  handled_by uuid references users(id) on delete set null,
+  handled_at timestamptz,
+  decline_reason text check (length(decline_reason) <= 500),
+  ip_hash text,
+  created_at timestamptz not null default now()
+);
+create index if not exists referrals_org_idx on referrals(org_id, created_at desc);
+create index if not exists referrals_ip_idx on referrals(ip_hash, created_at desc);
+alter table referrals enable row level security;
+do $$
+begin
+  drop policy if exists "admin" on referrals;
+  create policy "admin" on referrals for select to authenticated using (app_private.app_org_admin(org_id));
+exception when undefined_function or invalid_schema_name or undefined_object then
+  null;
+end $$;
 `;

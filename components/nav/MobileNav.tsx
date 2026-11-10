@@ -41,7 +41,9 @@ export function MobileNav({
   people,
   showTeam = false,
   showImpact = true,
+  referralCount = null,
 }: {
+  referralCount?: number | null;
   people: Pick<Person, "id" | "display_name">[];
   showTeam?: boolean;
   showImpact?: boolean;
@@ -52,7 +54,11 @@ export function MobileNav({
   const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const holding = useRef(false);
   const baseLinks = showImpact ? MORE_LINKS : MORE_LINKS.filter((l) => l.href !== "/impact");
-  const moreLinks = showTeam ? [{ href: "/team", label: "Team" }, ...baseLinks] : baseLinks;
+  const withReferrals =
+    referralCount !== null
+      ? [{ href: "/referrals", label: referralCount ? `Referrals (${referralCount})` : "Referrals" }, ...baseLinks]
+      : baseLinks;
+  const moreLinks = showTeam ? [{ href: "/team", label: "Team" }, ...withReferrals] : withReferrals;
   const moreActive = moreLinks.some((l) => isActive(pathname, l.href));
 
   function openCommand(opts: OpenCommandDetail = {}) {

@@ -12,6 +12,7 @@ import { queryOne } from "@/lib/db/client";
 import { TwoFactorPrompt } from "@/components/settings/TwoFactorPrompt";
 import { getUserSettings } from "@/lib/settings";
 import { getMembership } from "@/lib/org";
+import { countNewReferrals } from "@/lib/referrals";
 
 /** Offer optional 2FA to people who don't have it on, at most once every 30 days. */
 async function shouldOfferTwoFactor(): Promise<boolean> {
@@ -46,6 +47,8 @@ export default async function AppGroupLayout({ children }: { children: React.Rea
   }
 
   const [people, lists, notificationCount, timeZone, offerTwoFactor, settings, membership] = data;
+  const referralCount =
+    membership?.active && membership.role === "admin" ? await countNewReferrals(membership.orgId).catch(() => 0) : null;
   return (
     <TimeZoneProvider timeZone={timeZone}>
     <AppShell
@@ -54,6 +57,7 @@ export default async function AppGroupLayout({ children }: { children: React.Rea
       notificationCount={notificationCount}
       idleMinutes={settings.staySignedIn ? null : settings.idleTimeoutMinutes}
       showTeam={Boolean(membership?.active && membership.role !== "case_manager")}
+      referralCount={referralCount}
       showImpact={!(membership?.active && membership.role === "case_manager")}
     >
       {children}

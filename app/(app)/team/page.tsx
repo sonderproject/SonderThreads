@@ -2,6 +2,7 @@ import Link from "next/link";
 import { asUser } from "@/lib/db/as-user";
 import { requireTeamViewer } from "@/lib/team";
 import { ROLE_LABELS, type OrgRole } from "@/lib/org";
+import { countNewReferrals } from "@/lib/referrals";
 
 type Row = {
   user_id: string;
@@ -41,6 +42,7 @@ export default async function TeamPage() {
     { clients: 0, overdue: 0, followups: 0 },
   );
 
+  const newReferrals = viewer.role === "admin" ? await countNewReferrals(viewer.orgId) : 0;
   return (
     <div className="space-y-6">
       <div className="space-y-1">
@@ -51,9 +53,16 @@ export default async function TeamPage() {
         <p className="eyebrow text-text-faint">{viewer.orgName}</p>
         <h1 className="page-title">Team</h1>
         {viewer.role === "admin" && (
-          <Link href="/team/log" className="inline-block text-sm text-accent hover:underline">
-            Activity log →
-          </Link>
+          <div className="flex flex-wrap gap-4">
+            <Link href="/team/log" className="inline-block text-sm text-accent hover:underline">
+              Activity log →
+            </Link>
+            {newReferrals > 0 && (
+              <Link href="/referrals" className="inline-block text-sm font-medium text-accent hover:underline">
+                {newReferrals} new {newReferrals === 1 ? "referral" : "referrals"} →
+              </Link>
+            )}
+          </div>
         )}
       </div>
 
