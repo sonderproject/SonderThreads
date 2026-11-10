@@ -175,30 +175,6 @@ export default async function PersonProfilePage({
         </div>
       </Section>
 
-      <Section title="Current">
-        <div className="card px-3 py-2.5">
-          <EditableField
-            personId={person.id}
-            field="current_status"
-            value={person.current_status}
-            placeholder="Click to add current status..."
-            textClassName="text-sm text-text"
-          />
-        </div>
-      </Section>
-
-      <Section title="Next">
-        <div className="card px-3 py-2.5">
-          <EditableField
-            personId={person.id}
-            field="next_action"
-            value={person.next_action}
-            placeholder="Click to add next action..."
-            textClassName="text-sm text-accent"
-          />
-        </div>
-      </Section>
-
       <Section title="Summary">
         <p className="card px-3 py-2.5 text-sm text-text-muted">{person.summary ?? "No summary yet."}</p>
       </Section>

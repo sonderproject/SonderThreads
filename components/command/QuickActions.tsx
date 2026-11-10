@@ -56,8 +56,6 @@ export function QuickActions({ people }: { people: Pick<Person, "id" | "display_
 
 function PersonForm({ onDone }: { onDone: () => void }) {
   const [fullName, setFullName] = useState("");
-  const [currentStatus, setCurrentStatus] = useState("");
-  const [nextAction, setNextAction] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -68,8 +66,6 @@ function PersonForm({ onDone }: { onDone: () => void }) {
     setError(null);
     const result = await createPersonRecordSafe({
       fullName,
-      currentStatus: currentStatus || null,
-      nextAction: nextAction || null,
     });
     setSaving(false);
     if (result.ok) onDone();
@@ -88,28 +84,6 @@ function PersonForm({ onDone }: { onDone: () => void }) {
             onChange={(e) => setFullName(e.target.value)}
             className="input"
             placeholder="Marcus Johnson"
-          />
-        </Dictate>
-      </Field>
-      <Field label="Current (optional)">
-        <Dictate value={currentStatus} onChange={setCurrentStatus}>
-          <input
-            {...PROSE_INPUT}
-            value={currentStatus}
-            onChange={(e) => setCurrentStatus(e.target.value)}
-            className="input"
-            placeholder="Starting Amazon Monday"
-          />
-        </Dictate>
-      </Field>
-      <Field label="Next (optional)">
-        <Dictate value={nextAction} onChange={setNextAction}>
-          <input
-            {...PROSE_INPUT}
-            value={nextAction}
-            onChange={(e) => setNextAction(e.target.value)}
-            className="input"
-            placeholder="Follow up after first week"
           />
         </Dictate>
       </Field>

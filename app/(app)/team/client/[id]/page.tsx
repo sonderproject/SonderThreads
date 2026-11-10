@@ -145,8 +145,6 @@ export default async function TeamClientPage({
       <section className="space-y-3">
         <h2 className="section-label">Details</h2>
         <dl className="card space-y-2 p-4">
-          <Field label="Current status" value={person.current_status} />
-          <Field label="Next step" value={person.next_action} />
           <Field label="Phone" value={person.phone} />
           <Field label="Email" value={person.email} />
           <Field label="Date of birth" value={person.birthday} />

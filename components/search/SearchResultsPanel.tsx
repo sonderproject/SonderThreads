@@ -39,7 +39,6 @@ export function SearchResultsPanel({
                 className="block rounded px-2 py-1.5 hover:bg-bg-hover"
               >
                 <p className="text-sm text-text">{c.display_name}</p>
-                {c.current_status && <p className="text-xs text-text-muted">{c.current_status}</p>}
               </Link>
             ))}
           </ResultSection>

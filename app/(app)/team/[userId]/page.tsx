@@ -64,7 +64,6 @@ export default async function StaffCaseloadPage({ params }: { params: Promise<{ 
               <Link href={`/team/client/${c.id}`} className="flex items-start justify-between gap-3 p-4 hover:bg-bg-hover">
                 <div className="min-w-0">
                   <p className="truncate text-sm font-semibold text-text">{c.display_name}</p>
-                  {c.current_status && <p className="truncate text-xs text-text-muted">{c.current_status}</p>}
                   <p className="text-xs text-text-faint">Last activity {shortDate(c.last_activity_at, tz)}</p>
                 </div>
                 <div className="flex shrink-0 flex-col items-end gap-1 text-xs">

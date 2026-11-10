@@ -37,12 +37,6 @@ export function PersonCard({ person }: { person: Person }) {
             {relativeTime(person.last_activity_at)}
           </span>
         </div>
-        {person.current_status && (
-          <p className="mt-1 text-sm text-text-muted">{person.current_status}</p>
-        )}
-        {person.next_action && (
-          <p className="mt-1 text-xs text-accent">→ {person.next_action}</p>
-        )}
       </Card>
     </Link>
   );

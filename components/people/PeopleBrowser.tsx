@@ -11,7 +11,7 @@ import { createPersonRecordSafe, deletePeople, restorePeople } from "@/lib/actio
 import { useUndo } from "@/components/ui/UndoToast";
 import type { Person } from "@/lib/types";
 import { Dictate } from "@/components/voice/Dictate";
-import { NAME_INPUT, PROSE_INPUT, SEARCH_INPUT } from "@/lib/input-props";
+import { NAME_INPUT, SEARCH_INPUT } from "@/lib/input-props";
 import { fuzzyFilter } from "@/lib/fuzzy";
 
 export function PeopleBrowser({ people, orgName = null }: { people: Person[]; orgName?: string | null }) {
@@ -181,8 +181,6 @@ export function PeopleBrowser({ people, orgName = null }: { people: Person[]; or
 function NewPersonForm({ onDone, orgName }: { onDone: () => void; orgName: string | null }) {
   const [fullName, setFullName] = useState("");
   const [keepPrivate, setKeepPrivate] = useState(false);
-  const [currentStatus, setCurrentStatus] = useState("");
-  const [nextAction, setNextAction] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -196,8 +194,6 @@ function NewPersonForm({ onDone, orgName }: { onDone: () => void; orgName: strin
     startTransition(async () => {
       const result = await createPersonRecordSafe({
         fullName,
-        currentStatus: currentStatus || null,
-        nextAction: nextAction || null,
         personal: orgName ? keepPrivate : undefined,
       });
       setSaving(false);
@@ -223,30 +219,6 @@ function NewPersonForm({ onDone, orgName }: { onDone: () => void; orgName: strin
             onChange={(e) => setFullName(e.target.value)}
             className="input"
             placeholder="Marcus Johnson"
-          />
-        </Dictate>
-      </div>
-      <div>
-        <label className="mb-1 block text-xs text-text-muted">Current (optional)</label>
-        <Dictate value={currentStatus} onChange={setCurrentStatus}>
-          <input
-            {...PROSE_INPUT}
-            value={currentStatus}
-            onChange={(e) => setCurrentStatus(e.target.value)}
-            className="input"
-            placeholder="Starting Amazon Monday"
-          />
-        </Dictate>
-      </div>
-      <div>
-        <label className="mb-1 block text-xs text-text-muted">Next (optional)</label>
-        <Dictate value={nextAction} onChange={setNextAction}>
-          <input
-            {...PROSE_INPUT}
-            value={nextAction}
-            onChange={(e) => setNextAction(e.target.value)}
-            className="input"
-            placeholder="Follow up after first week"
           />
         </Dictate>
       </div>
