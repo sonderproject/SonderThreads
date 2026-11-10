@@ -40,7 +40,7 @@ Existing accounts aren't affected. They're created in Supabase as already confir
 Supabase → **Authentication → URL Configuration**:
 - **Site URL:** your production URL, for example `https://sonderthreads.app`.
 - **Redirect URLs:** add all three:
-  - `https://<your-production-domain>/**`
+  - `https://<your-production-domain>/**` and the `www.` version too (`https://www.<your-production-domain>/**`)
   - `https://<project>-*-<team>.vercel.app/**` for preview deployments. Use your project and team slugs from a preview URL. Supabase supports `*` and `**` wildcards.
   - `http://localhost:3000/**`
 
@@ -53,22 +53,22 @@ Supabase → **Authentication → Emails → Templates**. The app verifies email
 **Confirm signup.** Replace the link with:
 ```html
 <h2>Confirm your email</h2>
-<p><a href="{{ .RedirectTo }}&token_hash={{ .TokenHash }}&type=email">Confirm your email address</a></p>
+<p><a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email">Confirm your email address</a></p>
 ```
 
 **Reset password.** Replace the link with:
 ```html
 <h2>Reset your password</h2>
-<p><a href="{{ .RedirectTo }}&token_hash={{ .TokenHash }}&type=recovery">Set a new password</a></p>
+<p><a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=recovery">Set a new password</a></p>
 ```
 
 **Change email address.** Replace the link with:
 ```html
 <h2>Confirm your new email</h2>
-<p><a href="{{ .RedirectTo }}&token_hash={{ .TokenHash }}&type=email_change">Confirm the change to {{ .NewEmail }}</a></p>
+<p><a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email_change&next=%2Fsettings%3Femail%3Dconfirmed">Confirm the change to {{ .NewEmail }}</a></p>
 ```
 
-`{{ .RedirectTo }}` is always `<this deployment>/auth/confirm?next=...` (the app sets it), so the link returns to whichever deployment sent it: production, a preview, or localhost.
+Links use `{{ .SiteURL }}` so they always point at production and never break. (An earlier version used `{{ .RedirectTo }}`; when the sign-up page's address, e.g. `www.` vs no `www.`, wasn't on the Redirect URLs list, Supabase fell back to the bare Site URL and the link came out as `https://site.com&token_hash=...`, which browsers reject.) Testing sign-up on a preview deployment therefore confirms on production; that's fine.
 
 ## E. Custom SMTP (required before real users)
 
