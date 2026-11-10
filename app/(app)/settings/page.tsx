@@ -150,6 +150,14 @@ export default async function SettingsPage({
         <DeleteAccountCard error={error === "confirm" || error === "delete-login" || error === "last-admin" ? error : undefined} />
       </section>
 
+      <section id="billing" className="scroll-mt-20 space-y-3">
+        <h2 className="section-label">Billing</h2>
+        <Link href="/billing" className="card flex items-center justify-between gap-3 p-4 hover:bg-bg-hover">
+          <span className="text-sm text-text">Plan, free trial and payment</span>
+          <span className="text-sm text-accent">Open →</span>
+        </Link>
+      </section>
+
       {membership && (
         <section id="organization" className="scroll-mt-20 space-y-3">
           <h2 className="section-label">Organization</h2>

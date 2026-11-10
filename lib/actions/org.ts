@@ -13,6 +13,7 @@ import { toActionResult, type ActionResult } from "@/lib/validation";
 import { notify } from "@/lib/notify";
 import { appUrl, emailConfigured, escapeHtml, sendEmail } from "@/lib/email";
 import { ROLE_LABELS } from "@/lib/org-roles";
+import { syncOrgSeats } from "@/lib/billing";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const INVITE_DAYS = 14;
@@ -111,6 +112,7 @@ export async function acceptInvite(formData: FormData): Promise<void> {
     await q(`update invitations set accepted_at = now(), accepted_by = $2 where id = $1`, [invite!.id, userId]);
   });
   revalidatePath("/", "layout");
+  await syncOrgSeats(invite!.org_id);
   redirect("/organization/clients?joined=1");
 }
 
@@ -173,6 +175,7 @@ export async function deactivateMember(formData: FormData): Promise<void> {
     await transferOrgClients(q, orgId, target, to);
     await q(`update memberships set active = false, deactivated_at = now() where org_id = $1 and user_id = $2`, [orgId, target]);
   });
+  await syncOrgSeats(orgId);
   revalidatePath("/", "layout");
   redirect("/organization?saved=deactivated");
 }
@@ -184,6 +187,7 @@ export async function reactivateMember(formData: FormData): Promise<void> {
   await asUser(userId, (q) =>
     q(`update memberships set active = true, deactivated_at = null where org_id = $1 and user_id = $2`, [orgId, target]),
   );
+  await syncOrgSeats(orgId);
   revalidatePath("/organization");
   redirect("/organization?saved=reactivated");
 }
@@ -360,6 +364,7 @@ export async function acceptInviteInApp(formData: FormData): Promise<void> {
     await q(`update invitations set accepted_at = now(), accepted_by = $2 where id = $1`, [invite!.id, userId]);
   });
   revalidatePath("/", "layout");
+  await syncOrgSeats(invite!.org_id);
   redirect("/organization/clients?joined=1");
 }
 

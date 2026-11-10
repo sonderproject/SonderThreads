@@ -1,5 +1,6 @@
 "use server";
 
+import { assertCanWrite } from "@/lib/billing";
 import { createHash, randomBytes } from "node:crypto";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
@@ -166,6 +167,7 @@ async function addReferralNote(userId: string, personId: string, r: Referral): P
 /** Accept: creates the client in the organization. */
 export async function acceptReferral(formData: FormData): Promise<void> {
   const { userId, orgId } = await requireAdmin();
+  await assertCanWrite();
   const r = await loadNew(orgId, formData.get("id")?.toString() ?? "");
   const person = await queryOne<{ id: string }>(
     `insert into people (user_id, first_name, last_name, display_name, phone, birthday)
@@ -187,6 +189,7 @@ export async function acceptReferral(formData: FormData): Promise<void> {
 /** Already a client: attaches the referral to an existing organization client. */
 export async function matchReferral(formData: FormData): Promise<void> {
   const { userId, orgId } = await requireAdmin();
+  await assertCanWrite();
   const r = await loadNew(orgId, formData.get("id")?.toString() ?? "");
   const personId = formData.get("person_id")?.toString() ?? "";
   const person = await queryOne<{ id: string }>(
@@ -206,6 +209,7 @@ export async function matchReferral(formData: FormData): Promise<void> {
 /** Decline, with an optional reason kept in the log. */
 export async function declineReferral(formData: FormData): Promise<void> {
   const { userId, orgId } = await requireAdmin();
+  await assertCanWrite();
   const r = await loadNew(orgId, formData.get("id")?.toString() ?? "");
   const reason = clean(formData.get("reason"), 500) || null;
   await query(

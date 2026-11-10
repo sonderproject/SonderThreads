@@ -1,5 +1,6 @@
 "use server";
 
+import { assertCanWrite } from "@/lib/billing";
 import { revalidatePath } from "next/cache";
 import { actorQuery, actorQueryOne, mineOrOrg } from "@/lib/db/scope";
 import { query, queryOne } from "@/lib/db/client";
@@ -29,6 +30,7 @@ export async function createCheckIn(params: {
   reason?: string | null;
 }): Promise<CheckIn> {
   const userId = await requireUserId();
+  await assertCanWrite();
   params = validate(createCheckInSchema, params);
   const person = await getPerson(params.personId);
   if (!person) throw new Error("Person not found");
@@ -67,6 +69,7 @@ export async function updateCheckIn(
   patch: { checkedInAt?: string; reason?: string | null },
 ): Promise<CheckIn> {
   const userId = await requireUserId();
+  await assertCanWrite();
   const params = validate(updateCheckInSchema, patch);
   const checkIn = await actorQueryOne<CheckIn>(userId, 
     `update check_ins
@@ -107,6 +110,7 @@ export async function restoreCheckIn(id: string): Promise<void> {
 
 async function setCheckInDeleted(id: string, deleted: boolean): Promise<void> {
   const userId = await requireUserId();
+  await assertCanWrite();
   const row = await actorQueryOne<CheckIn>(userId, 
     `update check_ins set deleted_at = ${deleted ? "now()" : "null"}
      where ${mineOrOrg("$1")} and id = $2 and deleted_at is ${deleted ? "null" : "not null"}

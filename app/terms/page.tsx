@@ -79,9 +79,13 @@ export default function TermsPage() {
 
       <LegalSection title="Fees">
         <p>
-          Individual accounts are free. Organization plans are billed per staff member at the price agreed with the
-          organization before any charge. If prices change, we&apos;ll tell you in advance, and nothing is charged without
-          your agreement.
+          Individual accounts are $5 a month after a 7-day free trial. Organization plans are $15 per staff member a
+          month, or $249 a month for up to 20 staff and $10 for each additional staff member, after a 30-day free trial.
+          Subscriptions renew monthly until cancelled, and organization charges adjust when staff are added or removed.
+          Payments are processed by Stripe. You can cancel any time in Settings → Billing; you keep access until the end
+          of the period you paid for. If a trial ends or a payment fails, your account becomes view-only: you can still
+          see and export everything. Accounts created before November 10, 2026 are free for life. If prices change,
+          we&apos;ll tell you in advance.
         </p>
       </LegalSection>
 

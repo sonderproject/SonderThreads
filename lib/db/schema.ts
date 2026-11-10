@@ -786,4 +786,24 @@ begin
 exception when undefined_function or invalid_schema_name or undefined_object then
   null;
 end $$;
+
+-- Billing (Stripe). One row per paying account: an individual (user_id) or an
+-- organization (org_id). plan: individual | seat | team | comp (free for life).
+-- status mirrors Stripe: trialing | active | past_due | canceled | comp.
+-- Only the server reads or writes it (RLS on, no policies).
+create table if not exists billing_accounts (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid unique references users(id) on delete cascade,
+  org_id uuid unique references organizations(id) on delete cascade,
+  plan text not null default 'individual' check (plan in ('individual', 'seat', 'team', 'comp')),
+  status text not null default 'trialing',
+  stripe_customer_id text unique,
+  stripe_subscription_id text unique,
+  seats int,
+  current_period_end timestamptz,
+  past_due_since timestamptz,
+  updated_at timestamptz not null default now(),
+  check ((user_id is null) <> (org_id is null))
+);
+alter table billing_accounts enable row level security;
 `;

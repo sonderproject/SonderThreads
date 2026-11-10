@@ -57,7 +57,7 @@ function Cta({ className = "" }: { className?: string }) {
         href="/signup"
         className="rounded-full bg-accent px-6 py-3 text-sm font-semibold text-bg shadow-sm ring-1 ring-inset ring-white/15 transition-colors hover:bg-accent-dim"
       >
-        Create a free account
+        Start your free trial
       </Link>
       <Link
         href="/login"
@@ -111,7 +111,7 @@ export default function WelcomePage() {
               belongs.
             </p>
             <Cta />
-            <p className="text-xs text-text-muted">Free for individuals · Works on any phone or computer</p>
+            <p className="text-xs text-text-muted">7-day free trial · Works on any phone or computer</p>
           </div>
 
           <div className="card space-y-3 p-5" aria-hidden>
@@ -181,8 +181,9 @@ export default function WelcomePage() {
                 <p className="mt-1 text-sm text-text-muted">For case managers on their own, and anyone organizing their life.</p>
               </div>
               <p className="font-display text-5xl font-light tabular-nums">
-                $0<span className="ml-1 font-sans text-base text-text-muted">forever</span>
+                $5<span className="ml-1 font-sans text-base text-text-muted">/ month</span>
               </p>
+              <p className="-mt-2 text-xs text-text-muted">7-day free trial. Cancel any time.</p>
               <ul className="flex-1 space-y-2 text-sm">
                 {["Clients, check-ins, notes, tasks and lists", "Voice notes and smart command box", "Impact dashboard and PDF reports", "Export everything, any time"].map((f) => (
                   <li key={f} className="flex gap-2">
@@ -192,7 +193,7 @@ export default function WelcomePage() {
                 ))}
               </ul>
               <Link href="/signup" className="rounded-full border border-border bg-bg-raised px-6 py-3 text-center text-sm font-semibold hover:bg-bg-hover">
-                Create a free account
+                Start your free trial
               </Link>
             </div>
             <div className="card flex flex-col gap-4 border-accent p-6" style={{ borderColor: "var(--accent)" }}>
@@ -206,7 +207,9 @@ export default function WelcomePage() {
               <p className="font-display text-5xl font-light tabular-nums">
                 $15<span className="ml-1 font-sans text-base text-text-muted">per staff member / month</span>
               </p>
-              <p className="-mt-2 text-xs text-text-muted">Or $150 per staff member a year (two months free).</p>
+              <p className="-mt-2 text-xs text-text-muted">
+                Or Team: $249 / month for up to 20 staff, $10 for each one after. 30-day free trial.
+              </p>
               <ul className="flex-1 space-y-2 text-sm">
                 {[
                   "Everything in Individual",

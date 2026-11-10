@@ -1,5 +1,6 @@
 "use server";
 
+import { assertCanWrite } from "@/lib/billing";
 import { revalidatePath } from "next/cache";
 import { query, queryOne } from "@/lib/db/client";
 import { requireUserId } from "@/lib/current-user";
@@ -60,6 +61,7 @@ export async function createList(params: {
   isGroup?: boolean;
 }): Promise<List> {
   const userId = await requireUserId();
+  await assertCanWrite();
   params = validate(createListSchema, params);
   const list = await queryOne<List>(
     `insert into lists (user_id, name, description, is_group) values ($1, $2, $3, $4) returning *`,
@@ -96,6 +98,7 @@ export async function findOrCreateListByName(
 
 export async function renameList(id: string, name: string): Promise<void> {
   const userId = await requireUserId();
+  await assertCanWrite();
   await query(`update lists set name = $1 where user_id = $2 and id = $3 and deleted_at is null`, [
     name.trim(),
     userId,
@@ -107,6 +110,7 @@ export async function renameList(id: string, name: string): Promise<void> {
 
 export async function updateListDescription(id: string, description: string): Promise<void> {
   const userId = await requireUserId();
+  await assertCanWrite();
   await query(
     `update lists set description = $1 where user_id = $2 and id = $3 and deleted_at is null`,
     [description, userId, id],
@@ -117,6 +121,7 @@ export async function updateListDescription(id: string, description: string): Pr
 /** Soft-deletes a list — the row (and its items) stay in the database (recoverable) but disappear from every view. */
 export async function deleteList(id: string): Promise<void> {
   const userId = await requireUserId();
+  await assertCanWrite();
   await query(
     `update lists set deleted_at = now() where user_id = $1 and id = $2 and deleted_at is null`,
     [userId, id],
@@ -128,6 +133,7 @@ export async function deleteList(id: string): Promise<void> {
 /** Undoes deleteList(). Fails quietly if another list has since taken the same name. */
 export async function restoreList(id: string): Promise<void> {
   const userId = await requireUserId();
+  await assertCanWrite();
   await query(
     `update lists set deleted_at = null
      where user_id = $1 and id = $2 and deleted_at is not null
@@ -145,6 +151,7 @@ export async function restoreList(id: string): Promise<void> {
 
 export async function duplicateList(id: string): Promise<List> {
   const userId = await requireUserId();
+  await assertCanWrite();
   const existing = await getListWithItems(id);
   if (!existing) throw new Error("List not found");
 
@@ -172,6 +179,7 @@ export async function addListItem(params: {
   personId?: string | null;
 }): Promise<ListItem> {
   const userId = await requireUserId();
+  await assertCanWrite();
   params = validate(addListItemSchema, params);
   const last = await queryOne<{ position: number }>(
     `select position from list_items where user_id = $1 and list_id = $2 order by position desc limit 1`,
@@ -209,6 +217,7 @@ export async function addListItemSmartSafe(listId: string, label: string): Promi
  */
 export async function addPersonToList(listId: string, personId: string): Promise<ListItem> {
   const userId = await requireUserId();
+  await assertCanWrite();
   const [list, person] = await Promise.all([
     queryOne<List>(`select * from lists where user_id = $1 and id = $2 and deleted_at is null`, [userId, listId]),
     queryOne<{ id: string; display_name: string }>(
@@ -265,6 +274,7 @@ export async function addNamesToList(
   names: string[],
 ): Promise<{ createdPeople: string[]; linkedPeople: string[] }> {
   const userId = await requireUserId();
+  await assertCanWrite();
   const createdPeople: string[] = [];
   const linkedPeople: string[] = [];
   const list = await queryOne<List>(
@@ -310,6 +320,7 @@ export async function addNamesToList(
 
 export async function updateListItem(id: string, label: string): Promise<ListItem> {
   const userId = await requireUserId();
+  await assertCanWrite();
   const params = validate(updateListItemSchema, { label });
   const item = await queryOne<ListItem>(
     `update list_items set label = $1 where user_id = $2 and id = $3 returning *`,
@@ -331,6 +342,7 @@ export async function updateListItemSafe(id: string, label: string): Promise<Act
 export async function updateListItemNoteSafe(id: string, note: string): Promise<ActionResult<ListItem>> {
   return toActionResult(async () => {
     const userId = await requireUserId();
+  await assertCanWrite();
     const text = note.trim().slice(0, 500) || null;
     const item = await queryOne<ListItem>(
       `update list_items set note = $1, updated_at = now() where user_id = $2 and id = $3 returning *`,
@@ -344,6 +356,7 @@ export async function updateListItemNoteSafe(id: string, note: string): Promise<
 
 export async function toggleListItem(id: string, checked: boolean): Promise<void> {
   const userId = await requireUserId();
+  await assertCanWrite();
   const item = await queryOne<{ list_id: string }>(
     `update list_items set checked = $1 where user_id = $2 and id = $3 returning list_id`,
     [checked, userId, id],
@@ -353,6 +366,7 @@ export async function toggleListItem(id: string, checked: boolean): Promise<void
 
 export async function removeListItem(id: string): Promise<ListItem | null> {
   const userId = await requireUserId();
+  await assertCanWrite();
   const item = await queryOne<ListItem>(
     `delete from list_items where user_id = $1 and id = $2 returning *`,
     [userId, id],
@@ -364,6 +378,7 @@ export async function removeListItem(id: string): Promise<ListItem | null> {
 /** Undoes removeListItem() by putting the same row (same id and position) back. */
 export async function restoreListItem(item: ListItem): Promise<void> {
   const userId = await requireUserId();
+  await assertCanWrite();
   await query(
     `insert into list_items (id, user_id, list_id, person_id, label, checked, position, created_at, note)
      values ($1, $2, $3, $4, $5, $6, $7, $8, $9)
@@ -375,6 +390,7 @@ export async function restoreListItem(item: ListItem): Promise<void> {
 
 export async function reorderListItems(listId: string, orderedIds: string[]): Promise<void> {
   const userId = await requireUserId();
+  await assertCanWrite();
   await Promise.all(
     orderedIds.map((id, index) =>
       query(`update list_items set position = $1 where user_id = $2 and id = $3`, [

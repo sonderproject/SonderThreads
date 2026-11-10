@@ -1,5 +1,6 @@
 "use server";
 
+import { assertCanWrite } from "@/lib/billing";
 import { revalidatePath } from "next/cache";
 import { actorQuery, actorQueryOne, mineOrOrg } from "@/lib/db/scope";
 import { query, queryOne } from "@/lib/db/client";
@@ -46,6 +47,7 @@ export async function createTask(params: {
   sourceNoteId?: string | null;
 }): Promise<Task> {
   const userId = await requireUserId();
+  await assertCanWrite();
   params = validate(createTaskSchema, params);
   const task = await queryOne<Task>(
     `insert into tasks (user_id, title, person_id, list_id, due_at, notes, recurrence, source_note_id)
@@ -89,6 +91,7 @@ export async function createTaskSafe(params: Parameters<typeof createTask>[0]): 
 
 export async function setTaskCompleted(id: string, completed: boolean): Promise<void> {
   const userId = await requireUserId();
+  await assertCanWrite();
   const task = await actorQueryOne<Task>(userId, 
     `update tasks set completed = $1, completed_at = $2
      where ${mineOrOrg("$3")} and id = $4 and deleted_at is null
@@ -177,6 +180,7 @@ export async function restoreTasks(ids: string[]): Promise<void> {
 
 async function setTasksDeleted(ids: string[], deleted: boolean): Promise<void> {
   const userId = await requireUserId();
+  await assertCanWrite();
   if (ids.length === 0) return;
   await actorQuery(userId, 
     `update tasks set deleted_at = ${deleted ? "now()" : "null"}
@@ -191,6 +195,7 @@ async function setTasksDeleted(ids: string[], deleted: boolean): Promise<void> {
 
 async function setTaskDeleted(id: string, deleted: boolean): Promise<void> {
   const userId = await requireUserId();
+  await assertCanWrite();
   const task = await actorQueryOne<Task>(userId, 
     `update tasks set deleted_at = ${deleted ? "now()" : "null"}
      where ${mineOrOrg("$1")} and id = $2 and deleted_at is ${deleted ? "null" : "not null"}
@@ -208,6 +213,7 @@ export async function updateTask(
   patch: Partial<Pick<Task, "title" | "due_at" | "notes" | "person_id" | "list_id" | "recurrence">>,
 ): Promise<Task> {
   const userId = await requireUserId();
+  await assertCanWrite();
   patch = validate(updateTaskSchema, patch);
   const fields = Object.keys(patch) as (keyof typeof patch)[];
   if (fields.length === 0) {

@@ -1,5 +1,6 @@
 "use server";
 
+import { assertCanWrite } from "@/lib/billing";
 import { cache } from "react";
 import { revalidatePath } from "next/cache";
 import { actorQuery, actorQueryOne, mineOrOrg } from "@/lib/db/scope";
@@ -52,6 +53,7 @@ export async function createPersonRecord(params: {
   personal?: boolean;
 }): Promise<Person> {
   const userId = await requireUserId();
+  await assertCanWrite();
   params = validate(createPersonSchema, params);
   const { firstName, lastName } = splitName(params.fullName);
 
@@ -128,6 +130,7 @@ export async function updatePerson(
   >,
 ): Promise<Person> {
   const userId = await requireUserId();
+  await assertCanWrite();
   patch = validate(updatePersonSchema, patch);
   const before = await getPerson(id);
 
@@ -205,6 +208,7 @@ export async function updatePersonSafe(
 /** Soft-deletes a person — the row stays in the database (recoverable) but disappears from every view. */
 export async function deletePersonRecord(id: string): Promise<void> {
   const userId = await requireUserId();
+  await assertCanWrite();
   const person = await actorQueryOne<Person>(userId, 
     `update people set deleted_at = now() where ${mineOrOrg("$1")} and id = $2 and deleted_at is null returning *`,
     [userId, id],
@@ -231,6 +235,7 @@ export async function restorePersonRecord(id: string): Promise<void> {
 /** Soft-deletes several people at once (People tab → Select → Delete). */
 export async function deletePeople(ids: string[]): Promise<number> {
   const userId = await requireUserId();
+  await assertCanWrite();
   if (ids.length === 0) return 0;
   const deleted = await actorQuery<{ id: string }>(userId, 
     `update people set deleted_at = now()
@@ -254,6 +259,7 @@ export async function deletePeople(ids: string[]): Promise<number> {
 /** Undoes deletePeople(). */
 export async function restorePeople(ids: string[]): Promise<void> {
   const userId = await requireUserId();
+  await assertCanWrite();
   if (ids.length === 0) return;
   await actorQuery(userId, 
     `update people set deleted_at = null where ${mineOrOrg("$1")} and id = any($2::uuid[]) and deleted_at is not null`,
@@ -315,6 +321,7 @@ export async function getPeopleNeedingAttention(): Promise<Person[]> {
 export async function setPersonShared(personId: string, shared: boolean): Promise<ActionResult<true>> {
   return toActionResult(async () => {
     const userId = await requireUserId();
+  await assertCanWrite();
     const m = await getMembership();
     if (!m?.active) throw new Error("You're not in an organization.");
     await asUser(userId, (q) =>

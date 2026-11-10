@@ -13,6 +13,8 @@ import { TwoFactorPrompt } from "@/components/settings/TwoFactorPrompt";
 import { getUserSettings } from "@/lib/settings";
 import { getMembership } from "@/lib/org";
 import { countNewReferrals } from "@/lib/referrals";
+import { billingEnabled, getAccess } from "@/lib/billing";
+import { BillingBanner } from "@/components/billing/BillingBanner";
 
 /** Offer optional 2FA to people who don't have it on, at most once every 30 days. */
 async function shouldOfferTwoFactor(): Promise<boolean> {
@@ -47,6 +49,7 @@ export default async function AppGroupLayout({ children }: { children: React.Rea
   }
 
   const [people, lists, notificationCount, timeZone, offerTwoFactor, settings, membership] = data;
+  const access = await getAccess().catch(() => null);
   const referralCount =
     membership?.active && membership.role === "admin" ? await countNewReferrals(membership.orgId).catch(() => 0) : null;
   return (
@@ -60,6 +63,7 @@ export default async function AppGroupLayout({ children }: { children: React.Rea
       referralCount={referralCount}
       showImpact={!(membership?.active && membership.role === "case_manager")}
     >
+      {access && billingEnabled() && <BillingBanner access={access} />}
       {children}
       {offerTwoFactor && <TwoFactorPrompt />}
     </AppShell>

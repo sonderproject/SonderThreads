@@ -1,5 +1,6 @@
 "use server";
 
+import { assertCanWrite } from "@/lib/billing";
 import { revalidatePath } from "next/cache";
 import { actorQuery, actorQueryOne, mineOrOrg } from "@/lib/db/scope";
 import { query, queryOne } from "@/lib/db/client";
@@ -31,6 +32,7 @@ export async function createNote(params: {
   tzOffset?: number;
 }): Promise<Note> {
   const userId = await requireUserId();
+  await assertCanWrite();
   const tzOffset = params.tzOffset;
   params = validate(createNoteSchema, params);
   const note = await queryOne<Note>(
@@ -163,6 +165,7 @@ export async function listNotesForPerson(personId: string): Promise<Note[]> {
 
 export async function updateNote(id: string, content: string): Promise<Note> {
   const userId = await requireUserId();
+  await assertCanWrite();
   const params = validate(updateNoteSchema, { content });
   const note = await actorQueryOne<Note>(userId, 
     `update notes set content = $1 where ${mineOrOrg("$2")} and id = $3 and deleted_at is null returning *`,
@@ -195,6 +198,7 @@ export async function restoreNote(id: string): Promise<void> {
 
 async function setNoteDeleted(id: string, deleted: boolean): Promise<void> {
   const userId = await requireUserId();
+  await assertCanWrite();
   const note = await actorQueryOne<Note>(userId, 
     `update notes set deleted_at = ${deleted ? "now()" : "null"}
      where ${mineOrOrg("$1")} and id = $2 and deleted_at is ${deleted ? "null" : "not null"}
