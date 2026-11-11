@@ -806,6 +806,15 @@ create table if not exists billing_accounts (
   check ((user_id is null) <> (org_id is null))
 );
 alter table billing_accounts enable row level security;
+-- 'org': seat-based organization plan (lib/pricing.ts); seats = seats bought.
+do $$ begin
+  if not exists (select 1 from pg_constraint where conname = 'billing_accounts_plan_check'
+                  and pg_get_constraintdef(oid) like '%''org''%') then
+    alter table billing_accounts drop constraint if exists billing_accounts_plan_check;
+    alter table billing_accounts add constraint billing_accounts_plan_check
+      check (plan in ('individual', 'org', 'seat', 'team', 'comp'));
+  end if;
+end $$;
 -- Cancel flow and post-checkout welcome: whether renewal is off, the one-time
 -- "stay for $5" offer, and which subscription has already seen the welcome screen.
 alter table billing_accounts add column if not exists cancel_at_period_end boolean not null default false;

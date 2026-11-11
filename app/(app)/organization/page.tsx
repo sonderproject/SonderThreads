@@ -18,9 +18,11 @@ import { CopyInviteLink } from "@/components/org/CopyInviteLink";
 import { CopyText } from "@/components/org/CopyText";
 import { newReferralLink, setReferralLink } from "@/lib/actions/referrals";
 import { appUrl } from "@/lib/email";
+import { seatUsage } from "@/lib/billing";
 
 const ERRORS: Record<string, string> = {
   "last-admin": "An organization needs at least one active admin. Make someone else an admin first.",
+  seats: "All your seats are in use. Add seats in Billing, or cancel a pending invite.",
   self: "You can't deactivate yourself.",
   reassign: "Choose an active staff member to take over their clients.",
   role: "Choose a role.",
@@ -67,6 +69,7 @@ export default async function OrganizationPage({ searchParams }: { searchParams:
   if (!m) redirect("/organization/new");
   if (!m.active || m.role !== "admin") redirect("/settings#organization");
   const { error, saved } = await searchParams;
+  const seats = await seatUsage(m.orgId);
 
   const [members, invites, info] = await asUser(userId, async (q) => [
     await q<Member>(
@@ -312,6 +315,15 @@ export default async function OrganizationPage({ searchParams }: { searchParams:
 
       <section className="space-y-3">
         <h2 className="section-label">Invites</h2>
+        {seats.purchased !== null && (
+          <p className="text-sm text-text-muted">
+            <span className="tabular-nums text-text">{seats.active + seats.pending}</span> of{" "}
+            <span className="tabular-nums text-text">{seats.purchased}</span> seats in use (members and pending invites).{" "}
+            <Link href="/billing" className="text-accent hover:underline">
+              Change seats
+            </Link>
+          </p>
+        )}
         <InviteForm orgName={m.orgName} />
         {invites.length > 0 && (
           <ul className="card divide-y divide-border-subtle">

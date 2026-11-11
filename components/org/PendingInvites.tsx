@@ -11,6 +11,9 @@ export function PendingInvites({ invites, error }: { invites: PendingInvite[]; e
         <p className="flag text-sm">You&apos;re already in another organization. Ask its admin to deactivate you first.</p>
       )}
       {error === "invalid" && <p className="flag text-sm">That invite has expired or was already used.</p>}
+      {error === "seats" && (
+        <p className="flag text-sm">That organization has no free seats right now. Ask its admin to add a seat in Billing, then try again.</p>
+      )}
       {invites.map((i) => (
         <section key={i.id} className="card space-y-3 border-accent p-5" style={{ borderColor: "var(--accent)" }}>
           <p className="section-label">Invitation</p>

@@ -11,6 +11,7 @@ const ERRORS: Record<string, string> = {
   expired: "This invite has expired. Ask your admin for a new one.",
   email: "This invite is for a different email address. Sign in with the address it was sent to.",
   "other-org": "You're already in another organization. Ask that organization's admin to deactivate you first.",
+  seats: "This organization has no free seats right now. Ask your admin to add a seat in Billing, then try again.",
 };
 
 /** Where an invite link lands (sign-in is required first; middleware handles that). */

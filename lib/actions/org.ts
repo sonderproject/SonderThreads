@@ -13,7 +13,7 @@ import { toActionResult, type ActionResult } from "@/lib/validation";
 import { notify } from "@/lib/notify";
 import { appUrl, emailConfigured, escapeHtml, sendEmail } from "@/lib/email";
 import { ROLE_LABELS } from "@/lib/org-roles";
-import { syncOrgSeats } from "@/lib/billing";
+import { SeatLimitError, assertSeatAvailable, syncOrgSeats } from "@/lib/billing";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const INVITE_DAYS = 14;
@@ -59,6 +59,11 @@ export async function createInvite(email: string, role: string): Promise<ActionR
       [orgId],
     );
     if ((recent?.n ?? 0) >= 30) throw new Error("That's a lot of invites in one hour. Please try again a little later.");
+    const replacing = await queryOne(
+      `select 1 from invitations where org_id = $1 and lower(email) = $2 and accepted_at is null and expires_at > now()`,
+      [orgId, clean],
+    );
+    await assertSeatAvailable(orgId, { replacingInvite: Boolean(replacing) });
     const token = randomBytes(32).toString("base64url");
     await asUser(userId, async (q) => {
       // A new invite replaces any earlier unused one for the same address.
@@ -102,6 +107,7 @@ export async function acceptInvite(formData: FormData): Promise<void> {
   if (me?.email.toLowerCase() !== invite!.email.toLowerCase()) back("email");
   const existing = await getMembership();
   if (existing && existing.orgId !== invite!.org_id) back("other-org");
+  if (!(await seatFree(invite!.org_id, existing?.orgId === invite!.org_id && existing.active))) back("seats");
 
   await transaction(async (q) => {
     await q(
@@ -184,6 +190,12 @@ export async function deactivateMember(formData: FormData): Promise<void> {
 export async function reactivateMember(formData: FormData): Promise<void> {
   const { userId, orgId } = await requireAdmin();
   const target = formData.get("user_id")?.toString() ?? "";
+  try {
+    await assertSeatAvailable(orgId);
+  } catch (err) {
+    if (err instanceof SeatLimitError) redirect("/organization?error=seats");
+    throw err;
+  }
   await asUser(userId, (q) =>
     q(`update memberships set active = true, deactivated_at = null where org_id = $1 and user_id = $2`, [orgId, target]),
   );
@@ -355,6 +367,7 @@ export async function acceptInviteInApp(formData: FormData): Promise<void> {
   if (!invite) redirect("/?invite=invalid");
   const existing = await getMembership();
   if (existing && existing.active && existing.orgId !== invite!.org_id) redirect("/?invite=other-org");
+  if (!(await seatFree(invite!.org_id, existing?.orgId === invite!.org_id && existing.active))) redirect("/?invite=seats");
   await transaction(async (q) => {
     await q(
       `insert into memberships (org_id, user_id, role) values ($1, $2, $3)
@@ -435,4 +448,16 @@ export async function reassignAllClients(formData: FormData): Promise<void> {
   }).catch(() => {});
   revalidatePath("/", "layout");
   redirect("/organization?saved=moved");
+}
+
+/** Accepting a pending invite: it already holds a seat, so this only fails if seats were cut below what's in use. */
+async function seatFree(orgId: string, alreadyMember: boolean): Promise<boolean> {
+  if (alreadyMember) return true;
+  try {
+    await assertSeatAvailable(orgId, { fromPendingInvite: true });
+    return true;
+  } catch (err) {
+    if (err instanceof SeatLimitError) return false;
+    throw err;
+  }
 }

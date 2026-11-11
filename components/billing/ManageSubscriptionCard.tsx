@@ -6,6 +6,7 @@ import { CancelSubscriptionButton } from "@/components/billing/CancelSubscriptio
 
 const PLAN_NAMES: Record<string, string> = {
   individual: "Individual",
+  org: "Organization",
   seat: "Organization: per staff member",
   team: "Organization: Team",
 };

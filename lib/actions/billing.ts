@@ -5,9 +5,11 @@ import { revalidatePath } from "next/cache";
 import { query, queryOne } from "@/lib/db/client";
 import { requireUserId } from "@/lib/current-user";
 import { appUrl } from "@/lib/email";
+import { logEvent } from "@/lib/events";
+import { toActionResult, type ActionResult } from "@/lib/validation";
+import { MAX_SELF_SERVE_SEATS, MIN_ORG_SEATS, calculateMonthlyPriceCents, minimumSeats } from "@/lib/pricing";
 import {
   INDIVIDUAL_TRIAL_DAYS,
-  activeSeats,
   customerFor,
   enforceOneTrialPerCard,
   getAccess,
@@ -15,9 +17,17 @@ import {
   saveOfferCoupon,
   saveOfferEligible,
   saveSubscription,
+  seatUsage,
   stripe,
   type PaidPlan,
 } from "@/lib/billing";
+
+/** Seats asked for, checked on the server: whole number, at least 2 and at least what's in use, at most the self-serve limit. */
+function validSeats(raw: FormDataEntryValue | null | undefined, inUse: number): number | null {
+  const n = Number(raw);
+  if (!Number.isInteger(n) || n < minimumSeats(inUse, 0) || n > MAX_SELF_SERVE_SEATS) return null;
+  return n;
+}
 
 /** Settings → Billing → Subscribe: sends the person to Stripe Checkout. */
 export async function startCheckout(formData: FormData): Promise<void> {
@@ -26,14 +36,20 @@ export async function startCheckout(formData: FormData): Promise<void> {
   if (!s) redirect("/billing?error=not-set-up");
   const access = await getAccess();
   if (!access.canManage) redirect("/billing?error=admin");
-  const requested = formData.get("plan")?.toString() as PaidPlan;
-  const plan: PaidPlan = access.scope === "individual" ? "individual" : requested === "team" ? "team" : "seat";
+  // Organizations always get the seat-based plan; the price comes from lib/pricing.ts via the verified Stripe price.
+  const plan: PaidPlan = access.scope === "individual" ? "individual" : "org";
 
   const me = await queryOne<{ email: string; name: string | null }>(`select email, name from users where id = $1`, [userId]);
   const kind = access.scope === "org" ? "org" : "user";
   const ownerId = kind === "org" ? access.orgId! : userId;
   const customer = await customerFor(kind, ownerId, me?.email ?? "", kind === "org" ? access.orgName! : me?.name || me?.email || "");
-  const quantity = kind === "org" ? await activeSeats(ownerId) : 1;
+  let quantity = 1;
+  if (kind === "org") {
+    const u = await seatUsage(ownerId);
+    const seats = validSeats(formData.get("seats"), u.active + u.pending);
+    if (seats === null) redirect("/billing?error=seats");
+    quantity = seats!;
+  }
 
   // Organizations keep any free-trial days left (Stripe needs a trial end at least 2 days out).
   // Individuals start their 7-day trial here, with a card, the first time they subscribe.
@@ -150,4 +166,96 @@ export async function finishWelcome(): Promise<void> {
     ]);
   }
   redirect("/");
+}
+
+export type SeatPreview = {
+  seats: number;
+  currentMonthlyCents: number;
+  newMonthlyCents: number;
+  /** Charged now for the rest of this month (more seats), or 0. */
+  dueNowCents: number;
+  /** Credit toward the next bill for the rest of this month (fewer seats), or 0. */
+  creditCents: number;
+  trialing: boolean;
+};
+
+/** The admin's organization subscription on the seat-based plan, or an error the page can show. */
+async function orgSubscription() {
+  await requireUserId();
+  const s = stripe();
+  const access = await getAccess();
+  if (!s) throw new Error("Billing isn't switched on yet.");
+  if (access.scope !== "org" || !access.canManage) throw new Error("Only an organization admin can change seats.");
+  const row = access.row;
+  if (!row?.stripe_subscription_id || row.plan !== "org" || row.status === "canceled") throw new Error("Choose a plan first.");
+  const sub = await s.subscriptions.retrieve(row.stripe_subscription_id);
+  const item = sub.items.data[0];
+  if (!item) throw new Error("This subscription has no seats to change.");
+  return { s, access, row, sub, item };
+}
+
+/** Billing → Change seats → Preview: exactly what Stripe will charge or credit, before anything changes. */
+export async function previewSeatChange(seats: number): Promise<ActionResult<SeatPreview>> {
+  return toActionResult(async () => {
+    const { s, access, sub, item } = await orgSubscription();
+    const u = await seatUsage(access.orgId!);
+    const n = validSeats(String(seats), u.active + u.pending);
+    if (n === null) throw new Error(seatRangeMessage(u.active + u.pending));
+    const current = item.quantity ?? MIN_ORG_SEATS;
+    const trialing = sub.status === "trialing";
+    let dueNowCents = 0;
+    let creditCents = 0;
+    if (!trialing && n !== current) {
+      const preview = await s.invoices.createPreview({
+        customer: typeof sub.customer === "string" ? sub.customer : sub.customer.id,
+        subscription: sub.id,
+        subscription_details: {
+          items: [{ id: item.id, quantity: n }],
+          proration_behavior: "always_invoice",
+          proration_date: Math.floor(Date.now() / 1000),
+        },
+      });
+      const proration = preview.lines.data.filter((l) => l.proration).reduce((sum, l) => sum + l.amount, 0);
+      if (proration > 0) dueNowCents = proration;
+      else creditCents = -proration;
+    }
+    return {
+      seats: n,
+      currentMonthlyCents: calculateMonthlyPriceCents("organization", Math.max(MIN_ORG_SEATS, current)),
+      newMonthlyCents: calculateMonthlyPriceCents("organization", n),
+      dueNowCents,
+      creditCents,
+      trialing,
+    };
+  });
+}
+
+/**
+ * Billing → Change seats → Confirm. More seats: the difference for the rest
+ * of this month is charged now. Fewer seats: the difference is credited to
+ * the next bill. Never below the seats in use (members + pending invites).
+ */
+export async function changeSeats(seats: number): Promise<ActionResult<{ seats: number }>> {
+  return toActionResult(async () => {
+    const { s, access, sub, item } = await orgSubscription();
+    const u = await seatUsage(access.orgId!);
+    const n = validSeats(String(seats), u.active + u.pending);
+    if (n === null) throw new Error(seatRangeMessage(u.active + u.pending));
+    const current = item.quantity ?? MIN_ORG_SEATS;
+    if (n === current) return { seats: n };
+    const updated = await s.subscriptions.update(sub.id, {
+      items: [{ id: item.id, quantity: n }],
+      proration_behavior: sub.status === "trialing" ? "none" : n > current ? "always_invoice" : "create_prorations",
+      payment_behavior: "pending_if_incomplete",
+    });
+    await saveSubscription(updated);
+    await logEvent("billing.seats_changed", `Seats ${current} → ${n} (${access.orgName})`, { meta: { subscription: sub.id, from: current, to: n } });
+    revalidatePath("/", "layout");
+    return { seats: n };
+  });
+}
+
+function seatRangeMessage(inUse: number): string {
+  const min = Math.max(MIN_ORG_SEATS, inUse);
+  return `Choose between ${min} and ${MAX_SELF_SERVE_SEATS} seats${inUse > MIN_ORG_SEATS ? ` (${inUse} are in use by members and pending invites)` : ""}. For more, contact us about Enterprise.`;
 }

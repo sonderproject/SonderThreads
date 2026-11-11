@@ -1,5 +1,9 @@
 import Link from "next/link";
-import { billingEnabled, getAccess, getFreshAccess, monthlyCost } from "@/lib/billing";
+import { LEGACY_ORG_PLANS, billingEnabled, getAccess, getFreshAccess, seatUsage } from "@/lib/billing";
+import { MIN_ORG_SEATS, calculateMonthlyPriceCents, formatCents, orgTier } from "@/lib/pricing";
+import { SeatCalculator } from "@/components/billing/SeatCalculator";
+import { SeatManager } from "@/components/billing/SeatManager";
+import { SUPPORT_EMAIL } from "@/lib/settings-options";
 import { requireUserId } from "@/lib/current-user";
 import { queryOne } from "@/lib/db/client";
 import { SubscribedWelcome } from "@/components/billing/SubscribedWelcome";
@@ -13,6 +17,7 @@ const ERRORS: Record<string, string> = {
   "not-set-up":
     "Billing isn't switched on yet. Nothing is charged until it is.",
   admin: "Only an organization admin can change the plan.",
+  seats: "Choose at least 2 seats, and at least as many as your members and pending invites. Over 500? Contact us about Enterprise.",
 };
 
 const primary =
@@ -37,6 +42,7 @@ function daysLeft(d: Date | null): number {
 
 const PLAN_NAMES: Record<string, string> = {
   individual: "Individual",
+  org: "Organization",
   seat: "Organization: per staff member",
   team: "Organization: Team",
   comp: "Free for life",
@@ -58,16 +64,18 @@ export default async function BillingPage({
   const subscribed =
     Boolean(a.row?.stripe_subscription_id) && a.status !== "canceled";
   const isComp = a.plan === "comp";
-  const seatCost = monthlyCost("seat", a.seats);
-  const teamCost = monthlyCost("team", a.seats);
-  const teamCheaper = teamCost < seatCost;
+  const usage = a.scope === "org" && a.orgId ? await seatUsage(a.orgId) : null;
+  const inUse = usage ? usage.active + usage.pending : 1;
+  const onSeatPlan = a.plan === "org" && subscribed;
+  const legacyPlan = (LEGACY_ORG_PLANS as readonly string[]).includes(a.plan ?? "");
+  const purchased = onSeatPlan ? Math.max(MIN_ORG_SEATS, a.row?.seats ?? MIN_ORG_SEATS) : null;
   const welcome =
     Boolean(checkout) && subscribed && a.row?.welcomed_subscription_id !== a.row?.stripe_subscription_id;
   const me = welcome
     ? await queryOne<{ name: string | null }>(`select name from users where id = $1`, [await requireUserId()])
     : null;
   const price =
-    a.plan === "individual" ? "$9" : a.plan === "seat" ? `$${seatCost}` : a.plan === "team" ? `$${teamCost}` : null;
+    a.plan === "individual" ? "$9" : purchased ? formatCents(calculateMonthlyPriceCents("organization", purchased)) : null;
 
   return (
     <div className="max-w-xl space-y-6">
@@ -132,11 +140,42 @@ export default async function BillingPage({
           {a.state === "readonly" &&
             "Strynd is view-only: you can see and export everything, but not add or edit. Subscribe to pick up where you left off."}
         </p>
-        {a.scope === "org" && !isComp && (
+        {a.scope === "org" && !isComp && usage && purchased && (
+          <div className="space-y-1 pt-1 text-sm">
+            <p className="text-text">
+              <span className="tabular-nums">{inUse}</span> of <span className="tabular-nums">{purchased}</span> seats in use
+              <span className="text-text-muted">
+                {" "}
+                ({usage.active} {usage.active === 1 ? "member" : "members"}
+                {usage.pending ? `, ${usage.pending} pending ${usage.pending === 1 ? "invite" : "invites"}` : ""})
+              </span>
+            </p>
+            <div className="progress-bar" aria-hidden>
+              <span style={{ width: `${Math.min(100, (inUse / purchased) * 100)}%` }} />
+            </div>
+            <p className="text-text-muted">
+              {formatCents(calculateMonthlyPriceCents("organization", purchased))} / month ·{" "}
+              {orgTier(purchased) === "small_team" ? "Small Team: $19 a seat" : "Organization rate: $349 for 20 seats, $15 each after"}
+            </p>
+          </div>
+        )}
+        {a.scope === "org" && !isComp && legacyPlan && subscribed && (
           <p className="text-sm text-text-muted">
-            {a.seats} active staff {a.seats === 1 ? "member" : "members"}.
-            Billing updates automatically when staff join or leave.
+            {usage?.active ?? a.seats} active staff {(usage?.active ?? a.seats) === 1 ? "member" : "members"}. Your plan
+            bills per active member and updates automatically when staff join or leave.
           </p>
+        )}
+        {a.scope === "org" && !isComp && !subscribed && usage && (
+          <p className="text-sm text-text-muted">
+            {usage.active} {usage.active === 1 ? "member" : "members"}
+            {usage.pending ? ` and ${usage.pending} pending ${usage.pending === 1 ? "invite" : "invites"}` : ""}.
+          </p>
+        )}
+        {onSeatPlan && a.canManage && purchased && (
+          <div className="space-y-2 border-t border-border pt-4">
+            <p className="eyebrow text-text-faint">Change seats</p>
+            <SeatManager purchased={purchased} inUse={inUse} />
+          </div>
         )}
         {subscribed && a.canManage && !isComp && (
           <form action={openBillingPortal} className="pt-2">
@@ -191,78 +230,33 @@ export default async function BillingPage({
               )}
             </>
           ) : (
-            <div className="grid gap-3 sm:grid-cols-2">
-              <form
-                action={startCheckout}
-                className="card flex flex-col gap-3 p-5"
-                style={
-                  !teamCheaper ? { borderColor: "var(--accent)" } : undefined
-                }
-              >
-                <input type="hidden" name="plan" value="seat" />
-                <p className="font-display text-xl font-light">
-                  Per staff member
+            <>
+              <form action={startCheckout} className="card space-y-4 p-5">
+                <div>
+                  <p className="font-display text-2xl font-light">Team plan</p>
+                  <p className="mt-1 text-sm text-text-muted">
+                    $19 a seat for 2–18 people. At 19 or more, the $349 Organization rate (20 seats included, $15 for each
+                    extra seat) applies automatically, whichever is cheaper.
+                  </p>
+                </div>
+                <SeatCalculator name="seats" min={Math.max(MIN_ORG_SEATS, inUse)} initial={Math.max(MIN_ORG_SEATS, inUse)} />
+                <p className="text-xs text-text-muted">
+                  You need at least {Math.max(MIN_ORG_SEATS, inUse)} seats for your current members and pending invites. Add
+                  or remove seats any time; changes are prorated.
+                  {a.state === "trial" && a.endsAt ? ` Your free trial continues until ${fmt(a.endsAt)}; you won't be charged before then.` : ""}
                 </p>
-                <p className="font-display text-3xl font-light tabular-nums">
-                  $15
-                  <span className="ml-1 font-sans text-sm text-text-muted">
-                    / staff / month
-                  </span>
-                </p>
-                <p className="flex-1 text-sm text-text-muted">
-                  For your {a.seats}:{" "}
-                  <strong className="text-text tabular-nums">
-                    ${seatCost}/month
-                  </strong>
-                </p>
-                {!teamCheaper && (
-                  <span className="tag tag-n self-start">
-                    Best for your team
-                  </span>
-                )}
-                <button
-                  type="submit"
-                  className={primary}
-                  disabled={!billingEnabled()}
-                >
-                  Choose per staff member
+                <button type="submit" className={primary} disabled={!billingEnabled()}>
+                  Continue to payment
                 </button>
               </form>
-              <form
-                action={startCheckout}
-                className="card flex flex-col gap-3 p-5"
-                style={
-                  teamCheaper ? { borderColor: "var(--accent)" } : undefined
-                }
-              >
-                <input type="hidden" name="plan" value="team" />
-                <p className="font-display text-xl font-light">Team</p>
-                <p className="font-display text-3xl font-light tabular-nums">
-                  $249
-                  <span className="ml-1 font-sans text-sm text-text-muted">
-                    / month
-                  </span>
-                </p>
-                <p className="flex-1 text-sm text-text-muted">
-                  20 staff included, $10 for each one after. For your {a.seats}:{" "}
-                  <strong className="text-text tabular-nums">
-                    ${teamCost}/month
-                  </strong>
-                </p>
-                {teamCheaper && (
-                  <span className="tag tag-n self-start">
-                    Best for your team
-                  </span>
-                )}
-                <button
-                  type="submit"
-                  className={primary}
-                  disabled={!billingEnabled()}
-                >
-                  Choose Team
-                </button>
-              </form>
-            </div>
+              <p className="text-sm text-text-muted">
+                Over 500 people, or need custom onboarding or integrations?{" "}
+                <a href={`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent("Strynd Enterprise")}`} className="text-accent hover:underline">
+                  Contact sales about Enterprise
+                </a>
+                .
+              </p>
+            </>
           )}
           <p className="text-xs text-text-faint">
             Payment is handled securely by Stripe. Have a promo code? Enter it

@@ -12,7 +12,7 @@ const mail = <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a>;
 
 export default function TermsPage() {
   return (
-    <LegalPage title="Terms of service" updated="November 10, 2026">
+    <LegalPage title="Terms of service" updated="November 11, 2026">
       <p>
         These terms are an agreement between you and Sonder Project, a sole proprietorship based in California
         (&quot;we&quot;, &quot;us&quot;), for your use of Strynd at strynd.com and in its mobile apps
@@ -79,8 +79,10 @@ export default function TermsPage() {
 
       <LegalSection title="Fees">
         <p>
-          Individual accounts are $9 a month after a 7-day free trial. Starting the trial needs a payment card; you're charged when the trial ends unless you cancel first. Free trials are limited to one per person, card and mobile number. Organization plans are $15 per staff member a
-          month, or $249 a month for up to 20 staff and $10 for each additional staff member, after a 30-day free trial.
+          Individual accounts are $9 a month after a 7-day free trial. Starting the trial needs a payment card; you're charged when the trial ends unless you cancel first. Free trials are limited to one per person, card and mobile number. Team plans are billed by the number of seats
+          the organization buys (at least 2): $19 per seat a month for up to 18 seats, $349 a month for 19 or 20 seats, and $15
+          a month for each seat over 20, after a 30-day free trial. Seat changes are prorated. Enterprise pricing is agreed in
+          writing.
           Subscriptions renew monthly until cancelled, and organization charges adjust when staff are added or removed.
           Payments are processed by Stripe. You can cancel any time in Settings → Billing; you keep access until the end
           of the period you paid for. If a trial ends or a payment fails, your account becomes view-only: you can still

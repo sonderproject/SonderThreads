@@ -2,11 +2,14 @@ import { cache } from "react";
 import Stripe from "stripe";
 import { query, queryOne } from "@/lib/db/client";
 import { requireUserId } from "@/lib/current-user";
+import { MIN_ORG_SEATS, orgPriceTiersMatch, seatsAfterAdding } from "@/lib/pricing";
 
 /**
- * Billing. Individuals: $9/month after a 7-day free trial. Organizations:
- * $15 per staff member, or Team ($249/month with 20 staff included, $10 each
- * after), after a 30-day free trial. Accounts that existed before billing
+ * Billing. Individuals: $9/month after a 7-day free trial. Organizations buy
+ * a number of seats (at least 2) after a 30-day free trial: $19 a seat up to
+ * 18, $349 for 19–20, then $15 for each seat over 20 (lib/pricing.ts). The
+ * older "seat" and "team" plans are kept only for any subscription already on
+ * them. Accounts that existed before billing
  * started are "comp" (free for life). When a trial ends or payment fails for
  * more than 14 days, the account turns view-only: everything stays visible and
  * exportable, nothing can be added or changed. Nothing is enforced until
@@ -18,15 +21,14 @@ export const ORG_TRIAL_DAYS = 30;
 export const GRACE_DAYS = 14;
 export const PRICES = {
   individual: "threads_individual_monthly",
+  org: "strynd_org_monthly",
+  // Legacy organization prices, kept for subscriptions already on them.
   seat: "threads_org_seat_monthly",
   team: "threads_org_team_monthly",
 } as const;
 export type PaidPlan = keyof typeof PRICES;
-
-/** What each plan costs a month for `seats` staff (in dollars). */
-export function monthlyCost(plan: "seat" | "team", seats: number): number {
-  return plan === "seat" ? 15 * seats : 249 + 10 * Math.max(0, seats - 20);
-}
+/** Plans whose Stripe quantity follows active members automatically (the old model). */
+export const LEGACY_ORG_PLANS = ["seat", "team"] as const;
 
 let client: Stripe | null = null;
 export function stripe(): Stripe | null {
@@ -46,9 +48,12 @@ export async function priceId(plan: PaidPlan): Promise<string> {
   if (hit) return hit;
   const s = stripe();
   if (!s) throw new Error("Billing isn't set up yet.");
-  const res = await s.prices.list({ lookup_keys: [key], active: true, limit: 1 });
-  const id = res.data[0]?.id;
+  const res = await s.prices.list({ lookup_keys: [key], active: true, limit: 1, expand: ["data.tiers"] });
+  const price = res.data[0];
+  const id = price?.id;
   if (!id) throw new Error(`Stripe price ${key} not found.`);
+  // Server-side guard: never charge organizations with a price that doesn't match lib/pricing.ts.
+  if (plan === "org" && !orgPriceTiersMatch(price.tiers)) throw new Error(`Stripe price ${key} doesn't match Strynd's pricing.`);
   priceIds.set(key, id);
   return id;
 }
@@ -57,7 +62,7 @@ export type BillingRow = {
   id: string;
   user_id: string | null;
   org_id: string | null;
-  plan: "individual" | "seat" | "team" | "comp";
+  plan: "individual" | "org" | "seat" | "team" | "comp";
   status: string;
   stripe_customer_id: string | null;
   stripe_subscription_id: string | null;
@@ -173,12 +178,16 @@ export async function activeSeats(orgId: string): Promise<number> {
   return Math.max(1, r?.n ?? 1);
 }
 
-/** After staff join or leave: bill the organization for its current number of active staff. */
+/**
+ * After staff join or leave. Only the older per-member plans follow the
+ * member count automatically; on the current plan the admin buys seats
+ * (see changeSeats in lib/actions/billing.ts) and invites are capped by them.
+ */
 export async function syncOrgSeats(orgId: string): Promise<void> {
   const s = stripe();
   if (!s) return;
   const row = await queryOne<BillingRow>(`select * from billing_accounts where org_id = $1`, [orgId]);
-  if (!row?.stripe_subscription_id || row.plan === "comp") return;
+  if (!row?.stripe_subscription_id || !(LEGACY_ORG_PLANS as readonly string[]).includes(row.plan)) return;
   try {
     const seats = await activeSeats(orgId);
     const sub = await s.subscriptions.retrieve(row.stripe_subscription_id);
@@ -237,7 +246,7 @@ export async function customerFor(kind: "user" | "org", ownerId: string, email: 
   await query(
     `insert into billing_accounts (${col}, plan, status, stripe_customer_id) values ($1, $2, 'trialing', $3)
      on conflict (${col}) do update set stripe_customer_id = excluded.stripe_customer_id, updated_at = now()`,
-    [ownerId, kind === "user" ? "individual" : "seat", c.id],
+    [ownerId, kind === "user" ? "individual" : "org", c.id],
   );
   return c.id;
 }
@@ -301,4 +310,43 @@ export function saveOfferEligible(a: Access): boolean {
     (r.status === "active" || r.status === "trialing") &&
     !r.save_offer_used_at
   );
+}
+
+export type SeatUsage = {
+  active: number;
+  pending: number;
+  /** Seats paid for, or null when not capped (free trial, comp, or an older per-member plan). */
+  purchased: number | null;
+};
+
+/** Seats in use (active members + pending invites) against seats paid for. */
+export async function seatUsage(orgId: string): Promise<SeatUsage> {
+  const r = await queryOne<{ active: number; pending: number; plan: string | null; status: string | null; seats: number | null; sub: string | null }>(
+    `select (select count(*)::int from memberships where org_id = $1 and active) as active,
+            (select count(*)::int from invitations where org_id = $1 and accepted_at is null and expires_at > now()) as pending,
+            b.plan, b.status, b.seats, b.stripe_subscription_id as sub
+       from (select 1) x left join billing_accounts b on b.org_id = $1`,
+    [orgId],
+  );
+  const capped =
+    r?.plan === "org" && Boolean(r.sub) && r.status !== "canceled" && typeof r.seats === "number" && r.seats >= MIN_ORG_SEATS;
+  return { active: r?.active ?? 0, pending: r?.pending ?? 0, purchased: capped ? r!.seats : null };
+}
+
+export class SeatLimitError extends Error {}
+
+/**
+ * Throws when adding one more person (a new invite, or someone joining or
+ * coming back) would go past the seats paid for. `replacingInvite` is true
+ * when a new invite replaces an earlier one for the same address, and
+ * `fromPendingInvite` when an already-counted invite is being accepted.
+ */
+export async function assertSeatAvailable(orgId: string, opts: { replacingInvite?: boolean; fromPendingInvite?: boolean } = {}): Promise<void> {
+  const u = await seatUsage(orgId);
+  if (u.purchased === null) return;
+  if (seatsAfterAdding(u.active, u.pending, opts) > u.purchased) {
+    throw new SeatLimitError(
+      `All ${u.purchased} seats are in use (${u.active} members, ${u.pending} pending ${u.pending === 1 ? "invite" : "invites"}). Add seats in Billing, or cancel a pending invite.`,
+    );
+  }
 }

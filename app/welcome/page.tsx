@@ -3,6 +3,7 @@ import Link from "next/link";
 import { SITE_DESCRIPTION } from "@/lib/site";
 import { LegalLinks } from "@/components/legal/LegalPage";
 import { SUPPORT_EMAIL } from "@/lib/settings-options";
+import { SeatCalculator } from "@/components/billing/SeatCalculator";
 
 // Signed-out visitors to "/" are shown this page (middleware rewrites to it),
 // so "/" is the canonical address search engines should index.
@@ -62,6 +63,62 @@ const COMPARE: [string, boolean][] = [
   ["Front-desk check-in kiosk", false],
   ["Client reassignment and supervisor comments", false],
   ["Onboarding help and data import", false],
+];
+
+const TEAM_SIGNUP = "/signup?next=%2Forganization%2Fnew";
+const SALES = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent("Strynd Enterprise")}`;
+
+const PLANS: {
+  name: string;
+  who: string;
+  price: string;
+  unit?: string;
+  fine: string;
+  features: string[];
+  cta: string;
+  href: string;
+  featured?: boolean;
+}[] = [
+  {
+    name: "Individual",
+    who: "For one person with clients, projects or a busy life to keep straight.",
+    price: "$9",
+    unit: "/ month",
+    fine: "7-day free trial. Cancel any time.",
+    features: ["Your own private workspace", "Tasks, to-dos, notes and lists", "Clients and check-ins with full history", "Voice notes, smart command box, reminders"],
+    cta: "Start your free trial",
+    href: "/signup",
+  },
+  {
+    name: "Small Team",
+    who: "For teams of 2–18 people.",
+    price: "$19",
+    unit: "/ user / month",
+    fine: "e.g. 5 people: $95 / month. 30-day free trial.",
+    features: ["Everything in Individual, for everyone", "Shared team workspace and client list", "Invite and manage team members", "Roles and access controls", "One bill for the whole team"],
+    cta: "Start a free team trial",
+    href: TEAM_SIGNUP,
+  },
+  {
+    name: "Organization",
+    who: "For organizations of 19 or more.",
+    price: "$349",
+    unit: "/ month",
+    fine: "20 seats included. Additional seats $15 / user / month.",
+    features: ["Everything in Small Team", "20 seats included", "Extra seats just $15 each", "Team dashboard, activity log, Impact reports", "Admin permissions and centralized billing"],
+    cta: "Start a free team trial",
+    href: TEAM_SIGNUP,
+    featured: true,
+  },
+  {
+    name: "Enterprise",
+    who: "For large organizations with special needs.",
+    price: "Custom",
+    fine: "Tailored pricing and terms.",
+    features: ["Everything in Organization", "Guided onboarding and data import", "Integrations and custom setup", "Priority support"],
+    cta: "Contact sales",
+    href: SALES,
+  },
 ];
 
 /** Studio-style section marker: number, hairline, wide-tracked label. */
@@ -192,12 +249,20 @@ export default function WelcomePage() {
               day, and give managers a clear view of every client, while each person&apos;s own tasks and notes stay
               private.
             </p>
-            <a
-              href={`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent("Strynd for our team")}`}
-              className="inline-block rounded-full border border-border bg-bg-raised px-6 py-3 text-sm font-semibold transition-colors hover:bg-bg-hover"
-            >
-              Talk to us about your team
-            </a>
+            <div className="flex flex-wrap gap-3">
+              <Link
+                href={TEAM_SIGNUP}
+                className="inline-block rounded-full bg-accent px-6 py-3 text-sm font-semibold text-bg transition-colors hover:bg-accent-dim"
+              >
+                Start a 30-day free team trial
+              </Link>
+              <a
+                href="#pricing"
+                className="inline-block rounded-full border border-border bg-bg-raised px-6 py-3 text-sm font-semibold transition-colors hover:bg-bg-hover"
+              >
+                See team pricing
+              </a>
+            </div>
           </div>
           <ul className="card divide-y divide-border-subtle">
             {TEAMS.map((line) => (
@@ -211,65 +276,61 @@ export default function WelcomePage() {
 
         <section id="pricing" className="scroll-mt-20 space-y-8 border-t border-border py-16">
           <Marker n="04">Pricing</Marker>
-          <div className="grid gap-4 lg:grid-cols-2">
-            <div className="card flex flex-col gap-4 p-6">
-              <div>
-                <h2 className="font-display text-2xl font-light">Individual</h2>
-                <p className="mt-1 text-sm text-text-muted">For anyone with clients, projects or a busy life to keep straight.</p>
-              </div>
-              <p className="font-display text-5xl font-light tabular-nums">
-                $9<span className="ml-1 font-sans text-base text-text-muted">/ month</span>
-              </p>
-              <p className="-mt-2 text-xs text-text-muted">7-day free trial. Cancel any time.</p>
-              <ul className="flex-1 space-y-2 text-sm">
-                {["Tasks, to-do lists, notes and lists", "Clients and check-ins with full history", "Voice notes, smart command box and reminders", "Export everything, any time"].map((f) => (
-                  <li key={f} className="flex gap-2">
-                    <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" aria-hidden />
-                    {f}
-                  </li>
-                ))}
-              </ul>
-              <Link href="/signup" className="rounded-full border border-border bg-bg-raised px-6 py-3 text-center text-sm font-semibold hover:bg-bg-hover">
-                Start your free trial
-              </Link>
-            </div>
-            <div className="card flex flex-col gap-4 border-accent p-6" style={{ borderColor: "var(--accent)" }}>
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <h2 className="font-display text-2xl font-light">Organization</h2>
-                  <p className="mt-1 text-sm text-text-muted">For teams, offices, agencies and nonprofits.</p>
-                </div>
-                <span className="tag tag-v">Founding pricing</span>
-              </div>
-              <p className="font-display text-5xl font-light tabular-nums">
-                $15<span className="ml-1 font-sans text-base text-text-muted">per staff member / month</span>
-              </p>
-              <p className="-mt-2 text-xs text-text-muted">
-                Or Team: $249 / month for up to 20 staff, $10 for each one after. 30-day free trial. Founding teams
-                keep this price for 12 months.
-              </p>
-              <ul className="flex-1 space-y-2 text-sm">
-                {[
-                  "Everything in Individual",
-                  "One shared client list the whole team works from",
-                  "Impact reports with your logo",
-                  "Referral link for partners",
-                  "Front-desk check-in kiosk",
-                  "Roles, Team dashboard and an activity log",
-                ].map((f) => (
-                  <li key={f} className="flex gap-2">
-                    <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" aria-hidden />
-                    {f}
-                  </li>
-                ))}
-              </ul>
-              <a
-                href={`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent("Strynd for our team")}`}
-                className="rounded-full bg-accent px-6 py-3 text-center text-sm font-semibold text-bg hover:bg-accent-dim"
+          <h2 className="max-w-2xl font-display text-3xl font-light leading-tight tracking-[-0.02em] sm:text-4xl">
+            Simple pricing that gets cheaper as your team grows.
+          </h2>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {PLANS.map((p) => (
+              <div
+                key={p.name}
+                className="card flex flex-col gap-4 p-6"
+                style={p.featured ? { borderColor: "var(--accent)" } : undefined}
               >
-                Talk to us about your team
-              </a>
+                <div className="space-y-1">
+                  <div className="flex items-start justify-between gap-2">
+                    <h3 className="font-display text-2xl font-light">{p.name}</h3>
+                    {p.featured && <span className="tag tag-v whitespace-nowrap">Best value</span>}
+                  </div>
+                  <p className="text-sm text-text-muted">{p.who}</p>
+                </div>
+                <p className="font-display text-4xl font-light tabular-nums">
+                  {p.price}
+                  {p.unit && <span className="ml-1 font-sans text-sm text-text-muted">{p.unit}</span>}
+                </p>
+                <p className="-mt-2 text-xs text-text-muted">{p.fine}</p>
+                <ul className="flex-1 space-y-2 text-sm">
+                  {p.features.map((f) => (
+                    <li key={f} className="flex gap-2">
+                      <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" aria-hidden />
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+                <a
+                  href={p.href}
+                  className={
+                    p.featured
+                      ? "rounded-full bg-accent px-6 py-3 text-center text-sm font-semibold text-bg hover:bg-accent-dim"
+                      : "rounded-full border border-border bg-bg-raised px-6 py-3 text-center text-sm font-semibold hover:bg-bg-hover"
+                  }
+                >
+                  {p.cta}
+                </a>
+              </div>
+            ))}
+          </div>
+
+          <div className="card grid gap-6 p-6 lg:grid-cols-[1fr_1.2fr] lg:items-center">
+            <div className="space-y-2">
+              <p className="section-label">Team price calculator</p>
+              <h3 className="font-display text-2xl font-light">What will my team pay?</h3>
+              <p className="text-sm text-text-muted">
+                $19 a seat up to 18 people. From 19 seats, the $349 Organization rate (20 seats included) kicks in
+                automatically because it&apos;s cheaper, and each seat after 20 is just $15. You never have to pick the right
+                plan; you always get the lower price.
+              </p>
             </div>
+            <SeatCalculator initial={5} />
           </div>
 
           <div className="card overflow-x-auto">
@@ -278,7 +339,7 @@ export default function WelcomePage() {
                 <tr className="eyebrow border-b border-border text-left text-text-faint">
                   <th className="px-4 py-3 font-semibold">Compare plans</th>
                   <th className="px-3 py-3 text-center font-semibold">Individual</th>
-                  <th className="px-4 py-3 text-center font-semibold text-accent">Organization</th>
+                  <th className="px-4 py-3 text-center font-semibold text-accent">Teams</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border-subtle">
@@ -293,7 +354,8 @@ export default function WelcomePage() {
             </table>
           </div>
           <p className="text-sm text-text-muted">
-            For a team, $15 a seat is less than one hour of staff time a month, and the time it saves pays for itself in the first week.
+            Teams = Small Team and Organization. Teams start with a 30-day free trial, no card needed. Add or remove seats any
+            time; changes are prorated.
           </p>
         </section>
 
