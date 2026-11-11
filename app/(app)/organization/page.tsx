@@ -19,10 +19,17 @@ import { CopyText } from "@/components/org/CopyText";
 import { newReferralLink, setReferralLink } from "@/lib/actions/referrals";
 import { appUrl } from "@/lib/email";
 import { seatUsage } from "@/lib/billing";
+import { loadReferralSettings } from "@/lib/referral-settings";
+import { ReferralSettingsCard } from "@/components/org/ReferralSettingsCard";
 
 const ERRORS: Record<string, string> = {
   "last-admin": "An organization needs at least one active admin. Make someone else an admin first.",
   seats: "All your seats are in use. Add seats in Billing, or cancel a pending invite.",
+  hours: "Check the open hours: each open day needs a start time before its end time.",
+  "no-hours": "Open at least one day, or turn off appointment booking.",
+  slot: "Choose an appointment length.",
+  limits: "Limits must be whole numbers from 1 to 10,000, or left blank.",
+  timezone: "Choose a time zone.",
   self: "You can't deactivate yourself.",
   reassign: "Choose an active staff member to take over their clients.",
   role: "Choose a role.",
@@ -36,6 +43,7 @@ const SAVED: Record<string, string> = {
   role: "Role updated.",
   deactivated: "Deactivated. Their clients were handed over.",
   reactivated: "Reactivated.",
+  "referral-settings": "Referral settings saved.",
   name: "Name updated.",
   info: "Organization info saved.",
   logo: "Logo updated.",
@@ -69,7 +77,7 @@ export default async function OrganizationPage({ searchParams }: { searchParams:
   if (!m) redirect("/organization/new");
   if (!m.active || m.role !== "admin") redirect("/settings#organization");
   const { error, saved } = await searchParams;
-  const seats = await seatUsage(m.orgId);
+  const [seats, referralSettings] = await Promise.all([seatUsage(m.orgId), loadReferralSettings(m.orgId)]);
 
   const [members, invites, info] = await asUser(userId, async (q) => [
     await q<Member>(
@@ -277,8 +285,8 @@ export default async function OrganizationPage({ searchParams }: { searchParams:
         <h2 className="section-label">Referral link</h2>
         <div className="card space-y-3 p-4">
           <p className="text-sm text-text-muted">
-            Send this link to other departments. They fill in the client&apos;s name, phone and date of birth, plus
-            their own name and department, with no account needed. Referrals land in{" "}
+            Send this link to other departments and partners. They fill in the client&apos;s details, the services they
+            need, notes and an appointment time, plus their own name, department and email, with no account needed. Referrals land in{" "}
             <Link href="/referrals" className="text-accent hover:underline">
               Referrals
             </Link>{" "}
@@ -311,6 +319,7 @@ export default async function OrganizationPage({ searchParams }: { searchParams:
             </form>
           )}
         </div>
+        <ReferralSettingsCard settings={referralSettings} />
       </section>
 
       <section className="space-y-3">

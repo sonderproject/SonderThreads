@@ -23,12 +23,12 @@ export async function GET(request: Request) {
   const p = new URL(request.url).searchParams;
   const format = p.get("format");
   if (format !== "xlsx" && format !== "csv") return NextResponse.json({ error: "format must be xlsx or csv" }, { status: 400 });
-  const rows = await listReferrals(m.orgId, { dept: p.get("dept"), from: p.get("from"), to: p.get("to") });
+  const rows = await listReferrals(m.orgId, { dept: p.get("dept"), from: p.get("from"), to: p.get("to"), service: p.get("service") });
   const tz = await getTimeZone();
   const when = (v: string | null) =>
     v ? new Date(v).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short", timeZone: tz }) : "";
 
-  const headers = ["Sent", "Client first name", "Client last name", "Phone", "Date of birth", "Referred by", "Department", "Outcome", "Decline reason", "Handled by", "Handled"];
+  const headers = ["Sent", "Client first name", "Client last name", "Phone", "Date of birth", "Referred by", "Department", "Referrer email", "Appointment", "Services", "Notes", "Outcome", "Decline reason", "Handled by", "Handled"];
   const body = rows.map((r) => [
     when(r.created_at),
     r.first_name,
@@ -37,6 +37,10 @@ export async function GET(request: Request) {
     formatDob(r.dob),
     r.referrer_name,
     r.referrer_department,
+    r.referrer_email ?? "",
+    r.appointment_at ? when(r.appointment_at) : r.waitlisted ? "Next opening" : "",
+    (r.services ?? []).join(", "),
+    r.notes ?? "",
     STATUS_LABELS[r.status],
     r.decline_reason ?? "",
     r.handled_by_name ?? "",

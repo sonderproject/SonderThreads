@@ -22,9 +22,14 @@ export type ReferralRow = {
   handled_by_name: string | null;
   handled_at: string | null;
   created_at: string;
+  appointment_at: string | null;
+  waitlisted: boolean;
+  services: string[] | null;
+  notes: string | null;
+  referrer_email: string | null;
 };
 
-export type LogFilters = { dept?: string | null; from?: string | null; to?: string | null };
+export type LogFilters = { dept?: string | null; from?: string | null; to?: string | null; service?: string | null };
 
 /** YYYY-MM-DD for a `date` column (node-postgres returns a local-midnight Date). */
 export function dateOnly(v: string | Date | null): string {
@@ -48,16 +53,18 @@ const DAY = /^\d{4}-\d{2}-\d{2}$/;
 export async function listReferrals(orgId: string, f: LogFilters = {}, status?: ReferralStatus): Promise<ReferralRow[]> {
   return query<ReferralRow>(
     `select r.id, r.first_name, r.last_name, r.phone, r.dob, r.referrer_name, r.referrer_department, r.status,
-            r.person_id, r.decline_reason, coalesce(u.name, u.email) as handled_by_name, r.handled_at, r.created_at
+            r.person_id, r.decline_reason, coalesce(u.name, u.email) as handled_by_name, r.handled_at, r.created_at,
+            r.appointment_at, r.waitlisted, r.services, r.notes, r.referrer_email
        from referrals r left join users u on u.id = r.handled_by
       where r.org_id = $1
         and ($2::text is null or lower(trim(r.referrer_department)) = lower(trim($2)))
         and ($3::date is null or r.created_at >= $3::date)
         and ($4::date is null or r.created_at < $4::date + 1)
         and ($5::text is null or r.status = $5)
+        and ($6::text is null or $6 = any(r.services))
       order by r.created_at ${status === "new" ? "asc" : "desc"}
       limit 2000`,
-    [orgId, f.dept || null, f.from && DAY.test(f.from) ? f.from : null, f.to && DAY.test(f.to) ? f.to : null, status ?? null],
+    [orgId, f.dept || null, f.from && DAY.test(f.from) ? f.from : null, f.to && DAY.test(f.to) ? f.to : null, status ?? null, f.service || null],
   );
 }
 

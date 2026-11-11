@@ -778,6 +778,28 @@ create table if not exists referrals (
 );
 create index if not exists referrals_org_idx on referrals(org_id, created_at desc);
 create index if not exists referrals_ip_idx on referrals(ip_hash, created_at desc);
+-- Referral appointments, services and limits (Organization → Referral settings).
+-- Hours are per weekday in the org's zone; limits never block a referral, they
+-- only push its appointment to the next opening (lib/referral-slots.ts).
+alter table organizations add column if not exists referral_appointments boolean not null default true;
+alter table organizations add column if not exists referral_hours jsonb;
+alter table organizations add column if not exists referral_slot_minutes int not null default 30 check (referral_slot_minutes between 10 and 240);
+alter table organizations add column if not exists referral_timezone text;
+alter table organizations add column if not exists referral_services text[] not null default '{}';
+alter table organizations add column if not exists referral_max_day int check (referral_max_day > 0);
+alter table organizations add column if not exists referral_max_week int check (referral_max_week > 0);
+alter table organizations add column if not exists referral_max_month int check (referral_max_month > 0);
+alter table referrals add column if not exists appointment_at timestamptz;
+alter table referrals add column if not exists waitlisted boolean not null default false;
+alter table referrals add column if not exists services text[] not null default '{}';
+alter table referrals add column if not exists notes text check (length(notes) <= 2000);
+alter table referrals add column if not exists referrer_email text check (length(referrer_email) <= 254);
+-- One client per slot; a declined referral frees its slot.
+create unique index if not exists referrals_slot_idx on referrals(org_id, appointment_at)
+  where appointment_at is not null and status <> 'declined';
+-- The appointment task each admin gets for a booked referral.
+alter table tasks add column if not exists referral_id uuid references referrals(id) on delete set null;
+create index if not exists tasks_referral_idx on tasks(referral_id) where referral_id is not null;
 alter table referrals enable row level security;
 do $$
 begin

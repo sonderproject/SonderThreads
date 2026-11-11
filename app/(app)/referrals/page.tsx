@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { loadReferralSettings } from "@/lib/referral-settings";
+import { formatSlot } from "@/lib/referral-slots";
 import { notFound } from "next/navigation";
 import { getMembership } from "@/lib/org";
 import { getTimeZone } from "@/lib/timezone";
@@ -34,14 +36,16 @@ function timeOf(v: string, timeZone: string): string {
 export default async function ReferralsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tab?: string; dept?: string; from?: string; to?: string; saved?: string; error?: string; person?: string }>;
+  searchParams: Promise<{ tab?: string; dept?: string; from?: string; to?: string; service?: string; saved?: string; error?: string; person?: string }>;
 }) {
   const m = await getMembership();
   if (!m?.active || m.role !== "admin") notFound();
   const sp = await searchParams;
   const tab = sp.tab === "log" ? "log" : "inbox";
   const tz = await getTimeZone();
-  const filters = { dept: sp.dept || null, from: sp.from || null, to: sp.to || null };
+  const filters = { dept: sp.dept || null, from: sp.from || null, to: sp.to || null, service: sp.service || null };
+  const refSettings = await loadReferralSettings(m.orgId);
+  const apptTz = refSettings.tz;
 
   const [waiting, log, departments] = await Promise.all([
     listReferrals(m.orgId, {}, "new"),
@@ -119,10 +123,37 @@ export default async function ReferralsPage({
                   </div>
                   <p className="text-right text-xs text-text-muted">
                     From <span className="text-text">{r.referrer_name}</span>, {r.referrer_department}
+                    {r.referrer_email && (
+                      <>
+                        <br />
+                        <a href={`mailto:${r.referrer_email}`} className="text-accent hover:underline">
+                          {r.referrer_email}
+                        </a>
+                      </>
+                    )}
                     <br />
                     {shortDate(r.created_at, tz)} · {timeOf(r.created_at, tz)}
                   </p>
                 </div>
+                {(r.appointment_at || r.waitlisted) && (
+                  <p className="text-sm">
+                    {r.appointment_at ? (
+                      <span className="tag tag-n">Appointment {formatSlot(new Date(r.appointment_at), apptTz)}</span>
+                    ) : (
+                      <span className="tag tag-e">Waiting for next opening</span>
+                    )}
+                  </p>
+                )}
+                {r.services && r.services.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5">
+                    {r.services.map((svc) => (
+                      <span key={svc} className="rounded-full border border-border px-2.5 py-0.5 text-xs text-text-muted">
+                        {svc}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                {r.notes && <p className="whitespace-pre-line rounded-xl border border-border-subtle p-3 text-sm text-text">{r.notes}</p>}
 
                 {matches[i]?.length > 0 && (
                   <div className="space-y-2 rounded-xl border border-border-subtle p-3">
@@ -180,6 +211,19 @@ export default async function ReferralsPage({
                 ))}
               </select>
             </label>
+            {refSettings.services.length > 0 && (
+              <label className="space-y-1 text-sm">
+                <span className="text-text-muted">Service</span>
+                <select name="service" defaultValue={filters.service ?? ""} className="input">
+                  <option value="">All</option>
+                  {refSettings.services.map((svc) => (
+                    <option key={svc} value={svc}>
+                      {svc}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
             <label className="space-y-1 text-sm">
               <span className="text-text-muted">From</span>
               <input type="date" name="from" defaultValue={filters.from ?? ""} className="input" />
@@ -231,6 +275,8 @@ export default async function ReferralsPage({
                   <th className="px-3 py-2 font-semibold">Client</th>
                   <th className="px-3 py-2 font-semibold">Referred by</th>
                   <th className="px-3 py-2 font-semibold">Department</th>
+                  <th className="px-3 py-2 font-semibold">Appointment</th>
+                  <th className="px-3 py-2 font-semibold">Services</th>
                   <th className="px-3 py-2 font-semibold">Outcome</th>
                   <th className="px-4 py-2 font-semibold">Handled by</th>
                 </tr>
@@ -238,7 +284,7 @@ export default async function ReferralsPage({
               <tbody className="divide-y divide-border-subtle">
                 {log.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="px-4 py-6 text-center text-text-muted">
+                    <td colSpan={8} className="px-4 py-6 text-center text-text-muted">
                       No referrals{qs ? " match these filters" : " yet"}.
                     </td>
                   </tr>
@@ -260,6 +306,10 @@ export default async function ReferralsPage({
                     </td>
                     <td className="px-3 py-3">{r.referrer_name}</td>
                     <td className="px-3 py-3">{r.referrer_department}</td>
+                    <td className="whitespace-nowrap px-3 py-3 tabular-nums">
+                      {r.appointment_at ? formatSlot(new Date(r.appointment_at), apptTz) : r.waitlisted ? "Next opening" : "—"}
+                    </td>
+                    <td className="px-3 py-3 text-text-muted">{r.services?.join(", ") || "—"}</td>
                     <td className="px-3 py-3">
                       <span className={`tag ${STATUS_TONE[r.status]}`}>{STATUS_LABELS[r.status]}</span>
                       {r.decline_reason && <span className="block text-xs text-text-muted">{r.decline_reason}</span>}

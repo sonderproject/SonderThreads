@@ -10,6 +10,16 @@ import { requireUserId } from "@/lib/current-user";
 import { getMembership } from "@/lib/org";
 import { notify } from "@/lib/notify";
 import { logActivity } from "./activity";
+import { appUrl, escapeHtml, sendEmail } from "@/lib/email";
+import { logEvent } from "@/lib/events";
+import { MAX_SERVICES, loadReferralSettings, openSlots } from "@/lib/referral-settings";
+import { SLOT_CHOICES, cleanHours, formatSlot, minutesOf, type WeeklyHours } from "@/lib/referral-slots";
+import { isValidTimeZone } from "@/lib/tz";
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+/** Multi-line text: trims and caps, keeps line breaks. */
+const cleanText = (v: FormDataEntryValue | null, max: number) =>
+  (v?.toString() ?? "").replace(/\r\n?/g, "\n").replace(/[ \t]+/g, " ").replace(/\n{3,}/g, "\n\n").trim().slice(0, max);
 
 /** Referrals are an admin tool: the inbox, the log and the link. */
 async function requireAdmin(): Promise<{ userId: string; orgId: string }> {
@@ -50,6 +60,8 @@ export async function submitReferral(formData: FormData): Promise<void> {
   const dobRaw = clean(formData.get("dob"), 10);
   const referrer = clean(formData.get("referrer_name"), 120);
   const dept = clean(formData.get("referrer_department"), 120);
+  const referrerEmail = clean(formData.get("referrer_email"), 254).toLowerCase();
+  const notes = cleanText(formData.get("notes"), 2000) || null;
 
   if (!first || !last) back("error=name");
   if (phone.replace(/\D/g, "").length < 7) back("error=phone");
@@ -57,6 +69,30 @@ export async function submitReferral(formData: FormData): Promise<void> {
   const year = dob ? Number(dob.slice(0, 4)) : 0;
   if (!dob || year < 1900 || new Date(dob) > new Date()) back("error=dob");
   if (!referrer || !dept) back("error=referrer");
+  if (!EMAIL_RE.test(referrerEmail)) back("error=email");
+
+  const settings = await loadReferralSettings(org!.id);
+  const offered = new Set(settings.services);
+  const services = formData
+    .getAll("services")
+    .map((v) => clean(v, 80))
+    .filter((v) => offered.has(v))
+    .slice(0, MAX_SERVICES);
+
+  // Appointment: re-checked here against hours, bookings and limits. If every
+  // time is full, the referral still goes through and waits for the next opening.
+  let appointment: Date | null = null;
+  let waitlisted = false;
+  if (settings.appointments) {
+    const plan = await openSlots(org!.id, settings);
+    if (plan.open.length === 0) {
+      waitlisted = true;
+    } else {
+      const picked = Number(formData.get("slot"));
+      appointment = plan.open.find((t) => t.getTime() === picked) ?? null;
+      if (!appointment) back("error=slot");
+    }
+  }
 
   // Rate limits: 10 per device per hour, 300 per organization per day.
   const h = await headers();
@@ -69,30 +105,136 @@ export async function submitReferral(formData: FormData): Promise<void> {
   );
   if ((counts?.ip ?? 0) >= 10 || (counts?.org ?? 0) >= 300) back("error=busy");
 
-  const ref = await queryOne<{ id: string }>(
-    `insert into referrals (org_id, first_name, last_name, phone, dob, referrer_name, referrer_department, ip_hash)
-     values ($1, $2, $3, $4, $5, $6, $7, $8) returning id`,
-    [org!.id, first, last, phone, dob, referrer, dept, ipHash],
-  );
+  let ref: { id: string } | null = null;
+  try {
+    ref = await queryOne<{ id: string }>(
+      `insert into referrals (org_id, first_name, last_name, phone, dob, referrer_name, referrer_department, ip_hash,
+                              referrer_email, services, notes, appointment_at, waitlisted)
+       values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) returning id`,
+      [org!.id, first, last, phone, dob, referrer, dept, ipHash, referrerEmail, services, notes, appointment, waitlisted],
+    );
+  } catch (err) {
+    // Someone booked the same time a moment earlier (one client per slot).
+    if ((err as { code?: string }).code === "23505") back("error=taken");
+    throw err;
+  }
+  const when = appointment ? formatSlot(appointment, settings.tz) : null;
 
   // Every active admin gets it in Notifications (and by push if they turned it on).
   const admins = await query<{ user_id: string }>(
     `select user_id from memberships where org_id = $1 and active and role = 'admin'`,
     [org!.id],
   );
+  // Each admin gets the appointment on their Calendar and task list.
+  if (appointment) {
+    for (const a of admins) {
+      await query(
+        `insert into tasks (user_id, title, notes, due_at, referral_id) values ($1, $2, $3, $4, $5)`,
+        [
+          a.user_id,
+          `Referral appointment: ${first} ${last}`,
+          [`Referred by ${referrer} (${dept}).`, services.length ? `Services: ${services.join(", ")}.` : "", notes ? `Notes: ${notes}` : ""]
+            .filter(Boolean)
+            .join("\n"),
+          appointment,
+          ref!.id,
+        ],
+      ).catch((err) => console.error("[referrals] appointment task failed", err));
+    }
+  }
   await Promise.all(
     admins.map((a) =>
       notify(a.user_id, {
         type: "referral",
         title: `New referral: ${first} ${last.charAt(0)}.`,
-        body: `From ${referrer}, ${dept}`,
+        body: `From ${referrer}, ${dept}. ${when ? `Appointment ${when}.` : waitlisted ? "Fully booked: needs the next opening." : ""}`.trim(),
         href: `/referrals#r-${ref!.id}`,
         channels: ["push"],
       }).catch((err) => console.error("[referrals] notify failed", err)),
     ),
   );
 
-  back("sent=1");
+  await logEvent("referral.received", `Referral to ${org!.name}${when ? ` · ${when}` : waitlisted ? " · waitlisted" : ""}`, {
+    email: referrerEmail,
+    meta: { org: org!.id, referral: ref!.id },
+  });
+  await sendReferralConfirmation(referrerEmail, org!.name, `${first} ${last.charAt(0)}.`, when, waitlisted).catch(async (err) => {
+    console.error("[referrals] confirmation email failed", err);
+    await logEvent("email.failed", `Referral confirmation to ${referrerEmail} failed: ${err instanceof Error ? err.message : err}`, {
+      level: "warn",
+      email: referrerEmail,
+    });
+  });
+
+  back(appointment ? `sent=1&at=${appointment.getTime()}` : waitlisted ? "sent=1&wait=1" : "sent=1");
+}
+
+/** Lets the person who referred know it arrived, and when the appointment is. */
+async function sendReferralConfirmation(to: string, orgName: string, client: string, when: string | null, waitlisted: boolean) {
+  const line = when
+    ? `${client} has an appointment with ${orgName} on ${when}.`
+    : waitlisted
+      ? `${orgName} is fully booked right now, so ${client} will be contacted for the next available appointment.`
+      : `${orgName} will reach out to ${client}.`;
+  await sendEmail({
+    to,
+    subject: when ? `Referral received: ${client}, ${when}` : `Referral received: ${client}`,
+    text: `Thank you for your referral.\n\n${line}\n\nSent with Strynd (${appUrl()}).`,
+    html: `<div style="font-family:Inter,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:#141412">
+      <p style="margin:0 0 12px">Thank you for your referral.</p>
+      <p style="margin:0 0 12px"><strong>${escapeHtml(line)}</strong></p>
+      <p style="margin:16px 0 0;color:#6e5f4d;font-size:13px">Sent with Strynd.</p></div>`,
+  });
+}
+
+/* ------------------------------------------------------------------ */
+/* Admin: referral settings                                            */
+/* ------------------------------------------------------------------ */
+
+/** Organization → Referral settings: appointment hours, slot length, limits and the services list. */
+export async function saveReferralSettings(formData: FormData): Promise<void> {
+  const { orgId } = await requireAdmin();
+  const fail = (e: string) => redirect(`/organization?error=${e}#referral-settings`);
+  const appointments = formData.get("appointments") === "1";
+  const hours: WeeklyHours = {};
+  for (let d = 0; d <= 6; d++) {
+    if (formData.get(`open_${d}`) !== "1") continue;
+    const start = clean(formData.get(`start_${d}`), 5);
+    const end = clean(formData.get(`end_${d}`), 5);
+    const a = minutesOf(start);
+    const b = minutesOf(end);
+    if (a === null || b === null || a >= b) fail("hours");
+    hours[String(d)] = [[start, end]];
+  }
+  if (appointments && Object.keys(cleanHours(hours)).length === 0) fail("no-hours");
+  const slot = Number(formData.get("slot_minutes"));
+  if (!(SLOT_CHOICES as readonly number[]).includes(slot)) fail("slot");
+  const cap = (k: string) => {
+    const raw = clean(formData.get(k), 6);
+    if (!raw) return null;
+    const n = Number(raw);
+    if (!Number.isInteger(n) || n < 1 || n > 10000) fail("limits");
+    return n;
+  };
+  const tz = clean(formData.get("timezone"), 64);
+  if (!isValidTimeZone(tz)) fail("timezone");
+  const services = Array.from(
+    new Set(
+      cleanText(formData.get("services"), 4000)
+        .split("\n")
+        .map((x) => x.replace(/\s+/g, " ").trim().slice(0, 80))
+        .filter(Boolean),
+    ),
+  ).slice(0, MAX_SERVICES);
+  await query(
+    `update organizations set referral_appointments = $1, referral_hours = $2, referral_slot_minutes = $3,
+            referral_max_day = $4, referral_max_week = $5, referral_max_month = $6, referral_services = $7,
+            referral_timezone = $8
+      where id = $9`,
+    [appointments, JSON.stringify(hours), slot, cap("max_day"), cap("max_week"), cap("max_month"), services, tz, orgId],
+  );
+  revalidatePath("/organization");
+  redirect("/organization?saved=referral-settings#referral-settings");
 }
 
 /* ------------------------------------------------------------------ */
@@ -133,11 +275,15 @@ type Referral = {
   referrer_name: string;
   referrer_department: string;
   created_at: string;
+  appointment_at: string | null;
+  services: string[] | null;
+  notes: string | null;
 };
 
 async function loadNew(orgId: string, id: string): Promise<Referral> {
   const r = await queryOne<Referral>(
-    `select id, first_name, last_name, phone, dob, referrer_name, referrer_department, created_at
+    `select id, first_name, last_name, phone, dob, referrer_name, referrer_department, created_at,
+            appointment_at, services, notes
        from referrals where id = $1 and org_id = $2 and status = 'new'`,
     [id, orgId],
   );
@@ -155,7 +301,13 @@ function dobString(v: string | Date | null): string | null {
 /** The note added to the client so everyone sees where they came from. */
 async function addReferralNote(userId: string, personId: string, r: Referral): Promise<void> {
   const when = new Date(r.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-  const content = `Referred by ${r.referrer_name} (${r.referrer_department}) on ${when}.`;
+  const content = [
+    `Referred by ${r.referrer_name} (${r.referrer_department}) on ${when}.`,
+    r.services?.length ? `Services: ${r.services.join(", ")}.` : "",
+    r.notes ? `Notes: ${r.notes}` : "",
+  ]
+    .filter(Boolean)
+    .join("\n");
   const note = await queryOne<{ id: string }>(
     `insert into notes (user_id, content, person_id, category) values ($1, $2, $3, 'referral') returning id`,
     [userId, content, personId],
@@ -181,6 +333,7 @@ export async function acceptReferral(formData: FormData): Promise<void> {
     `update referrals set status = 'accepted', person_id = $1, handled_by = $2, handled_at = now() where id = $3`,
     [person.id, userId, r.id],
   );
+  await query(`update tasks set person_id = $1, updated_at = now() where referral_id = $2 and deleted_at is null`, [person.id, r.id]);
   revalidatePath("/referrals");
   revalidatePath("/people");
   redirect(`/referrals?saved=accepted&person=${person.id}`);
@@ -202,6 +355,7 @@ export async function matchReferral(formData: FormData): Promise<void> {
     `update referrals set status = 'matched', person_id = $1, handled_by = $2, handled_at = now() where id = $3`,
     [person!.id, userId, r.id],
   );
+  await query(`update tasks set person_id = $1, updated_at = now() where referral_id = $2 and deleted_at is null`, [person!.id, r.id]);
   revalidatePath("/referrals");
   redirect(`/referrals?saved=matched&person=${person!.id}`);
 }
@@ -216,6 +370,8 @@ export async function declineReferral(formData: FormData): Promise<void> {
     `update referrals set status = 'declined', decline_reason = $1, handled_by = $2, handled_at = now() where id = $3`,
     [reason, userId, r.id],
   );
+  // The time slot frees up; the appointment comes off admins' calendars.
+  await query(`update tasks set deleted_at = now() where referral_id = $1 and completed = false and deleted_at is null`, [r.id]);
   revalidatePath("/referrals");
   redirect("/referrals?saved=declined");
 }

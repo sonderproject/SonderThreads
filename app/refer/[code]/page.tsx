@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { queryOne } from "@/lib/db/client";
 import { submitReferral } from "@/lib/actions/referrals";
+import { loadReferralSettings, openSlots } from "@/lib/referral-settings";
+import { formatSlot } from "@/lib/referral-slots";
+import { dayKey } from "@/lib/tz";
 
 export const metadata: Metadata = { title: "Refer a client", robots: { index: false, follow: false } };
 export const dynamic = "force-dynamic";
@@ -10,6 +13,9 @@ const ERRORS: Record<string, string> = {
   phone: "Enter a phone number for the client.",
   dob: "Enter the client's date of birth.",
   referrer: "Enter your name and department.",
+  email: "Enter your email address so we can confirm the referral.",
+  slot: "Choose an appointment time from the list.",
+  taken: "Someone just booked that time. Please choose another.",
   busy: "Too many referrals from this device just now. Please try again in a little while.",
 };
 
@@ -19,14 +25,27 @@ export default async function ReferPage({
   searchParams,
 }: {
   params: Promise<{ code: string }>;
-  searchParams: Promise<{ sent?: string; error?: string }>;
+  searchParams: Promise<{ sent?: string; error?: string; at?: string; wait?: string }>;
 }) {
   const { code } = await params;
-  const { sent, error } = await searchParams;
-  const org = await queryOne<{ name: string; has_logo: boolean }>(
-    `select name, logo is not null as has_logo from organizations where referral_code = $1 and referral_enabled`,
+  const { sent, error, at, wait } = await searchParams;
+  const org = await queryOne<{ id: string; name: string; has_logo: boolean }>(
+    `select id, name, logo is not null as has_logo from organizations where referral_code = $1 and referral_enabled`,
     [code],
   );
+  const settings = org ? await loadReferralSettings(org.id) : null;
+  const plan = org && settings?.appointments && !sent ? await openSlots(org.id, settings) : null;
+  // Times grouped by day, in the organization's zone.
+  const days = new Map<string, Date[]>();
+  for (const t of plan?.open.slice(0, 120) ?? []) {
+    const k = dayKey(t, settings!.tz);
+    days.set(k, [...(days.get(k) ?? []), t]);
+  }
+  const zoneName = settings
+    ? new Intl.DateTimeFormat("en-US", { timeZone: settings.tz, timeZoneName: "short" }).formatToParts(new Date()).find((p) => p.type === "timeZoneName")?.value
+    : "";
+  const booked = at && /^\d{10,14}$/.test(at) && settings ? formatSlot(new Date(Number(at)), settings.tz) : null;
+  const fullLabel = { day: "today", week: "this week", month: "this month" } as const;
 
   return (
     <div className="min-h-screen bg-bg px-4 py-10 text-text">
@@ -52,7 +71,18 @@ export default async function ReferPage({
             {sent ? (
               <div className="card space-y-3 p-6 text-center">
                 <p className="font-display text-xl">Thank you, the team has it.</p>
-                <p className="text-sm text-text-muted">{org.name} will reach out to the client.</p>
+                {booked ? (
+                  <p className="text-sm text-text">
+                    Appointment booked for <strong>{booked}</strong> ({zoneName}).
+                  </p>
+                ) : wait ? (
+                  <p className="text-sm text-text-muted">
+                    {org.name} is fully booked right now, so the client will be contacted for the next available appointment.
+                  </p>
+                ) : (
+                  <p className="text-sm text-text-muted">{org.name} will reach out to the client.</p>
+                )}
+                <p className="text-xs text-text-muted">We&apos;ve emailed you a confirmation.</p>
                 <a href={`/refer/${encodeURIComponent(code)}`} className="inline-block text-sm text-accent hover:underline">
                   Refer another client
                 </a>
@@ -91,6 +121,31 @@ export default async function ReferPage({
                   </label>
                 </fieldset>
 
+                {settings && settings.services.length > 0 && (
+                  <fieldset className="space-y-2">
+                    <legend className="section-label mb-2">Services the client is looking for</legend>
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      {settings.services.map((svc) => (
+                        <label key={svc} className="flex items-center gap-2 rounded-xl border border-border-subtle p-2.5 text-sm">
+                          <input type="checkbox" name="services" value={svc} className="h-4 w-4 accent-[var(--accent)]" />
+                          {svc}
+                        </label>
+                      ))}
+                    </div>
+                  </fieldset>
+                )}
+
+                <label className="block space-y-1 text-sm">
+                  <span className="section-label">Notes</span>
+                  <textarea
+                    name="notes"
+                    maxLength={2000}
+                    rows={3}
+                    placeholder="Anything the team should know (best time to call, language, what they need help with)"
+                    className="input"
+                  />
+                </label>
+
                 <fieldset className="space-y-3">
                   <legend className="section-label mb-2">Referred by</legend>
                   <label className="block space-y-1 text-sm">
@@ -101,7 +156,47 @@ export default async function ReferPage({
                     <span className="text-text-muted">Your department</span>
                     <input name="referrer_department" required maxLength={120} autoComplete="organization-title" className="input" />
                   </label>
+                  <label className="block space-y-1 text-sm">
+                    <span className="text-text-muted">Your email</span>
+                    <input name="referrer_email" type="email" required maxLength={254} autoComplete="email" className="input" />
+                    <span className="block text-xs text-text-faint">We&apos;ll send you a confirmation.</span>
+                  </label>
                 </fieldset>
+
+                {plan && (
+                  <fieldset className="space-y-2">
+                    <legend className="section-label mb-2">Appointment</legend>
+                    {plan.open.length === 0 ? (
+                      <p className="rounded-xl border border-border-subtle p-3 text-sm text-text-muted">
+                        {org.name} is fully booked for the next two weeks. Send the referral anyway: the client will be contacted for
+                        the next available appointment.
+                      </p>
+                    ) : (
+                      <>
+                        {plan.pushedByLimits && plan.fullPeriod && (
+                          <p className="flag text-sm">
+                            {org.name} is fully booked {fullLabel[plan.fullPeriod]}, so the client will need to wait for the next
+                            availability. The earliest open times are below.
+                          </p>
+                        )}
+                        <select name="slot" required defaultValue="" className="input">
+                          <option value="" disabled>
+                            Choose a time ({zoneName})
+                          </option>
+                          {[...days.entries()].map(([k, times]) => (
+                            <optgroup key={k} label={formatSlot(times[0], settings!.tz).split(" · ")[0]}>
+                              {times.map((t) => (
+                                <option key={t.getTime()} value={t.getTime()}>
+                                  {formatSlot(t, settings!.tz)}
+                                </option>
+                              ))}
+                            </optgroup>
+                          ))}
+                        </select>
+                      </>
+                    )}
+                  </fieldset>
+                )}
 
                 <p className="text-xs text-text-muted">
                   Please don&apos;t include Social Security numbers, ID numbers or medical details.

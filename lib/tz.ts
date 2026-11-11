@@ -39,7 +39,7 @@ export function timeParts(value: string | Date, tz: string): { hour: number; min
 }
 
 /** Milliseconds `tz` is ahead of UTC at the given instant (e.g. -6h for Chicago in winter). */
-function zoneOffsetMs(at: Date, tz: string): number {
+export function zoneOffsetMs(at: Date, tz: string): number {
   const p = new Intl.DateTimeFormat("en-US", {
     timeZone: tz, hourCycle: "h23", year: "numeric", month: "numeric", day: "numeric", hour: "numeric", minute: "numeric", second: "numeric",
   }).formatToParts(at);
