@@ -198,13 +198,16 @@ export function impactPdf(
       }
       y += 14;
     };
-    const chartTitle = (x: number, yy: number, title: string, sub: string, w: number) => {
+    const chartTitle = (x: number, yy: number, title: string, sub: string, w: number, total?: string) => {
       doc.font("body-bold").fontSize(10).fillColor(C.ink).text(title, x, yy, { width: w, lineBreak: false });
       doc.font("body").fontSize(8).fillColor(C.muted).text(sub, x, yy + 14, { width: w, lineBreak: false });
+      if (total) doc.font("body-bold").fontSize(10).fillColor(C.ink).text(total, x, yy, { width: w, align: "right", lineBreak: false });
       return yy + 32;
     };
+    const sum = (pts: Point[]) => pts.reduce((n, p) => n + p.value, 0);
+    const totalLabel = (n: number, unit: string) => `Total: ${n.toLocaleString("en-US")} ${unit}`;
 
-    /** Columns with 3 gridlines, rounded tops, the peak labeled. Returns the bottom y. */
+    /** Columns with 3 gridlines, rounded tops, and the value on each bar. Returns the bottom y. */
     const columns = (x: number, top: number, w: number, h: number, pts: Point[], color: string) => {
       const max = Math.max(0, ...pts.map((p) => p.value));
       const axis = niceMax(max);
@@ -221,13 +224,19 @@ export function impactPdf(
       const barW = Math.max(1.5, Math.min(16, slot - 2));
       const every = pts.length <= 7 ? 1 : Math.max(1, Math.ceil(pts.length / Math.max(1, Math.floor(plotW / 46))));
       let peakDone = false;
+      const labelAll = slot >= 7; // room for a number over every bar
       pts.forEach((p, i) => {
         const bx = x + left + i * slot + (slot - barW) / 2;
         const by = yOf(p.value);
         if (p.value > 0) doc.path(topRounded(bx, by, barW, top + headroom + plotH - by, 3)).fill(color);
-        if (!peakDone && p.value === max && max > 0) {
-          peakDone = true;
-          doc.font("body-bold").fontSize(7).fillColor(C.ink).text(String(p.value), bx - 12, by - 10, { width: barW + 24, align: "center", lineBreak: false });
+        const isPeak = !peakDone && p.value === max && max > 0;
+        if (isPeak) peakDone = true;
+        if (p.value > 0 && (labelAll || isPeak)) {
+          doc
+            .font(isPeak ? "body-bold" : "body-medium")
+            .fontSize(slot >= 14 ? 7 : slot >= 9 ? 6 : 5.5)
+            .fillColor(C.ink)
+            .text(String(p.value), bx - 12, by - 9, { width: barW + 24, align: "center", lineBreak: false });
         }
         if (i % every === 0) {
           doc.font("body").fontSize(6.5).fillColor(C.muted).text(p.label, x + left + i * slot - 14, top + headroom + plotH + 5, { width: slot + 28, align: "center", lineBreak: false });
@@ -251,8 +260,9 @@ export function impactPdf(
       const axis = niceMax(max);
       const left = 22;
       const plotW = w - left;
-      const plotH = h - 18 - 16;
-      const yOf = (v: number) => t + plotH - (axis ? (v / axis) * plotH : 0);
+      const headroom = 11; // room for the total over each stack
+      const plotH = h - 18 - 16 - headroom;
+      const yOf = (v: number) => t + headroom + plotH - (axis ? (v / axis) * plotH : 0);
       for (const tick of [0, axis / 2, axis]) {
         doc.rect(x + left, yOf(tick), plotW, 0.5).fill(C.lineSubtle);
         doc.font("body").fontSize(6.5).fillColor(C.muted).text(String(tick), x, yOf(tick) - 3, { width: left - 5, align: "right", lineBreak: false });
@@ -260,9 +270,16 @@ export function impactPdf(
       const slot = pts.length ? plotW / pts.length : 0;
       const barW = Math.max(1.5, Math.min(18, slot - 2));
       const every = Math.max(1, Math.ceil(pts.length / Math.max(1, Math.floor(plotW / 46))));
+      const labelAll = slot >= 7;
+      const inside = (n: number, segTop: number, segH: number, bx: number) => {
+        // The part's own number, in white, when the segment is tall and wide enough to hold it.
+        if (n > 0 && segH >= 10 && barW >= 10) {
+          doc.font("body-medium").fontSize(6).fillColor("#ffffff").text(String(n), bx - 6, segTop + segH / 2 - 3, { width: barW + 12, align: "center", lineBreak: false });
+        }
+      };
       pts.forEach((p, i) => {
         const bx = x + left + i * slot + (slot - barW) / 2;
-        const base = t + plotH;
+        const base = t + headroom + plotH;
         const retTop = yOf(p.returning);
         const allTop = yOf(p.first + p.returning);
         if (p.returning > 0) {
@@ -273,6 +290,18 @@ export function impactPdf(
           const gap = p.returning > 0 ? 1.5 : 0;
           const hh = retTop - allTop - gap;
           if (hh > 0) doc.path(topRounded(bx, allTop, barW, hh, 3)).fill(C.orange);
+        }
+        const all = p.first + p.returning;
+        if (all > 0 && (labelAll || all === max)) {
+          if (p.first > 0 && p.returning > 0) {
+            inside(p.returning, retTop, base - retTop, bx);
+            inside(p.first, allTop, retTop - allTop - 1.5, bx);
+          }
+          doc
+            .font(all === max ? "body-bold" : "body-medium")
+            .fontSize(slot >= 14 ? 7 : slot >= 9 ? 6 : 5.5)
+            .fillColor(C.ink)
+            .text(String(all), bx - 12, allTop - 9, { width: barW + 24, align: "center", lineBreak: false });
         }
         if (i % every === 0) {
           doc.font("body").fontSize(6.5).fillColor(C.muted).text(p.label, x + left + i * slot - 14, base + 5, { width: slot + 28, align: "center", lineBreak: false });
@@ -411,12 +440,23 @@ export function impactPdf(
     ensure(330);
     marker("01", "Reach");
     heading("Who came through the door", "People served each period, split by whether it was their first visit.");
-    y = chartTitle(PAGE.m, y, "People served", `Per ${bucketWord}`, CONTENT_W);
+    {
+      const ret = m.reach.reduce((n, p) => n + p.returning, 0);
+      const first = m.reach.reduce((n, p) => n + p.first, 0);
+      y = chartTitle(
+        PAGE.m,
+        y,
+        "People served",
+        `Per ${bucketWord} · ${ret.toLocaleString("en-US")} returning, ${first.toLocaleString("en-US")} first visit`,
+        CONTENT_W,
+        totalLabel(ret + first, "visits"),
+      );
+    }
     y = reachChart(PAGE.m, y, CONTENT_W, 170, m.reach) + 24;
     ensure(170);
     const half = (CONTENT_W - 24) / 2;
-    let yl = chartTitle(PAGE.m, y, "Check-ins", `Per ${bucketWord}`, half);
-    let yr = chartTitle(PAGE.m + half + 24, y, "New clients added", `Per ${bucketWord}`, half);
+    let yl = chartTitle(PAGE.m, y, "Check-ins", `Per ${bucketWord}`, half, totalLabel(sum(m.checkInsOverTime), "check-ins"));
+    let yr = chartTitle(PAGE.m + half + 24, y, "New clients added", `Per ${bucketWord}`, half, totalLabel(sum(m.newPeopleOverTime), "new clients"));
     yl = columns(PAGE.m, yl, half, 120, m.checkInsOverTime, C.blue);
     yr = columns(PAGE.m + half + 24, yr, half, 120, m.newPeopleOverTime, C.blue);
     y = Math.max(yl, yr) + 34;
@@ -427,7 +467,7 @@ export function impactPdf(
     heading("Busiest times", "Check-ins by day of the week and time of day.");
     const heatBottom = heatmap(PAGE.m, y, CONTENT_W * 0.62, m.heatmap);
     const wx = PAGE.m + CONTENT_W * 0.66;
-    const wy = chartTitle(wx, y - 4, "By day of week", "Check-ins", CONTENT_W * 0.34);
+    const wy = chartTitle(wx, y - 4, "By day of week", "Check-ins", CONTENT_W * 0.34, `Total: ${sum(m.byWeekday).toLocaleString("en-US")}`);
     const wBottom = columns(wx, wy, CONTENT_W * 0.34, 110, m.byWeekday, C.blue);
     y = Math.max(heatBottom, wBottom) + 34;
 
