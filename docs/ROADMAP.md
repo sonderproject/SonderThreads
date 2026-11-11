@@ -83,7 +83,7 @@ Deferred by the owner (add later):
 - Admin invite flow: invite staff by email; invited users join that org. Solo sign-up still works.
 - Admins can deactivate users and reassign their clients.
 - Test with two fake orgs: neither sees the other's data, and supervisors can't see anyone's personal records.
-- Back up the database before running migrations. *(Done 2026-11-09: every table, plus Supabase's auth users, copied to the `backup_20261109` schema with row counts verified. The Supabase project is on the free plan, which has no automatic backups.)*
+- Back up the database before running migrations. *(Done 2026-11-09: every table, plus Supabase's auth users, copied to the `backup_20261109` schema with row counts verified. That schema and the older `backup_phase4` were deleted on 2026-11-11 for privacy, since they kept data users had deleted. The Supabase project is on the free plan, which has no automatic backups.)*
 - Data safety: changes only add tables and columns. No existing row is moved or deleted. Existing accounts stay solo until they create or join an org.
 - Database-enforced privacy goes behind one Vercel setting that can switch back to today's behavior instantly.
 - Built (awaiting test): Settings → "Set up an organization" (only link solo users see); /organization for admins (staff, roles, invite links, deactivate with client handover, reactivate, rename); /join/<token> invite links (one-time, 14 days, must match the invited email); /organization/clients to bring existing clients in. Deleting an account hands that member's organization clients to another admin (or asks for one first). Invites are links the admin sends; automated invite emails can come later.
