@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { requireOwner } from "@/lib/owner";
 import { logEvent } from "@/lib/events";
-import { createSupabaseServer } from "@/lib/supabase/server";
+import { createSupabaseAdmin } from "@/lib/supabase/admin";
 import { appUrl } from "@/lib/email";
 
 /** Command center → Needs attention → Resend: sends the sign-up confirmation email again. */
@@ -11,8 +11,8 @@ export async function ownerResendConfirmation(formData: FormData): Promise<void>
   await requireOwner();
   const email = formData.get("email")?.toString().trim().toLowerCase() ?? "";
   if (!email.includes("@")) redirect("/owner");
-  const supabase = await createSupabaseServer();
-  const { error } = await supabase.auth.resend({
+  // Server-side with the admin key, so it works even with sign-up CAPTCHA on.
+  const { error } = await createSupabaseAdmin().auth.resend({
     type: "signup",
     email,
     options: { emailRedirectTo: `${appUrl()}/auth/confirm?next=%2F` },
