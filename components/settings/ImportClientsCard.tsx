@@ -123,11 +123,11 @@ export function ImportClientsCard() {
   const templateHref = `data:text/csv;charset=utf-8,${encodeURIComponent(TEMPLATE_CSV)}`;
 
   return (
-    <div className="card space-y-3 p-4">
+    <div id="import" className="card scroll-mt-20 space-y-3 p-4">
       <div>
-        <h3 className="text-sm font-semibold text-text">Import a client list</h3>
+        <h3 className="text-sm font-semibold text-text">Import your client list</h3>
         <p className="text-xs text-text-muted">
-          Bring in clients from a spreadsheet (CSV or Excel). You&apos;ll match the columns and check a preview before anything
+          Already have clients in a spreadsheet or another system? Export them as CSV or Excel and upload here. Names, dates of birth, phone numbers and emails go straight into client profiles. You&apos;ll match the columns and check a preview before anything
           is saved. Clients already in Strynd are skipped.{" "}
           <a href={templateHref} download="strynd-client-template.csv" className="text-accent hover:underline">
             Download a template

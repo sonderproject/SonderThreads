@@ -325,6 +325,7 @@ async function DataSection({ q }: { q: SettingsQuery }) {
   ];
   return (
     <>
+      <ImportClientsCard />
       <div className="card space-y-3 p-4">
         <div>
           <h3 className="text-sm font-semibold text-text">Export my data</h3>
@@ -343,7 +344,6 @@ async function DataSection({ q }: { q: SettingsQuery }) {
           Or download everything as one backup file (JSON)
         </a>
       </div>
-      <ImportClientsCard />
       <ImportBackupCard />
       <form id="clear" action={clearMyData} className="card scroll-mt-20 space-y-3 border-danger/40 p-4">
         <div>

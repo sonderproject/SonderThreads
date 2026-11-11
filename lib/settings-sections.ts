@@ -7,7 +7,7 @@ export const SETTINGS_SECTIONS: { slug: SettingsSlug; title: string; hint: strin
   { slug: "notifications", title: "Notifications", hint: "When and how Strynd reminds you" },
   { slug: "security", title: "Privacy & security", hint: "Password, two-step sign-in, auto-lock and devices" },
   { slug: "organization", title: "Organization", hint: "Your team, or set one up" },
-  { slug: "data", title: "Your data", hint: "Export, import, clear or delete your account" },
+  { slug: "data", title: "Your data", hint: "Import your client list, export, clear or delete your account" },
   { slug: "about", title: "About & help", hint: "Version, support and legal" },
 ];
 
