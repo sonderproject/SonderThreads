@@ -65,7 +65,7 @@ export async function createInvite(email: string, role: string): Promise<ActionR
     );
     await assertSeatAvailable(orgId, { replacingInvite: Boolean(replacing) });
     const token = randomBytes(32).toString("base64url");
-    await asUser(userId, async (q) => {
+    await transaction(async (q) => {
       // A new invite replaces any earlier unused one for the same address.
       await q(`delete from invitations where org_id = $1 and lower(email) = $2 and accepted_at is null`, [orgId, clean]);
       await q(

@@ -714,11 +714,21 @@ begin
   create policy "member read" on organizations for select to authenticated using (app_private.app_org_member(id));
   drop policy if exists "admin update" on organizations;
   create policy "admin update" on organizations for update to authenticated using (app_private.app_org_admin(id)) with check (app_private.app_org_admin(id));
+  -- Through the API, admins may edit only the organization's profile and logo;
+  -- billing, referral settings and everything else change only on the server.
+  revoke insert, update, delete on table organizations from authenticated;
+  grant update (name, phone, email, website, address, about, logo, logo_type, logo_updated_at, updated_at)
+    on table organizations to authenticated;
 
   drop policy if exists "member read" on memberships;
   create policy "member read" on memberships for select to authenticated using (user_id = (select auth.uid()) or app_private.app_org_member(org_id));
+  -- Admins change a member's role or active status. Adding members happens only
+  -- on the server (invites, which check seats), so there is no insert rule.
   drop policy if exists "admin write" on memberships;
-  create policy "admin write" on memberships for all to authenticated using (app_private.app_org_admin(org_id)) with check (app_private.app_org_admin(org_id));
+  drop policy if exists "admin update" on memberships;
+  create policy "admin update" on memberships for update to authenticated using (app_private.app_org_admin(org_id)) with check (app_private.app_org_admin(org_id));
+  revoke insert, update, delete on table memberships from authenticated;
+  grant update (role, active, deactivated_at) on table memberships to authenticated;
 
   create or replace function app_private.app_owns_person(pid uuid) returns boolean
     language sql stable security definer set search_path = public as
@@ -742,7 +752,18 @@ begin
   create policy "admin read" on audit_log for select to authenticated using (app_private.app_org_admin(org_id));
 
   drop policy if exists "admin" on invitations;
-  create policy "admin" on invitations for all to authenticated using (app_private.app_org_admin(org_id)) with check (app_private.app_org_admin(org_id));
+  drop policy if exists "admin read" on invitations;
+  drop policy if exists "admin refresh" on invitations;
+  drop policy if exists "admin cancel" on invitations;
+  create policy "admin read" on invitations for select to authenticated using (app_private.app_org_admin(org_id));
+  create policy "admin refresh" on invitations for update to authenticated using (app_private.app_org_admin(org_id)) with check (app_private.app_org_admin(org_id));
+  create policy "admin cancel" on invitations for delete to authenticated using (app_private.app_org_admin(org_id));
+  revoke insert, update on table invitations from authenticated;
+  grant update (token_hash, expires_at) on table invitations to authenticated;
+  -- Defense in depth: signed-out visitors get nothing through the API, and
+  -- nobody can empty or alter table structure through it.
+  revoke all on all tables in schema public from anon;
+  revoke truncate, trigger, references on all tables in schema public from authenticated;
   -- The access-rule helpers are only for the rules themselves: not callable by signed-out visitors.
   revoke execute on function app_private.app_org_member(uuid), app_private.app_org_viewer(uuid), app_private.app_org_admin(uuid), app_private.app_shares_org(uuid),
     app_private.app_owns_person(uuid), app_private.app_person_in_org(uuid, uuid) from public, anon;

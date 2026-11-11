@@ -158,7 +158,15 @@ export async function submitReferral(formData: FormData): Promise<void> {
     email: referrerEmail,
     meta: { org: org!.id, referral: ref!.id },
   });
-  await sendReferralConfirmation(referrerEmail, org!.name, `${first} ${last.charAt(0)}.`, when, waitlisted).catch(async (err) => {
+  // Anyone can type any address here, so cap confirmations per address: the form
+  // can't be used to flood a stranger's inbox (or hurt our sender reputation).
+  const sentToday = await queryOne<{ n: number }>(
+    `select count(*)::int as n from referrals where lower(referrer_email) = $1 and created_at > now() - interval '1 day'`,
+    [referrerEmail],
+  );
+  const mayEmail = (sentToday?.n ?? 0) <= 5;
+  if (!mayEmail) await logEvent("referral.email_capped", `Confirmation not sent: ${referrerEmail} got 5 today`, { level: "warn", email: referrerEmail });
+  if (mayEmail) await sendReferralConfirmation(referrerEmail, org!.name, `${first} ${last.charAt(0)}.`, when, waitlisted).catch(async (err) => {
     console.error("[referrals] confirmation email failed", err);
     await logEvent("email.failed", `Referral confirmation to ${referrerEmail} failed: ${err instanceof Error ? err.message : err}`, {
       level: "warn",
