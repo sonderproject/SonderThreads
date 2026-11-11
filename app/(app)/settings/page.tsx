@@ -18,6 +18,7 @@ import { getUserSettings } from "@/lib/settings";
 import { IDLE_TIMEOUT_OPTIONS, REMINDER_LEAD_OPTIONS, SUPPORT_EMAIL, durationLabel, hourLabel } from "@/lib/settings-options";
 import packageJson from "@/package.json";
 import { formatPhone } from "@/lib/notify/phone";
+import { ManageSubscriptionCard } from "@/components/billing/ManageSubscriptionCard";
 
 /** Settings: account, notifications, security and data, in one place (was Account + Settings). */
 const EMAIL_ERRORS: Record<string, string> = {
@@ -57,9 +58,9 @@ const buttonClass = "rounded-full border border-border px-3 py-1.5 text-sm font-
 export default async function SettingsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; saved?: string; email?: string }>;
+  searchParams: Promise<{ error?: string; saved?: string; email?: string; billing?: string }>;
 }) {
-  const { error, saved, email } = await searchParams;
+  const { error, saved, email, billing } = await searchParams;
   const userId = await requireUserId();
   const [user, notify, prefs, membership] = await Promise.all([
     queryOne<{ email: string; name: string | null; phone: string | null; mfa_enabled: boolean }>(
@@ -78,6 +79,11 @@ export default async function SettingsPage({
         <h1 className="page-title">Settings</h1>
         <p className="text-sm text-text-muted">{user?.email}</p>
       </div>
+
+      <section id="billing" className="scroll-mt-20 space-y-3">
+        <h2 className="section-label">Subscription</h2>
+        <ManageSubscriptionCard message={billing} />
+      </section>
 
       <section id="account" className="scroll-mt-20 space-y-3">
         <h2 className="section-label">Account</h2>
@@ -151,14 +157,6 @@ export default async function SettingsPage({
         </div>
 
         <DeleteAccountCard error={error === "confirm" || error === "delete-login" || error === "last-admin" ? error : undefined} />
-      </section>
-
-      <section id="billing" className="scroll-mt-20 space-y-3">
-        <h2 className="section-label">Billing</h2>
-        <Link href="/billing" className="card flex items-center justify-between gap-3 p-4 hover:bg-bg-hover">
-          <span className="text-sm text-text">Plan, free trial and payment</span>
-          <span className="text-sm text-accent">Open →</span>
-        </Link>
       </section>
 
       {membership && (

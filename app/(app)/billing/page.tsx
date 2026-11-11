@@ -1,5 +1,8 @@
 import Link from "next/link";
-import { billingEnabled, getAccess, monthlyCost } from "@/lib/billing";
+import { billingEnabled, getAccess, getFreshAccess, monthlyCost } from "@/lib/billing";
+import { requireUserId } from "@/lib/current-user";
+import { queryOne } from "@/lib/db/client";
+import { SubscribedWelcome } from "@/components/billing/SubscribedWelcome";
 import {
   confirmCheckout,
   openBillingPortal,
@@ -50,13 +53,21 @@ export default async function BillingPage({
     await confirmCheckout(checkout).catch((err) =>
       console.error("[billing] confirm failed", err),
     );
-  const a = await getAccess();
+  // After Checkout, re-read: the cached access predates the subscription saved just above.
+  const a = checkout ? await getFreshAccess() : await getAccess();
   const subscribed =
     Boolean(a.row?.stripe_subscription_id) && a.status !== "canceled";
   const isComp = a.plan === "comp";
   const seatCost = monthlyCost("seat", a.seats);
   const teamCost = monthlyCost("team", a.seats);
   const teamCheaper = teamCost < seatCost;
+  const welcome =
+    Boolean(checkout) && subscribed && a.row?.welcomed_subscription_id !== a.row?.stripe_subscription_id;
+  const me = welcome
+    ? await queryOne<{ name: string | null }>(`select name from users where id = $1`, [await requireUserId()])
+    : null;
+  const price =
+    a.plan === "individual" ? "$9" : a.plan === "seat" ? `$${seatCost}` : a.plan === "team" ? `$${teamCost}` : null;
 
   return (
     <div className="max-w-xl space-y-6">
@@ -70,7 +81,15 @@ export default async function BillingPage({
       {error && ERRORS[error] && (
         <p className="flag text-sm">{ERRORS[error]}</p>
       )}
-      {checkout && subscribed && (
+      {welcome && (
+        <SubscribedWelcome
+          firstName={me?.name?.trim().split(/\s+/)[0] || null}
+          org={a.scope === "org" ? a.orgName : null}
+          trialEnds={a.status === "trialing" ? fmt(a.row?.current_period_end ?? null) || null : null}
+          price={price}
+        />
+      )}
+      {checkout && subscribed && !welcome && (
         <p className="text-sm text-accent">
           You&apos;re subscribed. Thank you!
         </p>

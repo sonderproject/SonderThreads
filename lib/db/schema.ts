@@ -806,6 +806,11 @@ create table if not exists billing_accounts (
   check ((user_id is null) <> (org_id is null))
 );
 alter table billing_accounts enable row level security;
+-- Cancel flow and post-checkout welcome: whether renewal is off, the one-time
+-- "stay for $5" offer, and which subscription has already seen the welcome screen.
+alter table billing_accounts add column if not exists cancel_at_period_end boolean not null default false;
+alter table billing_accounts add column if not exists save_offer_used_at timestamptz;
+alter table billing_accounts add column if not exists welcomed_subscription_id text;
 
 -- One free trial per card: Stripe card fingerprints that already started an individual trial.
 create table if not exists trial_cards (

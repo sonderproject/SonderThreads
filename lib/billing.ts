@@ -64,6 +64,9 @@ export type BillingRow = {
   seats: number | null;
   current_period_end: string | null;
   past_due_since: string | null;
+  cancel_at_period_end: boolean;
+  save_offer_used_at: string | null;
+  welcomed_subscription_id: string | null;
 };
 
 export type Access = {
@@ -145,6 +148,13 @@ export const getAccess = cache(async (): Promise<Access> => {
   return access;
 });
 
+/** Like getAccess, but read fresh, e.g. right after Checkout saved a new subscription in this same request. */
+export async function getFreshAccess(): Promise<Access> {
+  const access = await computeAccess(await requireUserId());
+  if (!billingEnabled() && (access.state === "readonly" || access.state === "setup")) return { ...access, state: "ok" };
+  return access;
+}
+
 export class ReadOnlyError extends Error {}
 
 /** Every add/edit/delete calls this first. View-only accounts get a clear message instead. */
@@ -197,8 +207,8 @@ export async function saveSubscription(sub: Stripe.Subscription): Promise<void> 
   const col = kind === "user" ? "user_id" : "org_id";
   const pastDue = status === "past_due" || status === "unpaid";
   await query(
-    `insert into billing_accounts (${col}, plan, status, stripe_customer_id, stripe_subscription_id, seats, current_period_end, past_due_since)
-     values ($1, $2, $3, $4, $5, $6, $7, case when $8 then now() end)
+    `insert into billing_accounts (${col}, plan, status, stripe_customer_id, stripe_subscription_id, seats, current_period_end, past_due_since, cancel_at_period_end)
+     values ($1, $2, $3, $4, $5, $6, $7, case when $8 then now() end, $9)
      on conflict (${col}) do update set
        plan = case when billing_accounts.plan = 'comp' then 'comp' else excluded.plan end,
        status = case when billing_accounts.plan = 'comp' then 'comp' else excluded.status end,
@@ -207,8 +217,9 @@ export async function saveSubscription(sub: Stripe.Subscription): Promise<void> 
        seats = excluded.seats,
        current_period_end = excluded.current_period_end,
        past_due_since = case when $8 then coalesce(billing_accounts.past_due_since, now()) end,
+       cancel_at_period_end = excluded.cancel_at_period_end,
        updated_at = now()`,
-    [ownerId, plan, status, customer, sub.id, seats, periodEnd, pastDue],
+    [ownerId, plan, status, customer, sub.id, seats, periodEnd, pastDue, Boolean(sub.cancel_at_period_end)],
   );
 }
 
@@ -253,4 +264,41 @@ export async function enforceOneTrialPerCard(sub: Stripe.Subscription): Promise<
     const ended = await s.subscriptions.update(sub.id, { trial_end: "now", proration_behavior: "none" });
     await saveSubscription(ended);
   }
+}
+
+/**
+ * The cancel-flow offer: Individual drops from $9 to $5 a month for 2 months,
+ * then goes back to $9. Offered once per account, ever. The coupon lives in
+ * Stripe and is created the first time anyone accepts it.
+ */
+export const SAVE_OFFER = { couponId: "threads_save_5_for_2", monthly: 5, months: 2 } as const;
+
+export async function saveOfferCoupon(): Promise<string> {
+  const s = stripe();
+  if (!s) throw new Error("Billing isn't set up yet.");
+  try {
+    return (await s.coupons.retrieve(SAVE_OFFER.couponId)).id;
+  } catch {
+    const c = await s.coupons.create({
+      id: SAVE_OFFER.couponId,
+      name: "Stay for $5/month",
+      amount_off: 400,
+      currency: "usd",
+      duration: "repeating",
+      duration_in_months: SAVE_OFFER.months,
+    });
+    return c.id;
+  }
+}
+
+/** Can this account still get the "$5 for 2 months" offer when it cancels? */
+export function saveOfferEligible(a: Access): boolean {
+  const r = a.row;
+  return (
+    a.scope === "individual" &&
+    r?.plan === "individual" &&
+    Boolean(r.stripe_subscription_id) &&
+    (r.status === "active" || r.status === "trialing") &&
+    !r.save_offer_used_at
+  );
 }

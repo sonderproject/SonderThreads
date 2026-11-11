@@ -1,7 +1,8 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { queryOne } from "@/lib/db/client";
+import { revalidatePath } from "next/cache";
+import { query, queryOne } from "@/lib/db/client";
 import { requireUserId } from "@/lib/current-user";
 import { appUrl } from "@/lib/email";
 import {
@@ -11,6 +12,8 @@ import {
   enforceOneTrialPerCard,
   getAccess,
   priceId,
+  saveOfferCoupon,
+  saveOfferEligible,
   saveSubscription,
   stripe,
   type PaidPlan,
@@ -84,4 +87,67 @@ export async function openBillingPortal(): Promise<void> {
     return_url: `${appUrl()}/billing`,
   });
   redirect(portal.url);
+}
+
+/** The subscription this person may manage, or back to Settings. */
+async function manageable() {
+  await requireUserId();
+  const s = stripe();
+  const access = await getAccess();
+  const subId = access.row?.stripe_subscription_id;
+  if (!s || !access.canManage || !subId || access.plan === "comp") redirect("/settings#billing");
+  return { s: s!, access, subId: subId! };
+}
+
+/** Settings → Subscription → Cancel: renewal turns off; access lasts until the paid period ends. */
+export async function cancelSubscription(): Promise<void> {
+  const { s, subId } = await manageable();
+  await saveSubscription(await s.subscriptions.update(subId, { cancel_at_period_end: true }));
+  revalidatePath("/", "layout");
+  redirect("/settings?billing=canceled#billing");
+}
+
+/** Undo a cancel before the period ends. */
+export async function resumeSubscription(): Promise<void> {
+  const { s, subId } = await manageable();
+  await saveSubscription(await s.subscriptions.update(subId, { cancel_at_period_end: false }));
+  revalidatePath("/", "layout");
+  redirect("/settings?billing=resumed#billing");
+}
+
+/** The cancel-flow offer: $5/month for 2 months instead of canceling. Once per account. */
+export async function acceptSaveOffer(): Promise<void> {
+  const { s, access, subId } = await manageable();
+  if (!saveOfferEligible(access)) redirect("/settings#billing");
+  // Claim the offer first so a double-click can't apply it twice.
+  const claimed = await queryOne<{ id: string }>(
+    `update billing_accounts set save_offer_used_at = now(), updated_at = now()
+      where id = $1 and save_offer_used_at is null returning id`,
+    [access.row!.id],
+  );
+  if (!claimed) redirect("/settings#billing");
+  try {
+    const coupon = await saveOfferCoupon();
+    const sub = await s.subscriptions.update(subId, { discounts: [{ coupon }], cancel_at_period_end: false });
+    await saveSubscription(sub);
+  } catch (err) {
+    console.error("[billing] save offer failed", err);
+    await query(`update billing_accounts set save_offer_used_at = null where id = $1`, [access.row!.id]);
+    redirect("/settings?billing=offer-failed#billing");
+  }
+  revalidatePath("/", "layout");
+  redirect("/settings?billing=saved#billing");
+}
+
+/** Closes the post-checkout welcome screen for good (for this subscription). */
+export async function finishWelcome(): Promise<void> {
+  const access = await getAccess();
+  const subId = access.row?.stripe_subscription_id;
+  if (access.row && subId) {
+    await query(`update billing_accounts set welcomed_subscription_id = $1, updated_at = now() where id = $2`, [
+      subId,
+      access.row.id,
+    ]);
+  }
+  redirect("/");
 }
