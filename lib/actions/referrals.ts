@@ -84,7 +84,8 @@ export async function submitReferral(formData: FormData): Promise<void> {
   let appointment: Date | null = null;
   let waitlisted = false;
   if (settings.appointments) {
-    const plan = await openSlots(org!.id, settings);
+    // A shorter cutoff than the form shows, so a time picked a few minutes ago still counts.
+    const plan = await openSlots(org!.id, settings, new Date(), 15);
     if (plan.open.length === 0) {
       waitlisted = true;
     } else {

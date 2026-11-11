@@ -54,8 +54,8 @@ export async function loadReferralSettings(orgId: string): Promise<ReferralSetti
 }
 
 /** Bookable appointment times right now, counting appointments already booked (declined ones free their slot). */
-export async function openSlots(orgId: string, settings: ReferralSettings, now = new Date()): Promise<SlotPlan> {
-  const slots = generateSlots({ hours: settings.hours, slotMinutes: settings.slotMinutes, tz: settings.tz, now });
+export async function openSlots(orgId: string, settings: ReferralSettings, now = new Date(), leadMinutes?: number): Promise<SlotPlan> {
+  const slots = generateSlots({ hours: settings.hours, slotMinutes: settings.slotMinutes, tz: settings.tz, now, leadMinutes });
   // Wide enough to cover this month's and next month's counts.
   const booked = await query<{ appointment_at: Date }>(
     `select appointment_at from referrals

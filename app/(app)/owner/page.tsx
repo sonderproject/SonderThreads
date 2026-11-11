@@ -40,6 +40,10 @@ const KIND_LABELS: Record<string, string> = {
   "billing.ended": "Subscription ended",
   "owner.resent_confirmation": "Resent confirmation",
   "owner.resend_failed": "Resend failed",
+  "referral.received": "Referral",
+  "referral.email_capped": "Referral email capped",
+  "billing.seats_changed": "Seats changed",
+  "email.failed": "Email failed",
 };
 
 function when(d: string | null): string {

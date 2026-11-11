@@ -103,13 +103,45 @@ async function migrateIfNeeded(): Promise<void> {
   } catch {
     // app_meta doesn't exist yet (new or pre-hash database) — fall through and migrate.
   }
-  await db.query(SCHEMA_SQL);
-  await db.query(
-    `create table if not exists app_meta (key text primary key, value text not null);
-     insert into app_meta (key, value) values ('schema_hash', '${SCHEMA_HASH}')
-     on conflict (key) do update set value = excluded.value`,
-  );
+  // Right after a deploy several instances start at once. Only one may run the
+  // DDL at a time (they deadlocked each other before): the rest wait on this
+  // lock, then see the new hash and skip. A transaction-level lock releases
+  // itself at commit/rollback, so it can't get stuck behind a connection pooler.
+  const client = await db.connect();
+  try {
+    await client.query("begin");
+    await client.query(`select pg_advisory_xact_lock(${MIGRATION_LOCK})`);
+    const current = await client
+      .query<{ value: string }>(`select value from app_meta where key = 'schema_hash'`)
+      .then((r) => r.rows[0]?.value)
+      .catch(async () => {
+        // app_meta doesn't exist yet: the failed read aborted the transaction, so start over under the lock.
+        await client.query("rollback");
+        await client.query("begin");
+        await client.query(`select pg_advisory_xact_lock(${MIGRATION_LOCK})`);
+        return undefined;
+      });
+    if (current === SCHEMA_HASH) {
+      await client.query("commit");
+      return;
+    }
+    await client.query(SCHEMA_SQL);
+    await client.query(
+      `create table if not exists app_meta (key text primary key, value text not null);
+       insert into app_meta (key, value) values ('schema_hash', '${SCHEMA_HASH}')
+       on conflict (key) do update set value = excluded.value`,
+    );
+    await client.query("commit");
+  } catch (err) {
+    await client.query("rollback").catch(() => undefined);
+    throw err;
+  } finally {
+    client.release();
+  }
 }
+
+/** Arbitrary constant key for the schema-migration advisory lock. */
+const MIGRATION_LOCK = 7_314_002_611;
 
 function ensureSchema(): Promise<void> {
   if (!schemaReady) {

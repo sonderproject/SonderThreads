@@ -10,7 +10,8 @@ const TYPES: EmailOtpType[] = ["signup", "email", "recovery", "invite", "magicli
  * Where links in Supabase's auth emails land (confirm email, reset
  * password). The email templates must point here with the token hash:
  *   {{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email&next=/
- * (see docs/auth-setup.md). Verifying the token signs the person in.
+ * (see docs/auth-setup.md). GET shows a Confirm button (/auth/verify); the
+ * button POSTs back here, and verifying the token signs the person in.
  */
 export async function GET(request: NextRequest) {
   const params = request.nextUrl.searchParams;
@@ -33,19 +34,35 @@ export async function GET(request: NextRequest) {
     await linkFailed("code", error.code ?? error.message);
   }
 
+  // Opening the link only shows a "Confirm" button (/auth/verify). Email security
+  // scanners (common at agencies) open every link in a message; if opening it
+  // used the one-time token, the person's own click would then fail.
   if (tokenHash && type && TYPES.includes(type)) {
-    const supabase = await createSupabaseServer();
-    const { error } = await supabase.auth.verifyOtp({ type, token_hash: tokenHash });
-    if (!error) {
-      // A password-reset link signs in only so the new password can be set.
-      const to = type === "recovery" ? "/reset-password" : next;
-      return NextResponse.redirect(new URL(to, request.url));
-    }
-    console.error("[auth] email link failed", error.code ?? error.message);
-    await linkFailed(type, error.code ?? error.message);
+    const to = new URL("/auth/verify", request.url);
+    to.search = new URLSearchParams({ token_hash: tokenHash, type, next }).toString();
+    return NextResponse.redirect(to);
   }
   if (!tokenHash && !code) await linkFailed(type ?? "unknown", "link had no token");
   return NextResponse.redirect(new URL(type === "recovery" ? "/reset-password?error=invalid" : "/login?error=link", request.url));
+}
+
+/** The "Confirm" button on /auth/verify: only a person pressing it uses the one-time token. */
+export async function POST(request: NextRequest) {
+  const form = await request.formData();
+  const tokenHash = form.get("token_hash")?.toString() ?? "";
+  const type = (form.get("type")?.toString() ?? "") as EmailOtpType;
+  const next = safeNextPath(form.get("next")?.toString());
+  const back = (path: string) => NextResponse.redirect(new URL(path, request.url), 303);
+  if (!tokenHash || !TYPES.includes(type)) return back(type === "recovery" ? "/reset-password?error=invalid" : "/login?error=link");
+  const supabase = await createSupabaseServer();
+  const { error } = await supabase.auth.verifyOtp({ type, token_hash: tokenHash });
+  if (!error) {
+    // A password-reset link signs in only so the new password can be set.
+    return back(type === "recovery" ? "/reset-password" : next);
+  }
+  console.error("[auth] email link failed", error.code ?? error.message);
+  await linkFailed(type, error.code ?? error.message);
+  return back(type === "recovery" ? "/reset-password?error=invalid" : "/login?error=link");
 }
 
 /** Someone clicked an email link that didn't work: record it and tell the owner. */
