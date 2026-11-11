@@ -316,22 +316,22 @@ export function ImpactDashboard({ orgName }: { orgName: string | null }) {
 }
 
 function StatTile({ label, hint, value, prev, periodName }: { label: string; hint?: string; value: number; prev: number; periodName: string }) {
-  const change = prev === 0 ? (value > 0 ? null : 0) : Math.round(((value - prev) / prev) * 100);
+  const change = prev === 0 ? 0 : Math.round(((value - prev) / prev) * 100);
   return (
     <div className="card px-3 py-2.5" title={hint}>
       <p className="text-xs text-text-muted">{label}</p>
       <p className="mt-0.5 text-2xl font-semibold leading-tight tabular-nums text-text">{value.toLocaleString()}</p>
       <p className="mt-0.5 text-[11px] text-text-muted" title={`vs ${periodName} (${prev.toLocaleString()})`}>
-        {change === null ? (
-          <span className="font-semibold text-accent">▲ new</span>
+        {prev === 0 ? (
+          <span>no earlier data</span>
         ) : change === 0 ? (
           <span>no change</span>
         ) : (
           <span className={`font-semibold ${change > 0 ? "text-accent" : "text-urgent"}`}>
             {change > 0 ? "▲" : "▼"} {Math.abs(change)}%
           </span>
-        )}{" "}
-        <span className="hidden sm:inline">vs before</span>
+        )}
+        {prev !== 0 && <span className="hidden sm:inline"> vs before</span>}
       </p>
     </div>
   );

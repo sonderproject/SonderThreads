@@ -117,7 +117,11 @@ async function compute(
   const range = [scopeId, tz, from, to];
   const inRange = `${col} = $1 and deleted_at is null`;
 
-  const [kpis, prev, checkInRows, newPeopleRows, reasonRows, weekdayRows, visitorRows, demoRows, reachRows, heatRows, followRows] = await Promise.all([
+  const [sinceRows, kpis, prev, checkInRows, newPeopleRows, reasonRows, weekdayRows, visitorRows, demoRows, reachRows, heatRows, followRows] = await Promise.all([
+    run<{ d: string | null }>(
+      `select to_char(min(c.checked_in_at at time zone $2), 'YYYY-MM-DD') as d from check_ins c where c.${col} = $1 and c.deleted_at is null`,
+      [scopeId, tz],
+    ),
     kpisFor(run, col, scopeId, tz, from, to),
     kpisFor(run, col, scopeId, tz, prevFrom, prevTo),
     run<{ k: string; n: number }>(
@@ -170,7 +174,8 @@ async function compute(
                          and (c.checked_in_at at time zone $2)::date between $3::date and $4::date)`,
       range,
     ),
-    // Each person served per bucket, and whether that bucket holds their first check-in ever.
+    // Each person served per bucket, and whether it was a first visit: their first check-in ever, by someone
+    // added during this range (clients added earlier aren't new, even if their first recorded check-in is here).
     run<{ k: string; first: number; returning: number }>(
       `with firsts as (
          select c.person_id, min(c.checked_in_at) as f from check_ins c
@@ -178,7 +183,8 @@ async function compute(
        select k, count(*) filter (where is_first)::int as first, count(*) filter (where not is_first)::int as returning
          from (
            select distinct to_char(date_trunc($5, c.checked_in_at at time zone $2), 'YYYY-MM-DD') as k, c.person_id,
-                  date_trunc($5, f.f at time zone $2) = date_trunc($5, c.checked_in_at at time zone $2) as is_first
+                  date_trunc($5, f.f at time zone $2) = date_trunc($5, c.checked_in_at at time zone $2)
+                    and (p.created_at at time zone $2)::date >= $3::date as is_first
              from check_ins c join people p on p.id = c.person_id and p.deleted_at is null
              join firsts f on f.person_id = c.person_id
             where c.${col} = $1 and c.deleted_at is null
@@ -262,6 +268,7 @@ async function compute(
     reach: reach(reachRows),
     heatmap,
     followThrough: followRows[0] ?? { due: 0, onTime: 0, late: 0, open: 0 },
+    trackingSince: sinceRows[0]?.d ?? null,
   };
 }
 

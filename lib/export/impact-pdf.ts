@@ -58,7 +58,7 @@ function fmtDay(day: string): string {
 }
 
 function change(cur: number, prev: number): string {
-  if (prev === 0) return cur > 0 ? "New this period" : "No change";
+  if (prev === 0) return "No earlier data";
   const pct = Math.round(((cur - prev) / prev) * 100);
   if (pct === 0) return "No change";
   return `${pct > 0 ? "+" : "−"}${Math.abs(pct)}% vs before`;

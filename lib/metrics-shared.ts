@@ -48,6 +48,8 @@ export type Metrics = {
   /** Check-ins by weekday (rows, Mon..Sun) and 2-hour block of the day (12 columns, from midnight). */
   heatmap: number[][];
   followThrough: FollowThrough;
+  /** Date of the first check-in ever recorded (YYYY-MM-DD), or null if none. */
+  trackingSince: string | null;
 };
 
 export const HEATMAP_BLOCKS = ["12a", "2a", "4a", "6a", "8a", "10a", "12p", "2p", "4p", "6p", "8p", "10p"];
@@ -55,12 +57,14 @@ export const WEEKDAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Fri
 
 const pct = (part: number, whole: number) => (whole > 0 ? Math.round((part / whole) * 100) : 0);
 
+const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+const shortDay = (day: string) => `${MONTHS[Number(day.slice(5, 7)) - 1].slice(0, 3)} ${Number(day.slice(8, 10))}`;
+
+/** The period in words: "in November" for a whole calendar month, otherwise the exact dates. */
 function periodWord(m: Metrics): string {
-  const n = daysBetween(m.from, m.to);
-  if (n === 7) return "this week";
-  if (n >= 28 && n <= 31) return "this month";
-  if (n >= 365) return "this year";
-  return `in these ${n} days`;
+  if (m.from.endsWith("-01") && m.from.slice(0, 7) === m.to.slice(0, 7) && addDays(m.to, 1).endsWith("-01"))
+    return `in ${MONTHS[Number(m.from.slice(5, 7)) - 1]}`;
+  return `from ${shortDay(m.from)} to ${shortDay(m.to)}`;
 }
 
 function changePhrase(cur: number, prev: number): string {
@@ -87,7 +91,9 @@ export function buildStory(m: Metrics, opts: { followUps?: boolean } = {}): stri
       `${who} served ${k.peopleServed.toLocaleString()} ${k.peopleServed === 1 ? "person" : "people"} across ${k.checkIns.toLocaleString()} check-ins ${periodWord(m)}${changePhrase(k.peopleServed, m.prev.peopleServed)}.`,
     );
     const firsts = m.reach.reduce((s, r) => s + r.first, 0);
-    if (firsts > 0) out.push(`${firsts.toLocaleString()} of them came in for the first time.`);
+    if (firsts > 0) out.push(`${firsts.toLocaleString()} of them ${firsts === 1 ? "was a new client" : "were new clients"} on their first visit.`);
+    if (m.trackingSince && m.trackingSince > m.from)
+      out.push(`Strynd started recording on ${shortDay(m.trackingSince)}, so visits before then aren't counted.`);
     const visits = k.checkIns / k.peopleServed;
     if (visits >= 1.5) out.push(`On average, each person visited ${visits.toFixed(1)} times.`);
   }
