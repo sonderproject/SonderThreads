@@ -3,6 +3,7 @@ import { TwoFactorCard } from "@/components/settings/TwoFactorCard";
 import { DeleteAccountCard } from "@/components/settings/DeleteAccountCard";
 import { ChangePasswordCard } from "@/components/settings/ChangePasswordCard";
 import { ImportBackupCard } from "@/components/settings/ImportBackupCard";
+import { ImportClientsCard } from "@/components/settings/ImportClientsCard";
 import { PushToggle } from "@/components/notifications/PushToggle";
 import { TimeZoneInput } from "@/components/notifications/TimeZoneInput";
 import { PendingInvites } from "@/components/org/PendingInvites";
@@ -342,6 +343,7 @@ async function DataSection({ q }: { q: SettingsQuery }) {
           Or download everything as one backup file (JSON)
         </a>
       </div>
+      <ImportClientsCard />
       <ImportBackupCard />
       <form id="clear" action={clearMyData} className="card scroll-mt-20 space-y-3 border-danger/40 p-4">
         <div>

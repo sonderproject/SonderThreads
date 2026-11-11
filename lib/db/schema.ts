@@ -451,6 +451,12 @@ create index if not exists check_ins_org_idx on check_ins(org_id) where org_id i
 -- "Keep private": a person the owner marked personal never joins the organization.
 alter table people add column if not exists personal boolean not null default false;
 
+-- Client list import (Settings → Data): which upload created the row (for undo),
+-- and when they actually became a client, so imported clients aren't counted as new.
+alter table people add column if not exists import_batch uuid;
+alter table people add column if not exists client_since date;
+create index if not exists people_import_batch_idx on people(import_batch) where import_batch is not null;
+
 -- A new client created by an active member belongs to their organization (unless kept private).
 create or replace function people_set_org() returns trigger language plpgsql set search_path = public as $$
 begin

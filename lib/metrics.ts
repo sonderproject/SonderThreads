@@ -175,7 +175,7 @@ async function compute(
       range,
     ),
     // Each person served per bucket, and whether it was a first visit: their first check-in ever, by someone
-    // added during this range (clients added earlier aren't new, even if their first recorded check-in is here).
+    // added during this range (clients added earlier, or with an earlier "client since" date, aren't new).
     run<{ k: string; first: number; returning: number }>(
       `with firsts as (
          select c.person_id, min(c.checked_in_at) as f from check_ins c
@@ -184,7 +184,7 @@ async function compute(
          from (
            select distinct to_char(date_trunc($5, c.checked_in_at at time zone $2), 'YYYY-MM-DD') as k, c.person_id,
                   date_trunc($5, f.f at time zone $2) = date_trunc($5, c.checked_in_at at time zone $2)
-                    and (p.created_at at time zone $2)::date >= $3::date as is_first
+                    and coalesce(p.client_since, (p.created_at at time zone $2)::date) >= $3::date as is_first
              from check_ins c join people p on p.id = c.person_id and p.deleted_at is null
              join firsts f on f.person_id = c.person_id
             where c.${col} = $1 and c.deleted_at is null
