@@ -3,6 +3,7 @@ import { safeEqual } from "@/lib/auth";
 import { query, queryOne } from "@/lib/db/client";
 import { deliver } from "@/lib/notify";
 import { inQuietHoursSql } from "@/lib/notify/quiet-hours";
+import { alertOwner, isLikelyBot } from "@/lib/events";
 
 export const dynamic = "force-dynamic";
 
@@ -59,7 +60,11 @@ export async function GET(request: NextRequest) {
   }
 
   const summaries = await sendDailySummaries();
-  return NextResponse.json({ reminded: due.length, summaries });
+  const stuck = await alertStuckSignups().catch((err) => {
+    console.error("[cron/reminders] stuck sign-up check failed", err);
+    return 0;
+  });
+  return NextResponse.json({ reminded: due.length, summaries, stuck });
 }
 
 /**
@@ -107,4 +112,20 @@ async function sendDailySummaries(): Promise<number> {
     }
   }
   return users.length;
+}
+
+/** Owner alert: real-looking sign-ups still unconfirmed after an hour (once per person). */
+async function alertStuckSignups(): Promise<number> {
+  const rows = await query<{ email: string; created_at: string }>(
+    `select email, created_at from auth.users
+      where email_confirmed_at is null and created_at < now() - interval '1 hour' and created_at > now() - interval '7 days'`,
+  );
+  const real = rows.filter((r) => !isLikelyBot(r.email));
+  for (const r of real) {
+    await alertOwner("Someone is stuck at sign-up", [
+      `${r.email} signed up ${new Date(r.created_at).toUTCString()} but hasn't confirmed their email.`,
+      "You can resend their confirmation from the command center.",
+    ], { key: `stuck:${r.email}` });
+  }
+  return real.length;
 }

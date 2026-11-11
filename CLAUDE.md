@@ -9,6 +9,10 @@
 
 ## Data access
 - Every query gets its `user_id` from `await requireUserId()` (`lib/current-user.ts`). Never import `OWNER_ID` anywhere else — accounts (see `docs/accounts-plan.md`) depend on that one function being the only source of the user id.
+- The one exception is the owner command center (`/owner`, `app/(app)/owner/page.tsx`), which reads across all accounts on purpose. It must stay behind `requireOwner()` (`lib/owner.ts`; owner = `OWNER_EMAILS` in Vercel, default `sonderproject.co@gmail.com`), which 404s for everyone else.
+
+## Owner command center
+- Record anything the owner should see with `logEvent()` / `alertOwner()` from `lib/events.ts` (table `app_events`). Server errors are captured automatically in `instrumentation.ts`.
 
 ## Open to-dos — remind the owner
 Mention these briefly when relevant while building (e.g. when touching sign-up, the landing page, or app-store prep). Remove an item once it's done.
@@ -19,7 +23,7 @@ Mention these briefly when relevant while building (e.g. when touching sign-up, 
 - Organization invite emails: live via Resend on strynd.com (`RESEND_API_KEY`, `EMAIL_FROM` = `Strynd <no-reply@strynd.com>` in Vercel). Supabase Auth SMTP sender must also be `no-reply@strynd.com`.
 - Turn on push notifications: generate VAPID keys (`npx web-push generate-vapid-keys`) and set `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` in Vercel.
 - Turn on text reminders: Twilio account + A2P 10DLC registration, then set `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_MESSAGING_SERVICE_SID` in Vercel. The privacy policy's SMS section is written for 10DLC.
-- Set `CRON_SECRET` in Vercel. Reminders run once a day on Vercel Hobby (`vercel.json`); for on-time reminders, ping `/api/cron/reminders` every 5 min from an outside cron service or upgrade to Vercel Pro.
+- `CRON_SECRET` is set in Vercel. The daily job (`/api/cron/reminders`, once a day on Vercel Hobby per `vercel.json`) sends reminders and the owner's stuck sign-up alerts; for on-time reminders, ping it every 5 min from an outside cron service or upgrade to Vercel Pro.
 - Billing is live (Stripe live mode; webhook at `https://www.strynd.com/api/stripe/webhook`, which must use `www` because the bare domain redirects). Left to do: delete the disabled old webhook in Stripe → Workbench → Webhooks, and roll the live secret key in Stripe (it was pasted in a chat), then update `STRIPE_SECRET_KEY` in Vercel and redeploy. Also roll the Resend key (`RESEND_API_KEY` in Vercel and the Supabase SMTP password) and delete the Supabase access token used for setup; both were pasted in a chat.
 - Billing for Apple/Google apps: Individual ($9/mo) sold inside the iOS/Android apps likely needs Apple/Google in-app purchase; verify the rules before store submission.
 - Tabled (bring up again): pick one more Organization-only benefit. Shortlist: Programs & grants (tag clients to funders, Impact split per grant; recommended), Goals & service plans, HMIS-ready export, text appointment reminders, intake forms with consent. Finance features come later for both plans.

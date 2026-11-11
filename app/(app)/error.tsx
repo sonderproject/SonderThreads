@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { reportClientError } from "@/lib/actions/report-error";
 
 export default function AppError({
   error,
@@ -13,6 +14,7 @@ export default function AppError({
 }) {
   useEffect(() => {
     console.error(error);
+    void reportClientError(error.message, window.location.pathname, error.digest).catch(() => {});
   }, [error]);
 
   return (

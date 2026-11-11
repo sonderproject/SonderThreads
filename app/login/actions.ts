@@ -1,6 +1,7 @@
 "use server";
 
 import { headers } from "next/headers";
+import { isLikelyBot, logEvent } from "@/lib/events";
 import { redirect } from "next/navigation";
 import { query, queryOne, transaction } from "@/lib/db/client";
 import { LEGACY_OWNER_ID } from "@/lib/db/constants";
@@ -241,6 +242,7 @@ export async function signup(formData: FormData): Promise<void> {
       if (error.code === "weak_password") back("/signup", "weak", email, next, rawPhone);
       if (error.code === "over_email_send_rate_limit" || error.code === "over_request_rate_limit") back("/signup", "rate", email, next, rawPhone);
       console.error("[auth] sign-up failed", error.message);
+      await logEvent("auth.signup_failed", error.message, { level: "error", email, path: "/signup", meta: { code: error.code ?? null } });
       back("/signup", "failed", email, next, rawPhone);
     }
     // Supabase hides whether an email is already registered (empty identities); treat it as sent.
@@ -254,6 +256,7 @@ export async function signup(formData: FormData): Promise<void> {
   }
 
   await createUserRow(userId, email, phone, smsOptIn, timeZone);
+  await logEvent("auth.signup", isLikelyBot(email) ? "New sign-up (likely bot)" : "New sign-up", { email, path: "/signup" });
   redirect(`/signup/check-email?${new URLSearchParams({ email })}`);
 }
 

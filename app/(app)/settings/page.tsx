@@ -19,6 +19,7 @@ import { IDLE_TIMEOUT_OPTIONS, REMINDER_LEAD_OPTIONS, SUPPORT_EMAIL, durationLab
 import packageJson from "@/package.json";
 import { formatPhone } from "@/lib/notify/phone";
 import { ManageSubscriptionCard } from "@/components/billing/ManageSubscriptionCard";
+import { isOwner } from "@/lib/owner";
 
 /** Settings: account, notifications, security and data, in one place (was Account + Settings). */
 const EMAIL_ERRORS: Record<string, string> = {
@@ -72,6 +73,7 @@ export default async function SettingsPage({
     getMembership(),
   ]);
   const invites = await getPendingInvites();
+  const owner = await isOwner().catch(() => false);
 
   return (
     <div className="max-w-md space-y-8">
@@ -79,6 +81,13 @@ export default async function SettingsPage({
         <h1 className="page-title">Settings</h1>
         <p className="text-sm text-text-muted">{user?.email}</p>
       </div>
+
+      {owner && (
+        <Link href="/owner" className="card flex items-center justify-between gap-3 p-4 hover:bg-bg-hover">
+          <span className="text-sm font-semibold text-text">Command center</span>
+          <span className="text-sm text-accent">Open →</span>
+        </Link>
+      )}
 
       <section id="billing" className="scroll-mt-20 space-y-3">
         <h2 className="section-label">Subscription</h2>

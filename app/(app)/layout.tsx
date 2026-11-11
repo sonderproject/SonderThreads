@@ -54,7 +54,7 @@ export default async function AppGroupLayout({ children }: { children: React.Rea
   // New individual accounts start their free trial (card on Stripe) before using the app.
   if (access?.state === "setup") {
     const path = (await headers()).get("x-pathname") ?? "";
-    const open = ["/billing", "/settings", "/organization/new", "/join", "/invites"].some((p) => path.startsWith(p));
+    const open = ["/billing", "/settings", "/organization/new", "/join", "/invites", "/owner"].some((p) => path.startsWith(p));
     if (!open) redirect("/billing");
   }
   const referralCount =

@@ -820,4 +820,21 @@ create table if not exists trial_cards (
   created_at timestamptz not null default now()
 );
 alter table trial_cards enable row level security;
+
+-- Owner command center (/owner): sign-up problems, app errors and billing
+-- events, kept here because Vercel's own logs last an hour on Hobby.
+-- Server-only (RLS on, no policies).
+create table if not exists app_events (
+  id uuid primary key default gen_random_uuid(),
+  kind text not null,
+  level text not null default 'info' check (level in ('info', 'warn', 'error')),
+  message text not null,
+  email text,
+  path text,
+  meta jsonb,
+  created_at timestamptz not null default now()
+);
+create index if not exists app_events_created_idx on app_events (created_at desc);
+create index if not exists app_events_kind_idx on app_events (kind, created_at desc);
+alter table app_events enable row level security;
 `;
