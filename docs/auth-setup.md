@@ -38,7 +38,7 @@ Existing accounts aren't affected. They're created in Supabase as already confir
 ## C. Site URL and Redirect URLs
 
 Supabase → **Authentication → URL Configuration**:
-- **Site URL:** your production URL, for example `https://sonderthreads.app`.
+- **Site URL:** your production URL, for example `https://www.strynd.com`.
 - **Redirect URLs:** add all three:
   - `https://<your-production-domain>/**` and the `www.` version too (`https://www.<your-production-domain>/**`)
   - `https://<project>-*-<team>.vercel.app/**` for preview deployments. Use your project and team slugs from a preview URL. Supabase supports `*` and `**` wildcards.
@@ -81,7 +81,7 @@ Supabase's built-in email sender is for testing only. It's heavily rate-limited 
    - Username: `resend`
    - Password: your Resend API key
    - Sender email: an address on your verified domain, for example `no-reply@yourdomain`
-   - Sender name: `sonderthreads`
+   - Sender name: `Strynd`
 3. **Supabase → Authentication → Rate Limits:** raise the email limit once SMTP is set.
 
 The old `RESEND_API_KEY` / `EMAIL_FROM` variables are no longer used for password reset. Supabase sends that email now.

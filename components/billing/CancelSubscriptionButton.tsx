@@ -52,7 +52,7 @@ export function CancelSubscriptionButton({
               <p className="text-sm text-text-muted">Less than a cup of coffee. Then it's $9 a month again, and you can still cancel any time.</p>
             </div>
             <form action={acceptSaveOffer}>
-              <Submit className={primary}>Keep Threads for $5</Submit>
+              <Submit className={primary}>Keep Strynd for $5</Submit>
             </form>
             <form action={cancelSubscription}>
               <Submit className={plain}>No thanks, cancel</Submit>

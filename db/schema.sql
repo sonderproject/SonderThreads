@@ -1,4 +1,4 @@
--- sonderthreads — Postgres schema (Vercel Postgres / Neon, or any Postgres).
+-- Strynd — Postgres schema (Vercel Postgres / Neon, or any Postgres).
 -- This file mirrors lib/db/schema.ts (the copy the app actually runs at startup)
 -- and is kept only as a human-readable reference / for manual use — you never
 -- need to run it by hand, the app self-provisions its schema on first connection.

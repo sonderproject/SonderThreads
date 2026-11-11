@@ -80,7 +80,7 @@ export function PushToggle({ publicKey }: { publicKey: string }) {
   if (state === "unsupported") {
     return (
       <p className="text-xs text-text-muted">
-        This browser can&apos;t get push notifications. On iPhone, add sonderthreads to your Home Screen first
+        This browser can&apos;t get push notifications. On iPhone, add Strynd to your Home Screen first
         (Share → Add to Home Screen), then open it from there.
       </p>
     );

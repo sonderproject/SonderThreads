@@ -1,11 +1,11 @@
 # Roadmap
 
-Sonder Threads (working name; branded "<name> by Sonder Project"): a client tracker and personal organizer. Backend: Supabase/Postgres.
+Strynd (formerly Sonder Threads; branded "Strynd by Sonder Project"): a client tracker and personal organizer. Backend: Supabase/Postgres.
 
 ## What we're building toward
 
 - **Product:** a general-purpose organizer anyone can use (tasks, notes, voice notes, planning) plus client tracking (client profiles, services, follow-ups, referrals).
-- **First market:** nonprofit and social services teams that must use HMIS. HMIS is the *system of record*; Threads is the *system of work*, the daily tool that makes HMIS entry a quick batch job. Threads complements HMIS and never replaces it.
+- **First market:** nonprofit and social services teams that must use HMIS. HMIS is the *system of record*; Strynd is the *system of work*, the daily tool that makes HMIS entry a quick batch job. Strynd complements HMIS and never replaces it.
 - **Business model:** organizations pay per user per month. Individuals can also use it solo.
 - **Deadlines:** app store submission by **Nov 20, 2026**. Conference pitch to organizations on **Dec 9, 2026**.
 

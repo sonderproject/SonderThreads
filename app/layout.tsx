@@ -20,10 +20,10 @@ const display = Outfit({
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: "Sonder Threads",
+  title: "Strynd",
   description: SITE_DESCRIPTION,
-  applicationName: "Sonder Threads",
-  appleWebApp: { capable: true, title: "Threads", statusBarStyle: "default" },
+  applicationName: "Strynd",
+  appleWebApp: { capable: true, title: "Strynd", statusBarStyle: "default" },
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "any" },

@@ -3,8 +3,8 @@ import { LegalPage, LegalSection } from "@/components/legal/LegalPage";
 import { SUPPORT_EMAIL } from "@/lib/settings-options";
 
 export const metadata: Metadata = {
-  title: "Terms of service · sonderthreads",
-  description: "The terms for using Sonder Threads.",
+  title: "Terms of service · Strynd",
+  description: "The terms for using Strynd.",
   alternates: { canonical: "/terms" },
 };
 
@@ -15,7 +15,7 @@ export default function TermsPage() {
     <LegalPage title="Terms of service" updated="November 10, 2026">
       <p>
         These terms are an agreement between you and Sonder Project, a sole proprietorship based in California
-        (&quot;we&quot;, &quot;us&quot;), for your use of Sonder Threads at sonderthreads.com and in its mobile apps
+        (&quot;we&quot;, &quot;us&quot;), for your use of Strynd at strynd.com and in its mobile apps
         (&quot;the app&quot;). By creating an account or using the app, you agree to these terms and to our{" "}
         <a href="/privacy">privacy policy</a>.
       </p>
@@ -63,7 +63,7 @@ export default function TermsPage() {
 
       <LegalSection title="Other systems you use">
         <p>
-          Sonder Threads is a work and organizing tool. It doesn&apos;t replace any official system of record (such as
+          Strynd is a work and organizing tool. It doesn&apos;t replace any official system of record (such as
           HMIS or an agency case file) that you&apos;re required to use, and you remain responsible for keeping those
           systems accurate.
         </p>

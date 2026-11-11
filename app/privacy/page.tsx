@@ -3,8 +3,8 @@ import { LegalPage, LegalSection } from "@/components/legal/LegalPage";
 import { SUPPORT_EMAIL } from "@/lib/settings-options";
 
 export const metadata: Metadata = {
-  title: "Privacy policy · sonderthreads",
-  description: "What Sonder Threads collects, how it's used and protected, and your choices.",
+  title: "Privacy policy · Strynd",
+  description: "What Strynd collects, how it's used and protected, and your choices.",
   alternates: { canonical: "/privacy" },
 };
 
@@ -14,8 +14,8 @@ export default function PrivacyPage() {
   return (
     <LegalPage title="Privacy policy" updated="November 9, 2026">
       <p>
-        Sonder Threads (&quot;the app&quot;) is run by Sonder Project, a sole proprietorship based in California
-        (&quot;we&quot;, &quot;us&quot;). This policy explains what we collect when you use the app at sonderthreads.com
+        Strynd (&quot;the app&quot;) is run by Sonder Project, a sole proprietorship based in California
+        (&quot;we&quot;, &quot;us&quot;). This policy explains what we collect when you use the app at strynd.com
         and in its mobile apps, how we use it, and the choices you have. We don&apos;t sell your data, and we don&apos;t
         use it for advertising.
       </p>
@@ -116,7 +116,7 @@ export default function PrivacyPage() {
 
       <LegalSection title="Health information">
         <p>
-          Sonder Threads isn&apos;t designed to hold medical records. Don&apos;t enter protected health information
+          Strynd isn&apos;t designed to hold medical records. Don&apos;t enter protected health information
           (such as diagnoses or treatment details) unless your organization has a written agreement with us that covers
           it.
         </p>

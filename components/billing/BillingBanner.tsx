@@ -18,8 +18,8 @@ export function BillingBanner({ access: a }: { access: Access }) {
   } else if (a.state === "readonly") {
     text =
       a.scope === "org" && !a.canManage
-        ? `${a.orgName}'s subscription has ended, so Threads is view-only. Ask your admin to renew it.`
-        : "Your free trial has ended, so Threads is view-only. Everything is still here.";
+        ? `${a.orgName}'s subscription has ended, so Strynd is view-only. Ask your admin to renew it.`
+        : "Your free trial has ended, so Strynd is view-only. Everything is still here.";
     tone = "flag";
   }
   if (!text) return null;

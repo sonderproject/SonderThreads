@@ -11,7 +11,7 @@ import { buildStory, HEATMAP_BLOCKS, WEEKDAY_NAMES, type Kpis, type Metrics, typ
  *
  * Client names never appear: a report like this gets shared with funders.
  *
- * White-label: no Sonder Threads or Sonder Project name or mark anywhere, so
+ * White-label: no Strynd or Sonder Project name or mark anywhere, so
  * an agency can put it in front of funders and boards as its own report.
  */
 

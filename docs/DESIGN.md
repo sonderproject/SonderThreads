@@ -1,6 +1,6 @@
-# Sonder Threads — Design System (Sonder Studio style)
+# Strynd — Design System (Sonder Studio style)
 
-Use this file as the visual source of truth for Sonder Threads. Match it exactly unless told otherwise. When building any UI, apply these tokens and components before inventing new ones.
+Use this file as the visual source of truth for Strynd. Match it exactly unless told otherwise. When building any UI, apply these tokens and components before inventing new ones.
 
 ## Feel
 

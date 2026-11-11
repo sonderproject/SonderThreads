@@ -62,7 +62,7 @@ export async function GET(request: Request) {
     return new NextResponse(csv, {
       headers: {
         "Content-Type": "text/csv",
-        "Content-Disposition": `attachment; filename="sonderthreads-${name.replace("_", "-")}-${timestamp}.csv"`,
+        "Content-Disposition": `attachment; filename="strynd-${name.replace("_", "-")}-${timestamp}.csv"`,
       },
     });
   }
@@ -81,7 +81,7 @@ export async function GET(request: Request) {
   return new NextResponse(JSON.stringify(payload, null, 2), {
     headers: {
       "Content-Type": "application/json",
-      "Content-Disposition": `attachment; filename="sonderthreads-export-${timestamp}.json"`,
+      "Content-Disposition": `attachment; filename="strynd-export-${timestamp}.json"`,
     },
   });
 }

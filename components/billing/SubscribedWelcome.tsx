@@ -31,7 +31,7 @@ export function SubscribedWelcome({
 }) {
   const steps = org ? ORG_STEPS : INDIVIDUAL_STEPS;
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-bg" role="dialog" aria-modal="true" aria-label="Welcome to Sonder Threads">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-bg" role="dialog" aria-modal="true" aria-label="Welcome to Strynd">
       <div className="sheet-in mx-auto flex min-h-full max-w-lg flex-col justify-center gap-8 px-4 py-12">
         <div className="space-y-4 text-center">
           <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-accent-soft" aria-hidden>
@@ -39,12 +39,12 @@ export function SubscribedWelcome({
               <path d="M5 12.5l4.5 4.5L19 7.5" />
             </svg>
           </span>
-          <p className="eyebrow text-text-faint">Welcome to Sonder Threads</p>
+          <p className="eyebrow text-text-faint">Welcome to Strynd</p>
           <h1 className="page-title">
             {org ? `${org} is all set.` : firstName ? `You're in, ${firstName}.` : "You're in."}
           </h1>
           <p className="text-text-muted">
-            Thank you for {org ? "bringing your team to" : "choosing"} Threads. We built it for people who carry a lot for
+            Thank you for {org ? "bringing your team to" : "choosing"} Strynd. We built it for people who carry a lot for
             others, and we&apos;re glad you&apos;re here.
           </p>
         </div>

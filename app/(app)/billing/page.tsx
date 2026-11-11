@@ -105,7 +105,7 @@ export default async function BillingPage({
               : a.state === "trial"
                 ? "Free trial"
                 : a.state === "setup"
-                  ? "Welcome to Sonder Threads"
+                  ? "Welcome to Strynd"
                   : "No plan"}
         </p>
         <p className="text-sm text-text-muted">
@@ -130,7 +130,7 @@ export default async function BillingPage({
           {a.state === "setup" &&
             "Start your 7-day free trial to begin. You won't be charged today, and you can cancel any time before the trial ends."}
           {a.state === "readonly" &&
-            "Threads is view-only: you can see and export everything, but not add or edit. Subscribe to pick up where you left off."}
+            "Strynd is view-only: you can see and export everything, but not add or edit. Subscribe to pick up where you left off."}
         </p>
         {a.scope === "org" && !isComp && (
           <p className="text-sm text-text-muted">

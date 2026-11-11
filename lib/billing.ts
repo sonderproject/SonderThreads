@@ -163,8 +163,8 @@ export async function assertCanWrite(): Promise<void> {
   if (a.state !== "readonly" && a.state !== "setup") return;
   throw new ReadOnlyError(
     a.scope === "org" && !a.canManage
-      ? `${a.orgName}'s subscription has ended, so Threads is view-only. Ask your organization admin to renew it.`
-      : "Your free trial has ended, so Threads is view-only. Subscribe in Settings → Billing to keep adding and editing.",
+      ? `${a.orgName}'s subscription has ended, so Strynd is view-only. Ask your organization admin to renew it.`
+      : "Your free trial has ended, so Strynd is view-only. Subscribe in Settings → Billing to keep adding and editing.",
   );
 }
 

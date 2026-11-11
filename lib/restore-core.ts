@@ -141,7 +141,7 @@ function day(value: string | number | null | undefined): string | null {
 export function parseBackup(raw: unknown): Backup {
   const result = backupSchema.safeParse(raw);
   if (!result.success) {
-    throw new Error("This doesn't look like a Sonder Threads backup file. Use the file from Settings → Data → backup (JSON).");
+    throw new Error("This doesn't look like a Strynd backup file. Use the file from Settings → Data → backup (JSON).");
   }
   if (TABLES.every((t) => result.data[t].length === 0)) throw new Error("This backup file is empty.");
   return result.data;

@@ -1,7 +1,7 @@
 /**
  * Transactional email via Resend's HTTP API (no SDK). Needs RESEND_API_KEY
  * and EMAIL_FROM (an address on a domain verified in Resend, e.g.
- * "SonderThreads <no-reply@example.com>"). In local development without
+ * "Strynd <no-reply@example.com>"). In local development without
  * them, emails are printed to the server console instead of sent.
  */
 export function emailConfigured(): boolean {

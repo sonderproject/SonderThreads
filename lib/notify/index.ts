@@ -68,7 +68,7 @@ export async function deliver(userId: string, n: Omit<NotifyParams, "type" | "pa
       [userId],
     );
     if (user?.phone && user.sms_opt_in) {
-      const text = [`sonderthreads: ${n.title}`, n.body, `${appUrl()}${url}`].filter(Boolean).join("\n");
+      const text = [`Strynd: ${n.title}`, n.body, `${appUrl()}${url}`].filter(Boolean).join("\n");
       await sendSms(user.phone, text).catch((err) => console.error("[notify] sms failed", err));
     }
   }

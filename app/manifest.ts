@@ -3,8 +3,8 @@ import type { MetadataRoute } from "next";
 /** Lets "Add to Home Screen" install the app with its own icon and open it full-screen. */
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Sonder Threads",
-    short_name: "Threads",
+    name: "Strynd",
+    short_name: "Strynd",
     description: "Clients, tasks, notes and check-ins in one calm place. By Sonder Project.",
     start_url: "/",
     display: "standalone",
@@ -18,7 +18,7 @@ export default function manifest(): MetadataRoute.Manifest {
       { name: "New task", short_name: "Task", url: "/?new=task", icons: [{ src: "/icon-192.png", sizes: "192x192" }] },
       { name: "New note", short_name: "Note", url: "/?new=note", icons: [{ src: "/icon-192.png", sizes: "192x192" }] },
     ],
-    // Shows Sonder Threads in Android's share sheet; shared text lands in the command bar.
+    // Shows Strynd in Android's share sheet; shared text lands in the command bar.
     share_target: {
       action: "/share",
       method: "GET",

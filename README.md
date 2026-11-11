@@ -1,4 +1,4 @@
-# sonderthreads
+# Strynd
 
 A minimal, command-first personal tracker for staying on top of people, notes, lists, groups, and tasks. Terminal-inspired, dark, and fast — not a CRM.
 

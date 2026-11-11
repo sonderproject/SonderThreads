@@ -7,17 +7,17 @@ import { SUPPORT_EMAIL } from "@/lib/settings-options";
 // Signed-out visitors to "/" are shown this page (middleware rewrites to it),
 // so "/" is the canonical address search engines should index.
 export const metadata: Metadata = {
-  title: "Sonder Threads: clients, tasks and notes in one calm place",
+  title: "Strynd: clients, tasks and notes in one calm place",
   description: SITE_DESCRIPTION,
   alternates: { canonical: "/" },
   openGraph: {
-    title: "Sonder Threads",
+    title: "Strynd",
     description: SITE_DESCRIPTION,
     url: "/",
-    siteName: "Sonder Threads",
+    siteName: "Strynd",
     type: "website",
   },
-  twitter: { card: "summary_large_image", title: "Sonder Threads", description: SITE_DESCRIPTION },
+  twitter: { card: "summary_large_image", title: "Strynd", description: SITE_DESCRIPTION },
 };
 
 const FEATURES = [
@@ -36,7 +36,7 @@ const AGENCY = [
   "A Team view of every caseload: clients, follow-ups and overdue tasks.",
   "Supervisors read client records and leave comments. Never anyone's personal notes.",
   "Invite staff, reassign clients, and keep an audit log of who did what.",
-  "HMIS stays your system of record. Threads is the system of work that makes entry a quick batch job.",
+  "HMIS stays your system of record. Strynd is the system of work that makes entry a quick batch job.",
 ];
 
 /** [feature, included in Individual]. Organization includes everything. */
@@ -91,9 +91,9 @@ export default function WelcomePage() {
     <div className="min-h-screen bg-bg text-text">
       <header className="glass pt-safe sticky top-0 z-20 border-b">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-8">
-          <Link href="/" className="flex items-center gap-3" aria-label="Sonder Threads">
+          <Link href="/" className="flex items-center gap-3" aria-label="Strynd">
             <span className="brand-mark h-7 w-[37px]" aria-hidden />
-            <span className="font-display text-sm font-light uppercase tracking-[0.25em] text-text">Threads</span>
+            <span className="font-display text-sm font-light uppercase tracking-[0.25em] text-text">Strynd</span>
             <span className="hidden h-4 w-px sm:block" style={{ background: "color-mix(in srgb, var(--accent) 50%, transparent)" }} aria-hidden />
             <span className="hidden text-[11px] uppercase tracking-[0.25em] text-text-muted sm:block">by Sonder Project</span>
           </Link>
@@ -124,7 +124,7 @@ export default function WelcomePage() {
               The daily tool for the people you serve.
             </h1>
             <p className="max-w-xl text-base leading-relaxed text-text-muted sm:text-lg">
-              Clients, tasks, notes and check-ins in one calm place. Type it or say it, and Threads files it where it
+              Clients, tasks, notes and check-ins in one calm place. Type it or say it, and Strynd files it where it
               belongs.
             </p>
             <Cta />
@@ -173,7 +173,7 @@ export default function WelcomePage() {
               caseload, while each person&apos;s own tasks and notes stay private.
             </p>
             <a
-              href={`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent("Sonder Threads for our agency")}`}
+              href={`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent("Strynd for our agency")}`}
               className="inline-block rounded-full border border-border bg-bg-raised px-6 py-3 text-sm font-semibold transition-colors hover:bg-bg-hover"
             >
               Talk to us about your team
@@ -244,7 +244,7 @@ export default function WelcomePage() {
                 ))}
               </ul>
               <a
-                href={`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent("Sonder Threads for our agency")}`}
+                href={`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent("Strynd for our agency")}`}
                 className="rounded-full bg-accent px-6 py-3 text-center text-sm font-semibold text-bg hover:bg-accent-dim"
               >
                 Talk to us about your team
@@ -283,14 +283,14 @@ export default function WelcomePage() {
             <div className="card space-y-1 p-5">
               <h2 className="font-display text-lg font-normal">iPhone</h2>
               <p className="text-sm text-text-muted">
-                Open sonderthreads.com in Safari, tap <strong className="text-text">Share</strong>, then{" "}
+                Open strynd.com in Safari, tap <strong className="text-text">Share</strong>, then{" "}
                 <strong className="text-text">Add to Home Screen</strong>.
               </p>
             </div>
             <div className="card space-y-1 p-5">
               <h2 className="font-display text-lg font-normal">Android</h2>
               <p className="text-sm text-text-muted">
-                Open sonderthreads.com in Chrome, tap the <strong className="text-text">⋮</strong> menu, then{" "}
+                Open strynd.com in Chrome, tap the <strong className="text-text">⋮</strong> menu, then{" "}
                 <strong className="text-text">Add to Home screen</strong> (or <strong className="text-text">Install app</strong>).
               </p>
             </div>

@@ -1,9 +1,9 @@
 import { ImageResponse } from "next/og";
 
-// The preview card shown when someone shares a Sonder Threads link in a text,
+// The preview card shown when someone shares a Strynd link in a text,
 // email or social post. (Image rendering can't read CSS variables, so the
 // Sonder Studio palette is written out here: obsidian, warm white, surf blue.)
-export const alt = "Sonder Threads: clients, tasks and notes in one calm place";
+export const alt = "Strynd: clients, tasks and notes in one calm place";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -23,7 +23,7 @@ export default function OpengraphImage() {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 18, fontSize: 24, letterSpacing: 8, color: "#aea08d" }}>
-          <span style={{ color: "#62b4e6" }}>SONDER THREADS</span>
+          <span style={{ color: "#62b4e6" }}>STRYND</span>
           <span style={{ width: 60, height: 2, background: "#3e9bd4" }} />
           <span>BY SONDER PROJECT</span>
         </div>

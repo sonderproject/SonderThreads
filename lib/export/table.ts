@@ -47,7 +47,7 @@ async function toXlsx({ title, meta, headers, body }: ExportTable): Promise<Buff
     const longest = Math.max(headers[i].length, ...body.map((r) => (r[i] ?? "").length));
     col.width = Math.min(Math.max(longest + 2, 5), 50);
   });
-  wb.creator = "sonderthreads";
+  wb.creator = "Strynd";
   wb.title = `${title} (${meta})`;
   return Buffer.from(await wb.xlsx.writeBuffer());
 }
