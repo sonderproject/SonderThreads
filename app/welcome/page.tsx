@@ -7,7 +7,7 @@ import { SUPPORT_EMAIL } from "@/lib/settings-options";
 // Signed-out visitors to "/" are shown this page (middleware rewrites to it),
 // so "/" is the canonical address search engines should index.
 export const metadata: Metadata = {
-  title: "Strynd: clients, tasks and notes in one calm place",
+  title: "Strynd: tasks, to-dos, notes and clients in one place",
   description: SITE_DESCRIPTION,
   alternates: { canonical: "/" },
   openGraph: {
@@ -22,21 +22,29 @@ export const metadata: Metadata = {
 
 const FEATURES = [
   {
-    title: "Clients & check-ins",
-    body: "Profiles, demographics, check-ins and a full history for everyone you work with.",
+    title: "Tasks & to-dos",
+    body: "Due dates, repeating tasks and reminders that actually reach you. Your day, sorted, and nothing slips.",
   },
-  { title: "Tasks & reminders", body: "Follow-ups that repeat, remind you on time, and never fall through the cracks." },
-  { title: "Notes & voice", body: "Type it or say it. Notes land on the right person, ready to search later." },
-  { title: "Lists & groups", body: "Rosters, groups and checklists you can share and export." },
-  { title: "Private by default", body: "Two-factor sign-in, auto-lock, and database-level privacy on every record." },
-  { title: "Yours to take", body: "Export everything as spreadsheets or a full backup, any time." },
+  {
+    title: "Clients & people",
+    body: "A profile and full history for everyone you work with: notes, check-ins, tasks and follow-ups, all in one place.",
+  },
+  {
+    title: "Say it once",
+    body: "Type “remind me to call Sarah Friday” or just say it. Strynd makes the task, sets the reminder and links the person.",
+  },
+  { title: "Notes & voice notes", body: "Capture anything in seconds. Notes land on the right person or project, ready to search later." },
+  { title: "Lists & groups", body: "Checklists, shopping lists, rosters and groups you can share and export." },
+  { title: "Private and yours", body: "Two-factor sign-in, auto-lock and record-level privacy. Export everything, any time." },
 ];
 
-const AGENCY = [
-  "A Team view of every caseload: clients, follow-ups and overdue tasks.",
-  "Supervisors read client records and leave comments. Never anyone's personal notes.",
-  "Invite staff, reassign clients, and keep an audit log of who did what.",
-  "HMIS stays your system of record. Strynd is the system of work that makes entry a quick batch job.",
+const AUDIENCES = ["Freelancers", "Business owners", "Coaches", "Realtors", "Consultants", "Case managers", "Students", "Parents", "Teams"];
+
+const TEAMS = [
+  "A Team view of everyone's clients, follow-ups and overdue tasks.",
+  "Managers can read client records and leave comments. Never anyone's personal notes.",
+  "Invite your team, reassign clients, and see an activity log of who did what.",
+  "Impact reports with your logo, ready for your boss, your board or your funders.",
 ];
 
 /** [feature, included in Individual]. Organization includes everything. */
@@ -45,11 +53,11 @@ const COMPARE: [string, boolean][] = [
   ["Voice notes, smart command box and reminders", true],
   ["Personal stats dashboard", true],
   ["Export everything (Excel, full backup)", true],
-  ["Shared caseload: everyone works every client", false],
-  ["Roles: admin, supervisor, case manager", false],
-  ["Team dashboard: caseloads, follow-ups, overdue", false],
+  ["One shared client list the whole team works from", false],
+  ["Roles for admins, supervisors and staff", false],
+  ["Team dashboard: everyone's clients, follow-ups, overdue", false],
   ["Activity log of who changed what", false],
-  ["Funder-ready Impact PDF reports with your logo", false],
+  ["Impact reports (PDF) with your logo", false],
   ["Referral link and referral log", false],
   ["Front-desk check-in kiosk", false],
   ["Client reassignment and supervisor comments", false],
@@ -119,24 +127,32 @@ export default function WelcomePage() {
       <main className="mx-auto max-w-6xl px-4 sm:px-8">
         <section className="grid gap-10 py-16 sm:py-24 lg:grid-cols-[1.2fr_1fr] lg:items-center">
           <div className="space-y-6">
-            <Marker n="01">Client tracker &amp; personal organizer</Marker>
+            <Marker n="01">Tasks · To-dos · Notes · Clients</Marker>
             <h1 className="font-display text-4xl font-light leading-[1.05] tracking-[-0.02em] sm:text-6xl">
-              The daily tool for the people you serve.
+              Everything you need to stay organized. One app.
             </h1>
             <p className="max-w-xl text-base leading-relaxed text-text-muted sm:text-lg">
-              Clients, tasks, notes and check-ins in one calm place. Type it or say it, and Strynd files it where it
-              belongs.
+              Your tasks, to-do lists, notes and the people you work with, in one calm place. Type it or say it once, and
+              Strynd files it, reminds you and keeps it all together. No more juggling five apps.
             </p>
             <Cta />
             <p className="text-xs text-text-muted">7-day free trial · Works on any phone or computer</p>
+            <div className="flex flex-wrap items-center gap-2 pt-2">
+              <span className="text-xs text-text-muted">Made for</span>
+              {AUDIENCES.map((a) => (
+                <span key={a} className="rounded-full border border-border px-3 py-1 text-xs text-text-muted">
+                  {a}
+                </span>
+              ))}
+            </div>
           </div>
 
           <div className="card space-y-3 p-5" aria-hidden>
             <p className="section-label">Today</p>
             {[
-              { name: "Maria Lopez", note: "Housing intake follow-up", tag: "Due today", tone: "tag-e" },
-              { name: "James Carter", note: "Benefits renewal", tag: "Overdue", tone: "tag-u" },
-              { name: "Ana Ruiz", note: "Checked in · food pantry", tag: "New", tone: "tag-n" },
+              { name: "Sarah Kim", note: "Send the proposal", tag: "Due today", tone: "tag-e" },
+              { name: "Grocery run", note: "Milk, eggs, coffee, birthday card", tag: "To-do", tone: "tag-v" },
+              { name: "Marcus Cole", note: "Check in after his first week", tag: "Overdue", tone: "tag-u" },
             ].map((r) => (
               <div key={r.name} className="flex items-center justify-between gap-3 rounded-xl border border-border-subtle p-3">
                 <div className="min-w-0">
@@ -146,12 +162,15 @@ export default function WelcomePage() {
                 <span className={`tag ${r.tone}`}>{r.tag}</span>
               </div>
             ))}
-            <p className="pt-1 text-xs text-text-muted">“remind me to call Maria Thursday” → task · Thu</p>
+            <p className="pt-1 text-xs text-text-muted">“remind me to call Sarah Thursday” → task · Thu</p>
           </div>
         </section>
 
         <section className="space-y-8 border-t border-border py-16">
-          <Marker n="02">What it does</Marker>
+          <Marker n="02">One app instead of five</Marker>
+          <h2 className="max-w-2xl font-display text-3xl font-light leading-tight tracking-[-0.02em] sm:text-4xl">
+            Your to-do app, notes app, reminders and client list. Finally in one place.
+          </h2>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {FEATURES.map((f) => (
               <div key={f.title} className="card space-y-2 p-5">
@@ -164,23 +183,24 @@ export default function WelcomePage() {
 
         <section className="grid gap-10 border-t border-border py-16 lg:grid-cols-2">
           <div className="space-y-5">
-            <Marker n="03">For agencies</Marker>
+            <Marker n="03">For teams</Marker>
             <h2 className="font-display text-3xl font-light leading-tight tracking-[-0.02em] sm:text-4xl">
-              Built for case management teams.
+              Even better together.
             </h2>
             <p className="text-text-muted">
-              Give your staff the tool they&apos;ll actually use every day, and give supervisors a clear view of every
-              caseload, while each person&apos;s own tasks and notes stay private.
+              Offices, agencies, nonprofits and small businesses: give everyone the tool they&apos;ll actually use every
+              day, and give managers a clear view of every client, while each person&apos;s own tasks and notes stay
+              private.
             </p>
             <a
-              href={`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent("Strynd for our agency")}`}
+              href={`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent("Strynd for our team")}`}
               className="inline-block rounded-full border border-border bg-bg-raised px-6 py-3 text-sm font-semibold transition-colors hover:bg-bg-hover"
             >
               Talk to us about your team
             </a>
           </div>
           <ul className="card divide-y divide-border-subtle">
-            {AGENCY.map((line) => (
+            {TEAMS.map((line) => (
               <li key={line} className="flex gap-3 p-4 text-sm leading-relaxed">
                 <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" aria-hidden />
                 {line}
@@ -195,14 +215,14 @@ export default function WelcomePage() {
             <div className="card flex flex-col gap-4 p-6">
               <div>
                 <h2 className="font-display text-2xl font-light">Individual</h2>
-                <p className="mt-1 text-sm text-text-muted">For anyone with clients, projects or a busy life to keep straight: entrepreneurs, freelancers, coaches, case managers and more.</p>
+                <p className="mt-1 text-sm text-text-muted">For anyone with clients, projects or a busy life to keep straight.</p>
               </div>
               <p className="font-display text-5xl font-light tabular-nums">
                 $9<span className="ml-1 font-sans text-base text-text-muted">/ month</span>
               </p>
               <p className="-mt-2 text-xs text-text-muted">7-day free trial. Cancel any time.</p>
               <ul className="flex-1 space-y-2 text-sm">
-                {["Clients, check-ins, notes, tasks and lists", "Voice notes, smart command box and reminders", "Personal stats dashboard", "Export everything, any time"].map((f) => (
+                {["Tasks, to-do lists, notes and lists", "Clients and check-ins with full history", "Voice notes, smart command box and reminders", "Export everything, any time"].map((f) => (
                   <li key={f} className="flex gap-2">
                     <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" aria-hidden />
                     {f}
@@ -217,7 +237,7 @@ export default function WelcomePage() {
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <h2 className="font-display text-2xl font-light">Organization</h2>
-                  <p className="mt-1 text-sm text-text-muted">For agencies and teams that work together.</p>
+                  <p className="mt-1 text-sm text-text-muted">For teams, offices, agencies and nonprofits.</p>
                 </div>
                 <span className="tag tag-v">Founding pricing</span>
               </div>
@@ -225,15 +245,15 @@ export default function WelcomePage() {
                 $15<span className="ml-1 font-sans text-base text-text-muted">per staff member / month</span>
               </p>
               <p className="-mt-2 text-xs text-text-muted">
-                Or Team: $249 / month for up to 20 staff, $10 for each one after. 30-day free trial. Founding agencies
+                Or Team: $249 / month for up to 20 staff, $10 for each one after. 30-day free trial. Founding teams
                 keep this price for 12 months.
               </p>
               <ul className="flex-1 space-y-2 text-sm">
                 {[
                   "Everything in Individual",
-                  "One shared caseload the whole team works from",
-                  "Funder-ready Impact reports, with your logo",
-                  "Referral link for partner departments",
+                  "One shared client list the whole team works from",
+                  "Impact reports with your logo",
+                  "Referral link for partners",
                   "Front-desk check-in kiosk",
                   "Roles, Team dashboard and an activity log",
                 ].map((f) => (
@@ -244,7 +264,7 @@ export default function WelcomePage() {
                 ))}
               </ul>
               <a
-                href={`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent("Strynd for our agency")}`}
+                href={`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent("Strynd for our team")}`}
                 className="rounded-full bg-accent px-6 py-3 text-center text-sm font-semibold text-bg hover:bg-accent-dim"
               >
                 Talk to us about your team
@@ -273,7 +293,7 @@ export default function WelcomePage() {
             </table>
           </div>
           <p className="text-sm text-text-muted">
-            For an agency, $15 a seat is less than one hour of staff time a month, and the reports alone save more than that.
+            For a team, $15 a seat is less than one hour of staff time a month, and the time it saves pays for itself in the first week.
           </p>
         </section>
 
