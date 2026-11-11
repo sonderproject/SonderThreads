@@ -1,5 +1,7 @@
 "use client";
 
+import { useTerms } from "@/components/TermsProvider";
+
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import { dismissWelcome, markWelcomePhoneDone } from "@/lib/actions/profile";
@@ -17,6 +19,7 @@ const COPY: Record<WelcomeStep["key"], { title: string; body: string; href?: str
 
 /** First-run checklist on Home: a few steps that tick themselves off, dismissible. */
 export function WelcomeChecklist({ steps }: { steps: WelcomeStep[] }) {
+  const terms = useTerms();
   const [hidden, setHidden] = useState(false);
   const [showPhone, setShowPhone] = useState(false);
   const [, startTransition] = useTransition();
@@ -49,7 +52,15 @@ export function WelcomeChecklist({ steps }: { steps: WelcomeStep[] }) {
       </div>
       <ol className="space-y-3">
         {steps.map((s, i) => {
-          const c = COPY[s.key];
+          const c =
+            s.key === "checkin"
+              ? {
+                  ...COPY.checkin,
+                  title: terms.logCheckIn,
+                  cta: terms.logCheckIn,
+                  body: `Record a visit or a call. It shows up in your ${terms.impact}.`,
+                }
+              : COPY[s.key];
           return (
             <li key={s.key} className="flex gap-3">
               <span

@@ -1,5 +1,7 @@
 "use client";
 
+import { useTerms } from "@/components/TermsProvider";
+
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -18,6 +20,7 @@ export function CheckInRow({
   showPerson?: boolean;
   showDay?: boolean;
 }) {
+  const terms = useTerms();
   const [editing, setEditing] = useState(false);
   const [when, setWhen] = useState(() => toLocalInputValue(checkIn.checked_in_at));
   const [reason, setReason] = useState(checkIn.reason ?? "");
@@ -49,7 +52,7 @@ export function CheckInRow({
     await deleteCheckIn(checkIn.id);
     setEditing(false);
     router.refresh();
-    undo.show("Check-in deleted", async () => {
+    undo.show(`${terms.checkIn} deleted`, async () => {
       await restoreCheckIn(checkIn.id);
       router.refresh();
     });
@@ -115,7 +118,7 @@ export function CheckInRow({
       </div>
       <button
         onClick={() => setEditing(true)}
-        aria-label="Edit check-in"
+        aria-label={`Edit ${terms.checkInLower}`}
         className="flex h-9 w-9 shrink-0 items-center justify-center text-xs text-text-faint hover:text-accent [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100"
       >
         ✎

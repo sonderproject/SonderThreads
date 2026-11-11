@@ -1,5 +1,7 @@
 "use client";
 
+import { useTerms } from "@/components/TermsProvider";
+
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -48,12 +50,15 @@ export function MobileNav({
   showTeam?: boolean;
   showImpact?: boolean;
 }) {
+  const terms = useTerms();
   const pathname = usePathname();
   const [sheet, setSheet] = useState<"command" | "more" | null>(null);
   const [commandOpts, setCommandOpts] = useState<OpenCommandDetail & { key: number }>({ key: 0 });
   const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const holding = useRef(false);
-  const baseLinks = showImpact ? MORE_LINKS : MORE_LINKS.filter((l) => l.href !== "/impact");
+  const baseLinks = (showImpact ? MORE_LINKS : MORE_LINKS.filter((l) => l.href !== "/impact")).map((l) =>
+    l.href === "/impact" ? { ...l, label: terms.impact } : l,
+  );
   const withReferrals =
     referralCount !== null
       ? [{ href: "/referrals", label: referralCount ? `Referrals (${referralCount})` : "Referrals" }, ...baseLinks]
@@ -153,7 +158,8 @@ export function MobileNav({
         aria-label="Main"
       >
         <div className="grid grid-cols-5">
-          {TABS.map(({ href, label, Icon }) => {
+          {TABS.map(({ href, label: base, Icon }) => {
+            const label = href === "/check-ins" ? terms.checkIns : base;
             const active = isActive(pathname, href);
             return (
               <Link

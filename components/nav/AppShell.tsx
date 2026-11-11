@@ -1,5 +1,7 @@
 "use client";
 
+import { useTerms } from "@/components/TermsProvider";
+
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ThemeToggle } from "@/components/nav/ThemeToggle";
@@ -47,6 +49,7 @@ export function AppShell({
   people?: Pick<Person, "id" | "display_name">[];
   lists?: { id: string; name: string }[];
 }) {
+  const terms = useTerms();
   const pathname = usePathname();
 
   return (
@@ -63,7 +66,7 @@ export function AppShell({
               <div className="flex items-center">
                 <div className="hidden items-center gap-2 sm:flex">
                   <nav className="flex gap-1">
-                    {[...NAV_ITEMS.filter((i) => showImpact || i.href !== "/impact"), ...(showTeam ? [{ href: "/team", label: "Team" }] : []), ...(referralCount !== null ? [{ href: "/referrals", label: referralCount ? `Referrals (${referralCount})` : "Referrals" }] : [])].map((item) => {
+                    {[...NAV_ITEMS.filter((i) => showImpact || i.href !== "/impact").map((i) => ({ ...i, label: i.href === "/check-ins" ? terms.checkIns : i.href === "/impact" ? terms.impact : i.label })), ...(showTeam ? [{ href: "/team", label: "Team" }] : []), ...(referralCount !== null ? [{ href: "/referrals", label: referralCount ? `Referrals (${referralCount})` : "Referrals" }] : [])].map((item) => {
                       const isActive =
                         item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
                       return (

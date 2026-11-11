@@ -6,6 +6,8 @@
 
 ## Design
 - `docs/DESIGN.md` is the visual source of truth. Use its tokens and components (`page-title`, `eyebrow`, `tag`, `flag`, `progress-bar` in `app/globals.css`) before inventing new ones. Never hard-code colors.
+- Wording depends on the account: organization members see "Check-ins" and "Impact", everyone else "Meetings" and "Insights". Never hard-code those words in the UI: use `useTerms()` (`components/TermsProvider.tsx`) in client components or `await getTerms()` (`lib/terms-server.ts`) in server components.
+- Settings is a menu (`/settings`) with one page per section (`/settings/<section>`, `lib/settings-sections.ts`).
 
 ## Data access
 - Every query gets its `user_id` from `await requireUserId()` (`lib/current-user.ts`). Never import `OWNER_ID` anywhere else — accounts (see `docs/accounts-plan.md`) depend on that one function being the only source of the user id.

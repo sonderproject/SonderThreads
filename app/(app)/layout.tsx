@@ -1,4 +1,5 @@
 import { redirect, unstable_rethrow } from "next/navigation";
+import { TermsProvider } from "@/components/TermsProvider";
 import { headers } from "next/headers";
 import { AppShell } from "@/components/nav/AppShell";
 import { TimeZoneProvider } from "@/components/TimeZoneProvider";
@@ -61,6 +62,7 @@ export default async function AppGroupLayout({ children }: { children: React.Rea
     membership?.active && membership.role === "admin" ? await countNewReferrals(membership.orgId).catch(() => 0) : null;
   return (
     <TimeZoneProvider timeZone={timeZone}>
+    <TermsProvider isOrg={Boolean(membership?.active)}>
     <AppShell
       people={people.map((p) => ({ id: p.id, display_name: p.display_name }))}
       lists={lists.map((l) => ({ id: l.id, name: l.name }))}
@@ -74,6 +76,7 @@ export default async function AppGroupLayout({ children }: { children: React.Rea
       {children}
       {offerTwoFactor && <TwoFactorPrompt />}
     </AppShell>
+    </TermsProvider>
     </TimeZoneProvider>
   );
 }

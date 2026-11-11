@@ -1,5 +1,7 @@
 "use client";
 
+import { useTerms } from "@/components/TermsProvider";
+
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -44,6 +46,7 @@ export function CheckInsBrowser({
   /** False on a bare /check-ins visit: use the browser's own "today". */
   hasParams: boolean;
 }) {
+  const terms = useTerms();
   const router = useRouter();
   const [loading, startLoading] = useTransition();
   const [search, setSearch] = useState("");
@@ -219,7 +222,7 @@ export function CheckInsBrowser({
         </div>
 
         {days.length === 0 ? (
-          <EmptyState message={search.trim() ? "No matches." : "No check-ins in this range."} />
+          <EmptyState message={search.trim() ? "No matches." : `No ${terms.checkInsLower} in this range.`} />
         ) : (
           days.map((day) => (
             <div key={day.key} className="space-y-1.5">

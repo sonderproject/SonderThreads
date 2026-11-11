@@ -1,4 +1,5 @@
 import { CheckInsBrowser } from "@/components/check-ins/CheckInsBrowser";
+import { getTerms } from "@/lib/terms-server";
 import { listCheckIns, listCheckInReasons } from "@/lib/actions/check-ins";
 import { listPeople } from "@/lib/actions/people";
 import { getMembership } from "@/lib/org";
@@ -13,6 +14,7 @@ export default async function CheckInsPage({
 }: {
   searchParams: Promise<{ from?: string; to?: string; all?: string }>;
 }) {
+  const terms = await getTerms();
   const sp = await searchParams;
   const all = sp.all === "1";
   const today = new Date().toISOString().slice(0, 10);
@@ -33,7 +35,7 @@ export default async function CheckInsPage({
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="page-title">Check-ins</h1>
+        <h1 className="page-title">{terms.checkIns}</h1>
         {membership?.active && (
           <a href="/kiosk" className="rounded-full border border-border px-4 py-1.5 text-sm font-medium text-text hover:bg-bg-hover">
             Front-desk kiosk

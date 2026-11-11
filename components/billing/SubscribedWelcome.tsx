@@ -5,7 +5,7 @@ type Step = { title: string; body: string; href: string };
 
 const INDIVIDUAL_STEPS: Step[] = [
   { title: "Add your first person", body: "A client, or anyone you want to keep track of.", href: "/people" },
-  { title: "Log a check-in", body: "Record a visit or a call. It powers your Impact report.", href: "/check-ins" },
+  { title: "Log a meeting", body: "Record a visit or a call. It shows up in your Insights.", href: "/check-ins" },
   { title: "Turn on reminders", body: "So follow-ups find you, not the other way around.", href: "/settings#notifications" },
 ];
 const ORG_STEPS: Step[] = [

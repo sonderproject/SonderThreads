@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getTerms } from "@/lib/terms-server";
 import { notFound } from "next/navigation";
 import { isUuid } from "@/lib/ids";
 import { NO_BIRTH_YEAR } from "@/lib/parse-person-line";
@@ -67,6 +68,7 @@ export default async function PersonProfilePage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const terms = await getTerms();
   const { id } = await params;
   if (!isUuid(id)) notFound();
   const me = await requireUserId();
@@ -186,11 +188,11 @@ export default async function PersonProfilePage({
         <PersonNotes personId={person.id} personName={person.display_name} notes={notes} />
       </Section>
 
-      <Section title={`Check-ins${checkIns.length ? ` · ${checkIns.length}` : ""}`}>
+      <Section title={`${terms.checkIns}${checkIns.length ? ` · ${checkIns.length}` : ""}`}>
         <div className="space-y-3">
           <CheckInForm personId={person.id} reasons={reasons} />
           {checkIns.length === 0 ? (
-            <EmptyState message="No check-ins yet." />
+            <EmptyState message={`No ${terms.checkInsLower} yet.`} />
           ) : (
             <div className="divide-y divide-border-subtle card">
               {checkIns.map((c) => (

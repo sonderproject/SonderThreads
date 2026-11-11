@@ -1,5 +1,7 @@
 "use client";
 
+import { useTerms } from "@/components/TermsProvider";
+
 import { useCallback, useEffect, useState } from "react";
 import { getMetricsSafe } from "@/lib/actions/metrics";
 import { addDays, buildStory, daysBetween, type Kpis, type Metrics, type MetricsScope, type Point } from "@/lib/metrics-shared";
@@ -64,6 +66,7 @@ function Chapter({ n, title, lead, children }: { n: string; title: string; lead?
  * and supervisors, and PDF / Excel / CSV export of exactly what's shown.
  */
 export function ImpactDashboard({ orgName }: { orgName: string | null }) {
+  const terms = useTerms();
   const timeZone = useTimeZone();
   const [today, setToday] = useState<string | null>(null);
   const [preset, setPreset] = useState<Preset>("30");
@@ -114,14 +117,14 @@ export function ImpactDashboard({ orgName }: { orgName: string | null }) {
       ? `/api/metrics/export?${new URLSearchParams({ format, from: range.from, to: range.to, scope, ...(followUps ? { followups: "1" } : {}) })}`
       : "#";
   const bucketWord = data?.bucket === "day" ? "day" : data?.bucket === "week" ? "week" : "month";
-  const story = data ? buildStory(data, { followUps }) : [];
+  const story = data ? buildStory(data, { followUps }).map((line) => line.replace(/check-ins/g, terms.checkInsLower)) : [];
 
   return (
     <div className="space-y-10">
       <div className="space-y-4">
         <div className="space-y-1">
           <p className="eyebrow text-text-muted">{scope === "org" && orgName ? orgName : "Your work"}</p>
-          <h1 className="page-title">Impact</h1>
+          <h1 className="page-title">{terms.impact}</h1>
         </div>
 
         <div className="flex flex-wrap items-center gap-1.5">
@@ -237,7 +240,7 @@ export function ImpactDashboard({ orgName }: { orgName: string | null }) {
 
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
             {TILES.map((t) => (
-              <StatTile key={t.key} label={t.label} hint={t.hint} value={data.kpis[t.key]} prev={data.prev[t.key]} periodName={periodName} />
+              <StatTile key={t.key} label={t.key === "checkIns" ? terms.checkIns : t.label} hint={t.hint} value={data.kpis[t.key]} prev={data.prev[t.key]} periodName={periodName} />
             ))}
           </div>
 
@@ -249,8 +252,8 @@ export function ImpactDashboard({ orgName }: { orgName: string | null }) {
               <ChartCard title="New clients added" subtitle={`Per ${bucketWord}`} table={data.newPeopleOverTime} unit="people">
                 <ColumnChart data={data.newPeopleOverTime} unit="new clients" />
               </ChartCard>
-              <ChartCard title="Check-ins" subtitle={`Per ${bucketWord}`} table={data.checkInsOverTime} unit="check-ins">
-                <ColumnChart data={data.checkInsOverTime} unit="check-ins" />
+              <ChartCard title={terms.checkIns} subtitle={`Per ${bucketWord}`} table={data.checkInsOverTime} unit={terms.checkInsLower}>
+                <ColumnChart data={data.checkInsOverTime} unit={terms.checkInsLower} />
               </ChartCard>
             </div>
           </Chapter>
@@ -261,15 +264,15 @@ export function ImpactDashboard({ orgName }: { orgName: string | null }) {
                 <h3 className="text-sm font-semibold text-text">Busiest times</h3>
                 <BusiestTimes grid={data.heatmap} />
               </section>
-              <ChartCard title="By day of week" subtitle="Check-ins" table={data.byWeekday} unit="check-ins">
-                <ColumnChart data={data.byWeekday} unit="check-ins" height={160} />
+              <ChartCard title="By day of week" subtitle={terms.checkIns} table={data.byWeekday} unit={terms.checkInsLower}>
+                <ColumnChart data={data.byWeekday} unit={terms.checkInsLower} height={160} />
               </ChartCard>
             </div>
           </Chapter>
 
           <Chapter n="03" title="Needs" lead="Why people came in.">
-            <ChartCard title="Reasons for visits" subtitle="Check-ins by reason" table={data.byReason} unit="check-ins" wide>
-              {data.byReason.length ? <BarList data={data.byReason} unit="check-ins" /> : <Empty />}
+            <ChartCard title="Reasons for visits" subtitle={`${terms.checkIns} by reason`} table={data.byReason} unit={terms.checkInsLower} wide>
+              {data.byReason.length ? <BarList data={data.byReason} unit={terms.checkInsLower} /> : <Empty />}
             </ChartCard>
           </Chapter>
 
@@ -297,12 +300,12 @@ export function ImpactDashboard({ orgName }: { orgName: string | null }) {
 
           <Chapter n={followUps ? "06" : "05"} title="Regulars" lead="The people who came in most. Not included in exported reports.">
             {scope === "me" ? (
-                <ChartCard title="Most frequent visitors" subtitle="Top 10 by check-ins" table={data.topVisitors} unit="check-ins">
-                  {data.topVisitors.length ? <BarList data={data.topVisitors} unit="check-ins" hrefFor={(p) => `/people/${p.personId}`} /> : <Empty />}
+                <ChartCard title="Most frequent visitors" subtitle={`Top 10 by ${terms.checkInsLower}`} table={data.topVisitors} unit={terms.checkInsLower}>
+                  {data.topVisitors.length ? <BarList data={data.topVisitors} unit={terms.checkInsLower} hrefFor={(p) => `/people/${p.personId}`} /> : <Empty />}
                 </ChartCard>
               ) : (
-                <ChartCard title="Most frequent visitors" subtitle="Top 10 by check-ins" table={data.topVisitors} unit="check-ins">
-                  {data.topVisitors.length ? <BarList data={data.topVisitors} unit="check-ins" hrefFor={(p) => `/team/client/${p.personId}`} /> : <Empty />}
+                <ChartCard title="Most frequent visitors" subtitle={`Top 10 by ${terms.checkInsLower}`} table={data.topVisitors} unit={terms.checkInsLower}>
+                  {data.topVisitors.length ? <BarList data={data.topVisitors} unit={terms.checkInsLower} hrefFor={(p) => `/team/client/${p.personId}`} /> : <Empty />}
                 </ChartCard>
               )}
           </Chapter>

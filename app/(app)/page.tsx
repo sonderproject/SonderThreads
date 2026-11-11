@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getTerms } from "@/lib/terms-server";
 import { CommandBar } from "@/components/command/CommandBar";
 import { QuickActions } from "@/components/command/QuickActions";
 import { PersonCard } from "@/components/people/PersonCard";
@@ -21,6 +22,7 @@ import { getTimeZone } from "@/lib/timezone";
 import { dateParts, dayKey } from "@/lib/tz";
 
 export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ invite?: string }> }) {
+  const terms = await getTerms();
   const { invite: inviteError } = await searchParams;
   // "Today" and this month in the viewer's zone, not the server's (UTC on Vercel).
   const timeZone = await getTimeZone();
@@ -94,7 +96,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         )}
       </Section>
 
-      <Section title="Impact · last 30 days" href="/impact">
+      <Section title={`${terms.impact} · last 30 days`} href="/impact">
         <ImpactTeaser />
       </Section>
 
