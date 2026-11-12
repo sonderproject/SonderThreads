@@ -118,27 +118,19 @@ function Feature({
   title,
   body,
   icon,
-  color,
   className = "",
   children,
 }: {
   title: string;
   body: string;
   icon: React.ReactNode;
-  color: string;
   className?: string;
   children: React.ReactNode;
 }) {
   return (
-    <div
-      className={`card group flex flex-col gap-4 p-5 transition-transform duration-200 motion-safe:hover:-translate-y-1 sm:p-6 ${className}`}
-      style={{ boxShadow: `inset 0 3px 0 ${color}, var(--shadow-card)` }}
-    >
+    <div className={`card group flex flex-col gap-4 p-5 transition-transform duration-200 motion-safe:hover:-translate-y-1 sm:p-6 ${className}`}>
       <div className="flex items-start gap-3">
-        <span
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
-          style={{ background: `color-mix(in srgb, ${color} 15%, transparent)`, color }}
-        >
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent">
           {icon}
         </span>
         <div className="space-y-1">
@@ -268,7 +260,6 @@ export default function WelcomePage() {
             {/* 1. Say it once: the live command bar */}
             <Feature
               className="lg:col-span-2"
-              color="var(--accent)"
               icon={<MicIcon className="h-5 w-5" />}
               title="Just say it. Strynd files it."
               body="Type or speak one sentence. It becomes a task, a note, a reminder or a sale, linked to the right person. No forms."
@@ -278,7 +269,6 @@ export default function WelcomePage() {
 
             {/* 2. Tasks */}
             <Feature
-              color="var(--cal-ext-3)"
               icon={<TasksIcon className="h-5 w-5" />}
               title="Nothing slips"
               body="Due dates, repeats and reminders. Notes that mention a to-do suggest the task for you."
@@ -305,7 +295,6 @@ export default function WelcomePage() {
 
             {/* 3. People */}
             <Feature
-              color="var(--cal-birthday)"
               icon={<PeopleIcon className="h-5 w-5" />}
               title="Everyone's story, in one place"
               body="A profile for every client or customer: notes, visits, tasks and follow-ups on one timeline."
@@ -313,8 +302,7 @@ export default function WelcomePage() {
               <div className="space-y-2" aria-hidden>
                 <div className="flex items-center gap-2">
                   <span
-                    className="flex h-8 w-8 items-center justify-center rounded-full text-xs font-semibold text-bg"
-                    style={{ background: "var(--cal-birthday)" }}
+                    className="flex h-8 w-8 items-center justify-center rounded-full bg-accent-soft text-xs font-semibold text-accent"
                   >
                     AO
                   </span>
@@ -330,7 +318,6 @@ export default function WelcomePage() {
 
             {/* 4. Calendar */}
             <Feature
-              color="var(--cal-ext-1)"
               icon={<CalendarIcon className="h-5 w-5" />}
               title="Your whole week, one calendar"
               body="Tasks and birthdays, plus your Google, Apple or Outlook calendar. Calendly bookings too."
@@ -341,8 +328,8 @@ export default function WelcomePage() {
                     <div key={i} className={`rounded-md py-1 ${i === 3 ? "bg-accent text-bg" : "bg-bg"}`}>
                       {d}
                       <div className="mt-0.5 flex justify-center gap-0.5">
-                        {i % 2 === 0 && <span className="h-1 w-1 rounded-full" style={{ background: "var(--cal-ext-1)" }} />}
-                        {i !== 6 && i % 3 === 0 && <span className="h-1 w-1 rounded-full" style={{ background: "var(--cal-birthday)" }} />}
+                        {i % 2 === 0 && <span className={`h-1 w-1 rounded-full ${i === 3 ? "bg-bg" : "bg-accent"}`} />}
+                        {i !== 6 && i % 3 === 0 && <span className={`h-1 w-1 rounded-full ${i === 3 ? "bg-bg" : "bg-text-muted"}`} />}
                       </div>
                     </div>
                   ))}
@@ -359,7 +346,6 @@ export default function WelcomePage() {
 
             {/* 5. Insights */}
             <Feature
-              color="var(--chart-2)"
               icon={
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5" aria-hidden>
                   <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" />
@@ -392,7 +378,6 @@ export default function WelcomePage() {
             {/* 6. Private */}
             <Feature
               className="lg:col-span-3"
-              color="var(--new)"
               icon={
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5" aria-hidden>
                   <rect x="4" y="11" width="16" height="10" rx="2" />

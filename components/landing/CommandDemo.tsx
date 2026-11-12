@@ -4,10 +4,10 @@ import { useEffect, useState } from "react";
 
 /** What a person types, and what Strynd makes of it. */
 const EXAMPLES = [
-  { said: "Remind me to call Sarah Friday at 3", kind: "Task", detail: "Fri 3:00 PM · linked to Sarah", color: "var(--accent)" },
-  { said: "Marcus got the job at Amazon", kind: "Note", detail: "Added to Marcus's profile", color: "var(--cal-ext-1)" },
-  { said: "Ana – haircut $45", kind: "Service", detail: "Haircut · $45 · today", color: "var(--cal-birthday)" },
-  { said: "Call Jo every Monday", kind: "Repeating task", detail: "Every Monday · linked to Jo", color: "var(--cal-ext-3)" },
+  { said: "Remind me to call Sarah Friday at 3", kind: "Task", detail: "Fri 3:00 PM · linked to Sarah" },
+  { said: "Marcus got the job at Amazon", kind: "Note", detail: "Added to Marcus's profile" },
+  { said: "Ana – haircut $45", kind: "Service", detail: "Haircut · $45 · today" },
+  { said: "Call Jo every Monday", kind: "Repeating task", detail: "Every Monday · linked to Jo" },
 ];
 
 /**
@@ -70,7 +70,7 @@ export function CommandDemo() {
           done ? "translate-y-0 opacity-100" : "translate-y-1 opacity-0"
         }`}
       >
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-bg" style={{ background: e.color }}>
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent text-bg">
           ✓
         </span>
         <span className="min-w-0">
