@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { takeQuota } from "@/lib/usage";
 import { getSessionUser } from "@/lib/session";
 
 export const runtime = "nodejs";
@@ -12,8 +13,12 @@ const MAX_BYTES = 10 * 1024 * 1024; // ~several minutes of compressed speech; co
  * Returns 501 when OPENAI_API_KEY isn't configured.
  */
 export async function POST(request: Request) {
-  if (!(await getSessionUser())) {
+  const user = await getSessionUser();
+  if (!user) {
     return NextResponse.json({ error: "Not signed in" }, { status: 401 });
+  }
+  if (!(await takeQuota(user.id, "transcribe"))) {
+    return NextResponse.json({ error: "You've used voice a lot just now. Type it, or try again in a little while." }, { status: 429 });
   }
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {

@@ -1,4 +1,5 @@
 import { mineOrOrg } from "@/lib/db/scope";
+import { takeQuota } from "@/lib/usage";
 import { query, queryOne } from "@/lib/db/client";
 import { generatePersonSummary } from "@/lib/ai/person-summary";
 import type { Person } from "@/lib/types";
@@ -37,7 +38,9 @@ export async function regenerateSummaryFor(userId: string, personId: string): Pr
     ),
   ]);
 
-  const result = await generatePersonSummary({
+  const usesAi = process.env.AI_PROVIDER === "openai" || process.env.AI_PROVIDER === "anthropic";
+  const result = await generatePersonSummary(
+    {
     person: {
       displayName: person.display_name,
       currentStatus: person.current_status,
@@ -45,7 +48,10 @@ export async function regenerateSummaryFor(userId: string, personId: string): Pr
     },
     recentNotes: notes.map((n) => ({ content: n.content, createdAt: n.created_at })),
     openTasks: tasks.map((t) => ({ title: t.title, dueAt: t.due_at })),
-  });
+  },
+    // AI costs per call: past the user's cap, the free built-in summary is used.
+    { forceFallback: usesAi && !(await takeQuota(userId, "ai.summary")) },
+  );
 
   await query(
     `update people set summary = $1, current_status = $2, next_action = $3

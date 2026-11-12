@@ -1,4 +1,5 @@
 import { query, queryOne } from "@/lib/db/client";
+import { takeQuota } from "@/lib/usage";
 import { appUrl } from "@/lib/email";
 import { sendPush } from "./push";
 import { sendSms } from "./sms";
@@ -67,7 +68,8 @@ export async function deliver(userId: string, n: Omit<NotifyParams, "type" | "pa
       `select phone, sms_opt_in from users where id = $1`,
       [userId],
     );
-    if (user?.phone && user.sms_opt_in) {
+    // Texts cost money: past the per-person cap they're skipped (the notice still shows in the app).
+    if (user?.phone && user.sms_opt_in && (await takeQuota(userId, "sms"))) {
       const text = [`Strynd: ${n.title}`, n.body, `${appUrl()}${url}`].filter(Boolean).join("\n");
       await sendSms(user.phone, text).catch((err) => console.error("[notify] sms failed", err));
     }

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { takeQuota } from "@/lib/usage";
 import { exportFilter } from "@/lib/db/scope";
 import { csvCell } from "@/lib/csv";
 import { query } from "@/lib/db/client";
@@ -34,6 +35,9 @@ function formatBirthday(value: string | Date | null): string {
 export async function GET(request: Request) {
   const user = await getSessionUser();
   if (!user) return NextResponse.json({ error: "Not signed in" }, { status: 401 });
+  if (!(await takeQuota(user.id, "export"))) {
+    return NextResponse.json({ error: "Too many exports in a short time. Try again in a little while." }, { status: 429 });
+  }
 
   const params = new URL(request.url).searchParams;
   const format = params.get("format") as Format;

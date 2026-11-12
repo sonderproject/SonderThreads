@@ -995,4 +995,17 @@ end $$;
 -- default depends on the account: 4 hours for individuals, 30 minutes in an
 -- organization (lib/auth.ts defaultIdleMinutes).
 alter table user_settings add column if not exists idle_timeout_chosen boolean not null default false;
+
+-- Per-user usage counters for anything that costs money or server time
+-- (lib/usage.ts): AI calls, voice transcription, texts, report exports.
+-- One row per user, kind and hour. Server-only (RLS on, no policies).
+create table if not exists usage_counters (
+  user_id uuid not null,
+  kind text not null,
+  hour timestamptz not null,
+  count int not null default 0,
+  primary key (user_id, kind, hour)
+);
+create index if not exists usage_counters_hour_idx on usage_counters (hour);
+alter table usage_counters enable row level security;
 `;

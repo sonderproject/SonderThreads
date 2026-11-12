@@ -1,5 +1,6 @@
 "use server";
 
+import { takeQuota } from "@/lib/usage";
 import { query } from "@/lib/db/client";
 import { requireUserId } from "@/lib/current-user";
 import { parseCommand, type ParserContext } from "@/lib/ai/command-parser";
@@ -179,7 +180,13 @@ async function executeOne(trimmed: string, tzOffset: number): Promise<CommandRes
       href: `/people/${svc.match.personId}`,
     };
   }
-  const parsed = await parseCommand(trimmed, await loadParserContext(tzOffset));
+  const context = await loadParserContext(tzOffset);
+  // AI costs per call: within the user's cap it reads the sentence; past it, the free built-in parser does.
+  const usesAi = process.env.AI_PROVIDER === "openai" || process.env.AI_PROVIDER === "anthropic";
+  const parsed =
+    usesAi && !(await takeQuota(await requireUserId(), "ai.command"))
+      ? await fallbackProvider.parse(trimmed, context)
+      : await parseCommand(trimmed, context);
 
   try {
     switch (parsed.intent) {

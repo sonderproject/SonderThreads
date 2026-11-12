@@ -22,8 +22,8 @@ async function resolveProvider(): Promise<SummaryProvider> {
   return fallbackSummaryProvider;
 }
 
-export async function generatePersonSummary(input: SummaryInput): Promise<SummaryResult> {
-  const provider = await resolveProvider();
+export async function generatePersonSummary(input: SummaryInput, opts: { forceFallback?: boolean } = {}): Promise<SummaryResult> {
+  const provider = opts.forceFallback ? fallbackSummaryProvider : await resolveProvider();
 
   if (provider.name === "fallback") {
     return provider.summarize(input);

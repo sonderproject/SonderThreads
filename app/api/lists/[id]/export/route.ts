@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { takeQuota } from "@/lib/usage";
 import { query, queryOne } from "@/lib/db/client";
 import { getSessionUser } from "@/lib/session";
 import { CONTENT_TYPES, fileStem, renderTable, type ExportFormat } from "@/lib/export/table";
@@ -35,6 +36,9 @@ function buildTable(list: List, rows: Row[]): { headers: string[]; body: string[
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const user = await getSessionUser();
   if (!user) return NextResponse.json({ error: "Not signed in" }, { status: 401 });
+  if (!(await takeQuota(user.id, "export"))) {
+    return NextResponse.json({ error: "Too many exports in a short time. Try again in a little while." }, { status: 429 });
+  }
   const userId = user.id;
   const { id } = await params;
   if (!isUuid(id)) return NextResponse.json({ error: "List not found" }, { status: 404 });

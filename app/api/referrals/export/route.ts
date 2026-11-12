@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { takeQuota } from "@/lib/usage";
 import { getSessionUser } from "@/lib/session";
 import { getMembership } from "@/lib/org";
 import { getTimeZone } from "@/lib/timezone";
@@ -17,6 +18,9 @@ function csvCell(v: string): string {
 export async function GET(request: Request) {
   const user = await getSessionUser();
   if (!user) return NextResponse.json({ error: "Not signed in" }, { status: 401 });
+  if (!(await takeQuota(user.id, "export"))) {
+    return NextResponse.json({ error: "Too many exports in a short time. Try again in a little while." }, { status: 429 });
+  }
   const m = await getMembership();
   if (!m?.active || m.role !== "admin") return NextResponse.json({ error: "Not allowed" }, { status: 403 });
 

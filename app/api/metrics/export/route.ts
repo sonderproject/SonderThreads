@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { takeQuota } from "@/lib/usage";
 import { getSessionUser } from "@/lib/session";
 import { getTimeZone } from "@/lib/timezone";
 import { dayKey } from "@/lib/tz";
@@ -17,6 +18,9 @@ export const runtime = "nodejs";
 export async function GET(request: Request) {
   const user = await getSessionUser();
   if (!user) return NextResponse.json({ error: "Not signed in" }, { status: 401 });
+  if (!(await takeQuota(user.id, "export"))) {
+    return NextResponse.json({ error: "Too many exports in a short time. Try again in a little while." }, { status: 429 });
+  }
 
   const m = await getMembership();
   if (m?.active && m.role === "case_manager") return NextResponse.json({ error: "Not allowed" }, { status: 403 });
