@@ -44,7 +44,8 @@ export async function createOrganization(formData: FormData): Promise<void> {
   await recordAcceptance(userId, "organization", orgId);
   revalidatePath("/", "layout");
   // New organizations start their free trial with a card first (lib/billing.ts), then bring clients in.
-  redirect(billingEnabled() ? "/billing?org=new" : "/organization/clients?new=1");
+  const offer = formData.get("offer") === "skip" ? "&offer=skip" : "";
+  redirect(billingEnabled() ? `/billing?org=new${offer}` : "/organization/clients?new=1");
 }
 
 /** Admin: makes a one-time invite link for an email address and role, and emails it when email is set up. */

@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { SeatSummary } from "@/components/org/SeatSummary";
+import { seatUsage } from "@/lib/billing";
 import { asUser } from "@/lib/db/as-user";
 import { requireTeamViewer } from "@/lib/team";
 import { ROLE_LABELS, type OrgRole } from "@/lib/org";
@@ -43,6 +45,7 @@ export default async function TeamPage() {
   );
 
   const newReferrals = viewer.role === "admin" ? await countNewReferrals(viewer.orgId) : 0;
+  const seats = viewer.role === "admin" ? await seatUsage(viewer.orgId) : null;
   return (
     <div className="space-y-6">
       <div className="space-y-1">
@@ -65,6 +68,7 @@ export default async function TeamPage() {
           </div>
         )}
       </div>
+      {seats && <SeatSummary seats={seats} canManage />}
 
       <div className="grid gap-3 sm:grid-cols-4">
         <div className="card p-4 sm:col-span-2" style={{ borderColor: "var(--accent)" }}>

@@ -52,9 +52,11 @@ const PLAN_NAMES: Record<string, string> = {
 export default async function BillingPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; checkout?: string }>;
+  searchParams: Promise<{ error?: string; checkout?: string; offer?: string }>;
 }) {
-  const { error, checkout } = await searchParams;
+  const { error, checkout, offer } = await searchParams;
+  // Came from "Get started now: 30% off" on the landing page: lead with that button.
+  const leadWithOffer = offer === "skip";
   if (checkout)
     await confirmCheckout(checkout).catch((err) =>
       console.error("[billing] confirm failed", err),
@@ -143,7 +145,10 @@ export default async function BillingPage({
         {a.scope === "org" && !isComp && usage && purchased && (
           <div className="space-y-1 pt-1 text-sm">
             <p className="text-text">
-              <span className="tabular-nums">{inUse}</span> of <span className="tabular-nums">{purchased}</span> seats in use
+              <span className="tabular-nums">{inUse}</span> of <span className="tabular-nums">{purchased}</span> seats in use ·{" "}
+              <strong className={purchased - inUse > 0 ? "text-accent" : "text-urgent"}>
+                {Math.max(0, purchased - inUse)} left
+              </strong>
               <span className="text-text-muted">
                 {" "}
                 ({usage.active} {usage.active === 1 ? "member" : "members"}
@@ -210,14 +215,19 @@ export default async function BillingPage({
                       ? "Your free trial has ended. Subscribe to keep adding and editing; everything is still here."
                       : "Everything for one person. Cancel any time."}
                 </p>
+                {a.state === "trial" && leadWithOffer && (
+                  <button type="submit" name="skip" value="1" className={primary} disabled={!billingEnabled()}>
+                    Get started now: 30% off your first month
+                  </button>
+                )}
                 <button
                   type="submit"
-                  className={primary}
+                  className={a.state === "trial" && leadWithOffer ? secondary : primary}
                   disabled={!billingEnabled()}
                 >
-                  {a.state === "trial" ? "Add a card" : "Subscribe"}
+                  {a.state === "trial" ? (leadWithOffer ? "Keep my free trial" : "Add a card") : "Subscribe"}
                 </button>
-                {a.state === "trial" && (
+                {a.state === "trial" && !leadWithOffer && (
                   <button type="submit" name="skip" value="1" className={secondary} disabled={!billingEnabled()}>
                     Skip the trial: 30% off your first month
                   </button>
@@ -269,10 +279,15 @@ export default async function BillingPage({
                   or remove seats any time; changes are prorated.
                   {a.state === "trial" && a.endsAt ? ` Your free trial continues until ${fmt(a.endsAt)}; you won't be charged before then.` : ""}
                 </p>
-                <button type="submit" className={primary} disabled={!billingEnabled()}>
+                {(a.state === "setup" || a.state === "trial") && !a.row?.stripe_subscription_id && leadWithOffer && (
+                  <button type="submit" name="skip" value="1" className={primary} disabled={!billingEnabled()}>
+                    Get started now: 30% off your first month
+                  </button>
+                )}
+                <button type="submit" className={leadWithOffer && (a.state === "setup" || a.state === "trial") ? secondary : primary} disabled={!billingEnabled()}>
                   {a.state === "setup" ? "Start the free trial" : "Continue to payment"}
                 </button>
-                {(a.state === "setup" || a.state === "trial") && !a.row?.stripe_subscription_id && (
+                {(a.state === "setup" || a.state === "trial") && !a.row?.stripe_subscription_id && !leadWithOffer && (
                   <button type="submit" name="skip" value="1" className={secondary} disabled={!billingEnabled()}>
                     Skip the trial: 30% off your first month
                   </button>

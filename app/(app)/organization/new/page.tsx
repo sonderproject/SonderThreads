@@ -4,9 +4,9 @@ import { getMembership } from "@/lib/org";
 import { createOrganization } from "@/lib/actions/org";
 
 /** Set up an organization (agency or team). The creator becomes its admin. */
-export default async function NewOrganizationPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
+export default async function NewOrganizationPage({ searchParams }: { searchParams: Promise<{ error?: string; offer?: string }> }) {
   if (await getMembership()) redirect("/organization");
-  const { error } = await searchParams;
+  const { error, offer } = await searchParams;
   return (
     <div className="max-w-md space-y-6">
       <div className="space-y-1">
@@ -17,6 +17,7 @@ export default async function NewOrganizationPage({ searchParams }: { searchPara
         </p>
       </div>
       <form action={createOrganization} className="card space-y-3 p-4">
+        {offer === "skip" && <input type="hidden" name="offer" value="skip" />}
         <label className="block space-y-1">
           <span className="text-xs text-text-muted">Organization name</span>
           <input name="name" required maxLength={200} placeholder="Hope House" className="input" />

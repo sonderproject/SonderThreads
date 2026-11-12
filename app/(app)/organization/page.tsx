@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SeatSummary } from "@/components/org/SeatSummary";
 import { redirect } from "next/navigation";
 import { asUser } from "@/lib/db/as-user";
 import { requireUserId } from "@/lib/current-user";
@@ -109,6 +110,7 @@ export default async function OrganizationPage({ searchParams }: { searchParams:
           </Link>
         </p>
       </div>
+      <SeatSummary seats={seats} canManage />
 
       {error && ERRORS[error] && <p className="flag text-sm">{ERRORS[error]}</p>}
       {saved && SAVED[saved] && <p className="text-sm text-accent">{SAVED[saved]}</p>}
@@ -326,11 +328,9 @@ export default async function OrganizationPage({ searchParams }: { searchParams:
         <h2 className="section-label">Invites</h2>
         {seats.purchased !== null && (
           <p className="text-sm text-text-muted">
-            <span className="tabular-nums text-text">{seats.active + seats.pending}</span> of{" "}
-            <span className="tabular-nums text-text">{seats.purchased}</span> seats in use (members and pending invites).{" "}
-            <Link href="/billing" className="text-accent hover:underline">
-              Change seats
-            </Link>
+            {Math.max(0, seats.purchased - seats.active - seats.pending) === 0
+              ? "No seats left: add seats in Billing before inviting more people."
+              : `${seats.purchased - seats.active - seats.pending} ${seats.purchased - seats.active - seats.pending === 1 ? "seat" : "seats"} left to invite people into.`}
           </p>
         )}
         <InviteForm orgName={m.orgName} />

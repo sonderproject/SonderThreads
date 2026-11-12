@@ -66,6 +66,9 @@ const COMPARE: [string, boolean][] = [
 ];
 
 const TEAM_SIGNUP = "/signup?next=%2Forganization%2Fnew";
+/** "Get started now": sign up, then land on Billing with "Skip the trial: 30% off your first month" up front. */
+const OFFER_SIGNUP = "/signup?next=%2Fbilling%3Foffer%3Dskip";
+const TEAM_OFFER_SIGNUP = "/signup?next=%2Forganization%2Fnew%3Foffer%3Dskip";
 const SALES = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent("Strynd Enterprise")}`;
 
 const PLANS: {
@@ -77,6 +80,8 @@ const PLANS: {
   features: string[];
   cta: string;
   href: string;
+  /** Skip the trial, 30% off the first month. */
+  offerHref?: string;
   featured?: boolean;
 }[] = [
   {
@@ -88,6 +93,7 @@ const PLANS: {
     features: ["Your own private workspace", "Tasks, to-dos, notes and lists", "Clients and check-ins with full history", "Voice notes, smart command box, reminders"],
     cta: "Start your free trial",
     href: "/signup",
+    offerHref: OFFER_SIGNUP,
   },
   {
     name: "Small Team",
@@ -98,6 +104,7 @@ const PLANS: {
     features: ["Everything in Individual, for everyone", "Shared team workspace and client list", "Invite and manage team members", "Roles and access controls", "One bill for the whole team"],
     cta: "Start a free team trial",
     href: TEAM_SIGNUP,
+    offerHref: TEAM_OFFER_SIGNUP,
   },
   {
     name: "Organization",
@@ -108,6 +115,7 @@ const PLANS: {
     features: ["Everything in Small Team", "20 seats included", "Extra seats just $15 each", "Team dashboard, activity log, Impact reports", "Admin permissions and centralized billing"],
     cta: "Start a free team trial",
     href: TEAM_SIGNUP,
+    offerHref: TEAM_OFFER_SIGNUP,
     featured: true,
   },
   {
@@ -147,6 +155,12 @@ function Cta({ className = "" }: { className?: string }) {
       >
         Sign in
       </Link>
+      <p className="w-full text-sm text-text-muted">
+        Ready now?{" "}
+        <Link href={OFFER_SIGNUP} className="font-medium text-accent hover:underline">
+          Get started today with 30% off your first month →
+        </Link>
+      </p>
     </div>
   );
 }
@@ -316,6 +330,11 @@ export default function WelcomePage() {
                 >
                   {p.cta}
                 </a>
+                {p.offerHref && (
+                  <a href={p.offerHref} className="-mt-1 text-center text-sm font-medium text-accent hover:underline">
+                    Or get started now: 30% off your first month
+                  </a>
+                )}
               </div>
             ))}
           </div>
