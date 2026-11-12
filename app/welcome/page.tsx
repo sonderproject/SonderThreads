@@ -344,40 +344,8 @@ export default function WelcomePage() {
               </div>
             </Feature>
 
-            {/* 5. Insights */}
-            <Feature
-              icon={
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5" aria-hidden>
-                  <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" />
-                </svg>
-              }
-              title="Know what's working"
-              body="See your best services, busiest days and hours, and what's growing, without a spreadsheet."
-            >
-              <div className="space-y-2" aria-hidden>
-                <div className="flex h-16 items-end gap-1.5">
-                  {[35, 55, 40, 70, 60, 95, 50].map((h, i) => (
-                    <span
-                      key={i}
-                      className="flex-1 rounded-t"
-                      style={{ height: `${h}%`, background: i === 5 ? "var(--accent)" : "color-mix(in srgb, var(--accent) 30%, transparent)" }}
-                    />
-                  ))}
-                </div>
-                <p className="flex flex-wrap gap-x-3 text-xs text-text-muted">
-                  <span>
-                    Busiest: <strong className="text-text">Sat 10am</strong>
-                  </span>
-                  <span>
-                    Haircuts <strong className="text-accent">↑ 20%</strong>
-                  </span>
-                </p>
-              </div>
-            </Feature>
-
             {/* 6. Private */}
             <Feature
-              className="lg:col-span-3"
               icon={
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5" aria-hidden>
                   <rect x="4" y="11" width="16" height="10" rx="2" />
@@ -395,6 +363,55 @@ export default function WelcomePage() {
                 ))}
               </div>
             </Feature>
+            {/* 5. Insights */}
+            <Feature
+              className="lg:col-span-3"
+              icon={
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5" aria-hidden>
+                  <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" />
+                </svg>
+              }
+              title="Insights for smarter decisions"
+              body="Personal and business insights: your best services, busiest days and hours, and what's growing or slipping. Decide with real numbers, then share them as a polished PDF report in one click."
+            >
+              <div className="grid gap-4 sm:grid-cols-2 sm:items-end" aria-hidden>
+                <div className="space-y-2">
+                <div className="flex h-20 items-end gap-1.5">
+                  {[35, 55, 40, 70, 60, 95, 50].map((h, i) => (
+                    <span
+                      key={i}
+                      className="flex-1 rounded-t"
+                      style={{ height: `${h}%`, background: i === 5 ? "var(--accent)" : "color-mix(in srgb, var(--accent) 30%, transparent)" }}
+                    />
+                  ))}
+                </div>
+                <p className="flex flex-wrap gap-x-3 text-xs text-text-muted">
+                  <span>
+                    Busiest: <strong className="text-text">Sat 10am</strong>
+                  </span>
+                  <span>
+                    Haircuts <strong className="text-accent">↑ 20%</strong>
+                  </span>
+                </p>
+                </div>
+                <div className="space-y-2 rounded-2xl border border-border bg-bg p-4">
+                <p className="text-sm font-medium text-text">Monthly report · November</p>
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-accent px-3 py-1 text-xs font-semibold text-bg">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5">
+                      <path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" />
+                      <path d="M14 3v6h6M12 12v6M9 15l3 3 3-3" />
+                    </svg>
+                    PDF report
+                  </span>
+                  <span className="rounded-full border border-border px-2.5 py-1 text-xs text-text-muted">Excel</span>
+                  <span className="rounded-full border border-border px-2.5 py-1 text-xs text-text-muted">CSV</span>
+                </div>
+                <p className="text-[11px] text-text-muted">PDF reports with your logo on team plans; Excel and CSV on every plan.</p>
+                </div>
+              </div>
+            </Feature>
+
           </div>
         </section>
 
