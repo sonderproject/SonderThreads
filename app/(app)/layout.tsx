@@ -19,11 +19,13 @@ import { billingEnabled, getAccess } from "@/lib/billing";
 import { BillingBanner } from "@/components/billing/BillingBanner";
 import { pendingAgreements } from "@/lib/actions/legal";
 
-/** Offer optional 2FA to people who don't have it on, at most once every 30 days. */
+/** Offer optional 2FA to people who don't have it on (from day 3), at most once every 30 days. */
 async function shouldOfferTwoFactor(): Promise<boolean> {
   const userId = await requireUserId();
   const row = await queryOne<{ offer: boolean }>(
     `select (not mfa_enabled
+             -- Not on day one: let new people try the app before asking about security settings.
+             and created_at < now() - interval '3 days'
              and (mfa_prompt_dismissed_at is null or mfa_prompt_dismissed_at < now() - interval '30 days')) as offer
      from users where id = $1`,
     [userId],
