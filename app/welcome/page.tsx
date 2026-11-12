@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { CommandDemo } from "@/components/landing/CommandDemo";
+import { CalendarIcon, MicIcon, PeopleIcon, TasksIcon } from "@/components/ui/icons";
 import Link from "next/link";
 import { SITE_DESCRIPTION } from "@/lib/site";
 import { LegalLinks } from "@/components/legal/LegalPage";
@@ -20,24 +22,6 @@ export const metadata: Metadata = {
   },
   twitter: { card: "summary_large_image", title: "Strynd", description: SITE_DESCRIPTION },
 };
-
-const FEATURES = [
-  {
-    title: "Tasks & to-dos",
-    body: "Due dates, repeating tasks and reminders that actually reach you. Your day, sorted, and nothing slips.",
-  },
-  {
-    title: "Clients & people",
-    body: "A profile and full history for everyone you work with: notes, check-ins, tasks and follow-ups, all in one place.",
-  },
-  {
-    title: "Say it once",
-    body: "Type “remind me to call Sarah Friday” or just say it. Strynd makes the task, sets the reminder and links the person.",
-  },
-  { title: "Notes & voice notes", body: "Capture anything in seconds. Notes land on the right person or project, ready to search later." },
-  { title: "Lists & groups", body: "Checklists, shopping lists, rosters and groups you can share and export." },
-  { title: "Private and yours", body: "Two-factor sign-in, auto-lock and record-level privacy. Export everything, any time." },
-];
 
 const AUDIENCES = ["Freelancers", "Business owners", "Coaches", "Realtors", "Consultants", "Case managers", "Students", "Parents", "Teams"];
 
@@ -128,6 +112,44 @@ const PLANS: {
     href: SALES,
   },
 ];
+
+/** One feature on the landing page: colored icon, title, one line, and a small live preview. */
+function Feature({
+  title,
+  body,
+  icon,
+  color,
+  className = "",
+  children,
+}: {
+  title: string;
+  body: string;
+  icon: React.ReactNode;
+  color: string;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div
+      className={`card group flex flex-col gap-4 p-5 transition-transform duration-200 motion-safe:hover:-translate-y-1 sm:p-6 ${className}`}
+      style={{ boxShadow: `inset 0 3px 0 ${color}, var(--shadow-card)` }}
+    >
+      <div className="flex items-start gap-3">
+        <span
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
+          style={{ background: `color-mix(in srgb, ${color} 15%, transparent)`, color }}
+        >
+          {icon}
+        </span>
+        <div className="space-y-1">
+          <h3 className="font-display text-lg font-normal leading-snug">{title}</h3>
+          <p className="text-sm leading-relaxed text-text-muted">{body}</p>
+        </div>
+      </div>
+      <div className="mt-auto">{children}</div>
+    </div>
+  );
+}
 
 /** Studio-style section marker: number, hairline, wide-tracked label. */
 function Marker({ n, children }: { n: string; children: React.ReactNode }) {
@@ -242,13 +264,152 @@ export default function WelcomePage() {
           <h2 className="max-w-2xl font-display text-3xl font-light leading-tight tracking-[-0.02em] sm:text-4xl">
             Your to-do app, notes app, reminders and client list. Finally in one place.
           </h2>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {FEATURES.map((f) => (
-              <div key={f.title} className="card space-y-2 p-5">
-                <h2 className="font-display text-lg font-normal">{f.title}</h2>
-                <p className="text-sm leading-relaxed text-text-muted">{f.body}</p>
+          <div className="grid gap-4 lg:grid-cols-3">
+            {/* 1. Say it once: the live command bar */}
+            <Feature
+              className="lg:col-span-2"
+              color="var(--accent)"
+              icon={<MicIcon className="h-5 w-5" />}
+              title="Just say it. Strynd files it."
+              body="Type or speak one sentence. It becomes a task, a note, a reminder or a sale, linked to the right person. No forms."
+            >
+              <CommandDemo />
+            </Feature>
+
+            {/* 2. Tasks */}
+            <Feature
+              color="var(--cal-ext-3)"
+              icon={<TasksIcon className="h-5 w-5" />}
+              title="Nothing slips"
+              body="Due dates, repeats and reminders. Notes that mention a to-do suggest the task for you."
+            >
+              <ul className="space-y-1.5 text-sm" aria-hidden>
+                <li className="flex items-center gap-2">
+                  <span className="h-4 w-4 rounded border border-border" />
+                  <span className="flex-1 truncate">Call the landlord</span>
+                  <span className="tag tag-e !ml-0">Today 2pm</span>
+                </li>
+                <li className="flex items-center gap-2 text-text-muted">
+                  <span className="flex h-4 w-4 items-center justify-center rounded bg-accent text-[10px] text-bg">✓</span>
+                  <span className="flex-1 truncate line-through">Send the lease forms</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="h-4 w-4 rounded border border-border" />
+                  <span className="flex-1 truncate">Follow up with Ana</span>
+                  <span className="rounded-full px-2 py-0.5 text-[11px] font-semibold text-urgent" style={{ background: "var(--urgent-soft)" }}>
+                    Overdue
+                  </span>
+                </li>
+              </ul>
+            </Feature>
+
+            {/* 3. People */}
+            <Feature
+              color="var(--cal-birthday)"
+              icon={<PeopleIcon className="h-5 w-5" />}
+              title="Everyone's story, in one place"
+              body="A profile for every client or customer: notes, visits, tasks and follow-ups on one timeline."
+            >
+              <div className="space-y-2" aria-hidden>
+                <div className="flex items-center gap-2">
+                  <span
+                    className="flex h-8 w-8 items-center justify-center rounded-full text-xs font-semibold text-bg"
+                    style={{ background: "var(--cal-birthday)" }}
+                  >
+                    AO
+                  </span>
+                  <span className="text-sm font-medium">Ana Ortiz</span>
+                </div>
+                <ul className="space-y-1 border-l-2 border-border pl-3 text-xs text-text-muted">
+                  <li>Today · Haircut, $45</li>
+                  <li>Nov 3 · Note: moving in December</li>
+                  <li>Oct 20 · Follow-up done</li>
+                </ul>
               </div>
-            ))}
+            </Feature>
+
+            {/* 4. Calendar */}
+            <Feature
+              color="var(--cal-ext-1)"
+              icon={<CalendarIcon className="h-5 w-5" />}
+              title="Your whole week, one calendar"
+              body="Tasks and birthdays, plus your Google, Apple or Outlook calendar. Calendly bookings too."
+            >
+              <div className="space-y-2" aria-hidden>
+                <div className="grid grid-cols-7 gap-1 text-center text-[10px] text-text-muted">
+                  {["M", "T", "W", "T", "F", "S", "S"].map((d, i) => (
+                    <div key={i} className={`rounded-md py-1 ${i === 3 ? "bg-accent text-bg" : "bg-bg"}`}>
+                      {d}
+                      <div className="mt-0.5 flex justify-center gap-0.5">
+                        {i % 2 === 0 && <span className="h-1 w-1 rounded-full" style={{ background: "var(--cal-ext-1)" }} />}
+                        {i !== 6 && i % 3 === 0 && <span className="h-1 w-1 rounded-full" style={{ background: "var(--cal-birthday)" }} />}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {["Google", "Apple", "Outlook", "Calendly"].map((c) => (
+                    <span key={c} className="rounded-full border border-border px-2 py-0.5 text-[11px] text-text-muted">
+                      {c}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </Feature>
+
+            {/* 5. Insights */}
+            <Feature
+              color="var(--chart-2)"
+              icon={
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5" aria-hidden>
+                  <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" />
+                </svg>
+              }
+              title="Know what's working"
+              body="See your best services, busiest days and hours, and what's growing, without a spreadsheet."
+            >
+              <div className="space-y-2" aria-hidden>
+                <div className="flex h-16 items-end gap-1.5">
+                  {[35, 55, 40, 70, 60, 95, 50].map((h, i) => (
+                    <span
+                      key={i}
+                      className="flex-1 rounded-t"
+                      style={{ height: `${h}%`, background: i === 5 ? "var(--accent)" : "color-mix(in srgb, var(--accent) 30%, transparent)" }}
+                    />
+                  ))}
+                </div>
+                <p className="flex flex-wrap gap-x-3 text-xs text-text-muted">
+                  <span>
+                    Busiest: <strong className="text-text">Sat 10am</strong>
+                  </span>
+                  <span>
+                    Haircuts <strong className="text-accent">↑ 20%</strong>
+                  </span>
+                </p>
+              </div>
+            </Feature>
+
+            {/* 6. Private */}
+            <Feature
+              className="lg:col-span-3"
+              color="var(--new)"
+              icon={
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5" aria-hidden>
+                  <rect x="4" y="11" width="16" height="10" rx="2" />
+                  <path d="M8 11V7a4 4 0 0 1 8 0v4" />
+                </svg>
+              }
+              title="Private, and always yours"
+              body="Your data is never sold. Two-step sign-in, auto sign-out, and database-level privacy. Export everything, any time."
+            >
+              <div className="flex flex-wrap gap-2" aria-hidden>
+                {["Two-step sign-in", "Auto sign-out", "Never sold", "Export any time", "Works on any phone"].map((c) => (
+                  <span key={c} className="rounded-full border border-border bg-bg px-3 py-1 text-xs font-medium text-text">
+                    ✓ {c}
+                  </span>
+                ))}
+              </div>
+            </Feature>
           </div>
         </section>
 
