@@ -1,5 +1,7 @@
 "use client";
 
+import { formatMoney } from "@/lib/money";
+import type { ServiceStat } from "@/lib/metrics-shared";
 import { useTerms } from "@/components/TermsProvider";
 
 import { useCallback, useEffect, useState } from "react";
@@ -271,6 +273,7 @@ export function ImpactDashboard({ orgName }: { orgName: string | null }) {
           </Chapter>
 
           <Chapter n="03" title="Needs" lead="Why people came in.">
+            {data.services.length > 0 && <ServicesTable services={data.services} />}
             <ChartCard title="Reasons for visits" subtitle={`${terms.checkIns} by reason`} table={data.byReason} unit={terms.checkInsLower} wide>
               {data.byReason.length ? <BarList data={data.byReason} unit={terms.checkInsLower} /> : <Empty />}
             </ChartCard>
@@ -390,4 +393,65 @@ function Empty() {
 function Demographic({ data }: { data: Point[] }) {
   const shown = data.filter((d) => d.value > 0);
   return shown.length ? <BarList data={shown} unit="people" /> : <Empty />;
+}
+
+/** Services: how often each was provided, to how many people, what it brought in, its trend and its busiest time. */
+export function ServicesTable({ services }: { services: ServiceStat[] }) {
+  const showValue = services.some((s) => s.valueCents > 0);
+  const trend = (s: ServiceStat) => {
+    if (s.prevCount === 0) return { text: "new", tone: "text-accent" };
+    const pct = Math.round(((s.count - s.prevCount) / s.prevCount) * 100);
+    if (pct === 0) return { text: "same", tone: "text-text-muted" };
+    return { text: `${pct > 0 ? "↑" : "↓"} ${Math.abs(pct)}%`, tone: pct > 0 ? "text-accent" : "text-urgent" };
+  };
+  return (
+    <section className="card space-y-2 p-4">
+      <div>
+        <h3 className="text-sm font-semibold text-text">Services</h3>
+        <p className="text-xs text-text-muted">Most used first. Trend compares with the previous period of the same length.</p>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[34rem] text-sm">
+          <thead>
+            <tr className="eyebrow text-left">
+              <th className="py-1.5 pr-3 font-medium">Service</th>
+              <th className="py-1.5 pr-3 text-right font-medium">Times</th>
+              <th className="py-1.5 pr-3 text-right font-medium">People</th>
+              {showValue && <th className="py-1.5 pr-3 text-right font-medium">Value</th>}
+              <th className="py-1.5 pr-3 text-right font-medium">Trend</th>
+              <th className="py-1.5 font-medium">Busiest</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border-subtle">
+            {services.map((s) => {
+              const t = trend(s);
+              return (
+                <tr key={s.name}>
+                  <td className="py-2 pr-3 text-text">{s.name}</td>
+                  <td className="py-2 pr-3 text-right tabular-nums">{s.count.toLocaleString("en-US")}</td>
+                  <td className="py-2 pr-3 text-right tabular-nums">{s.people.toLocaleString("en-US")}</td>
+                  {showValue && <td className="py-2 pr-3 text-right tabular-nums">{s.valueCents ? formatMoney(s.valueCents) : "–"}</td>}
+                  <td className={`py-2 pr-3 text-right tabular-nums ${t.tone}`}>{t.text}</td>
+                  <td className="py-2 text-text-muted">
+                    {s.busiestDay ? `${s.busiestDay.slice(0, 3)}${s.busiestTime ? `, ${s.busiestTime}m` : ""}` : "–"}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+          {showValue && (
+            <tfoot>
+              <tr className="font-semibold">
+                <td className="pt-2 pr-3">Total</td>
+                <td className="pt-2 pr-3 text-right tabular-nums">{services.reduce((n, s) => n + s.count, 0).toLocaleString("en-US")}</td>
+                <td />
+                <td className="pt-2 pr-3 text-right tabular-nums">{formatMoney(services.reduce((n, s) => n + s.valueCents, 0))}</td>
+                <td colSpan={2} />
+              </tr>
+            </tfoot>
+          )}
+        </table>
+      </div>
+    </section>
+  );
 }

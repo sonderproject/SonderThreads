@@ -127,6 +127,8 @@ export type CheckIn = {
   person_id: string;
   checked_in_at: string;
   reason: string | null;
+  service_id?: string | null;
+  amount_cents?: number | null;
   created_at: string;
   updated_at: string;
   deleted_at: string | null;

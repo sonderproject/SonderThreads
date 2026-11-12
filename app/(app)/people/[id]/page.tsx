@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { formatMoney } from "@/lib/money";
+import { listServices } from "@/lib/services";
 import { getTerms } from "@/lib/terms-server";
 import { notFound } from "next/navigation";
 import { isUuid } from "@/lib/ids";
@@ -73,7 +75,7 @@ export default async function PersonProfilePage({
   if (!isUuid(id)) notFound();
   const me = await requireUserId();
   // Everything loads at once (each query is scoped to the user, so a bad id just returns nothing).
-  const [person, activity, tasks, lists, notes, checkIns, reasons, allLists, comments, tz, membership] = await Promise.all([
+  const [person, activity, tasks, lists, notes, checkIns, reasons, allLists, comments, tz, membership, services] = await Promise.all([
     getPerson(id),
     getPersonTimeline(id),
     listTasksForPerson(id),
@@ -85,6 +87,7 @@ export default async function PersonProfilePage({
     listCommentsForPerson(id),
     getTimeZone(),
     getMembership(),
+    listServices(),
   ]);
   if (!person) notFound();
 
@@ -193,7 +196,8 @@ export default async function PersonProfilePage({
 
       <Section title={`${terms.checkIns}${checkIns.length ? ` · ${checkIns.length}` : ""}`}>
         <div className="space-y-3">
-          <CheckInForm personId={person.id} reasons={reasons} />
+          <CheckInForm personId={person.id} reasons={reasons} services={services} />
+          <ServiceUsage checkIns={checkIns} formatDate={(iso) => shortDate(iso, tz)} />
           {checkIns.length === 0 ? (
             <EmptyState message={`No ${terms.checkInsLower} yet.`} />
           ) : (
@@ -259,5 +263,42 @@ function Section({ title, children }: { title: string; children: React.ReactNode
       <h2 className="section-label mb-3">{title}</h2>
       {children}
     </section>
+  );
+}
+
+/** "Haircut · 4× · last Nov 3 · $180" for each service this person has had. */
+function ServiceUsage({
+  checkIns,
+  formatDate,
+}: {
+  checkIns: { service_id?: string | null; reason: string | null; checked_in_at: string; amount_cents?: number | null }[];
+  formatDate: (iso: string) => string;
+}) {
+  const byService = new Map<string, { name: string; count: number; last: string; total: number }>();
+  for (const c of checkIns) {
+    if (!c.service_id) continue;
+    const s = byService.get(c.service_id) ?? { name: c.reason ?? "Service", count: 0, last: c.checked_in_at, total: 0 };
+    s.count += 1;
+    if (c.checked_in_at > s.last) s.last = c.checked_in_at;
+    s.total += c.amount_cents ?? 0;
+    byService.set(c.service_id, s);
+  }
+  const rows = [...byService.values()].sort((a, b) => b.count - a.count);
+  if (!rows.length) return null;
+  return (
+    <div className="card space-y-1.5 px-3.5 py-3">
+      <p className="eyebrow">Services</p>
+      <ul className="space-y-1 text-sm">
+        {rows.map((s) => (
+          <li key={s.name} className="flex flex-wrap items-baseline justify-between gap-x-3">
+            <span className="text-text">{s.name}</span>
+            <span className="tabular-nums text-[0.82rem] text-text-muted">
+              {s.count}× · last {formatDate(s.last)}
+              {s.total > 0 ? ` · ${formatMoney(s.total)}` : ""}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }

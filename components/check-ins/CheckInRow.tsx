@@ -1,5 +1,6 @@
 "use client";
 
+import { formatMoney } from "@/lib/money";
 import { useTerms } from "@/components/TermsProvider";
 
 import { useState } from "react";
@@ -114,6 +115,7 @@ export function CheckInRow({
         )}
         <p className={`text-sm ${checkIn.reason ? "text-text-muted" : "text-text-faint"}`}>
           {checkIn.reason || "No reason given"}
+          {checkIn.amount_cents != null && <span className="tabular-nums"> · {formatMoney(checkIn.amount_cents)}</span>}
         </p>
       </div>
       <button

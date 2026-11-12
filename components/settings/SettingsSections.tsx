@@ -13,6 +13,8 @@ import { saveOrgTimeZone } from "@/lib/actions/org";
 import { getOrgTimeZone } from "@/lib/referral-settings";
 import { US_ZONES, zoneLabel } from "@/lib/time-zones";
 import { ContactSupportCard } from "@/components/settings/ContactSupportCard";
+import { ServicesSettings } from "@/components/settings/ServicesSettings";
+import { listServices, serviceScope } from "@/lib/services";
 import { getMyCalendarLink, listLinkedCalendars } from "@/lib/actions/calendar";
 import { requireUserId } from "@/lib/current-user";
 import { queryOne } from "@/lib/db/client";
@@ -70,6 +72,8 @@ export async function SettingsSection({ slug, q }: { slug: SettingsSlug; q: Sett
       return <ManageSubscriptionCard message={q.billing} />;
     case "notifications":
       return <NotificationsSection q={q} />;
+    case "services":
+      return <ServicesSection />;
     case "calendar":
       return <CalendarSection />;
     case "security":
@@ -81,6 +85,11 @@ export async function SettingsSection({ slug, q }: { slug: SettingsSlug; q: Sett
     case "about":
       return <AboutSection />;
   }
+}
+
+async function ServicesSection() {
+  const [services, scope, membership] = await Promise.all([listServices({ includeArchived: true }), serviceScope(), getMembership()]);
+  return <ServicesSettings services={services} canManage={scope.canManage} orgName={membership?.active ? membership.orgName : null} />;
 }
 
 async function CalendarSection() {

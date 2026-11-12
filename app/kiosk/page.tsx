@@ -6,7 +6,8 @@ import { requireUserId } from "@/lib/current-user";
 import { KIOSK_COOKIE } from "@/lib/auth";
 import { getMembership } from "@/lib/org";
 import { saveKioskSetup, startKiosk } from "@/lib/actions/kiosk";
-import { DEFAULT_KIOSK_REASONS } from "@/lib/kiosk-shared";
+import { DEFAULT_KIOSK_REASONS, kioskButtons } from "@/lib/kiosk-shared";
+import { listServices } from "@/lib/services";
 import { KioskScreen } from "@/components/kiosk/KioskScreen";
 import { BrandLockup } from "@/components/BrandLockup";
 
@@ -35,7 +36,10 @@ export default async function KioskPage({ searchParams }: { searchParams: Promis
     ),
     getMembership(),
   ]);
-  const reasons = settings?.kiosk_reasons?.length ? settings.kiosk_reasons : DEFAULT_KIOSK_REASONS;
+  const ownReasons = settings?.kiosk_reasons?.length ? settings.kiosk_reasons : DEFAULT_KIOSK_REASONS;
+  // With a services list (Settings → Services), the buttons are the services, so kiosk visits count per service.
+  const services = membership?.active ? await listServices() : [];
+  const reasons = services.length ? kioskButtons(services.map((s) => s.name)) : ownReasons;
   const org = membership?.active ? membership.orgName : null;
   const logo = org
     ? (await queryOne<{ v: string | null }>(`select extract(epoch from logo_updated_at)::bigint::text as v from organizations where id = $1`, [membership!.orgId]))?.v ?? null
@@ -92,10 +96,21 @@ export default async function KioskPage({ searchParams }: { searchParams: Promis
               <input name="confirm" inputMode="numeric" pattern="\d{4}" maxLength={4} autoComplete="off" required={!hasPin} className="input tabular-nums" />
             </label>
           </div>
-          <label className="block space-y-1">
-            <span className="text-xs text-text-muted">Reason buttons clients can tap (one per line, up to 8)</span>
-            <textarea name="reasons" rows={5} defaultValue={reasons.join("\n")} className="input" />
-          </label>
+          {services.length ? (
+            <p className="text-xs text-text-muted">
+              Clients pick from your services. Change them in{" "}
+              <Link href="/settings/services" className="text-accent hover:underline">
+                Settings → Services
+              </Link>
+              .
+              <input type="hidden" name="reasons" value={ownReasons.join("\n")} />
+            </p>
+          ) : (
+            <label className="block space-y-1">
+              <span className="text-xs text-text-muted">Reason buttons clients can tap (one per line, up to 8)</span>
+              <textarea name="reasons" rows={5} defaultValue={reasons.join("\n")} className="input" />
+            </label>
+          )}
           <button type="submit" className="rounded-full border border-border px-4 py-1.5 text-sm font-medium text-text hover:bg-bg-hover">
             Save setup
           </button>

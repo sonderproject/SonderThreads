@@ -103,6 +103,8 @@ export const createCheckInSchema = z.object({
   personId: uuid,
   checkedInAt: isoDate.nullable().optional(),
   reason: optionalText(500),
+  serviceId: uuid.nullable().optional(),
+  amountCents: z.number().int().min(0).max(100000000).nullable().optional(),
 });
 
 export const updateCheckInSchema = z.object({

@@ -47,7 +47,20 @@ export function metricsCsv(m: Metrics): string {
     ...KPI_ROWS.map(([k, label]) => [label, String(m.kpis[k]), String(m.prev[k]), change(m.kpis[k], m.prev[k])]),
   ];
   const esc = csvCell;
-  return [`Period,${esc(periodLabel(m))}`, `Previous period,${esc(`${fmtDay(m.prevFrom)} – ${fmtDay(m.prevTo)}`)}`, "", ...rows.map((r) => r.map(esc).join(","))].join("\n");
+  const services = m.services.length
+    ? [
+        "",
+        ["Service", "Times", "Previous period", "People", "Value"].map(esc).join(","),
+        ...m.services.map((s) => [s.name, String(s.count), String(s.prevCount), String(s.people), (s.valueCents / 100).toFixed(2)].map(esc).join(",")),
+      ]
+    : [];
+  return [
+    `Period,${esc(periodLabel(m))}`,
+    `Previous period,${esc(`${fmtDay(m.prevFrom)} – ${fmtDay(m.prevTo)}`)}`,
+    "",
+    ...rows.map((r) => r.map(esc).join(",")),
+    ...services,
+  ].join("\n");
 }
 
 export async function metricsXlsx(m: Metrics, opts: { followUps?: boolean } = {}): Promise<Buffer> {
@@ -76,6 +89,18 @@ export async function metricsXlsx(m: Metrics, opts: { followUps?: boolean } = {}
   story.addRow([m.scope === "org" && m.orgName ? `${m.orgName}: ${periodLabel(m)}` : periodLabel(m)]).font = { bold: true, size: 13 };
   for (const line of buildStory(m, opts)) story.addRow([line]);
   story.columns = [{ width: 110 }];
+
+  if (m.services.length) {
+    const svc = wb.addWorksheet("Services");
+    svc.addRow(["Service", "Times", "Previous period", "People", "Value ($)", "Busiest day", "Busiest time"]).font = { bold: true };
+    for (const s of m.services) {
+      svc.addRow([s.name, s.count, s.prevCount, s.people, s.valueCents / 100, s.busiestDay ?? "", s.busiestTime ? `${s.busiestTime}m` : ""]);
+    }
+    svc.addRow(["Total", m.services.reduce((n, s) => n + s.count, 0), "", "", m.services.reduce((n, s) => n + s.valueCents, 0) / 100]).font = { bold: true };
+    svc.getColumn(5).numFmt = "$#,##0.00";
+    svc.columns = [{ width: 28 }, { width: 8 }, { width: 16 }, { width: 8 }, { width: 12 }, { width: 13 }, { width: 13 }];
+    svc.views = [{ state: "frozen", ySplit: 1 }];
+  }
 
   const reach = wb.addWorksheet("People served");
   reach.addRow(["Period", "Returning", "First visit", "Total"]).font = { bold: true };

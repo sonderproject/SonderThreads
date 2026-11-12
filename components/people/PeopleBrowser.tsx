@@ -1,5 +1,6 @@
 "use client";
 
+import type { Service } from "@/lib/services";
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { PersonCard } from "@/components/people/PersonCard";
@@ -14,8 +15,20 @@ import { Dictate } from "@/components/voice/Dictate";
 import { NAME_INPUT, SEARCH_INPUT } from "@/lib/input-props";
 import { fuzzyFilter } from "@/lib/fuzzy";
 
-export function PeopleBrowser({ people, orgName = null }: { people: Person[]; orgName?: string | null }) {
+export function PeopleBrowser({
+  people,
+  orgName = null,
+  services = [],
+  serviceUse = {},
+}: {
+  people: Person[];
+  orgName?: string | null;
+  /** Services anyone here has had, for the "Had service" filter. */
+  services?: Service[];
+  serviceUse?: Record<string, string[]>;
+}) {
   const [query, setQuery] = useState("");
+  const [serviceFilter, setServiceFilter] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [selecting, setSelecting] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -25,13 +38,13 @@ export function PeopleBrowser({ people, orgName = null }: { people: Person[]; or
 
   const filtered = useMemo(
     () =>
-      fuzzyFilter(people, query, (c) => [
+      fuzzyFilter(serviceFilter ? people.filter((p) => serviceUse[p.id]?.includes(serviceFilter)) : people, query, (c) => [
         { text: c.display_name, weight: 1 },
         { text: c.current_status, weight: 0.8 },
         { text: c.next_action, weight: 0.8 },
         { text: c.summary, weight: 0.7 },
       ]),
-    [people, query],
+    [people, query, serviceFilter, serviceUse],
   );
 
   function toggle(id: string) {
@@ -85,6 +98,21 @@ export function PeopleBrowser({ people, orgName = null }: { people: Person[]; or
             className="input tabular-nums"
           />
         </Dictate>
+        {services.length > 0 && (
+          <select
+            value={serviceFilter}
+            onChange={(e) => setServiceFilter(e.target.value)}
+            className="input w-auto max-w-[11rem] shrink-0"
+            aria-label="Filter by service"
+          >
+            <option value="">All services</option>
+            {services.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
+          </select>
+        )}
         <ImportPeopleButton />
         <Button onClick={() => setModalOpen(true)} className="shrink-0">
           + New

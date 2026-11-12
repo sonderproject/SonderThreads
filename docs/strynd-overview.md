@@ -72,6 +72,15 @@ It's built for two kinds of users:
 - Browse them by day, week or month, and export them.
 - Every check-in lands on the person's timeline.
 
+## 6b. Services: know what works
+
+- List what you offer in **Settings → Services** (haircut, consultation, catering order, housing support), with an optional price.
+- Log one in a tap when you record a visit or meeting, or just type "Ana – haircut" or "Marcus bought catering $200".
+- Each profile shows the services that person has had, how often and when.
+- **Insights** show each service's use, people, revenue, trend vs the last period, and its busiest day and time. Filter People by service.
+
+**Benefit:** real numbers on what sells, what's growing and when you're busiest, without extra data entry.
+
 ## 7. For agencies and teams (Organization plan)
 
 - **Roles:**

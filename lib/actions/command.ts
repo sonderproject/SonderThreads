@@ -10,6 +10,31 @@ import { createNote } from "./notes";
 import { createTask } from "./tasks";
 import { createList, findOrCreateListByName, addNamesToList } from "./lists";
 import { searchAll, type SearchResults } from "./search";
+import { createCheckIn } from "./check-ins";
+import { listPeople } from "./people";
+import { listServices, type Service } from "@/lib/services";
+import { matchServiceCommand, type ServiceMatch } from "@/lib/service-command";
+import { formatMoney } from "@/lib/money";
+
+/** "Ana - haircut" / "Marcus bought catering $200": a service to log, if the sentence is one. */
+async function serviceCommand(
+  input: string,
+): Promise<{ match: ServiceMatch; service: Service; personName: string } | null> {
+  const services = await listServices();
+  if (!services.length) return null;
+  const people = await listPeople();
+  const match = matchServiceCommand(
+    input,
+    people.map((p) => ({ id: p.id, displayName: p.display_name, firstName: p.first_name })),
+    services,
+  );
+  if (!match) return null;
+  return {
+    match,
+    service: services.find((s) => s.id === match.serviceId)!,
+    personName: people.find((p) => p.id === match.personId)!.display_name,
+  };
+}
 
 export type CommandResult =
   | { kind: "confirmation"; message: string; href?: string; listName?: string }
@@ -75,6 +100,17 @@ export async function previewCommand(input: string, tzOffset = 0): Promise<Comma
 }
 
 async function previewOne(input: string, context: ParserContext): Promise<CommandPreview> {
+  const svc = await serviceCommand(input);
+  if (svc) {
+    const amount = svc.match.amountCents ?? svc.service.priceCents;
+    return {
+      action: "log service",
+      details: [svc.service.name, svc.personName, amount !== null ? formatMoney(amount) : null, svc.match.daysAgo ? "yesterday" : null].filter(
+        Boolean,
+      ) as string[],
+      dueDate: null,
+    };
+  }
   const p = await fallbackProvider.parse(input, context);
   const quote = (s: string | null) => (s ? `"${s.length > 40 ? `${s.slice(0, 39)}…` : s}"` : null);
   const listKnown = p.listName ? context.lists.some((l) => l.name.toLowerCase() === p.listName!.toLowerCase()) : false;
@@ -132,6 +168,17 @@ export async function executeCommand(input: string, tzOffset = 0): Promise<Comma
 }
 
 async function executeOne(trimmed: string, tzOffset: number): Promise<CommandResult> {
+  const svc = await serviceCommand(trimmed);
+  if (svc) {
+    const at = svc.match.daysAgo ? new Date(Date.now() - svc.match.daysAgo * 86_400_000).toISOString() : null;
+    await createCheckIn({ personId: svc.match.personId, serviceId: svc.service.id, amountCents: svc.match.amountCents, checkedInAt: at });
+    const amount = svc.match.amountCents ?? svc.service.priceCents;
+    return {
+      kind: "confirmation",
+      message: `✓ Logged ${svc.service.name} for ${svc.personName}${amount !== null ? ` (${formatMoney(amount)})` : ""}`,
+      href: `/people/${svc.match.personId}`,
+    };
+  }
   const parsed = await parseCommand(trimmed, await loadParserContext(tzOffset));
 
   try {

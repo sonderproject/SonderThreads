@@ -16,6 +16,8 @@ import { ETHNICITIES, GENDERS, INCOME_LEVELS, NOT_RECORDED } from "@/lib/demogra
 
 import {
   addDays,
+  HEATMAP_BLOCKS,
+  WEEKDAY_NAMES,
   bucketFor,
   daysBetween,
   toUtc,
@@ -127,7 +129,7 @@ async function compute(
   // Clients deleted later still count in the periods they were served, so past reports never change.
   const inRange = `${col} = $1`;
 
-  const [sinceRows, kpis, prev, checkInRows, newPeopleRows, reasonRows, weekdayRows, visitorRows, demoRows, reachRows, heatRows, followRows] = await Promise.all([
+  const [sinceRows, kpis, prev, checkInRows, newPeopleRows, reasonRows, weekdayRows, visitorRows, demoRows, reachRows, heatRows, followRows, serviceRows] = await Promise.all([
     run<{ d: string | null }>(
       `select to_char(min(c.checked_in_at at time zone $2), 'YYYY-MM-DD') as d from check_ins c where c.${col} = $1 and c.deleted_at is null`,
       [scopeId, tz],
@@ -221,6 +223,23 @@ async function compute(
           and (due_at at time zone $2)::date between $3::date and $4::date`,
       range,
     ),
+    // Per service: uses this period and last, people, value, and its most common weekday and 2-hour block.
+    run<{ name: string; n: number; prev: number; people: number; value: number; dow: number | null; block: number | null }>(
+      `select s.name,
+              count(*) filter (where d between $3::date and $4::date)::int as n,
+              count(*) filter (where d between $5::date and $6::date)::int as prev,
+              count(distinct c.person_id) filter (where d between $3::date and $4::date)::int as people,
+              coalesce(sum(c.amount_cents) filter (where d between $3::date and $4::date), 0)::int as value,
+              mode() within group (order by extract(isodow from local)::int) filter (where d between $3::date and $4::date) as dow,
+              mode() within group (order by extract(hour from local)::int / 2) filter (where d between $3::date and $4::date) as block
+         from (select c.*, c.checked_in_at at time zone $2 as local, (c.checked_in_at at time zone $2)::date as d from check_ins c) c
+         join services s on s.id = c.service_id
+        where c.${col} = $1 and c.deleted_at is null and c.d between $5::date and $4::date
+        group by s.id, s.name
+       having count(*) filter (where d between $3::date and $4::date) > 0
+        order by n desc, s.name`,
+      [...range, prevFrom, prevTo],
+    ),
   ]);
 
   // Every category in the standard order (zeros included) so exports are complete tables.
@@ -279,6 +298,15 @@ async function compute(
     heatmap,
     followThrough: followRows[0] ?? { due: 0, onTime: 0, late: 0, open: 0 },
     trackingSince: sinceRows[0]?.d ?? null,
+    services: serviceRows.map((r) => ({
+      name: r.name,
+      count: r.n,
+      prevCount: r.prev,
+      people: r.people,
+      valueCents: r.value,
+      busiestDay: r.dow ? WEEKDAY_NAMES[r.dow - 1] : null,
+      busiestTime: r.block === null ? null : HEATMAP_BLOCKS[r.block],
+    })),
   };
 }
 

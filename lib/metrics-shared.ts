@@ -24,6 +24,21 @@ export type FollowThrough = { due: number; onTime: number; late: number; open: n
 /** Whose numbers: your own, or your whole organization (admins and supervisors). */
 export type MetricsScope = "me" | "org";
 
+/** One service's numbers for the period (Settings → Services). */
+export type ServiceStat = {
+  name: string;
+  /** Times provided in the period, and in the previous period of the same length. */
+  count: number;
+  prevCount: number;
+  /** Different people it was provided to. */
+  people: number;
+  /** Total amount recorded, in cents (0 when no prices are used). */
+  valueCents: number;
+  /** Most common weekday (Monday..Sunday) and 2-hour block ("2p"), or null. */
+  busiestDay: string | null;
+  busiestTime: string | null;
+};
+
 export type Metrics = {
   from: string;
   to: string;
@@ -50,6 +65,8 @@ export type Metrics = {
   followThrough: FollowThrough;
   /** Date of the first check-in ever recorded (YYYY-MM-DD), or null if none. */
   trackingSince: string | null;
+  /** Services provided in the period, most used first (empty when none are logged). */
+  services: ServiceStat[];
 };
 
 export const HEATMAP_BLOCKS = ["12a", "2a", "4a", "6a", "8a", "10a", "12p", "2p", "4p", "6p", "8p", "10p"];

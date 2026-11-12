@@ -1,5 +1,6 @@
 "use client";
 
+import type { Service } from "@/lib/services";
 import { useTerms } from "@/components/TermsProvider";
 
 import { useMemo, useState, useTransition } from "react";
@@ -35,9 +36,11 @@ export function CheckInsBrowser({
   checkIns,
   people,
   reasons,
+  services = [],
   range,
   hasParams,
 }: {
+  services?: Service[];
   checkIns: CheckInWithPerson[];
   people: Pick<Person, "id" | "display_name">[];
   reasons: string[];
@@ -111,7 +114,7 @@ export function CheckInsBrowser({
 
   return (
     <div className="space-y-6">
-      <CheckInForm people={people} reasons={reasons} />
+      <CheckInForm people={people} reasons={reasons} services={services} />
 
       <section className="space-y-3">
         <div className="flex flex-wrap items-center gap-x-5 gap-y-1 text-sm text-text-muted">

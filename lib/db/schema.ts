@@ -945,4 +945,39 @@ create table if not exists legal_acceptances (
 );
 create index if not exists legal_acceptances_user_idx on legal_acceptances (user_id, created_at desc);
 alter table legal_acceptances enable row level security;
+
+-- Services: what a business or agency provides (Settings → Services). One list
+-- per organization (admins manage it), or per person for solo accounts. Logging
+-- a check-in/meeting with a service records what was provided, when and for how
+-- much; amount_cents is the price at that moment, so later price changes don't
+-- rewrite past revenue. Archived services keep their history.
+create table if not exists services (
+  id uuid primary key default gen_random_uuid(),
+  org_id uuid references organizations(id) on delete cascade,
+  user_id uuid references users(id) on delete cascade,
+  name text not null check (length(name) between 1 and 80),
+  price_cents int check (price_cents >= 0 and price_cents <= 100000000),
+  position int not null default 0,
+  archived_at timestamptz,
+  created_at timestamptz not null default now(),
+  check (org_id is not null or user_id is not null)
+);
+create unique index if not exists services_name_idx on services (coalesce(org_id, user_id), lower(name)) where archived_at is null;
+create index if not exists services_scope_idx on services (org_id, user_id, position);
+alter table services enable row level security;
+do $$
+begin
+  if not exists (select 1 from pg_policies where tablename = 'services' and policyname = 'owner') then
+    create policy "owner" on services for all to authenticated
+      using (org_id is null and user_id = (select auth.uid())) with check (org_id is null and user_id = (select auth.uid()));
+  end if;
+  if not exists (select 1 from pg_policies where tablename = 'services' and policyname = 'org read') then
+    create policy "org read" on services for select to authenticated using (app_private.app_org_viewer(org_id));
+  end if;
+exception when undefined_function or invalid_schema_name or undefined_object then
+  null;
+end $$;
+alter table check_ins add column if not exists service_id uuid references services(id) on delete set null;
+alter table check_ins add column if not exists amount_cents int check (amount_cents >= 0 and amount_cents <= 100000000);
+create index if not exists check_ins_service_idx on check_ins (service_id) where service_id is not null;
 `;

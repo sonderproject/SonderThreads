@@ -16,6 +16,7 @@ import {
   type ActionResult,
 } from "@/lib/validation";
 import type { CheckIn, CheckInWithPerson } from "@/lib/types";
+import { findService } from "@/lib/services";
 
 function revalidate(personId: string) {
   revalidatePath("/check-ins");
@@ -28,6 +29,9 @@ export async function createCheckIn(params: {
   /** ISO timestamp; defaults to now. */
   checkedInAt?: string | null;
   reason?: string | null;
+  /** A service from Settings → Services: becomes the reason, and its price the amount unless one is given. */
+  serviceId?: string | null;
+  amountCents?: number | null;
 }): Promise<CheckIn> {
   const userId = await requireUserId();
   await assertCanWrite();
@@ -35,12 +39,16 @@ export async function createCheckIn(params: {
   const person = await getPerson(params.personId);
   if (!person) throw new Error("Person not found");
 
-  const reason = params.reason?.trim() || null;
+  const service = params.serviceId ? await findService(params.serviceId) : null;
+  if (params.serviceId && !service) throw new Error("That service isn't on your list anymore.");
+  // The service name is the reason, so services and plain reasons count together in reports.
+  const reason = service?.name ?? (params.reason?.trim() || null);
+  const amount = params.amountCents ?? service?.priceCents ?? null;
   const checkIn = await queryOne<CheckIn>(
-    `insert into check_ins (user_id, person_id, checked_in_at, reason)
-     values ($1, $2, coalesce($3::timestamptz, now()), $4)
+    `insert into check_ins (user_id, person_id, checked_in_at, reason, service_id, amount_cents)
+     values ($1, $2, coalesce($3::timestamptz, now()), $4, $5, $6)
      returning *`,
-    [userId, person.id, params.checkedInAt ?? null, reason],
+    [userId, person.id, params.checkedInAt ?? null, reason, service?.id ?? null, amount],
   );
   if (!checkIn) throw new Error("Failed to save check-in");
 
@@ -75,6 +83,9 @@ export async function updateCheckIn(
     `update check_ins
      set checked_in_at = coalesce($3::timestamptz, checked_in_at),
          reason = case when $4 then $5 else reason end,
+         -- Retyping the reason means it's no longer that service (and its amount).
+         service_id = case when $4 and $5 is distinct from reason then null else service_id end,
+         amount_cents = case when $4 and $5 is distinct from reason then null else amount_cents end,
          updated_at = now()
      where ${mineOrOrg("$1")} and id = $2 and deleted_at is null
      returning *`,

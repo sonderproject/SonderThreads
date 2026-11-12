@@ -17,7 +17,8 @@ async function requireOrg(): Promise<void> {
 }
 import { createCheckIn } from "./check-ins";
 import { toActionResult, type ActionResult } from "@/lib/validation";
-import { DEFAULT_KIOSK_REASONS } from "@/lib/kiosk-shared";
+import { DEFAULT_KIOSK_REASONS, kioskButtons } from "@/lib/kiosk-shared";
+import { listServices } from "@/lib/services";
 
 
 /** Kiosk setup: the 4-digit PIN that exits kiosk mode, and the reason buttons. */
@@ -88,7 +89,9 @@ export async function kioskCheckIn(firstName: string, lastName: string, reason: 
     if (!first) throw new Error("Please enter your first name.");
     if (!last) throw new Error("Please enter your last name.");
     const settings = await queryOne<{ kiosk_reasons: string[] | null }>(`select kiosk_reasons from user_settings where user_id = $1`, [userId]);
-    const allowed = settings?.kiosk_reasons?.length ? settings.kiosk_reasons : DEFAULT_KIOSK_REASONS;
+    const services = await listServices();
+    const service = services.find((s) => s.name === reason) ?? null;
+    const allowed = services.length ? kioskButtons(services.map((s) => s.name)) : settings?.kiosk_reasons?.length ? settings.kiosk_reasons : DEFAULT_KIOSK_REASONS;
     const why = allowed.includes(reason) ? reason : null;
     const fullName = `${first} ${last}`;
     const match = await queryOne<{ id: string }>(
@@ -98,7 +101,7 @@ export async function kioskCheckIn(firstName: string, lastName: string, reason: 
     );
     const personId = match?.id ?? (await createPersonRecord({ fullName })).id;
     // Same reason text as staff use, so kiosk check-ins count together in Impact.
-    await createCheckIn({ personId, reason: why });
+    await createCheckIn({ personId, reason: why, serviceId: service?.id ?? null });
     return { firstName: first };
   });
 }

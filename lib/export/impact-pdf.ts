@@ -472,8 +472,61 @@ export function impactPdf(
     y = Math.max(heatBottom, wBottom) + 34;
 
     // ── 03 Needs ─────────────────────────────────────────────────────────
-    ensure(70 + Math.max(1, m.byReason.length) * 19);
+    ensure(70 + Math.max(1, m.byReason.length) * 19 + (m.services.length ? 60 + m.services.length * 18 : 0));
     marker("03", "Needs");
+    if (m.services.length) {
+      heading("Services", "How often each was provided, to how many people, and versus the previous period.");
+      const showValue = m.services.some((s) => s.valueCents > 0);
+      const cols: [string, number, "left" | "right"][] = [
+        ["Service", CONTENT_W * (showValue ? 0.34 : 0.48), "left"],
+        ["Times", CONTENT_W * 0.1, "right"],
+        ["People", CONTENT_W * 0.1, "right"],
+        ...(showValue ? ([["Value", CONTENT_W * 0.14, "right"]] as [string, number, "left" | "right"][]) : []),
+        ["Change", CONTENT_W * 0.12, "right"],
+        ["Busiest", CONTENT_W * 0.2, "left"],
+      ];
+      const row = (cells: string[], bold: boolean) => {
+        ensure(18);
+        let x = PAGE.m;
+        cells.forEach((cell, i) => {
+          const [, w, align] = cols[i];
+          doc
+            .font(bold ? "body-bold" : "body")
+            .fontSize(9)
+            .fillColor(C.ink)
+            .text(cell, i ? x + 10 : x, y, { width: w - 10, align, lineBreak: false, ellipsis: true });
+          x += w;
+        });
+        y += 14;
+        doc.moveTo(PAGE.m, y).lineTo(PAGE.m + CONTENT_W, y).lineWidth(0.5).strokeColor(C.lineSubtle).stroke();
+        y += 4;
+      };
+      const money = (c: number) =>
+        `$${(c / 100).toLocaleString("en-US", { minimumFractionDigits: c % 100 ? 2 : 0, maximumFractionDigits: 2 })}`;
+      row(
+        cols.map(([h]) => h),
+        true,
+      );
+      for (const s of m.services) {
+        row(
+          [
+            s.name,
+            s.count.toLocaleString("en-US"),
+            s.people.toLocaleString("en-US"),
+            ...(showValue ? [s.valueCents ? money(s.valueCents) : "–"] : []),
+            s.prevCount === 0
+              ? "new"
+              : `${s.count >= s.prevCount ? "+" : "−"}${Math.abs(Math.round(((s.count - s.prevCount) / s.prevCount) * 100))}%`,
+            s.busiestDay ? `${s.busiestDay.slice(0, 3)}${s.busiestTime ? `, ${s.busiestTime}m` : ""}` : "–",
+          ],
+          false,
+        );
+      }
+      if (showValue) {
+        row(["Total", m.services.reduce((n, s) => n + s.count, 0).toLocaleString("en-US"), "", money(m.services.reduce((n, s) => n + s.valueCents, 0)), "", ""], true);
+      }
+      y += 22;
+    }
     heading("Why people came in", "Check-ins by reason, most common first.");
     y = hbars(PAGE.m, y, CONTENT_W, m.byReason, C.blue, 170) + 34;
 
