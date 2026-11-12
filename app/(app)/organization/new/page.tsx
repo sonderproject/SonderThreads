@@ -26,8 +26,8 @@ export default async function NewOrganizationPage({ searchParams }: { searchPara
           <p className="text-xs text-danger">Please confirm the agreement below to create the organization.</p>
         )}
         <p className="text-xs text-text-muted">
-          You&apos;ll be its admin. Next you can choose which of your existing clients to bring in; anything you
-          don&apos;t choose stays private to you.
+          You&apos;ll be its admin. Next you&apos;ll start your 14-day free trial ($0 today, card required, one trial per
+          card), then choose which of your existing clients to bring in; anything you don&apos;t choose stays private to you.
         </p>
         <label className="flex items-start gap-2 text-xs text-text-muted">
           <input type="checkbox" name="agree" required className="mt-0.5" />

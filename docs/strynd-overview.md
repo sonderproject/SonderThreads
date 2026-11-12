@@ -127,9 +127,9 @@ It's built for two kinds of users:
 | Plan | Price | Free trial |
 |---|---|---|
 | **Individual** | $9 / month | 7 days |
-| **Team** (2–18 people) | $19 per seat / month | 30 days, no card needed to start |
-| **Organization** (19–20 people) | $349 / month (20 seats included) | 30 days |
-| **Organization** (21+ people) | $349 + $15 per extra seat / month | 30 days |
+| **Team** (2–18 people) | $19 per seat / month | 14 days ($0 today, card required) |
+| **Organization** (19–20 people) | $349 / month (20 seats included) | 14 days |
+| **Organization** (21+ people) | $349 + $15 per extra seat / month | 14 days |
 | **Enterprise** (500+ people, custom onboarding) | Contact us | |
 
 Plans renew monthly and can be canceled any time in Settings → Subscription. Seat changes are prorated.

@@ -50,17 +50,16 @@ export default async function SignupPage({
         <input
           type="tel"
           name="phone"
-          required
           defaultValue={phone ?? ""}
           autoComplete="tel"
           inputMode="tel"
-          placeholder="Mobile number"
+          placeholder="Mobile number (optional)"
           className="input tabular-nums"
         />
         <label className="flex items-start gap-2 text-xs text-text-muted">
           <input type="checkbox" name="sms_opt_in" className="mt-0.5" />
           <span>
-            Text me task reminders. Message &amp; data rates may apply. Reply STOP to opt out, HELP for help.
+            Text me task reminders (needs a mobile number). Message &amp; data rates may apply. Reply STOP to opt out, HELP for help.
           </span>
         </label>
         <input

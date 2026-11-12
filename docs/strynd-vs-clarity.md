@@ -77,7 +77,7 @@ Bitfocus says Clarity ships with the HUD data elements, entry screens and standa
 - **Small programs and teams** with no HMIS requirement get case management, check-ins, referrals and funder reports without a procurement process.
 - **Front-door tools:** a self check-in kiosk and a public referral link with appointment booking.
 - **Staff keep a personal workspace.** Their own tasks, notes and lists stay private, while client records stay with the agency.
-- **Transparent cost:** published prices, monthly billing, cancel any time, and a 30-day free trial for teams.
+- **Transparent cost:** published prices, monthly billing, cancel any time, and a 14-day free trial for teams.
 
 ## Using them together
 

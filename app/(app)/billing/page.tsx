@@ -236,7 +236,7 @@ export default async function BillingPage({
                   >
                     Create an organization
                   </Link>{" "}
-                  instead: 30 days free, no card needed.
+                  instead: 14 days free for your whole team.
                 </p>
               )}
             </>
@@ -245,6 +245,12 @@ export default async function BillingPage({
               <form action={startCheckout} className="card space-y-4 p-5">
                 <div>
                   <p className="font-display text-2xl font-light">Team plan</p>
+                  {a.state === "setup" && (
+                    <p className="mt-1 text-sm text-text">
+                      $0 today. Your 14-day free trial starts now, and you&apos;re only charged for your seats after it ends.
+                      Cancel any time before then and you won&apos;t be charged. One free trial per card.
+                    </p>
+                  )}
                   <p className="mt-1 text-sm text-text-muted">
                     $19 a seat for 2–18 people. At 19 or more, the $349 Organization rate (20 seats included, $15 for each
                     extra seat) applies automatically, whichever is cheaper.
@@ -257,12 +263,12 @@ export default async function BillingPage({
                   {a.state === "trial" && a.endsAt ? ` Your free trial continues until ${fmt(a.endsAt)}; you won't be charged before then.` : ""}
                 </p>
                 <button type="submit" className={primary} disabled={!billingEnabled()}>
-                  Continue to payment
+                  {a.state === "setup" ? "Start the free trial" : "Continue to payment"}
                 </button>
                 <p className="text-xs text-text-muted">
                   The plan renews automatically every month at the price shown for your seats (plus prorated changes when you
                   add or remove seats) until you cancel.
-                  {a.state === "trial" ? " Nothing is charged before your free trial ends." : ""} Cancel any time in Settings →
+                  {a.state === "trial" || a.state === "setup" ? " Nothing is charged before your free trial ends." : ""} Cancel any time in Settings →
                   Subscription; you keep access until the end of the month you paid for. By continuing you agree to the{" "}
                   <Link href="/terms#fees" className="text-accent hover:underline">
                     Terms of service

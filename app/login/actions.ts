@@ -182,14 +182,15 @@ export async function signup(formData: FormData): Promise<void> {
   const legacyCode = formData.get("legacy")?.toString() ?? "";
   const rawPhone = formData.get("phone")?.toString().trim() ?? "";
   const phone = normalizePhone(rawPhone);
-  const smsOptIn = formData.get("sms_opt_in") === "on";
+  // Optional; text reminders need one.
+  const smsOptIn = formData.get("sms_opt_in") === "on" && Boolean(rawPhone);
   const timeZone = formData.get("timezone")?.toString() || null;
   const agreed = formData.get("agree") === "on";
 
   if (!agreed) back("/signup", "agree", email, next, rawPhone);
   if (!EMAIL_RE.test(email) || email.length > 254) back("/signup", "email", email, next, rawPhone);
-  if (!phone) back("/signup", "phone", email, next, rawPhone);
-  if (await phoneTaken(phone!)) back("/signup", "phone-used", email, next, rawPhone);
+  if (rawPhone && !phone) back("/signup", "phone", email, next, rawPhone);
+  if (phone && (await phoneTaken(phone))) back("/signup", "phone-used", email, next, rawPhone);
   if (password.length < MIN_PASSWORD_LENGTH) back("/signup", "short", email, next, rawPhone);
   if (await queryOne(`select 1 from users where lower(email) = $1`, [email])) {
     back("/signup", "exists", email, next, rawPhone);

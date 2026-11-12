@@ -94,7 +94,7 @@ const PLANS: {
     who: "For teams of 2–18 people.",
     price: "$19",
     unit: "/ user / month",
-    fine: "e.g. 5 people: $95 / month. 30-day free trial.",
+    fine: "e.g. 5 people: $95 / month. 14-day free trial.",
     features: ["Everything in Individual, for everyone", "Shared team workspace and client list", "Invite and manage team members", "Roles and access controls", "One bill for the whole team"],
     cta: "Start a free team trial",
     href: TEAM_SIGNUP,
@@ -254,7 +254,7 @@ export default function WelcomePage() {
                 href={TEAM_SIGNUP}
                 className="inline-block rounded-full bg-accent px-6 py-3 text-sm font-semibold text-bg transition-colors hover:bg-accent-dim"
               >
-                Start a 30-day free team trial
+                Start a 14-day free team trial
               </Link>
               <a
                 href="#pricing"
@@ -354,7 +354,7 @@ export default function WelcomePage() {
             </table>
           </div>
           <p className="text-sm text-text-muted">
-            Teams = Small Team and Organization. Teams start with a 30-day free trial, no card needed. Add or remove seats any
+            Teams = Small Team and Organization. Teams start with a 14-day free trial ($0 today; card required, one trial per card). Add or remove seats any
             time; changes are prorated.
           </p>
         </section>

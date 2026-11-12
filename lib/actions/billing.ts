@@ -10,6 +10,7 @@ import { toActionResult, type ActionResult } from "@/lib/validation";
 import { MAX_SELF_SERVE_SEATS, MIN_ORG_SEATS, calculateMonthlyPriceCents, minimumSeats } from "@/lib/pricing";
 import {
   INDIVIDUAL_TRIAL_DAYS,
+  ORG_TRIAL_DAYS,
   customerFor,
   enforceOneTrialPerCard,
   getAccess,
@@ -57,8 +58,10 @@ export async function startCheckout(formData: FormData): Promise<void> {
     kind === "org" && access.state === "trial" && access.endsAt && access.endsAt.getTime() - Date.now() > 2 * 86_400_000
       ? Math.floor(access.endsAt.getTime() / 1000)
       : undefined;
-  const firstTrial = kind === "user" && !access.row?.stripe_subscription_id;
-  const metadata = { kind, owner_id: ownerId, plan };
+  // A first subscription starts the free trial: 7 days for individuals, 14 for organizations on card-first trials.
+  const firstTrial = !access.row?.stripe_subscription_id && (kind === "user" || access.state === "setup");
+  // card_trial marks a fresh card-first trial, which the one-trial-per-card check applies to.
+  const metadata = { kind, owner_id: ownerId, plan, ...(firstTrial && !trialEnd ? { card_trial: "1" } : {}) };
 
   const session = await s.checkout.sessions.create({
     mode: "subscription",
@@ -67,7 +70,7 @@ export async function startCheckout(formData: FormData): Promise<void> {
     subscription_data: {
       metadata,
       ...(trialEnd ? { trial_end: trialEnd } : {}),
-      ...(firstTrial ? { trial_period_days: INDIVIDUAL_TRIAL_DAYS } : {}),
+      ...(firstTrial && !trialEnd ? { trial_period_days: kind === "org" ? ORG_TRIAL_DAYS : INDIVIDUAL_TRIAL_DAYS } : {}),
     },
     payment_method_collection: "always",
     metadata,

@@ -62,7 +62,7 @@ Ask a program director these questions. Every "yes" is a reason to buy.
 > "Your CoC decides your HMIS, the system for HUD data. They don't decide how your case managers track their to-dos or how your front desk signs people in. Strynd replaces the spreadsheets and notebooks, not the HMIS."
 
 **"Staff won't enter things twice."**
-> "Most of what goes into Strynd never goes into the HMIS anyway: reminders, quick notes, who to call back. It takes one sentence, or they can just say it out loud. If it saves them chasing things later, they'll use it. Try it with one team for 30 days and see."
+> "Most of what goes into Strynd never goes into the HMIS anyway: reminders, quick notes, who to call back. It takes one sentence, or they can just say it out loud. If it saves them chasing things later, they'll use it. Try it with one team for two weeks and see."
 *(Be honest: the required HUD fields still go into the HMIS. Strynd doesn't sync with Clarity yet.)*
 
 **"Does it do HUD reports (APR, CAPER, PIT)?"**
@@ -79,7 +79,7 @@ Ask a program director these questions. Every "yes" is a reason to buy.
 > "Your data is never locked in. You can export everything to Excel, CSV or a full backup any time, and billing is month to month with no contract. It runs on the same infrastructure big companies use. And you get the founder on support, not a ticket queue."
 
 **"We have no budget."**
-> "A team of five is $95 a month. If it saves each case manager 30 minutes a week, that's 10 staff hours a month, about $250 at $25 an hour. It pays for itself in the first month. And the first 30 days are free, no card needed."
+> "A team of five is $95 a month. If it saves each case manager 30 minutes a week, that's 10 staff hours a month, about $250 at $25 an hour. It pays for itself in the first month. And the first 14 days are free; nothing is charged until the trial ends."
 *(This is **ROI**, return on investment: what they get back for what they spend. Use their own hourly rate if you know it.)*
 
 **"We just use Excel and Google Calendar. It's fine."**
@@ -125,14 +125,14 @@ Ask a program director these questions. Every "yes" is a reason to buy.
 
 ## 6. How to close
 
-1. **Start small.** One program, 3–10 staff, on the 30-day free team trial (no card needed).
+1. **Start small.** One program, 3–10 staff, on the 14-day free team trial ($0 today; a card is required, one trial per card).
 2. **Set it up with them in the first meeting:** create the organization, invite staff, upload their Excel client list, and turn on the kiosk or referral link if they use one. Aim to leave with it already working.
-3. **Agree on what success looks like in 30 days.** For example:
+3. **Agree on what success looks like in 14 days.** For example:
    - Every client contact gets logged the same day.
    - No overdue follow-ups at the end of each week.
    - The monthly board/funder report takes minutes, not days.
-4. **Check in at day 14 and day 28.** Show the director the Team view and the Impact report with their own numbers. That's the moment they decide.
+4. **Check in at day 5 and day 12.** Show the director the Team view and the Impact report with their own numbers. That's the moment they decide.
 5. **Convert:** they choose the number of seats in Billing. Expand to the next program once the first one sticks.
 
 **Your closing line:**
-> "Keep everything you're required to use. Give your team 30 days with Strynd for the day-to-day work, and if your follow-ups and reports aren't easier, you've lost nothing."
+> "Keep everything you're required to use. Give your team two weeks with Strynd for the day-to-day work, and if your follow-ups and reports aren't easier, you've lost nothing."

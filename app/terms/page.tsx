@@ -127,12 +127,14 @@ export default function TermsPage() {
           <li>
             <strong>Individual:</strong> $9 a month after a 7-day free trial. Starting the trial needs a payment card;
             you&apos;re charged $9 when the trial ends, and every month after that, unless you cancel before the trial
-            ends. Free trials are limited to one per person, card and mobile number.
+            ends. Free trials are limited to one per person and card.
           </li>
           <li>
             <strong>Teams and organizations:</strong> billed for the number of seats the organization buys (at least 2):
             $19 per seat a month for up to 18 seats, $349 a month for 19 or 20 seats, and $15 a month for each seat over 20,
-            after a 30-day free trial. Adding or removing seats changes the monthly charge, and the difference for the
+            after a 14-day free trial. Starting the trial needs a payment card; the organization is charged for its seats
+            when the trial ends unless an admin cancels first (organizations created before November 12, 2026 keep the
+            30-day trial they started with). Adding or removing seats changes the monthly charge, and the difference for the
             current month is prorated. Enterprise pricing is agreed in writing.
           </li>
         </ul>

@@ -15,7 +15,7 @@ import { recordAcceptance } from "@/lib/legal-server";
 import { notify } from "@/lib/notify";
 import { appUrl, emailConfigured, escapeHtml, sendEmail } from "@/lib/email";
 import { ROLE_LABELS } from "@/lib/org-roles";
-import { SeatLimitError, assertSeatAvailable, syncOrgSeats } from "@/lib/billing";
+import { SeatLimitError, assertSeatAvailable, billingEnabled, syncOrgSeats } from "@/lib/billing";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const INVITE_DAYS = 14;
@@ -43,7 +43,8 @@ export async function createOrganization(formData: FormData): Promise<void> {
   });
   await recordAcceptance(userId, "organization", orgId);
   revalidatePath("/", "layout");
-  redirect("/organization/clients?new=1");
+  // New organizations start their free trial with a card first (lib/billing.ts), then bring clients in.
+  redirect(billingEnabled() ? "/billing?org=new" : "/organization/clients?new=1");
 }
 
 /** Admin: makes a one-time invite link for an email address and role, and emails it when email is set up. */

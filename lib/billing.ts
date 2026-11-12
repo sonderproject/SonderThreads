@@ -6,7 +6,7 @@ import { MIN_ORG_SEATS, orgPriceTiersMatch, seatsAfterAdding } from "@/lib/prici
 
 /**
  * Billing. Individuals: $9/month after a 7-day free trial. Organizations buy
- * a number of seats (at least 2) after a 30-day free trial: $19 a seat up to
+ * a number of seats (at least 2) after a 14-day free trial: $19 a seat up to
  * 18, $349 for 19–20, then $15 for each seat over 20 (lib/pricing.ts). The
  * older "seat" and "team" plans are kept only for any subscription already on
  * them. Accounts that existed before billing
@@ -17,7 +17,14 @@ import { MIN_ORG_SEATS, orgPriceTiersMatch, seatsAfterAdding } from "@/lib/prici
  */
 
 export const INDIVIDUAL_TRIAL_DAYS = 7;
-export const ORG_TRIAL_DAYS = 30;
+export const ORG_TRIAL_DAYS = 14;
+/**
+ * Organizations created from this moment start their 14-day trial with a card
+ * on Stripe (one free trial per card, like individuals). Older ones keep the
+ * 30-day, no-card trial they signed up with.
+ */
+export const ORG_CARD_TRIALS_FROM = new Date("2026-11-12T09:00:00Z");
+const LEGACY_ORG_TRIAL_DAYS = 30;
 export const GRACE_DAYS = 14;
 export const PRICES = {
   individual: "threads_individual_monthly",
@@ -107,8 +114,17 @@ async function computeAccess(userId: string): Promise<Access> {
       queryOne<BillingRow>(`select * from billing_accounts where org_id = $1`, [m.org_id]),
       activeSeats(m.org_id),
     ]);
-    const trialEnd = new Date(new Date(m.org_created).getTime() + ORG_TRIAL_DAYS * DAY);
-    return { ...decide(row, trialEnd), scope: "org", orgId: m.org_id, orgName: m.name, canManage: m.role === "admin", seats, row };
+    const orgBase = { scope: "org" as const, orgId: m.org_id, orgName: m.name, canManage: m.role === "admin", seats, row };
+    if (new Date(m.org_created) >= ORG_CARD_TRIALS_FROM) {
+      // Card first: until an admin starts the trial in Billing, admins set up and everyone else is view-only.
+      const decided = decide(row, new Date(0));
+      if (decided.state === "readonly" && !row?.stripe_subscription_id) {
+        return { ...orgBase, ...decided, state: m.role === "admin" ? "setup" : "readonly", endsAt: null };
+      }
+      return { ...orgBase, ...decided };
+    }
+    const trialEnd = new Date(new Date(m.org_created).getTime() + LEGACY_ORG_TRIAL_DAYS * DAY);
+    return { ...decide(row, trialEnd), ...orgBase };
   }
   const [row, invited] = await Promise.all([
     queryOne<BillingRow>(`select * from billing_accounts where user_id = $1`, [userId]),
@@ -166,10 +182,15 @@ export class ReadOnlyError extends Error {}
 export async function assertCanWrite(): Promise<void> {
   const a = await getAccess();
   if (a.state !== "readonly" && a.state !== "setup") return;
+  const notStarted = !a.row?.stripe_subscription_id && a.endsAt === null;
   throw new ReadOnlyError(
     a.scope === "org" && !a.canManage
-      ? `${a.orgName}'s subscription has ended, so Strynd is view-only. Ask your organization admin to renew it.`
-      : "Your free trial has ended, so Strynd is view-only. Subscribe in Settings → Billing to keep adding and editing.",
+      ? notStarted
+        ? `${a.orgName}'s free trial hasn't started yet. Ask your organization admin to start it in Settings → Subscription.`
+        : `${a.orgName}'s subscription has ended, so Strynd is view-only. Ask your organization admin to renew it.`
+      : notStarted
+        ? "Start your free trial in Settings → Subscription to begin adding and editing."
+        : "Your free trial has ended, so Strynd is view-only. Subscribe in Settings → Billing to keep adding and editing.",
   );
 }
 
@@ -252,13 +273,15 @@ export async function customerFor(kind: "user" | "org", ownerId: string, email: 
 }
 
 /**
- * One free trial per card: if a new individual trial uses a card that already
- * had one (under any account), the trial ends now and billing starts today.
+ * One free trial per card: if a new trial (individual or organization) uses a
+ * card that already had one (under any account), the trial ends now and
+ * billing starts today.
  * Stripe gives every card number the same fingerprint, whatever email is used.
  */
 export async function enforceOneTrialPerCard(sub: Stripe.Subscription): Promise<void> {
   const s = stripe();
-  if (!s || sub.status !== "trialing" || sub.metadata?.kind !== "user") return;
+  // Individuals' trials always start with a card; organizations only on card-first trials (older ones keep their days).
+  if (!s || sub.status !== "trialing" || !(sub.metadata?.kind === "user" || (sub.metadata?.kind === "org" && sub.metadata?.card_trial === "1"))) return;
   const pmId = typeof sub.default_payment_method === "string" ? sub.default_payment_method : sub.default_payment_method?.id;
   if (!pmId) return;
   const pm = await s.paymentMethods.retrieve(pmId);
