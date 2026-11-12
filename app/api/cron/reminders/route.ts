@@ -3,7 +3,7 @@ import { safeEqual } from "@/lib/auth";
 import { query, queryOne } from "@/lib/db/client";
 import { deliver } from "@/lib/notify";
 import { inQuietHoursSql } from "@/lib/notify/quiet-hours";
-import { alertOwner, isLikelyBot } from "@/lib/events";
+import { alertOwner, isLikelyBot, logEvent } from "@/lib/events";
 
 export const dynamic = "force-dynamic";
 
@@ -121,11 +121,18 @@ async function alertStuckSignups(): Promise<number> {
       where email_confirmed_at is null and created_at < now() - interval '1 hour' and created_at > now() - interval '7 days'`,
   );
   const real = rows.filter((r) => !isLikelyBot(r.email));
+  // One digest email per run (one email per person hit Resend's rate limit).
+  const fresh: typeof real = [];
   for (const r of real) {
-    await alertOwner("Someone is stuck at sign-up", [
-      `${r.email} signed up ${new Date(r.created_at).toUTCString()} but hasn't confirmed their email.`,
+    const seen = await queryOne(`select 1 from app_events where kind = 'alert' and meta->>'key' = $1`, [`stuck:${r.email}`]);
+    if (!seen) fresh.push(r);
+  }
+  if (fresh.length > 0) {
+    await alertOwner(fresh.length === 1 ? "Someone is stuck at sign-up" : `${fresh.length} people are stuck at sign-up`, [
+      ...fresh.map((r) => `${r.email} signed up ${new Date(r.created_at).toUTCString()} but hasn't confirmed their email.`),
       "You can resend their confirmation from the command center.",
-    ], { key: `stuck:${r.email}` });
+    ]);
+    for (const r of fresh) await logEvent("alert", "Stuck sign-up alerted", { meta: { key: `stuck:${r.email}` } });
   }
   return real.length;
 }
