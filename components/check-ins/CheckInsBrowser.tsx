@@ -37,10 +37,12 @@ export function CheckInsBrowser({
   people,
   reasons,
   services = [],
+  canAddService = false,
   range,
   hasParams,
 }: {
   services?: Service[];
+  canAddService?: boolean;
   checkIns: CheckInWithPerson[];
   people: Pick<Person, "id" | "display_name">[];
   reasons: string[];
@@ -114,7 +116,7 @@ export function CheckInsBrowser({
 
   return (
     <div className="space-y-6">
-      <CheckInForm people={people} reasons={reasons} services={services} />
+      <CheckInForm people={people} reasons={reasons} services={services} canAddService={canAddService} />
 
       <section className="space-y-3">
         <div className="flex flex-wrap items-center gap-x-5 gap-y-1 text-sm text-text-muted">

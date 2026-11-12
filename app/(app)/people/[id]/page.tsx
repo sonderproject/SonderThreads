@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { formatMoney } from "@/lib/money";
-import { listServices } from "@/lib/services";
+import { listServices, serviceScope } from "@/lib/services";
 import { getTerms } from "@/lib/terms-server";
 import { notFound } from "next/navigation";
 import { isUuid } from "@/lib/ids";
@@ -75,7 +75,7 @@ export default async function PersonProfilePage({
   if (!isUuid(id)) notFound();
   const me = await requireUserId();
   // Everything loads at once (each query is scoped to the user, so a bad id just returns nothing).
-  const [person, activity, tasks, lists, notes, checkIns, reasons, allLists, comments, tz, membership, services] = await Promise.all([
+  const [person, activity, tasks, lists, notes, checkIns, reasons, allLists, comments, tz, membership, services, scope] = await Promise.all([
     getPerson(id),
     getPersonTimeline(id),
     listTasksForPerson(id),
@@ -88,6 +88,7 @@ export default async function PersonProfilePage({
     getTimeZone(),
     getMembership(),
     listServices(),
+    serviceScope(),
   ]);
   if (!person) notFound();
 
@@ -196,7 +197,7 @@ export default async function PersonProfilePage({
 
       <Section title={`${terms.checkIns}${checkIns.length ? ` · ${checkIns.length}` : ""}`}>
         <div className="space-y-3">
-          <CheckInForm personId={person.id} reasons={reasons} services={services} />
+          <CheckInForm personId={person.id} reasons={reasons} services={services} canAddService={scope.canManage} />
           <ServiceUsage checkIns={checkIns} formatDate={(iso) => shortDate(iso, tz)} />
           {checkIns.length === 0 ? (
             <EmptyState message={`No ${terms.checkInsLower} yet.`} />

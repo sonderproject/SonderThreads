@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { createCheckInSafe } from "@/lib/actions/check-ins";
+import { addService } from "@/lib/actions/services";
 import { createPersonRecordSafe } from "@/lib/actions/people";
 import { fromLocalInputValue, toLocalInputValue } from "./time";
 import type { Person } from "@/lib/types";
@@ -12,6 +13,8 @@ import { parseMoney } from "@/lib/money";
 import type { Service } from "@/lib/services";
 
 const NEW_PERSON = "__new__";
+const NEW_SERVICE = "__new_service__";
+const OTHER = "__other__";
 
 /**
  * Logs a check-in. With `personId` set (on a profile) the person picker is
@@ -21,27 +24,51 @@ export function CheckInForm({
   people = [],
   personId: fixedPersonId,
   reasons,
-  services = [],
+  services: initialServices = [],
+  canAddService = false,
 }: {
   people?: Pick<Person, "id" | "display_name">[];
   personId?: string;
   reasons: string[];
   /** Settings → Services. When set, one tap picks a service instead of typing a reason. */
   services?: Service[];
+  /** Can add to the services list (solo accounts, organization admins). */
+  canAddService?: boolean;
 }) {
+  const [services, setServices] = useState(initialServices);
   const [serviceId, setServiceId] = useState<string | null>(null);
+  // "" = nothing picked, a service id, NEW_SERVICE or OTHER.
+  const [serviceChoice, setServiceChoice] = useState("");
+  const [newServiceName, setNewServiceName] = useState("");
+  const [addingService, startAddingService] = useTransition();
+  const useServicePicker = services.length > 0 || canAddService;
   const [amount, setAmount] = useState("");
   const service = services.find((s) => s.id === serviceId) ?? null;
   const showAmount = services.some((s) => s.priceCents !== null);
   function pickService(s: Service) {
-    if (serviceId === s.id) {
-      setServiceId(null);
-      setAmount("");
-      return;
-    }
+    setServiceChoice(s.id);
     setServiceId(s.id);
     setReason("");
     setAmount(s.priceCents === null ? "" : (s.priceCents / 100).toFixed(s.priceCents % 100 ? 2 : 0));
+  }
+  function chooseService(value: string) {
+    const s = services.find((x) => x.id === value);
+    if (s) return pickService(s);
+    setServiceChoice(value);
+    setServiceId(null);
+    setAmount("");
+  }
+  function saveNewService() {
+    const name = newServiceName.trim();
+    if (!name) return;
+    setError(null);
+    startAddingService(async () => {
+      const result = await addService({ name });
+      if (!result.ok) return setError(result.error);
+      setServices((list) => [...list, result.data]);
+      setNewServiceName("");
+      pickService(result.data);
+    });
   }
   const [personId, setPersonId] = useState("");
   const [newName, setNewName] = useState("");
@@ -83,6 +110,7 @@ export function CheckInForm({
       setNewName("");
       setReason("");
       setServiceId(null);
+      setServiceChoice("");
       setAmount("");
       setWhen(toLocalInputValue(new Date()));
       setSaved(name ? `${name} checked in.` : "Checked in.");
@@ -138,40 +166,68 @@ export function CheckInForm({
             required
           />
         </label>
-        <label className="block">
-          <span className="eyebrow mb-1 block text-text-faint">{services.length ? "Service or reason" : "Reason"}</span>
-          <input
-            {...PROSE_INPUT}
-            value={service ? service.name : reason}
-            onChange={(e) => {
-              setServiceId(null);
-              setReason(e.target.value);
-            }}
-            placeholder={services.length ? "Pick a service below, or type a reason" : "Why they checked in..."}
-            maxLength={500}
-            className="input"
-          />
-        </label>
+        {useServicePicker ? (
+          <label className="block">
+            <span className="eyebrow mb-1 block text-text-faint">Service</span>
+            <select value={serviceChoice} onChange={(e) => chooseService(e.target.value)} className="input">
+              <option value="">Choose a service...</option>
+              {services.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
+              ))}
+              {canAddService && <option value={NEW_SERVICE}>+ Add new service</option>}
+              <option value={OTHER}>Other (type it)</option>
+            </select>
+          </label>
+        ) : (
+          <label className="block">
+            <span className="eyebrow mb-1 block text-text-faint">Reason</span>
+            <input
+              {...PROSE_INPUT}
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              placeholder="Why they checked in..."
+              maxLength={500}
+              className="input"
+            />
+          </label>
+        )}
       </div>
 
-      {services.length > 0 && (
-        <div className="flex flex-wrap gap-1.5" role="group" aria-label="Services">
-          {services.map((s) => (
-            <button
-              key={s.id}
-              type="button"
-              aria-pressed={serviceId === s.id}
-              onClick={() => pickService(s)}
-              className={`rounded-full border px-2.5 py-1 text-xs ${
-                serviceId === s.id
-                  ? "border-accent bg-accent-soft text-accent"
-                  : "border-border text-text hover:border-accent hover:text-accent"
-              }`}
-            >
-              {s.name}
-            </button>
-          ))}
+      {serviceChoice === NEW_SERVICE && (
+        <div className="flex gap-2">
+          <input
+            {...PROSE_INPUT}
+            autoFocus
+            value={newServiceName}
+            onChange={(e) => setNewServiceName(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                saveNewService();
+              }
+            }}
+            placeholder="New service name"
+            maxLength={80}
+            className="input"
+          />
+          <Button type="button" onClick={saveNewService} disabled={addingService || !newServiceName.trim()}>
+            {addingService ? "Adding..." : "Add"}
+          </Button>
         </div>
+      )}
+
+      {serviceChoice === OTHER && (
+        <input
+          {...PROSE_INPUT}
+          autoFocus
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          placeholder="What was it?"
+          maxLength={500}
+          className="input"
+        />
       )}
 
       {service && showAmount && (
@@ -181,7 +237,7 @@ export function CheckInForm({
         </label>
       )}
 
-      {services.length === 0 && reasons.length > 0 && (
+      {!useServicePicker && reasons.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
           {reasons.map((r) => (
             <button
