@@ -53,7 +53,7 @@ export function QuickAddTaskForm({
 
   return (
     <form onSubmit={submit} className="space-y-3">
-      {error && <p className="text-xs text-red-400">{error}</p>}
+      {error && <p className="text-xs text-danger">{error}</p>}
       <Dictate value={title} onChange={setTitle}>
         <input
           {...PROSE_INPUT}

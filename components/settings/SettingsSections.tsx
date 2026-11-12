@@ -8,6 +8,8 @@ import { PushToggle } from "@/components/notifications/PushToggle";
 import { TimeZoneInput } from "@/components/notifications/TimeZoneInput";
 import { PendingInvites } from "@/components/org/PendingInvites";
 import { ManageSubscriptionCard } from "@/components/billing/ManageSubscriptionCard";
+import { CalendarSyncSettings } from "@/components/settings/CalendarSyncSettings";
+import { getMyCalendarLink, listLinkedCalendars } from "@/lib/actions/calendar";
 import { requireUserId } from "@/lib/current-user";
 import { queryOne } from "@/lib/db/client";
 import { logout, requestEmailChange, signOutEverywhere } from "@/app/login/actions";
@@ -64,6 +66,8 @@ export async function SettingsSection({ slug, q }: { slug: SettingsSlug; q: Sett
       return <ManageSubscriptionCard message={q.billing} />;
     case "notifications":
       return <NotificationsSection q={q} />;
+    case "calendar":
+      return <CalendarSection />;
     case "security":
       return <SecuritySection q={q} />;
     case "organization":
@@ -73,6 +77,11 @@ export async function SettingsSection({ slug, q }: { slug: SettingsSlug; q: Sett
     case "about":
       return <AboutSection />;
   }
+}
+
+async function CalendarSection() {
+  const [linked, myLink] = await Promise.all([listLinkedCalendars(), getMyCalendarLink()]);
+  return <CalendarSyncSettings linked={linked} myLink={myLink} />;
 }
 
 async function AccountSection({ q }: { q: SettingsQuery }) {

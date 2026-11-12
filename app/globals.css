@@ -29,6 +29,13 @@
      1 = brand blue, 2 = orange. */
   --chart-1: #1c77b5;
   --chart-2: #eb6834;
+  /* Calendar (docs/DESIGN.md "Calendar"): birthdays, and the four colors people
+     can give linked outside calendars. Meetings use --accent, tasks --fg. */
+  --cal-birthday: #b0306f;
+  --cal-ext-1: #0e7c74;
+  --cal-ext-2: #8a5a2b;
+  --cal-ext-3: #3f7a1c;
+  --cal-ext-4: #5a6878;
   color-scheme: light;
 }
 
@@ -56,6 +63,11 @@
     --shadow-card: inset 0 1px 0 rgba(255, 255, 255, 0.03), 0 10px 30px -18px rgba(0, 0, 0, 0.6);
     --chart-1: #3e9bd4;
     --chart-2: #d95926;
+    --cal-birthday: #f08cbf;
+    --cal-ext-1: #4cc2b6;
+    --cal-ext-2: #d2a679;
+    --cal-ext-3: #8fcf66;
+    --cal-ext-4: #a3b3c4;
     color-scheme: dark;
   }
 }
@@ -83,6 +95,11 @@
   --shadow-card: inset 0 1px 0 rgba(255, 255, 255, 0.03), 0 10px 30px -18px rgba(0, 0, 0, 0.6);
   --chart-1: #3e9bd4;
   --chart-2: #d95926;
+  --cal-birthday: #f08cbf;
+  --cal-ext-1: #4cc2b6;
+  --cal-ext-2: #d2a679;
+  --cal-ext-3: #8fcf66;
+  --cal-ext-4: #a3b3c4;
   color-scheme: dark;
 }
 

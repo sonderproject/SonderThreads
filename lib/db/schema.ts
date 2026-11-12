@@ -895,4 +895,33 @@ create table if not exists app_events (
 create index if not exists app_events_created_idx on app_events (created_at desc);
 create index if not exists app_events_kind_idx on app_events (kind, created_at desc);
 alter table app_events enable row level security;
+
+-- Calendar sync. Outside calendars (Google, Apple, Outlook, Calendly, Cal.com)
+-- each person subscribes to by their private iCal link; events are fetched
+-- live and never stored. color is a palette slot (1-4, --cal-ext-N), not a hex.
+create table if not exists calendar_feeds (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references users(id) on delete cascade,
+  name text not null check (length(name) between 1 and 80),
+  url text not null check (length(url) between 8 and 2000),
+  color smallint not null default 1 check (color between 1 and 4),
+  last_error text,
+  last_synced_at timestamptz,
+  created_at timestamptz not null default now()
+);
+create index if not exists calendar_feeds_user_idx on calendar_feeds (user_id, created_at);
+alter table calendar_feeds enable row level security;
+do $$
+begin
+  if not exists (select 1 from pg_policies where tablename = 'calendar_feeds' and policyname = 'owner') then
+    create policy "owner" on calendar_feeds for all to authenticated
+      using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()));
+  end if;
+exception when undefined_function or invalid_schema_name or undefined_object then
+  null;
+end $$;
+
+-- The secret in each person's subscribe-from-Google/Apple link (/api/calendar/feed/<token>).
+alter table user_settings add column if not exists calendar_feed_token text;
+create unique index if not exists user_settings_calendar_feed_token_idx on user_settings (calendar_feed_token);
 `;

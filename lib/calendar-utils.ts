@@ -1,6 +1,3 @@
-import { dateParts } from "@/lib/tz";
-import type { Task } from "@/lib/types";
-import type { CalendarBirthday } from "@/lib/actions/calendar";
 
 export type CalendarDay = { dayNum: number | null; isToday: boolean };
 
@@ -28,24 +25,4 @@ export function buildWeeks(year: number, month: number, todayKey: string): Calen
   const weeks: CalendarDay[][] = [];
   for (let i = 0; i < days.length; i += 7) weeks.push(days.slice(i, i + 7));
   return weeks;
-}
-
-export function groupTasksByDay(tasks: Task[], timeZone: string): Record<number, Task[]> {
-  const byDay: Record<number, Task[]> = {};
-  for (const task of tasks) {
-    if (!task.due_at) continue;
-    const day = dateParts(task.due_at, timeZone).day;
-    (byDay[day] ??= []).push(task);
-  }
-  return byDay;
-}
-
-export function groupBirthdaysByDay(
-  birthdays: CalendarBirthday[],
-): Record<number, { personId: string; displayName: string }[]> {
-  const byDay: Record<number, { personId: string; displayName: string }[]> = {};
-  for (const b of birthdays) {
-    (byDay[b.day] ??= []).push({ personId: b.personId, displayName: b.displayName });
-  }
-  return byDay;
 }

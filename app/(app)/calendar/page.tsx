@@ -1,78 +1,36 @@
-import { getCalendarMonth } from "@/lib/actions/calendar";
+import { getCalendarRange } from "@/lib/actions/calendar";
 import { listPeople } from "@/lib/actions/people";
-import { CalendarGrid } from "@/components/calendar/CalendarGrid";
-import { NewCalendarEventButton } from "@/components/calendar/NewCalendarEventButton";
-import { buildWeeks, groupTasksByDay, groupBirthdaysByDay } from "@/lib/calendar-utils";
+import { CalendarView } from "@/components/calendar/CalendarView";
+import { CALENDAR_VIEWS, isDayKey, makeKey, viewRange, type CalendarView as View } from "@/lib/calendar-items";
 import { getTimeZone } from "@/lib/timezone";
-import { dateParts, dayKey } from "@/lib/tz";
-
-const MONTH_NAMES = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
-];
+import { dayKey } from "@/lib/tz";
 
 export default async function CalendarPage({
   searchParams,
 }: {
-  searchParams: Promise<{ year?: string; month?: string }>;
+  searchParams: Promise<{ view?: string; date?: string; year?: string; month?: string }>;
 }) {
   const sp = await searchParams;
-  const timeZone = await getTimeZone();
-  const now = dateParts(new Date(), timeZone);
-  // Ignore malformed ?year=/&month= rather than rendering "NaN".
+  const view: View = CALENDAR_VIEWS.includes(sp.view as View) ? (sp.view as View) : "month";
+
+  // ?date=YYYY-MM-DD, or the older ?year=&month= links (home page mini calendar). Malformed values fall back to today.
+  const today = dayKey(new Date(), await getTimeZone());
   const y = Number(sp.year);
   const m = Number(sp.month);
-  const year = Number.isInteger(y) && y >= 1900 && y <= 2200 ? y : now.year;
-  const month = Number.isInteger(m) && m >= 1 && m <= 12 ? m : now.month;
+  const legacy = Number.isInteger(y) && Number.isInteger(m) && m >= 1 && m <= 12 ? makeKey(y, m, 1) : null;
+  const anchor = isDayKey(sp.date) ? sp.date : legacy && isDayKey(legacy) ? legacy : today;
 
-  const [{ tasks, birthdays }, people] = await Promise.all([
-    getCalendarMonth(year, month, timeZone),
-    listPeople(),
-  ]);
-
-  const tasksByDay = groupTasksByDay(tasks, timeZone);
-  const birthdaysByDay = groupBirthdaysByDay(birthdays);
-  const weeks = buildWeeks(year, month, dayKey(new Date(), timeZone));
-
-  const prevMonth = month === 1 ? { year: year - 1, month: 12 } : { year, month: month - 1 };
-  const nextMonth = month === 12 ? { year: year + 1, month: 1 } : { year, month: month + 1 };
+  const [{ items, feeds, today: todayKey }, people] = await Promise.all([getCalendarRange(view, anchor), listPeople()]);
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="page-title">Calendar</h1>
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-3 tabular-nums text-sm">
-            <a
-              href={`/calendar?year=${prevMonth.year}&month=${prevMonth.month}`}
-              className="text-text-muted hover:text-accent"
-            >
-              ‹
-            </a>
-            <span className="text-text">
-              {MONTH_NAMES[month - 1]} {year}
-            </span>
-            <a
-              href={`/calendar?year=${nextMonth.year}&month=${nextMonth.month}`}
-              className="text-text-muted hover:text-accent"
-            >
-              ›
-            </a>
-          </div>
-          <NewCalendarEventButton
-            people={people.map((c) => ({ id: c.id, display_name: c.display_name }))}
-          />
-        </div>
-      </div>
-
-      <CalendarGrid
-        year={year}
-        month={month}
-        weeks={weeks}
-        tasksByDay={tasksByDay}
-        birthdaysByDay={birthdaysByDay}
-        people={people.map((c) => ({ id: c.id, display_name: c.display_name }))}
-      />
-    </div>
+    <CalendarView
+      view={view}
+      anchor={anchor}
+      range={viewRange(view, anchor)}
+      today={todayKey}
+      items={items}
+      feeds={feeds}
+      people={people.map((p) => ({ id: p.id, display_name: p.display_name }))}
+    />
   );
 }

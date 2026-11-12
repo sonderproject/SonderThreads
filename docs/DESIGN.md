@@ -116,6 +116,9 @@ Green stays the brand/action color; never use these three for decoration.
 ### Charts (Metrics)
 Single-series charts use `--chart-1` (brand green adjusted to pass the dataviz color checks: `#1a7f56` light, `#45a97f` dark). Columns ≤24px with 4px rounded tops on one baseline, hairline `--line-subtle` grid, value label on the tallest mark only, hover tooltip per mark, and a "View as table" under every chart. Text never uses the chart color. Components: `components/metrics/`.
 
+### Calendar
+Colored dots mark what an item is (components/calendar/): meetings/check-ins `--accent`, tasks `--fg` (overdue `--urgent`), birthdays `--cal-birthday`, and linked outside calendars one of `--cal-ext-1`…`--cal-ext-4` (teal, brown, green, slate; stored as the number, never a hex). A legend sits above the calendar. Dots only; text stays `--fg`/`--muted`.
+
 ## Rules
 
 - Group related content in a `.card` so it separates clearly from the page; headings and section labels sit on the page background between cards. Don't nest cards inside cards.
