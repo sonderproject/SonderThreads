@@ -111,8 +111,8 @@ function externalItems(feed: FeedRow, events: IcsOccurrence[], from: string, to:
 }
 
 /**
- * Everything on the calendar for one view: your tasks, your logged
- * meetings/check-ins, birthdays, and events from linked outside calendars.
+ * Everything on the calendar for one view: your tasks, birthdays, and
+ * events from linked outside calendars. Check-ins stay on their own page.
  */
 export async function getCalendarRange(
   view: CalendarView,
@@ -125,18 +125,11 @@ export async function getCalendarRange(
   const start = midnight(range.from, tz);
   const end = midnight(addDays(range.to, 1), tz);
 
-  const [tasks, checkIns, birthdays, feeds] = await Promise.all([
+  const [tasks, birthdays, feeds] = await Promise.all([
     query<Pick<Task, "id" | "title" | "due_at" | "completed">>(
       `select id, title, due_at, completed from tasks
        where user_id = $1 and deleted_at is null and due_at >= $2 and due_at < $3
        order by due_at asc limit 2000`,
-      [userId, start.toISOString(), end.toISOString()],
-    ),
-    query<{ id: string; person_id: string; checked_in_at: string; reason: string | null; display_name: string }>(
-      `select c.id, c.person_id, c.checked_in_at, c.reason, p.display_name
-       from check_ins c join people p on p.id = c.person_id and p.deleted_at is null
-       where c.user_id = $1 and c.deleted_at is null and c.checked_in_at >= $2 and c.checked_in_at < $3
-       order by c.checked_in_at asc limit 2000`,
       [userId, start.toISOString(), end.toISOString()],
     ),
     query<{ id: string; display_name: string; month: number; day: number }>(
@@ -163,18 +156,6 @@ export async function getCalendarRange(
       href: `/tasks#${t.id}`,
       taskId: t.id,
       completed: t.completed,
-    });
-  }
-
-  for (const c of checkIns) {
-    items.push({
-      key: `m-${c.id}`,
-      kind: "meeting",
-      title: c.display_name,
-      day: dayKey(c.checked_in_at, tz),
-      minutes: minutesOf(c.checked_in_at, tz),
-      href: `/people/${c.person_id}`,
-      detail: c.reason,
     });
   }
 

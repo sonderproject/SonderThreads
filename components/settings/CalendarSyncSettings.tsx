@@ -11,7 +11,6 @@ import {
   updateLinkedCalendar,
   type LinkedCalendar,
 } from "@/lib/actions/calendar";
-import { useTerms } from "@/components/TermsProvider";
 
 const COLORS = [1, 2, 3, 4] as const;
 const COLOR_NAMES = ["Teal", "Brown", "Green", "Slate"];
@@ -225,7 +224,6 @@ function LinkedRow({ cal }: { cal: LinkedCalendar }) {
 }
 
 function SubscribeToStrynd({ initialLink }: { initialLink: string }) {
-  const terms = useTerms();
   const [link, setLink] = useState(initialLink);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -260,8 +258,8 @@ function SubscribeToStrynd({ initialLink }: { initialLink: string }) {
       <div>
         <h3 className="text-sm font-semibold text-text">See Strynd in Google, Apple or Outlook</h3>
         <p className="text-xs text-text-muted">
-          Subscribe to this private link and your Strynd tasks and {terms.checkInsLower} show up in your other calendar. It
-          includes titles, names and times only, never notes. Google can take several hours to pick up changes.
+          Subscribe to this private link and your open Strynd tasks show up in your other calendar. It includes task titles
+          and due times only, never notes. Google can take several hours to pick up changes.
         </p>
       </div>
       {error && <p className="text-xs text-danger">{error}</p>}

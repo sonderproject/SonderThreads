@@ -6,7 +6,7 @@
 export type CalendarView = "month" | "week" | "agenda";
 export const CALENDAR_VIEWS: CalendarView[] = ["month", "week", "agenda"];
 
-export type CalendarItemKind = "meeting" | "task" | "birthday" | "external";
+export type CalendarItemKind = "task" | "birthday" | "external";
 
 export type CalendarItem = {
   /** Unique within the page (kind-prefixed). */
@@ -26,7 +26,7 @@ export type CalendarItem = {
   /** Outside calendars only: the calendar's name and palette slot (1-4). */
   source?: string;
   color?: number;
-  /** Meeting reason or event location. */
+  /** Outside event location. */
   detail?: string | null;
 };
 
@@ -142,7 +142,7 @@ export function longDayLabel(key: string): string {
   });
 }
 
-const KIND_ORDER: Record<CalendarItemKind, number> = { birthday: 0, external: 1, meeting: 2, task: 3 };
+const KIND_ORDER: Record<CalendarItemKind, number> = { birthday: 0, external: 1, task: 2 };
 
 /** All-day items first, then by time, then by kind. */
 export function sortItems(items: CalendarItem[]): CalendarItem[] {

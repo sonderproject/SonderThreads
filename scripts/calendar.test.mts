@@ -41,7 +41,7 @@ test("items group by day, all-day first then by time", () => {
   const base = { title: "x" } as const;
   const items: CalendarItem[] = [
     { ...base, key: "a", kind: "task", day: "2026-11-12", minutes: 600 },
-    { ...base, key: "b", kind: "meeting", day: "2026-11-12", minutes: 540 },
+    { ...base, key: "b", kind: "external", day: "2026-11-12", minutes: 540 },
     { ...base, key: "c", kind: "birthday", day: "2026-11-12", minutes: null },
     { ...base, key: "d", kind: "external", day: "2026-11-13", minutes: 60 },
   ];

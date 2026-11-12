@@ -1,14 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useTerms } from "@/components/TermsProvider";
 import { formatMinutes, type CalendarItem } from "@/lib/calendar-items";
 
 /** The token color that marks an item's kind (and overdue state for tasks). */
 export function itemColor(item: CalendarItem, today: string): string {
   switch (item.kind) {
-    case "meeting":
-      return "var(--accent)";
     case "birthday":
       return "var(--cal-birthday)";
     case "external":
@@ -48,19 +45,10 @@ export function ItemRow({
   completed?: boolean;
   onToggle?: (item: CalendarItem) => void;
 }) {
-  const terms = useTerms();
   const done = item.kind === "task" && (completed ?? item.completed);
   const overdue = isOverdue({ ...item, completed: done }, today);
   const kindLabel =
-    item.kind === "meeting"
-      ? terms.checkIn
-      : item.kind === "birthday"
-        ? "Birthday"
-        : item.kind === "external"
-          ? item.source
-          : overdue
-            ? "Overdue"
-            : "Task";
+    item.kind === "birthday" ? "Birthday" : item.kind === "external" ? item.source : overdue ? "Overdue" : "Task";
   const meta = [item.kind === "birthday" ? null : timeLabel(item), kindLabel, item.detail].filter(Boolean).join(" · ");
   const title = item.kind === "birthday" ? `${item.title}'s birthday` : item.title;
 

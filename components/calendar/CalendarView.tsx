@@ -4,10 +4,9 @@ import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
-import { useTerms } from "@/components/TermsProvider";
 import { Dot, ItemList } from "@/components/calendar/CalendarItems";
 import { MonthGrid } from "@/components/calendar/MonthGrid";
-import { NewCalendarItem } from "@/components/calendar/NewCalendarItem";
+import { NewCalendarTask } from "@/components/calendar/NewCalendarTask";
 import { setTaskCompleted } from "@/lib/actions/tasks";
 import {
   CALENDAR_VIEWS,
@@ -178,10 +177,9 @@ export function CalendarView({
         <Agenda days={daysBetween(range.from, range.to)} byDay={byDay} onAdd={setAdding} {...listProps} />
       )}
 
-      <NewCalendarItem
+      <NewCalendarTask
         open={adding !== null}
         day={adding ?? selected}
-        today={today}
         people={people}
         onClose={() => setAdding(null)}
       />
@@ -190,9 +188,7 @@ export function CalendarView({
 }
 
 function Legend({ feeds }: { feeds: CalendarFeedStatus[] }) {
-  const terms = useTerms();
   const entries: [string, string][] = [
-    [terms.checkIns, "var(--accent)"],
     ["Tasks", "var(--fg)"],
     ["Overdue", "var(--urgent)"],
     ["Birthdays", "var(--cal-birthday)"],
