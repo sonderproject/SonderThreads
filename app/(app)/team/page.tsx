@@ -5,6 +5,8 @@ import { asUser } from "@/lib/db/as-user";
 import { requireTeamViewer } from "@/lib/team";
 import { ROLE_LABELS, type OrgRole } from "@/lib/org";
 import { countNewReferrals } from "@/lib/referrals";
+import { getOrgTimeZone } from "@/lib/referral-settings";
+import { getTerms } from "@/lib/terms-server";
 
 type Row = {
   user_id: string;
@@ -12,26 +14,27 @@ type Row = {
   email: string;
   role: OrgRole;
   clients: number;
-  followups: number;
-  open_tasks: number;
-  overdue: number;
+  check_ins_today: number;
+  services_today: number;
 };
 
-/** Team: each staff member's caseload at a glance (admins and supervisors). */
+/** Team: each staff member's clients and today's check-ins and services (admins and supervisors). Tasks and follow-ups stay private to each member. */
 export default async function TeamPage() {
   const viewer = await requireTeamViewer();
+  const [tz, terms] = await Promise.all([getOrgTimeZone(viewer.orgId), getTerms()]);
   const [staff, logo] = await asUser(viewer.userId, async (q) => [
     await q<Row>(
       `select m.user_id, u.name, u.email, m.role,
               (select count(*) from people p where p.user_id = m.user_id and p.org_id = m.org_id and p.deleted_at is null)::int as clients,
-              (select count(*) from people p where p.user_id = m.user_id and p.org_id = m.org_id and p.deleted_at is null and p.needs_followup)::int as followups,
-              (select count(*) from tasks t where t.user_id = m.user_id and t.org_id = m.org_id and t.deleted_at is null and not t.completed)::int as open_tasks,
-              (select count(*) from tasks t where t.user_id = m.user_id and t.org_id = m.org_id and t.deleted_at is null and not t.completed
-                 and t.due_at < now())::int as overdue
+              (select count(*) from check_ins c where c.user_id = m.user_id and c.org_id = m.org_id and c.deleted_at is null
+                 and (c.checked_in_at at time zone $2)::date = (now() at time zone $2)::date)::int as check_ins_today,
+              (select count(*) from check_ins c where c.user_id = m.user_id and c.org_id = m.org_id and c.deleted_at is null
+                 and c.service_id is not null
+                 and (c.checked_in_at at time zone $2)::date = (now() at time zone $2)::date)::int as services_today
          from memberships m join users u on u.id = m.user_id
         where m.org_id = $1 and m.active
         order by coalesce(u.name, u.email)`,
-      [viewer.orgId],
+      [viewer.orgId, tz],
     ),
     (
       await q<{ v: string | null }>(`select extract(epoch from logo_updated_at)::bigint::text as v from organizations where id = $1`, [
@@ -40,8 +43,8 @@ export default async function TeamPage() {
     )[0]?.v ?? null,
   ]);
   const totals = staff.reduce(
-    (a, r) => ({ clients: a.clients + r.clients, overdue: a.overdue + r.overdue, followups: a.followups + r.followups }),
-    { clients: 0, overdue: 0, followups: 0 },
+    (a, r) => ({ clients: a.clients + r.clients, checkIns: a.checkIns + r.check_ins_today, services: a.services + r.services_today }),
+    { clients: 0, checkIns: 0, services: 0 },
   );
 
   const newReferrals = viewer.role === "admin" ? await countNewReferrals(viewer.orgId) : 0;
@@ -79,12 +82,12 @@ export default async function TeamPage() {
           </p>
         </div>
         <div className="card p-4">
-          <p className="eyebrow text-text-faint">Need follow-up</p>
-          <p className="font-display text-4xl font-light tabular-nums">{totals.followups}</p>
+          <p className="eyebrow text-text-faint">{terms.checkIns} today</p>
+          <p className="font-display text-4xl font-light tabular-nums">{totals.checkIns}</p>
         </div>
         <div className="card p-4">
-          <p className="eyebrow text-text-faint">Overdue tasks</p>
-          <p className="font-display text-4xl font-light tabular-nums">{totals.overdue}</p>
+          <p className="eyebrow text-text-faint">Services today</p>
+          <p className="font-display text-4xl font-light tabular-nums">{totals.services}</p>
         </div>
       </div>
 
@@ -94,9 +97,8 @@ export default async function TeamPage() {
             <tr className="eyebrow border-b border-border text-left text-text-faint">
               <th className="px-4 py-2 font-semibold">Staff</th>
               <th className="px-3 py-2 text-right font-semibold">Clients they added</th>
-              <th className="px-3 py-2 text-right font-semibold">Follow-up</th>
-              <th className="px-3 py-2 text-right font-semibold">Open tasks</th>
-              <th className="px-4 py-2 text-right font-semibold">Overdue</th>
+              <th className="px-3 py-2 text-right font-semibold">{terms.checkIns} today</th>
+              <th className="px-4 py-2 text-right font-semibold">Services today</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border-subtle">
@@ -110,21 +112,16 @@ export default async function TeamPage() {
                   </Link>
                 </td>
                 <td className="px-3 py-3 text-right tabular-nums">{r.clients}</td>
-                <td className="px-3 py-3 text-right tabular-nums">
-                  {r.followups > 0 ? <span className="tag tag-e">{r.followups}</span> : 0}
-                </td>
-                <td className="px-3 py-3 text-right tabular-nums">{r.open_tasks}</td>
-                <td className="px-4 py-3 text-right tabular-nums">
-                  {r.overdue > 0 ? <span className="tag tag-u">{r.overdue}</span> : 0}
-                </td>
+                <td className="px-3 py-3 text-right tabular-nums">{r.check_ins_today}</td>
+                <td className="px-4 py-3 text-right tabular-nums">{r.services_today}</td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
       <p className="text-xs text-text-faint">
-        &quot;Clients they added&quot; is who entered each client, not who can see it. Staff members&apos; personal tasks
-        and notes are never shown here.
+        &quot;Clients they added&quot; is who entered each client, not who can see it. Today follows the organization&apos;s
+        time zone. Staff members&apos; tasks, follow-ups and notes stay private to them.
       </p>
     </div>
   );
