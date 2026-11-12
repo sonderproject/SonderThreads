@@ -50,13 +50,34 @@ If a deployment's URL isn't on this list, Supabase falls back to the Site URL an
 
 Supabase → **Authentication → Emails → Templates**. The app verifies email links on the server, so the links must carry a token hash, not Supabase's default link.
 
-**Confirm signup.** A button plus the 6-digit code, so people can either tap Confirm or type the code on the "Check your email" screen without leaving the app:
+**Confirm signup** (done Nov 12, 2026). A Confirm button plus the 6-digit code, so people can tap Confirm or type the code on the "Check your email" screen without leaving the app.
+
+Subject:
+```
+Your Strynd code: {{ .Token }}
+```
+Body:
 ```html
-<h2>Confirm your email</h2>
-<p><a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email" style="display:inline-block;background:#1c77b5;color:#ffffff;padding:10px 20px;border-radius:999px;text-decoration:none;font-weight:600">Confirm</a></p>
-<p>Or type this code in Strynd:</p>
-<p style="font-size:28px;font-weight:700;letter-spacing:6px">{{ .Token }}</p>
-<p style="color:#6e5f4d;font-size:13px">If you didn't sign up for Strynd, you can ignore this email.</p>
+<div style="background:#f6f4ef;padding:32px 16px;font-family:Inter,Helvetica,Arial,sans-serif;color:#141412">
+  <div style="max-width:480px;margin:0 auto;background:#ffffff;border:1px solid #e2dbd0;border-radius:16px;padding:32px">
+    <p style="margin:0 0 24px;font-size:13px;letter-spacing:4px;font-weight:600">STRYND</p>
+    <h1 style="margin:0 0 12px;font-size:24px;font-weight:500">Confirm your email</h1>
+    <p style="margin:0 0 24px;font-size:15px;line-height:1.5;color:#6e5f4d">
+      Tap the button to finish setting up your account.
+    </p>
+    <p style="margin:0 0 28px">
+      <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email"
+         style="display:inline-block;background:#1c77b5;color:#ffffff;padding:12px 28px;border-radius:999px;text-decoration:none;font-weight:600;font-size:15px">
+        Confirm
+      </a>
+    </p>
+    <p style="margin:0 0 8px;font-size:15px;color:#6e5f4d">Or type this code in Strynd:</p>
+    <p style="margin:0 0 28px;font-size:32px;font-weight:700;letter-spacing:8px;color:#141412">{{ .Token }}</p>
+    <p style="margin:0;font-size:13px;line-height:1.5;color:#6e5f4d">
+      The code and button work once. If you didn't sign up for Strynd, you can ignore this email.
+    </p>
+  </div>
+</div>
 ```
 
 **Reset password.** Replace the link with:
