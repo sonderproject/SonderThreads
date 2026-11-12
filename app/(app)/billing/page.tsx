@@ -215,6 +215,17 @@ export default async function BillingPage({
                 >
                   {a.state === "setup" ? "Start my free trial" : "Subscribe"}
                 </button>
+                <p className="text-xs text-text-muted">
+                  {a.state === "setup"
+                    ? "Your plan renews automatically: after the 7-day free trial you're charged $9 every month until you cancel."
+                    : "Your plan renews automatically: you're charged $9 every month until you cancel."}{" "}
+                  Cancel any time in Settings → Subscription; you keep access until the end of the month you paid for. By
+                  continuing you agree to the{" "}
+                  <Link href="/terms#fees" className="text-accent hover:underline">
+                    Terms of service
+                  </Link>
+                  .
+                </p>
               </form>
               {a.state === "setup" && (
                 <p className="text-sm text-text-muted">
@@ -248,6 +259,16 @@ export default async function BillingPage({
                 <button type="submit" className={primary} disabled={!billingEnabled()}>
                   Continue to payment
                 </button>
+                <p className="text-xs text-text-muted">
+                  The plan renews automatically every month at the price shown for your seats (plus prorated changes when you
+                  add or remove seats) until you cancel.
+                  {a.state === "trial" ? " Nothing is charged before your free trial ends." : ""} Cancel any time in Settings →
+                  Subscription; you keep access until the end of the month you paid for. By continuing you agree to the{" "}
+                  <Link href="/terms#fees" className="text-accent hover:underline">
+                    Terms of service
+                  </Link>
+                  .
+                </p>
               </form>
               <p className="text-sm text-text-muted">
                 Over 500 people, or need custom onboarding or integrations?{" "}

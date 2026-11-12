@@ -35,9 +35,9 @@ export function LegalPage({ title, updated, children }: { title: string; updated
 }
 
 /** A titled section of a legal page. */
-export function LegalSection({ title, children }: { title: string; children: React.ReactNode }) {
+export function LegalSection({ title, id, children }: { title: string; id?: string; children: React.ReactNode }) {
   return (
-    <section className="space-y-2">
+    <section id={id ?? title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")} className="scroll-mt-20 space-y-2">
       <h2 className="section-title text-text">{title}</h2>
       {children}
     </section>

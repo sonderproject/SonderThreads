@@ -13,12 +13,15 @@
 - Every query gets its `user_id` from `await requireUserId()` (`lib/current-user.ts`). Never import `OWNER_ID` anywhere else — accounts (see `docs/accounts-plan.md`) depend on that one function being the only source of the user id.
 - The one exception is the owner command center (`/owner`, `app/(app)/owner/page.tsx`), which reads across all accounts on purpose. It must stay behind `requireOwner()` (`lib/owner.ts`; owner = `OWNER_EMAILS` in Vercel, default `sonderproject.co@gmail.com`), which 404s for everyone else.
 
+## Legal
+- `/terms` and `/privacy` show `LEGAL_UPDATED` from `lib/legal.ts`. When you change either page materially, bump `LEGAL_VERSION` and `LEGAL_UPDATED` there: everyone (and each organization's admin) is then asked to agree again (`app/accept-terms`), and each agreement is logged in `legal_acceptances`.
+
 ## Owner command center
 - Record anything the owner should see with `logEvent()` / `alertOwner()` from `lib/events.ts` (table `app_events`). Server errors are captured automatically in `instrumentation.ts`.
 
 ## Open to-dos — remind the owner
 Mention these briefly when relevant while building (e.g. when touching sign-up, the landing page, or app-store prep). Remove an item once it's done.
-- Have a lawyer review `/privacy` and `/terms` (drafts live; owner is a sole proprietor until the LLC forms in January — update the legal name then). Also have them check the Settings cancel flow and its one-time "$5 for 2 months" offer against California's auto-renewal law.
+- Have a lawyer review `/privacy` and `/terms` (rewritten Nov 12, 2026 with organizations, calendar sync, kiosk/referrals and auto-renewal/cancel/refund terms; sign-up, org creation and invites now require ticking "I agree", recorded per version; drafts live; owner is a sole proprietor until the LLC forms in January — update the legal name then). Also have them check the Settings cancel flow and its one-time "$5 for 2 months" offer against California's auto-renewal law.
 - Google + Apple sign-in (see `docs/accounts-plan.md`). The public account-deletion page is live at `/account-deletion`.
 - Supabase Auth: turn on Turnstile CAPTCHA (`docs/auth-setup.md` section F). Custom SMTP via Resend, email templates, rate limits and redirect URLs are done.
 - Rename to Strynd (Nov 2026): code, copy, Supabase Auth (Site URL, redirect URLs, SMTP sender `no-reply@strynd.com`, email templates), Resend (strynd.com verified), `APP_URL`/`EMAIL_FROM` in Vercel and the Stripe webhook (`https://www.strynd.com/api/stripe/webhook`) are done; www.strynd.com is primary and sonderthreads.com still serves the app. Left to do: (1) redirect sonderthreads.com → www.strynd.com in Vercel (keep renewing sonderthreads.com for at least a year; keep its Supabase redirect URLs until then); (2) rename the GitHub repo and Vercel project.

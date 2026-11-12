@@ -22,10 +22,28 @@ export default async function NewOrganizationPage({ searchParams }: { searchPara
           <input name="name" required maxLength={200} placeholder="Hope House" className="input" />
         </label>
         {error === "name" && <p className="text-xs text-danger">Enter a name.</p>}
+        {error === "agree" && (
+          <p className="text-xs text-danger">Please confirm the agreement below to create the organization.</p>
+        )}
         <p className="text-xs text-text-muted">
           You&apos;ll be its admin. Next you can choose which of your existing clients to bring in; anything you
           don&apos;t choose stays private to you.
         </p>
+        <label className="flex items-start gap-2 text-xs text-text-muted">
+          <input type="checkbox" name="agree" required className="mt-0.5" />
+          <span>
+            I&apos;m authorized to agree to the{" "}
+            <Link href="/terms" target="_blank" className="text-accent hover:underline">
+              Terms of service
+            </Link>{" "}
+            and{" "}
+            <Link href="/privacy" target="_blank" className="text-accent hover:underline">
+              Privacy policy
+            </Link>{" "}
+            for this organization, and it has its clients&apos; permission (or another lawful basis) to keep their
+            information in Strynd.
+          </span>
+        </label>
         <div className="flex gap-2">
           <button type="submit" className="rounded-full bg-accent px-3 py-1.5 text-sm font-semibold text-bg hover:bg-accent-dim">
             Create organization

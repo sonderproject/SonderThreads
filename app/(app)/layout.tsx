@@ -17,6 +17,7 @@ import { getMembership } from "@/lib/org";
 import { countNewReferrals } from "@/lib/referrals";
 import { billingEnabled, getAccess } from "@/lib/billing";
 import { BillingBanner } from "@/components/billing/BillingBanner";
+import { pendingAgreements } from "@/lib/actions/legal";
 
 /** Offer optional 2FA to people who don't have it on, at most once every 30 days. */
 async function shouldOfferTwoFactor(): Promise<boolean> {
@@ -51,6 +52,12 @@ export default async function AppGroupLayout({ children }: { children: React.Rea
   }
 
   const [people, lists, notificationCount, timeZone, offerTwoFactor, settings, membership] = data;
+  // Everyone agrees to the current Terms/Privacy policy (and admins for their organization) before using the app.
+  const agreements = await pendingAgreements();
+  if (agreements.user || agreements.org) {
+    const path = (await headers()).get("x-pathname") ?? "/";
+    if (!path.startsWith("/settings/data")) redirect(`/accept-terms?next=${encodeURIComponent(path)}`);
+  }
   const access = await getAccess().catch(() => null);
   // New individual accounts start their free trial (card on Stripe) before using the app.
   if (access?.state === "setup") {

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { LegalPage, LegalSection } from "@/components/legal/LegalPage";
 import { SUPPORT_EMAIL } from "@/lib/settings-options";
+import { LEGAL_UPDATED, LEGAL_VERSION } from "@/lib/legal";
 
 export const metadata: Metadata = {
   title: "Terms of service · Strynd",
@@ -12,12 +13,13 @@ const mail = <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a>;
 
 export default function TermsPage() {
   return (
-    <LegalPage title="Terms of service" updated="November 11, 2026">
+    <LegalPage title="Terms of service" updated={LEGAL_UPDATED}>
       <p>
         These terms are an agreement between you and Sonder Project, a sole proprietorship based in California
         (&quot;we&quot;, &quot;us&quot;), for your use of Strynd at strynd.com and in its mobile apps
-        (&quot;the app&quot;). By creating an account or using the app, you agree to these terms and to our{" "}
-        <a href="/privacy">privacy policy</a>.
+        (&quot;the app&quot;). You agree to these terms and to our <a href="/privacy">privacy policy</a> when you
+        tick the box to create an account, set up or join an organization, or keep using the app after we ask you to
+        agree to an updated version. We keep a record of which version you agreed to and when (version {LEGAL_VERSION}).
       </p>
 
       <LegalSection title="Who can use it">
@@ -51,6 +53,35 @@ export default function TermsPage() {
         </ul>
       </LegalSection>
 
+      <LegalSection title="Organizations">
+        <p>If you set up or run an organization (an agency or team) in the app:</p>
+        <ul>
+          <li>
+            the admin who creates it confirms they&apos;re authorized to accept these terms for the organization, which is
+            then bound by them;
+          </li>
+          <li>
+            client records added to the organization belong to the organization, not to the staff member who entered
+            them, and stay with it when that person leaves. Each person&apos;s personal tasks, notes and lists stay
+            private to them;
+          </li>
+          <li>
+            the organization decides what client information to collect and why, and is responsible for having
+            clients&apos; permission or another lawful basis, for giving clients any notices the law requires, and for
+            answering their requests. We store and process that information only on the organization&apos;s behalf;
+          </li>
+          <li>
+            admins can add, deactivate and change the roles of staff, see the organization&apos;s client records and
+            activity log, and manage billing. Staff who join agree to follow these terms and the organization&apos;s
+            rules when handling client information;
+          </li>
+          <li>
+            if the organization uses the front-desk kiosk or a public referral link, it&apos;s responsible for how
+            they&apos;re used, including telling clients and referrers how their information will be handled.
+          </li>
+        </ul>
+      </LegalSection>
+
       <LegalSection title="Acceptable use">
         <p>Don&apos;t:</p>
         <ul>
@@ -69,6 +100,16 @@ export default function TermsPage() {
         </p>
       </LegalSection>
 
+      <LegalSection title="Calendar sync">
+        <p>
+          You can show events from another calendar (such as Google, Apple or Outlook) in Strynd by pasting its private
+          link, and subscribe to your Strynd tasks from another calendar using your own private link. Only link
+          calendars you&apos;re allowed to share. Anyone who has your Strynd calendar link can see the task titles and due
+          times in it, so keep it private; you can replace it in Settings → Calendar at any time. Once another calendar
+          service copies your tasks, its own terms apply to that copy.
+        </p>
+      </LegalSection>
+
       <LegalSection title="Text messages">
         <p>
           If you opt in to text reminders, you agree to receive them at the number you provide. Message frequency varies.
@@ -77,17 +118,38 @@ export default function TermsPage() {
         </p>
       </LegalSection>
 
-      <LegalSection title="Fees">
+      <LegalSection title="Fees, renewal and cancellation" id="fees">
         <p>
-          Individual accounts are $9 a month after a 7-day free trial. Starting the trial needs a payment card; you're charged when the trial ends unless you cancel first. Free trials are limited to one per person, card and mobile number. Team plans are billed by the number of seats
-          the organization buys (at least 2): $19 per seat a month for up to 18 seats, $349 a month for 19 or 20 seats, and $15
-          a month for each seat over 20, after a 30-day free trial. Seat changes are prorated. Enterprise pricing is agreed in
-          writing.
-          Subscriptions renew monthly until cancelled, and organization charges adjust when staff are added or removed.
-          Payments are processed by Stripe. You can cancel any time in Settings → Billing; you keep access until the end
-          of the period you paid for. If a trial ends or a payment fails, your account becomes view-only: you can still
-          see and export everything. Accounts created before November 10, 2026 are free for life. If prices change,
-          we&apos;ll tell you in advance.
+          <strong>Your plan renews automatically every month until you cancel.</strong> We charge the card on file at the
+          start of each monthly period. Payments are processed by Stripe.
+        </p>
+        <ul>
+          <li>
+            <strong>Individual:</strong> $9 a month after a 7-day free trial. Starting the trial needs a payment card;
+            you&apos;re charged $9 when the trial ends, and every month after that, unless you cancel before the trial
+            ends. Free trials are limited to one per person, card and mobile number.
+          </li>
+          <li>
+            <strong>Teams and organizations:</strong> billed for the number of seats the organization buys (at least 2):
+            $19 per seat a month for up to 18 seats, $349 a month for 19 or 20 seats, and $15 a month for each seat over 20,
+            after a 30-day free trial. Adding or removing seats changes the monthly charge, and the difference for the
+            current month is prorated. Enterprise pricing is agreed in writing.
+          </li>
+        </ul>
+        <p>
+          <strong>How to cancel:</strong> any time, online, in Settings → Subscription (organization admins cancel for
+          their organization). Cancelling stops the next renewal; you keep access until the end of the month you&apos;ve
+          already paid for. When you cancel we may offer you a lower price to stay, which you&apos;re free to decline.
+          You can also email {mail} to cancel.
+        </p>
+        <p>
+          <strong>Refunds:</strong> payments aren&apos;t refundable and we don&apos;t give credit for partial months,
+          except where the law requires it or we tell you otherwise in writing.
+        </p>
+        <p>
+          If a trial ends without a subscription or a payment fails, your account becomes view-only: you can still see
+          and export everything. Accounts created before November 10, 2026 are free for life. If prices change,
+          we&apos;ll tell you at least 30 days before the change applies to you, and you can cancel before then.
         </p>
       </LegalSection>
 
@@ -101,7 +163,7 @@ export default function TermsPage() {
 
       <LegalSection title="Ending your account">
         <p>
-          You can delete your account at any time in Settings. We may suspend or close an account that breaks these
+          You can delete your account at any time in Settings → Your data. We may suspend or close an account that breaks these
           terms or puts others at risk; where reasonable, we&apos;ll warn you first and give you a chance to export your
           data.
         </p>
@@ -141,13 +203,15 @@ export default function TermsPage() {
 
       <LegalSection title="Changes to these terms">
         <p>
-          If we make significant changes, we&apos;ll update the date above and let you know in the app or by email
-          before they take effect. Continuing to use the app after that means you accept the new terms.
+          If we make significant changes, we&apos;ll update the date above and ask you to agree to the new version in the
+          app before you keep using it. If you don&apos;t agree, you can export your data and delete your account.
         </p>
       </LegalSection>
 
       <LegalSection title="Contact">
-        <p>Sonder Project, California, USA. Email {mail}.</p>
+        <p>
+          Sonder Project, California, USA. Email {mail}, or use Settings → About &amp; help → Contact support in the app.
+        </p>
       </LegalSection>
     </LegalPage>
   );

@@ -924,4 +924,25 @@ end $$;
 -- The secret in each person's subscribe-from-Google/Apple link (/api/calendar/feed/<token>).
 alter table user_settings add column if not exists calendar_feed_token text;
 create unique index if not exists user_settings_calendar_feed_token_idx on user_settings (calendar_feed_token);
+
+-- Terms of service / privacy policy agreement (lib/legal.ts LEGAL_VERSION).
+-- users/organizations hold the latest version agreed to; legal_acceptances
+-- keeps every agreement (who, what, when, from where) as the record.
+alter table users add column if not exists terms_version text;
+alter table users add column if not exists terms_accepted_at timestamptz;
+alter table organizations add column if not exists terms_version text;
+alter table organizations add column if not exists terms_accepted_at timestamptz;
+alter table organizations add column if not exists terms_accepted_by uuid references users(id) on delete set null;
+create table if not exists legal_acceptances (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references users(id) on delete cascade,
+  org_id uuid references organizations(id) on delete cascade,
+  kind text not null check (kind in ('user', 'organization', 'membership')),
+  version text not null,
+  ip text,
+  user_agent text,
+  created_at timestamptz not null default now()
+);
+create index if not exists legal_acceptances_user_idx on legal_acceptances (user_id, created_at desc);
+alter table legal_acceptances enable row level security;
 `;

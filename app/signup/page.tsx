@@ -14,6 +14,7 @@ const ERRORS: Record<string, string> = {
   exists: "An account with that email already exists.",
   legacy: "That isn't the current shared password.",
   captcha: "Please complete the security check and try again.",
+  agree: "Please agree to the Terms of service and Privacy policy to create an account.",
   weak: "Choose a stronger password.",
   rate: "Too many sign-ups right now. Wait a minute and try again.",
   failed: "Couldn't create the account. Please try again.",
@@ -86,6 +87,20 @@ export default async function SignupPage({
             </p>
           </div>
         )}
+        <label className="flex items-start gap-2 text-xs text-text-muted">
+          <input type="checkbox" name="agree" required className="mt-0.5" />
+          <span>
+            I agree to the{" "}
+            <Link href="/terms" target="_blank" className="text-accent hover:underline">
+              Terms of service
+            </Link>{" "}
+            and{" "}
+            <Link href="/privacy" target="_blank" className="text-accent hover:underline">
+              Privacy policy
+            </Link>
+            , and I&apos;m at least 18.
+          </span>
+        </label>
         <Turnstile />
         <button
           type="submit"
@@ -93,17 +108,6 @@ export default async function SignupPage({
         >
           Create account
         </button>
-        <p className="text-center text-xs text-text-muted">
-          By creating an account you agree to the{" "}
-          <Link href="/terms" className="text-accent hover:underline">
-            Terms
-          </Link>{" "}
-          and{" "}
-          <Link href="/privacy" className="text-accent hover:underline">
-            Privacy Policy
-          </Link>
-          .
-        </p>
         <p className="text-center text-xs text-text-muted">
           Already have an account?{" "}
           <Link href={loginHref} className="text-accent hover:underline">

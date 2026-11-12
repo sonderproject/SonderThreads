@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { acceptInviteInApp, declineInviteInApp } from "@/lib/actions/org";
 import { ROLE_LABELS } from "@/lib/org-roles";
 import type { PendingInvite } from "@/lib/org";
@@ -10,6 +11,7 @@ export function PendingInvites({ invites, error }: { invites: PendingInvite[]; e
       {error === "other-org" && (
         <p className="flag text-sm">You&apos;re already in another organization. Ask its admin to deactivate you first.</p>
       )}
+      {error === "agree" && <p className="flag text-sm">Please tick the box to confirm before joining.</p>}
       {error === "invalid" && <p className="flag text-sm">That invite has expired or was already used.</p>}
       {error === "seats" && (
         <p className="flag text-sm">That organization has no free seats right now. Ask its admin to add a seat in Billing, then try again.</p>
@@ -25,8 +27,22 @@ export function PendingInvites({ invites, error }: { invites: PendingInvite[]; e
             Clients you choose (and new ones you add) will belong to {i.orgName}. Your personal tasks, notes and lists stay private.
           </p>
           <div className="flex flex-wrap gap-2">
-            <form action={acceptInviteInApp}>
+            <form action={acceptInviteInApp} className="w-full space-y-3">
               <input type="hidden" name="invite_id" value={i.id} />
+              <label className="flex items-start gap-2 text-xs text-text-muted">
+                <input type="checkbox" name="agree" required className="mt-0.5" />
+                <span>
+                  I&apos;ll follow the{" "}
+                  <Link href="/terms" target="_blank" className="text-accent hover:underline">
+                    Terms of service
+                  </Link>
+                  , the{" "}
+                  <Link href="/privacy" target="_blank" className="text-accent hover:underline">
+                    Privacy policy
+                  </Link>{" "}
+                  and {i.orgName}&apos;s rules when handling client information.
+                </span>
+              </label>
               <button type="submit" className="rounded-full bg-accent px-5 py-2 text-sm font-semibold text-bg hover:bg-accent-dim">
                 Join {i.orgName}
               </button>

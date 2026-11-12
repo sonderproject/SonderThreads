@@ -11,6 +11,7 @@ const ERRORS: Record<string, string> = {
   expired: "This invite has expired. Ask your admin for a new one.",
   email: "This invite is for a different email address. Sign in with the address it was sent to.",
   "other-org": "You're already in another organization. Ask that organization's admin to deactivate you first.",
+  agree: "Please confirm the agreement to join.",
   seats: "This organization has no free seats right now. Ask your admin to add a seat in Billing, then try again.",
 };
 
@@ -36,7 +37,7 @@ export default async function JoinPage({
   ]);
 
   const problem =
-    error ??
+    (error && error !== "agree" ? error : null) ??
     (!invite ? "invalid" : invite.accepted ? "used" : invite.expired ? "expired" : me?.email.toLowerCase() !== invite.email.toLowerCase() ? "email" : null);
 
   return (
@@ -56,6 +57,7 @@ export default async function JoinPage({
         </div>
       ) : (
         <form action={acceptInvite} className="card space-y-3 p-4">
+          {error === "agree" && <p className="text-xs text-danger">{ERRORS.agree}</p>}
           <input type="hidden" name="token" value={token} />
           <p className="text-sm text-text">
             You&apos;re invited to join <strong>{invite!.org_name}</strong> as a <strong>{ROLE_LABELS[invite!.role]}</strong>.
@@ -66,6 +68,20 @@ export default async function JoinPage({
             and lists stay private to you.
           </p>
           {membership && <p className="text-xs text-text-muted">You&apos;re currently in {membership.orgName}.</p>}
+          <label className="flex items-start gap-2 text-xs text-text-muted">
+            <input type="checkbox" name="agree" required className="mt-0.5" />
+            <span>
+              I&apos;ll follow the{" "}
+              <Link href="/terms" target="_blank" className="text-accent hover:underline">
+                Terms of service
+              </Link>
+              , the{" "}
+              <Link href="/privacy" target="_blank" className="text-accent hover:underline">
+                Privacy policy
+              </Link>{" "}
+              and {invite!.org_name}&apos;s rules when handling client information.
+            </span>
+          </label>
           <button type="submit" className="rounded-full bg-accent px-3 py-1.5 text-sm font-semibold text-bg hover:bg-accent-dim">
             Join {invite!.org_name}
           </button>

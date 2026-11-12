@@ -10,6 +10,7 @@ import { hashToken } from "@/lib/session";
 import { getMembership, isOrgRole, type OrgRole } from "@/lib/org";
 import { transferOrgClients } from "@/lib/org-admin";
 import { toActionResult, type ActionResult } from "@/lib/validation";
+import { recordAcceptance } from "@/lib/legal-server";
 import { notify } from "@/lib/notify";
 import { appUrl, emailConfigured, escapeHtml, sendEmail } from "@/lib/email";
 import { ROLE_LABELS } from "@/lib/org-roles";
@@ -30,13 +31,16 @@ export async function createOrganization(formData: FormData): Promise<void> {
   const userId = await requireUserId();
   const name = (formData.get("name")?.toString() ?? "").trim().slice(0, 200);
   if (!name) redirect("/organization/new?error=name");
+  if (formData.get("agree") !== "on") redirect("/organization/new?error=agree");
   if (await getMembership()) redirect("/organization");
-  await transaction(async (q) => {
+  const orgId = await transaction(async (q) => {
     const res = (await q(`insert into organizations (name, created_by) values ($1, $2) returning id`, [name, userId])) as {
       rows: { id: string }[];
     };
     await q(`insert into memberships (org_id, user_id, role) values ($1, $2, 'admin')`, [res.rows[0].id, userId]);
+    return res.rows[0].id;
   });
+  await recordAcceptance(userId, "organization", orgId);
   revalidatePath("/", "layout");
   redirect("/organization/clients?new=1");
 }
@@ -95,6 +99,7 @@ export async function acceptInvite(formData: FormData): Promise<void> {
   const userId = await requireUserId();
   const token = formData.get("token")?.toString() ?? "";
   const back = (error: string) => redirect(`/join/${encodeURIComponent(token)}?error=${error}`);
+  if (formData.get("agree") !== "on") back("agree");
   const invite = await queryOne<{ id: string; org_id: string; email: string; role: OrgRole; expired: boolean; accepted: boolean }>(
     `select id, org_id, email, role, expires_at < now() as expired, accepted_at is not null as accepted
        from invitations where token_hash = $1`,
@@ -117,6 +122,7 @@ export async function acceptInvite(formData: FormData): Promise<void> {
     );
     await q(`update invitations set accepted_at = now(), accepted_by = $2 where id = $1`, [invite!.id, userId]);
   });
+  await recordAcceptance(userId, "membership", invite!.org_id);
   revalidatePath("/", "layout");
   await syncOrgSeats(invite!.org_id);
   redirect("/organization/clients?joined=1");
@@ -358,6 +364,7 @@ export async function removeOrgLogo(): Promise<void> {
 export async function acceptInviteInApp(formData: FormData): Promise<void> {
   const userId = await requireUserId();
   const id = formData.get("invite_id")?.toString() ?? "";
+  if (formData.get("agree") !== "on") redirect("/?invite=agree");
   const me = await queryOne<{ email: string }>(`select email from users where id = $1`, [userId]);
   const invite = await queryOne<{ id: string; org_id: string; role: OrgRole }>(
     `select id, org_id, role from invitations
@@ -376,6 +383,7 @@ export async function acceptInviteInApp(formData: FormData): Promise<void> {
     );
     await q(`update invitations set accepted_at = now(), accepted_by = $2 where id = $1`, [invite!.id, userId]);
   });
+  await recordAcceptance(userId, "membership", invite!.org_id);
   revalidatePath("/", "layout");
   await syncOrgSeats(invite!.org_id);
   redirect("/organization/clients?joined=1");

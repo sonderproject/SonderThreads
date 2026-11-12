@@ -1,5 +1,6 @@
 "use server";
 
+import { recordAcceptance } from "@/lib/legal-server";
 import { headers } from "next/headers";
 import { isLikelyBot, logEvent } from "@/lib/events";
 import { redirect } from "next/navigation";
@@ -183,7 +184,9 @@ export async function signup(formData: FormData): Promise<void> {
   const phone = normalizePhone(rawPhone);
   const smsOptIn = formData.get("sms_opt_in") === "on";
   const timeZone = formData.get("timezone")?.toString() || null;
+  const agreed = formData.get("agree") === "on";
 
+  if (!agreed) back("/signup", "agree", email, next, rawPhone);
   if (!EMAIL_RE.test(email) || email.length > 254) back("/signup", "email", email, next, rawPhone);
   if (!phone) back("/signup", "phone", email, next, rawPhone);
   if (await phoneTaken(phone!)) back("/signup", "phone-used", email, next, rawPhone);
@@ -260,12 +263,14 @@ export async function signup(formData: FormData): Promise<void> {
   redirect(`/signup/check-email?${new URLSearchParams({ email })}`);
 }
 
+/** Sign-up always requires ticking "I agree", so every new row records that agreement. */
 async function createUserRow(id: string, email: string, phone: string | null, smsOptIn: boolean, timeZone: string | null) {
   await query(
     `insert into users (id, email, phone, sms_opt_in, timezone) values ($1, $2, $3, $4, $5)
      on conflict (id) do update set phone = excluded.phone, sms_opt_in = excluded.sms_opt_in, timezone = excluded.timezone`,
     [id, email, phone, smsOptIn, validTimeZone(timeZone)],
   );
+  await recordAcceptance(id, "user");
 }
 
 /**

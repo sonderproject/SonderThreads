@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { LegalPage, LegalSection } from "@/components/legal/LegalPage";
 import { SUPPORT_EMAIL } from "@/lib/settings-options";
+import { LEGAL_UPDATED } from "@/lib/legal";
 
 export const metadata: Metadata = {
   title: "Privacy policy · Strynd",
@@ -12,7 +13,7 @@ const mail = <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a>;
 
 export default function PrivacyPage() {
   return (
-    <LegalPage title="Privacy policy" updated="November 9, 2026">
+    <LegalPage title="Privacy policy" updated={LEGAL_UPDATED}>
       <p>
         Strynd (&quot;the app&quot;) is run by Sonder Project, a sole proprietorship based in California
         (&quot;we&quot;, &quot;us&quot;). This policy explains what we collect when you use the app at strynd.com
@@ -30,6 +31,22 @@ export default function PrivacyPage() {
           <li>
             <strong>What you enter:</strong> people and client profiles (such as name, date of birth, phone, email,
             gender, income level and ethnicity), notes, tasks, lists, check-ins and reminders.
+          </li>
+          <li>
+            <strong>Billing:</strong> your plan, seat count, trial and payment status, and the Stripe customer and
+            subscription IDs. Card details go straight to Stripe; we never see or store full card numbers.
+          </li>
+          <li>
+            <strong>Agreements:</strong> which version of these terms and policy you agreed to, when, and the IP address
+            and browser you used, as a record of your consent.
+          </li>
+          <li>
+            <strong>Support messages:</strong> what you send through the contact form, with your plan, app version and
+            device type so we can help.
+          </li>
+          <li>
+            <strong>Calendar links:</strong> the private links to any outside calendars you choose to show in Strynd
+            (see Calendar sync below).
           </li>
           <li>
             <strong>Device and usage data:</strong> time zone, push notification subscriptions, and standard server
@@ -55,12 +72,51 @@ export default function PrivacyPage() {
         </p>
       </LegalSection>
 
+      <LegalSection title="Organizations">
+        <p>
+          When you use Strynd as part of an organization (such as an agency), the organization decides what client
+          information is kept and why, and we process it on the organization&apos;s behalf as its service provider. The
+          organization&apos;s admins can see and manage its client records, staff list and activity log. If you&apos;re a
+          client of an organization and want to see, correct or delete your information, contact that organization; we
+          will help it respond.
+        </p>
+        <ul>
+          <li>
+            <strong>Front-desk kiosk:</strong> clients who check themselves in on an organization&apos;s kiosk enter their
+            first and last name and a reason for the visit, which go to that organization&apos;s records.
+          </li>
+          <li>
+            <strong>Referral links:</strong> people who send a referral through an organization&apos;s public referral
+            link enter the client&apos;s details (such as name, phone, date of birth and needed services) and their own
+            name and contact details, which go only to that organization.
+          </li>
+        </ul>
+      </LegalSection>
+
+      <LegalSection title="Calendar sync">
+        <ul>
+          <li>
+            <strong>Showing other calendars in Strynd:</strong> if you paste a private calendar link, we store the link
+            and use it only to fetch that calendar&apos;s events while you look at your Strynd calendar. Events are kept in
+            memory for a few minutes and aren&apos;t saved to our database. Remove the link any time in Settings →
+            Calendar.
+          </li>
+          <li>
+            <strong>Seeing Strynd in other calendars:</strong> your private Strynd calendar link shares the titles and due
+            times of your open tasks, never notes or client details. If you subscribe to it in Google, Apple or Outlook,
+            that company stores a copy under its own privacy policy. Anyone with the link can see those tasks; you can
+            replace it in Settings → Calendar.
+          </li>
+        </ul>
+      </LegalSection>
+
       <LegalSection title="How we use it">
         <ul>
           <li>To run the app: show your records, send the reminders and summaries you turn on, and keep you signed in.</li>
           <li>To keep accounts secure: sign-in, email confirmation, password reset, two-factor authentication and abuse prevention.</li>
           <li>To send account emails, such as confirmations and password resets.</li>
           <li>To answer your support requests and fix problems.</li>
+          <li>To bill your subscription, and to keep records of payments and of your agreement to these terms.</li>
         </ul>
         <p>We don&apos;t sell or rent personal information, share it for advertising, or use it to build ad profiles.</p>
       </LegalSection>
@@ -82,6 +138,7 @@ export default function PrivacyPage() {
         <p>We use these service providers, which process data only on our instructions and only to run the app:</p>
         <ul>
           <li>Supabase: database and sign-in (data stored in the United States).</li>
+          <li>Stripe: payments and subscriptions.</li>
           <li>Vercel: hosting.</li>
           <li>Resend: account emails.</li>
           <li>Twilio: text messages, if you opt in.</li>
@@ -125,9 +182,11 @@ export default function PrivacyPage() {
       <LegalSection title="Keeping and deleting your data">
         <p>
           We keep your data while your account is open. You can export it any time (Settings → Data) and delete your
-          account and all its data in the app (Settings → Account → Delete account). See{" "}
+          account and all its data in the app (Settings → Your data → Delete account). See{" "}
           <a href="/account-deletion">how to delete your account</a>. Deleted data is removed right away from the live
-          database and may remain in encrypted backups for up to 30 days before it&apos;s overwritten.
+          database and may remain in encrypted backups for up to 30 days before it&apos;s overwritten. Payment records
+          held by Stripe are kept as long as tax and accounting laws require. Client records that belong to an
+          organization stay with the organization when a staff member leaves or deletes their own account.
         </p>
       </LegalSection>
 
@@ -150,13 +209,15 @@ export default function PrivacyPage() {
 
       <LegalSection title="Changes to this policy">
         <p>
-          If we make significant changes, we&apos;ll update the date above and let you know in the app or by email
-          before they take effect.
+          If we make significant changes, we&apos;ll update the date above and ask you to agree to the new version in the
+          app before you keep using it.
         </p>
       </LegalSection>
 
       <LegalSection title="Contact">
-        <p>Sonder Project, California, USA. Email {mail}.</p>
+        <p>
+          Sonder Project, California, USA. Email {mail}, or use Settings → About &amp; help → Contact support in the app.
+        </p>
       </LegalSection>
     </LegalPage>
   );
