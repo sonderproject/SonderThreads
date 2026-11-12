@@ -9,6 +9,7 @@ import { TimeZoneInput } from "@/components/notifications/TimeZoneInput";
 import { PendingInvites } from "@/components/org/PendingInvites";
 import { ManageSubscriptionCard } from "@/components/billing/ManageSubscriptionCard";
 import { CalendarSyncSettings } from "@/components/settings/CalendarSyncSettings";
+import { ContactSupportCard } from "@/components/settings/ContactSupportCard";
 import { getMyCalendarLink, listLinkedCalendars } from "@/lib/actions/calendar";
 import { requireUserId } from "@/lib/current-user";
 import { queryOne } from "@/lib/db/client";
@@ -383,6 +384,8 @@ async function DataSection({ q }: { q: SettingsQuery }) {
 
 function AboutSection() {
   return (
+    <>
+    <ContactSupportCard supportEmail={SUPPORT_EMAIL} />
     <div className="card divide-y divide-border-subtle text-sm">
       <div className="flex items-center justify-between p-4">
         <span className="text-text">Version</span>
@@ -400,13 +403,8 @@ function AboutSection() {
           →
         </span>
       </a>
-      <div className="flex items-center justify-between gap-3 p-4">
-        <span className="text-text">Contact support</span>
-        <a href={`mailto:${SUPPORT_EMAIL}`} className="truncate text-accent hover:underline">
-          {SUPPORT_EMAIL}
-        </a>
-      </div>
     </div>
+    </>
   );
 }
 

@@ -9,7 +9,7 @@ export const SETTINGS_SECTIONS: { slug: SettingsSlug; title: string; hint: strin
   { slug: "security", title: "Privacy & security", hint: "Password, two-step sign-in, auto-lock and devices" },
   { slug: "organization", title: "Organization", hint: "Your team, or set one up" },
   { slug: "data", title: "Your data", hint: "Import your client list, export, clear or delete your account" },
-  { slug: "about", title: "About & help", hint: "Version, support and legal" },
+  { slug: "about", title: "About & help", hint: "Contact support, version and legal" },
 ];
 
 export function isSettingsSlug(s: string): s is SettingsSlug {
@@ -30,6 +30,8 @@ export const HASH_TO_SECTION: Record<string, SettingsSlug> = {
   clear: "data",
   calendar: "calendar",
   about: "about",
+  contact: "about",
+  support: "about",
 };
 
 /**
