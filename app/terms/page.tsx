@@ -125,9 +125,10 @@ export default function TermsPage() {
         </p>
         <ul>
           <li>
-            <strong>Individual:</strong> $9 a month after a 7-day free trial. Starting the trial needs a payment card;
-            you&apos;re charged $9 when the trial ends, and every month after that, unless you cancel before the trial
-            ends. Free trials are limited to one per person and card.
+            <strong>Individual:</strong> $9 a month after a 7-day free trial. The trial doesn&apos;t need a card; to keep
+            using Strynd after it, add one. If you add a card during the trial, you&apos;re charged $9 when the trial
+            ends, and every month after that, unless you cancel before the trial ends. Until a card is on file, imports
+            are limited (up to 25 people, and no backup restores). Free trials are limited to one per person and card.
           </li>
           <li>
             <strong>Teams and organizations:</strong> billed for the number of seats the organization buys (at least 2):

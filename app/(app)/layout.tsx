@@ -59,7 +59,7 @@ export default async function AppGroupLayout({ children }: { children: React.Rea
     if (!path.startsWith("/settings/data")) redirect(`/accept-terms?next=${encodeURIComponent(path)}`);
   }
   const access = await getAccess().catch(() => null);
-  // New individual accounts start their free trial (card on Stripe) before using the app.
+  // New organizations start their free trial (card on Stripe) before using the app; individuals try it first without a card.
   if (access?.state === "setup") {
     const path = (await headers()).get("x-pathname") ?? "";
     const open = ["/billing", "/settings", "/organization/new", "/join", "/invites", "/owner"].some((p) => path.startsWith(p));

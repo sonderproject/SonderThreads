@@ -1,5 +1,6 @@
 "use server";
 
+import { importAllowance, TRIAL_IMPORT_MESSAGE } from "@/lib/billing";
 import { revalidatePath } from "next/cache";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
@@ -138,6 +139,9 @@ export async function importClients(input: unknown): Promise<ActionResult<Import
       toAdd.push(r.record);
     }
     if (!toAdd.length) return { imported: 0, duplicates, skipped, blanked: 0, batch: null };
+    // Without a card on file (free trial), imports are capped so a trial can't be reset by re-importing.
+    const allowance = await importAllowance(userId);
+    if (allowance !== null && toAdd.length > allowance) throw new Error(TRIAL_IMPORT_MESSAGE);
 
     const batch = randomUUID();
     const col = <K extends keyof ImportRecord>(k: K) => toAdd.map((p) => p[k]);

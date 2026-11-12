@@ -84,7 +84,7 @@ const PLANS: {
     who: "For one person with clients, projects or a busy life to keep straight.",
     price: "$9",
     unit: "/ month",
-    fine: "7-day free trial. Cancel any time.",
+    fine: "7-day free trial, no card needed. Cancel any time.",
     features: ["Your own private workspace", "Tasks, to-dos, notes and lists", "Clients and check-ins with full history", "Voice notes, smart command box, reminders"],
     cta: "Start your free trial",
     href: "/signup",

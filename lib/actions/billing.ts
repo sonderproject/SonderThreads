@@ -53,14 +53,15 @@ export async function startCheckout(formData: FormData): Promise<void> {
     quantity = seats!;
   }
 
-  // Organizations keep any free-trial days left (Stripe needs a trial end at least 2 days out).
-  // Individuals start their 7-day trial here, with a card, the first time they subscribe.
+  // Adding a card during a free trial keeps the days left (Stripe needs a trial end at least 2 days out,
+  // so the last day or two round up). After the trial has ended, billing starts today.
+  const minEnd = Date.now() + 2 * 86_400_000 + 10 * 60_000;
   const trialEnd =
-    kind === "org" && access.state === "trial" && access.endsAt && access.endsAt.getTime() - Date.now() > 2 * 86_400_000
-      ? Math.floor(access.endsAt.getTime() / 1000)
+    access.state === "trial" && access.endsAt && !access.row?.stripe_subscription_id
+      ? Math.floor(Math.max(access.endsAt.getTime(), minEnd) / 1000)
       : undefined;
-  // A first subscription starts the free trial: 7 days for individuals, 14 for organizations on card-first trials.
-  const firstTrial = !access.row?.stripe_subscription_id && (kind === "user" || access.state === "setup");
+  // Card-first trials (new organizations) start here: 14 days.
+  const firstTrial = !access.row?.stripe_subscription_id && access.state === "setup";
   // "Skip the trial": a first subscription can start paying today with 30% off the first month instead.
   const skip =
     formData.get("skip") === "1" && !access.row?.stripe_subscription_id && (access.state === "setup" || access.state === "trial");

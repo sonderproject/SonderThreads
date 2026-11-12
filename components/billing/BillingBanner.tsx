@@ -30,7 +30,7 @@ export function BillingBanner({ access: a }: { access: Access }) {
       <span>{text}</span>
       {a.canManage && (
         <Link href="/billing" className="font-semibold text-accent hover:underline">
-          {a.state === "grace" ? "Update payment →" : "Subscribe →"}
+          {a.state === "grace" ? "Update payment →" : a.state === "trial" && a.scope === "individual" && !a.row?.stripe_subscription_id ? "Add a card →" : "Subscribe →"}
         </Link>
       )}
     </div>

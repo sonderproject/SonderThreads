@@ -1,6 +1,6 @@
 "use server";
 
-import { assertCanWrite } from "@/lib/billing";
+import { assertCanWrite, importAllowance, TRIAL_IMPORT_MESSAGE } from "@/lib/billing";
 import { revalidatePath } from "next/cache";
 import { query, queryOne } from "@/lib/db/client";
 import { requireUserId } from "@/lib/current-user";
@@ -44,6 +44,7 @@ export async function importPeopleToList(params: {
   let created = 0;
   let linked = 0;
   let alreadyOnList = 0;
+  let allowance = await importAllowance(userId);
 
   for (const row of params.rows) {
     let person = await queryOne<Person>(
@@ -52,6 +53,7 @@ export async function importPeopleToList(params: {
     );
     if (person) linked++;
     else {
+      if (allowance !== null && allowance-- <= 0) throw new Error(TRIAL_IMPORT_MESSAGE);
       person = await createPersonRecord({ fullName: row.name });
       created++;
     }
@@ -135,6 +137,7 @@ export async function addListItemsToPeople(listId: string): Promise<ListToPeople
   let linked = 0;
   let skipped = 0;
   const links: Record<string, string> = {};
+  let allowance = await importAllowance(userId);
 
   for (const item of items) {
     const { name, phone, birthday } = parsePersonLine(item.label);
@@ -151,6 +154,7 @@ export async function addListItemsToPeople(listId: string): Promise<ListToPeople
       );
       if (person) linked++;
       else {
+        if (allowance !== null && allowance-- <= 0) throw new Error(TRIAL_IMPORT_MESSAGE);
         person = await createPersonRecord({ fullName: name });
         created++;
       }

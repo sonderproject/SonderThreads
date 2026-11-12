@@ -136,7 +136,7 @@ export default async function BillingPage({
           {a.state === "grace" &&
             `Your last payment didn't go through. Update your card by ${fmt(a.endsAt)} to keep full access.`}
           {a.state === "setup" &&
-            "Start your 7-day free trial to begin. You won't be charged today, and you can cancel any time before the trial ends."}
+            "Start your 14-day free trial to begin. You won't be charged today, and you can cancel any time before the trial ends."}
           {a.state === "readonly" &&
             "Strynd is view-only: you can see and export everything, but not add or edit. Subscribe to pick up where you left off."}
         </p>
@@ -204,25 +204,27 @@ export default async function BillingPage({
                   </span>
                 </p>
                 <p className="text-sm text-text-muted">
-                  {a.state === "setup"
-                    ? "$0 today. After 7 days, $9 a month. Cancel any time before then and you won't be charged. One free trial per card."
-                    : "Everything for one person. Cancel any time."}
+                  {a.state === "trial" && a.endsAt
+                    ? `Your free trial runs until ${fmt(a.endsAt)}. Add a card to keep going after that; you won't be charged before then. Adding a card also unlocks full imports.`
+                    : a.state === "readonly"
+                      ? "Your free trial has ended. Subscribe to keep adding and editing; everything is still here."
+                      : "Everything for one person. Cancel any time."}
                 </p>
                 <button
                   type="submit"
                   className={primary}
                   disabled={!billingEnabled()}
                 >
-                  {a.state === "setup" ? "Start my free trial" : "Subscribe"}
+                  {a.state === "trial" ? "Add a card" : "Subscribe"}
                 </button>
-                {a.state === "setup" && (
+                {a.state === "trial" && (
                   <button type="submit" name="skip" value="1" className={secondary} disabled={!billingEnabled()}>
                     Skip the trial: 30% off your first month
                   </button>
                 )}
                 <p className="text-xs text-text-muted">
-                  {a.state === "setup"
-                    ? "Your plan renews automatically: after the 7-day free trial you're charged $9 every month until you cancel. If you skip the trial, you're charged $6.30 today for your first month, then $9 every month."
+                  {a.state === "trial"
+                    ? "Your plan renews automatically: after your free trial you're charged $9 every month until you cancel. If you skip the trial, you're charged $6.30 today for your first month, then $9 every month."
                     : "Your plan renews automatically: you're charged $9 every month until you cancel."}{" "}
                   Cancel any time in Settings → Subscription; you keep access until the end of the month you paid for. By
                   continuing you agree to the{" "}
@@ -232,7 +234,7 @@ export default async function BillingPage({
                   .
                 </p>
               </form>
-              {a.state === "setup" && (
+              {!a.row?.stripe_subscription_id && (
                 <p className="text-sm text-text-muted">
                   Setting up for a team or agency?{" "}
                   <Link

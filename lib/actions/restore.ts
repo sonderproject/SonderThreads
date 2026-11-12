@@ -1,5 +1,6 @@
 "use server";
 
+import { assertCanWrite, importAllowance } from "@/lib/billing";
 import { revalidatePath } from "next/cache";
 import { requireUserId } from "@/lib/current-user";
 import { toActionResult, type ActionResult } from "@/lib/validation";
@@ -19,6 +20,11 @@ export async function previewBackup(raw: unknown): Promise<ActionResult<RestoreC
 export async function restoreBackup(raw: unknown): Promise<ActionResult<RestoreCounts>> {
   return toActionResult(async () => {
     const userId = await requireUserId();
+    await assertCanWrite();
+    // A backup restores a whole account, so it needs a card on file (otherwise it would reset a free trial).
+    if ((await importAllowance(userId)) !== null) {
+      throw new Error("Restoring a backup needs a card on file. Add one in Settings → Subscription; you won't be charged until your free trial ends.");
+    }
     const added = await restoreInto(userId, parseBackup(raw));
     revalidatePath("/", "layout");
     return added;

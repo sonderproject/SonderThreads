@@ -25,6 +25,14 @@ export const ORG_TRIAL_DAYS = 14;
  */
 export const ORG_CARD_TRIALS_FROM = new Date("2026-11-12T09:00:00Z");
 const LEGACY_ORG_TRIAL_DAYS = 30;
+/**
+ * Individuals: from this moment the 7-day trial needs no card (it starts at
+ * sign-up, or now for anyone who signed up earlier and never added one). Until
+ * a card is on file, imports are limited (see importAllowance) so the trial
+ * can't be reset by exporting and importing into a new account.
+ */
+export const INDIVIDUAL_NO_CARD_FROM = new Date("2026-11-12T10:00:00Z");
+export const TRIAL_IMPORT_LIMIT = 25;
 export const GRACE_DAYS = 14;
 export const PRICES = {
   individual: "threads_individual_monthly",
@@ -139,10 +147,10 @@ async function computeAccess(userId: string): Promise<Access> {
   if (invited && !row?.stripe_subscription_id && row?.plan !== "comp") {
     return { ...base, state: "ok", plan: row?.plan ?? null, status: row?.status ?? null, endsAt: null };
   }
-  // Individuals start their 7-day trial with a card on Stripe, so no subscription yet means "set up first".
-  const decided = decide(row, new Date(0));
-  if (decided.state === "readonly" && !row?.stripe_subscription_id) return { ...base, ...decided, state: "setup" };
-  return { ...base, ...decided };
+  // Individuals: a 7-day trial without a card, from sign-up (or from INDIVIDUAL_NO_CARD_FROM for older accounts).
+  const user = await queryOne<{ created_at: string }>(`select created_at from users where id = $1`, [userId]);
+  const start = Math.max(new Date(user?.created_at ?? Date.now()).getTime(), INDIVIDUAL_NO_CARD_FROM.getTime());
+  return { ...base, ...decide(row, new Date(start + INDIVIDUAL_TRIAL_DAYS * DAY)) };
 }
 
 function decide(row: BillingRow | null, trialEnd: Date): Pick<Access, "state" | "plan" | "status" | "endsAt"> {
@@ -396,3 +404,21 @@ export async function assertSeatAvailable(orgId: string, opts: { replacingInvite
     );
   }
 }
+
+/** True while an individual is on the no-card trial (or view-only without ever adding a card): imports are limited. */
+export function noCardYet(a: Access): boolean {
+  return billingEnabled() && a.scope === "individual" && !a.row?.stripe_subscription_id && a.plan !== "comp" && a.status !== "comp";
+}
+
+/**
+ * How many more people an import may add, or null for no limit. Without a card
+ * on file, imports can bring an account up to TRIAL_IMPORT_LIMIT people in total;
+ * typing people in by hand is never limited.
+ */
+export async function importAllowance(userId: string): Promise<number | null> {
+  if (!noCardYet(await getAccess())) return null;
+  const r = await queryOne<{ n: number }>(`select count(*)::int as n from people where user_id = $1 and deleted_at is null`, [userId]);
+  return Math.max(0, TRIAL_IMPORT_LIMIT - (r?.n ?? 0));
+}
+
+export const TRIAL_IMPORT_MESSAGE = `During the free trial you can import up to ${TRIAL_IMPORT_LIMIT} people. Add a card in Settings → Subscription to import your full list. You won't be charged until your trial ends.`;
