@@ -113,7 +113,7 @@ The old `RESEND_API_KEY` / `EMAIL_FROM` variables are no longer used for passwor
 ## F. CAPTCHA: Cloudflare Turnstile (do this last)
 
 1. **Cloudflare dashboard → Turnstile → Add widget.**
-   - Hostnames: your production domain, `vercel.app` (covers previews) and `localhost`.
+   - Hostnames: `strynd.com` and `sonderthreads.com` only. Don't add `vercel.app`: anyone's Vercel preview could then mint valid tokens for our Supabase.
    - Widget mode: **Managed**.
 2. Copy the **Site key** into Vercel as `NEXT_PUBLIC_TURNSTILE_SITE_KEY` (section A), then **redeploy**.
 3. Supabase → **Authentication → Attack Protection** (also called "Bot and Abuse Protection") → **Enable CAPTCHA protection**:
