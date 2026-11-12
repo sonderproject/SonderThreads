@@ -50,10 +50,13 @@ If a deployment's URL isn't on this list, Supabase falls back to the Site URL an
 
 Supabase → **Authentication → Emails → Templates**. The app verifies email links on the server, so the links must carry a token hash, not Supabase's default link.
 
-**Confirm signup.** Replace the link with:
+**Confirm signup.** A button plus the 6-digit code, so people can either tap Confirm or type the code on the "Check your email" screen without leaving the app:
 ```html
 <h2>Confirm your email</h2>
-<p><a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email">Confirm your email address</a></p>
+<p><a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email" style="display:inline-block;background:#1c77b5;color:#ffffff;padding:10px 20px;border-radius:999px;text-decoration:none;font-weight:600">Confirm</a></p>
+<p>Or type this code in Strynd:</p>
+<p style="font-size:28px;font-weight:700;letter-spacing:6px">{{ .Token }}</p>
+<p style="color:#6e5f4d;font-size:13px">If you didn't sign up for Strynd, you can ignore this email.</p>
 ```
 
 **Reset password.** Replace the link with:

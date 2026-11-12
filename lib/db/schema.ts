@@ -990,4 +990,9 @@ begin
       references services(id) on delete set null deferrable initially deferred;
   end if;
 end $$;
+
+-- Whether the person picked their auto sign-out time. Until they do, the
+-- default depends on the account: 4 hours for individuals, 30 minutes in an
+-- organization (lib/auth.ts defaultIdleMinutes).
+alter table user_settings add column if not exists idle_timeout_chosen boolean not null default false;
 `;

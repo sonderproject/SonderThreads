@@ -62,9 +62,9 @@ export async function saveSecurityPrefs(formData: FormData): Promise<void> {
   const minutes = preset(formData.get("idle_timeout_minutes"), IDLE_TIMEOUT_OPTIONS, 30);
   const staySignedIn = formData.get("stay_signed_in") === "on";
   await query(
-    `insert into user_settings (user_id, idle_timeout_minutes, stay_signed_in) values ($1, $2, $3)
+    `insert into user_settings (user_id, idle_timeout_minutes, stay_signed_in, idle_timeout_chosen) values ($1, $2, $3, true)
      on conflict (user_id) do update set idle_timeout_minutes = excluded.idle_timeout_minutes,
-       stay_signed_in = excluded.stay_signed_in, updated_at = now()`,
+       stay_signed_in = excluded.stay_signed_in, idle_timeout_chosen = true, updated_at = now()`,
     [userId, minutes, staySignedIn],
   );
   // The middleware's backstop reads this; set it now so it applies right away.

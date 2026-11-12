@@ -163,7 +163,7 @@ export async function login(formData: FormData): Promise<void> {
     options: { captchaToken: captcha(formData) },
   });
   if (error) {
-    if (error.code === "email_not_confirmed") redirect(`/signup/check-email?${new URLSearchParams({ email })}`);
+    if (error.code === "email_not_confirmed") redirect(`/signup/check-email?${new URLSearchParams({ email, next })}`);
     if (error.code === "captcha_failed") back("/login", "captcha", email, next);
     if (error.code === "over_request_rate_limit") back("/login", "rate", email, next);
     back("/login", "invalid", email, next);
@@ -250,7 +250,7 @@ export async function signup(formData: FormData): Promise<void> {
       back("/signup", "failed", email, next, rawPhone);
     }
     // Supabase hides whether an email is already registered (empty identities); treat it as sent.
-    if (!data.user || data.user.identities?.length === 0) redirect(`/signup/check-email?${new URLSearchParams({ email })}`);
+    if (!data.user || data.user.identities?.length === 0) redirect(`/signup/check-email?${new URLSearchParams({ email, next })}`);
     userId = data.user.id;
     if (data.session) {
       // Email confirmation is off in Supabase: they're signed in already.
@@ -261,7 +261,7 @@ export async function signup(formData: FormData): Promise<void> {
 
   await createUserRow(userId, email, phone, smsOptIn, timeZone);
   await logEvent("auth.signup", isLikelyBot(email) ? "New sign-up (likely bot)" : "New sign-up", { email, path: "/signup" });
-  redirect(`/signup/check-email?${new URLSearchParams({ email })}`);
+  redirect(`/signup/check-email?${new URLSearchParams({ email, next })}`);
 }
 
 /** Sign-up always requires ticking "I agree", so every new row records that agreement. */
@@ -404,4 +404,26 @@ export async function deleteAccount(formData: FormData): Promise<void> {
   const supabase = await createSupabaseServer();
   await supabase.auth.signOut();
   redirect("/signup?deleted=1");
+}
+
+/**
+ * The 6-digit code from the confirmation email, typed on the "Check your email"
+ * screen: the same check as tapping the email's button, without leaving the app.
+ */
+export async function verifySignupCode(formData: FormData): Promise<void> {
+  const email = formData.get("email")?.toString().trim().toLowerCase() ?? "";
+  const code = (formData.get("code")?.toString() ?? "").replace(/\s/g, "");
+  const next = safeNextPath(formData.get("next")?.toString());
+  const back = (error: string) => redirect(`/signup/check-email?${new URLSearchParams({ email, next, error })}`);
+  if (!EMAIL_RE.test(email)) back("code-email");
+  if (!/^\d{6,10}$/.test(code)) back("code");
+  const supabase = await createSupabaseServer();
+  // Newer Supabase accepts sign-up codes as "email"; older projects as "signup".
+  let { error } = await supabase.auth.verifyOtp({ email, token: code, type: "email" });
+  if (error) ({ error } = await supabase.auth.verifyOtp({ email, token: code, type: "signup" }));
+  if (error) {
+    await logEvent("auth.code_failed", `Sign-up code didn't work: ${error.code ?? error.message}`, { level: "warn", email, path: "/signup/check-email" });
+    back(error.code === "otp_expired" ? "code-expired" : "code");
+  }
+  redirect(next);
 }

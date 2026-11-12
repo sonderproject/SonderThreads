@@ -21,6 +21,11 @@ export const STAY_SIGNED_IN = "0";
  * The idle limit from the cookie: null = stay signed in; an allowed preset;
  * anything else (or no cookie) = the default.
  */
+/** Auto sign-out default until someone picks their own: individuals 4 hours, organization members 30 minutes (shared computers, client data). */
+export function defaultIdleMinutes(inOrg: boolean): number {
+  return inOrg ? 30 : 240;
+}
+
 export function idleMinutesFrom(value: string | number | undefined | null): number | null {
   if (String(value) === STAY_SIGNED_IN) return null;
   const n = Number(value);
