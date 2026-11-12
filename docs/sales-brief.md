@@ -27,7 +27,7 @@ Ask a program director these questions. Every "yes" is a reason to buy.
 | "How does your front desk sign people in?" | Paper sheets, typed up later (or never). | Tablet **kiosk**: clients type their name and reason, and it lands in the system instantly. |
 | "How do partners send you referrals?" | Phone calls, emails, lost voicemails. | A public **referral link** with appointment booking and a "might already be a client" check. |
 | "How long does your monthly funder or board report take?" | Days of pulling spreadsheets together. | The **Impact** report: people served (each counted once), new vs returning, demographics and busiest times, exported to PDF/Excel in a click. |
-| "Can supervisors see who's falling behind?" | Not without asking everyone. | **Team** view: each worker's clients, open tasks and who needs follow-up. |
+| "Can managers see who's falling behind?" | Not without asking everyone. | **Team** view: each worker's clients, open tasks and who needs follow-up. |
 | "How long does it take to log a contact in your current system?" | Minutes of clicking through forms, so staff put it off. | Seconds. Type or say it. |
 
 **The core value:** fewer clients falling through the cracks, hours of admin saved every week, and reports without the scramble.
@@ -95,7 +95,7 @@ Ask a program director these questions. Every "yes" is a reason to buy.
 > "Each person is counted once per period, by the day they actually came in, in your organization's time zone, so every admin sees the same numbers. Clients you import count as new only if their intake date falls in that period, so uploading your existing list doesn't inflate your numbers. Past reports never change after the fact: only admins can delete agency clients, and a deleted client still counts in the months they were served. The PDF and Excel exports show the same figures as the screen."
 
 **"Supervisors want visibility, but staff want privacy."**
-> "That's built in. Supervisors see every client and every worker's caseload, read-only. Admins manage staff. Personal tasks and lists are never visible to anyone else."
+> "That's built in. In Strynd, supervisors are **Managers**: they see every client and every member's work, read-only. Admins manage staff. Personal tasks and lists are never visible to anyone else."
 
 **"How long does setup take?"**
 > "Minutes. Create the organization, invite staff by email, and upload your client list from Excel. The kiosk and referral link are a couple of clicks each."

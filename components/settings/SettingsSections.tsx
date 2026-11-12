@@ -353,7 +353,7 @@ async function OrganizationSection({ q }: { q: SettingsQuery }) {
           <div className="min-w-0">
             <h3 className="text-sm font-semibold text-text">Run a team or agency?</h3>
             <p className="text-xs text-text-muted">
-              Invite your staff and give supervisors a view of your clients. Personal tasks and notes stay private.
+              Invite your staff and give managers a view of your clients. Personal tasks and notes stay private.
             </p>
           </div>
           <Link href="/organization/new" className={`shrink-0 ${buttonClass}`}>

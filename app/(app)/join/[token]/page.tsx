@@ -60,7 +60,7 @@ export default async function JoinPage({
           {error === "agree" && <p className="text-xs text-danger">{ERRORS.agree}</p>}
           <input type="hidden" name="token" value={token} />
           <p className="text-sm text-text">
-            You&apos;re invited to join <strong>{invite!.org_name}</strong> as a <strong>{ROLE_LABELS[invite!.role]}</strong>.
+            You&apos;re invited to join <strong>{invite!.org_name}</strong> as {invite!.role === "admin" ? "an" : "a"} <strong>{ROLE_LABELS[invite!.role]}</strong>.
           </p>
           <p className="text-xs text-text-muted">{ROLE_HELP[invite!.role]}</p>
           <p className="text-xs text-text-muted">

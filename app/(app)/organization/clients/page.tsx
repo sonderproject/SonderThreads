@@ -32,7 +32,7 @@ export default async function OrgClientsPage({
         )}
         <h1 className="page-title">Bring clients into {m.orgName}</h1>
         <p className="text-sm text-text-muted">
-          Clients you move here, with their notes, tasks and check-ins, belong to {m.orgName}: its supervisors and admins
+          Clients you move here, with their notes, tasks and check-ins, belong to {m.orgName}: its managers and admins
           can view them. Anyone you don&apos;t move stays private to you. New clients you add from now on belong to{" "}
           {m.orgName} automatically.
         </p>

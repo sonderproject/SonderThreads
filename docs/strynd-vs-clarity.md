@@ -50,8 +50,8 @@ If your funding requires HMIS reporting, Clarity (or another approved HMIS) stay
 | Referral form with appointment booking and duplicate check | ✅ | ◐ CE referrals |
 | Install on any phone as an app | ✅ | ◐ mobile field use |
 | **Team and reporting** | | |
-| Roles (case manager, supervisor, admin) | ✅ | ✅ |
-| Supervisor view of every client | ✅ | ✅ |
+| Roles (member, manager, admin) | ✅ | ✅ |
+| Manager view of every client | ✅ | ✅ |
 | Activity log | ✅ | ? |
 | Funder-ready impact report (people served, demographics, busiest times) as PDF/Excel | ✅ | ✅ via report library |
 | Custom dashboards and business intelligence | ◐ fixed Impact dashboard | ✅ |
@@ -83,7 +83,7 @@ Bitfocus says Clarity ships with the HUD data elements, entry screens and standa
 
 1. Staff use **Strynd** all day: check-ins, notes, follow-ups, reminders and the kiosk.
 2. Required HUD data elements and services are entered in **Clarity** as your CoC requires.
-3. Supervisors use Strynd's **Team** view and **Impact** reports for day-to-day management and quick funder updates. Clarity remains the source for official HUD reports.
+3. Managers use Strynd's **Team** view and **Impact** reports for day-to-day management and quick funder updates. Clarity remains the source for official HUD reports.
 
 *Strynd doesn't sync with Clarity yet. An HMIS-ready export is on our list of possible organization features.*
 

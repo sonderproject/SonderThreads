@@ -21,7 +21,7 @@ export function PendingInvites({ invites, error }: { invites: PendingInvite[]; e
           <p className="section-label">Invitation</p>
           <p className="font-display text-xl font-light text-text">
             {i.inviter ? `${i.inviter} invited you` : "You're invited"} to join <strong className="font-medium">{i.orgName}</strong> as{" "}
-            {ROLE_LABELS[i.role].toLowerCase()}.
+            {i.role === "admin" ? "an" : "a"} {ROLE_LABELS[i.role].toLowerCase()}.
           </p>
           <p className="text-xs text-text-muted">
             Clients you choose (and new ones you add) will belong to {i.orgName}. Your personal tasks, notes and lists stay private.

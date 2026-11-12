@@ -7,7 +7,7 @@
 It's built for two kinds of users:
 
 - **Individuals** who keep track of a lot of people: coaches, mentors, recruiters, program leads, small-business owners and community organizers.
-- **Agencies and teams**, such as nonprofits, case-management programs and outreach teams. Staff work their own caseloads, supervisors see the whole picture, and the organization gets reports it can hand to funders.
+- **Agencies and teams**, such as nonprofits, case-management programs and outreach teams. Members work their own clients, managers see the whole picture, and the organization gets reports it can hand to funders.
 
 ---
 
@@ -84,8 +84,8 @@ It's built for two kinds of users:
 ## 7. For agencies and teams (Organization plan)
 
 - **Roles:**
-  - **Case managers** work their own caseload.
-  - **Supervisors** see every client in the organization, read-only.
+  - **Members** work with their own clients.
+  - **Managers** see every client and every member's work, read-only.
   - **Admins** also invite staff, change roles and deactivate people.
 - **Personal stays personal.** Each staff member's own tasks, notes and lists are never visible to the organization.
 - **Team dashboard:** each staff member's clients, open tasks and items needing follow-up.
@@ -99,7 +99,7 @@ It's built for two kinds of users:
   - Who you serve by gender, ethnicity and income level.
   - Exports to PDF and Excel for funders and boards.
 
-**Benefit:** supervisors get visibility, staff keep their own workspace, and grant reports take minutes instead of a weekend.
+**Benefit:** managers get visibility, staff keep their own workspace, and grant reports take minutes instead of a weekend.
 
 ## 8. Works where you work
 

@@ -8,6 +8,7 @@
 - `docs/DESIGN.md` is the visual source of truth. Use its tokens and components (`page-title`, `eyebrow`, `tag`, `flag`, `progress-bar` in `app/globals.css`) before inventing new ones. Never hard-code colors.
 - Wording depends on the account: organization members see "Check-ins" and "Impact", everyone else "Meetings" and "Insights". Never hard-code those words in the UI: use `useTerms()` (`components/TermsProvider.tsx`) in client components or `await getTerms()` (`lib/terms-server.ts`) in server components.
 - Settings is a menu (`/settings`) with one page per section (`/settings/<section>`, `lib/settings-sections.ts`).
+- Strynd is for any business with customers, not only nonprofits. Organization roles are shown as **Admin**, **Manager** and **Member** (`ROLE_LABELS` in `lib/org-roles.ts`); the internal codes stay `admin`, `supervisor` and `case_manager`. Never show the codes or say "case manager"/"supervisor" in the UI.
 
 ## Data access
 - Every query gets its `user_id` from `await requireUserId()` (`lib/current-user.ts`). Never import `OWNER_ID` anywhere else — accounts (see `docs/accounts-plan.md`) depend on that one function being the only source of the user id.
@@ -36,4 +37,5 @@ Mention these briefly when relevant while building (e.g. when touching sign-up, 
 - Tabled (bring up again): landing page "For agencies" section with mini previews (Team dashboard, Impact report, Referrals, Activity log; sample data only) and an Organization "Start a 30-day free trial" button.
 - Tabled (bring up again): landing page data-ownership and security copy: your data is yours alone, we never sell it, it's encrypted and protected by database-level access rules, and it's deleted when you delete your account (we do store it to run the app, so don't say "we don't keep it").
 - AI (OpenAI/Anthropic): keys and `AI_PROVIDER` are set in Vercel production from development, and while `OPENAI_API_KEY` is set, iPhone voice commands go to OpenAI (`/api/transcribe`). The privacy policy has no AI section by the owner's choice. Before AI ships for real: add an AI section to `/privacy` (which providers, what's sent, not used for training), name them under "Who processes data for us", and bump `LEGAL_VERSION`; or remove the keys until then.
+- Phone number at sign-up (decision open, Nov 2026): it isn't verified, so it barely stops repeat free trials. Recommended: make it optional now, and once Twilio is live require a verified phone (text code) to start a free trial; or require a card for organization trials. Individual trials are already one per card.
 - Disconnect the unused Neon database from the Vercel project (live data is in Supabase).

@@ -24,7 +24,7 @@ export async function getMetricsSafe(from: string, to: string, scope: MetricsSco
   return toActionResult(async () => {
     const [userId, viewerTz] = await Promise.all([requireUserId(), getTimeZone()]);
     const org = scope === "org" ? await reportableOrg() : null;
-    if (scope === "org" && !org) throw new Error("Only organization admins and supervisors can see organization-wide numbers.");
+    if (scope === "org" && !org) throw new Error("Only organization admins and managers can see organization-wide numbers.");
     // Organization reports count days in the organization's time zone, so every admin sees the same numbers.
     const tz = org?.timeZone ?? viewerTz;
     const range = normalizeRange(from, to, dayKey(new Date(), tz));

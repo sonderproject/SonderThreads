@@ -110,11 +110,11 @@ export default async function TeamClientPage({
           <span className="tag bg-bg-hover text-text-muted">Read-only</span>
         </div>
         <p className="text-sm text-text-muted">
-          Case manager: {person.owner_name || person.owner_email} · client since {shortDate(person.created_at, tz)}
+          Assigned to: {person.owner_name || person.owner_email} · client since {shortDate(person.created_at, tz)}
         </p>
       </div>
 
-      {saved === "reassigned" && <p className="text-sm text-accent">Reassigned. The new case manager was notified.</p>}
+      {saved === "reassigned" && <p className="text-sm text-accent">Reassigned. The person it's now assigned to was notified.</p>}
       {error === "reassign" && <p className="flag text-sm">Choose an active staff member other than the current one.</p>}
 
       {canManage && others.length > 0 && (

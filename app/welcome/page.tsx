@@ -55,13 +55,13 @@ const COMPARE: [string, boolean][] = [
   ["Personal stats dashboard", true],
   ["Export everything (Excel, full backup)", true],
   ["One shared client list the whole team works from", false],
-  ["Roles for admins, supervisors and staff", false],
+  ["Roles for admins, managers and members", false],
   ["Team dashboard: everyone's clients, follow-ups, overdue", false],
   ["Activity log of who changed what", false],
   ["Impact reports (PDF) with your logo", false],
   ["Referral link and referral log", false],
   ["Front-desk check-in kiosk", false],
-  ["Client reassignment and supervisor comments", false],
+  ["Client reassignment and manager comments", false],
   ["Onboarding help and data import", false],
 ];
 

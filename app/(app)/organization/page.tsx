@@ -48,7 +48,7 @@ const SAVED: Record<string, string> = {
   info: "Organization info saved.",
   logo: "Logo updated.",
   "logo-removed": "Logo removed.",
-  moved: "Clients moved. The new case manager was notified.",
+  moved: "Clients moved. The person they're now assigned to was notified.",
   "referral-on": "Referral link is on.",
   "referral-off": "Referral link is off. It won't accept referrals until you turn it back on.",
   "referral-new": "New referral link made. The old one no longer works.",

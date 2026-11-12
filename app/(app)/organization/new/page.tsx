@@ -12,7 +12,7 @@ export default async function NewOrganizationPage({ searchParams }: { searchPara
       <div className="space-y-1">
         <h1 className="page-title">Set up an organization</h1>
         <p className="text-sm text-text-muted">
-          For agencies and teams: invite your staff, give supervisors a read-only view of every client, and keep each
+          For agencies and teams: invite your staff, give managers a read-only view of every client, and keep each
           person&apos;s personal tasks and notes private.
         </p>
       </div>
