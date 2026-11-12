@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { mineOrOrg } from "@/lib/db/scope";
+import { exportFilter } from "@/lib/db/scope";
 import { csvCell } from "@/lib/csv";
 import { query } from "@/lib/db/client";
 import { getSessionUser } from "@/lib/session";
@@ -52,7 +52,7 @@ export async function GET(request: Request) {
     `select p.display_name, c.checked_in_at, c.reason, c.amount_cents
        from check_ins c
        join people p on p.id = c.person_id and p.deleted_at is null
-      where ${mineOrOrg("$1", "c.")}
+      where ${await exportFilter(user.id, "$1", "c.")}
         and c.deleted_at is null
         and ($2::timestamptz is null or c.checked_in_at >= $2::timestamptz)
         and ($3::timestamptz is null or c.checked_in_at < $3::timestamptz)

@@ -81,8 +81,8 @@ async function main() {
 
   // ── Screens' database operations ──
   await query(`update memberships set active = true where user_id = $1`, [S1]);
-  const adminInvite = await asUser(A1, (q) => q(`insert into invitations (org_id, email, role, token_hash, expires_at) values ($1, 'x@t.dev', 'supervisor', 'h2', now() + interval '14 days') returning id`, [o1.id]));
-  check("admin can create an invite", adminInvite.length === 1);
+  // Invites are created by the server (lib/actions/org.ts createInvite) after its own checks; nobody inserts them through the API.
+  check("even an admin can't insert an invite directly", await fails(() => asUser(A1, (q) => q(`insert into invitations (org_id, email, role, token_hash, expires_at) values ($1, 'x@t.dev', 'supervisor', 'h2', now() + interval '14 days') returning id`, [o1.id]))));
   check("case manager can't create an invite", await fails(() => asUser(C1, (q) => q(`insert into invitations (org_id, email, role, token_hash, expires_at) values ($1, 'y@t.dev', 'admin', 'h3', now())`, [o1.id]))));
   const staff = await asUser(A1, (q) => q<{ user_id: string; clients: number }>(`select m.user_id, (select count(*) from people p where p.user_id = m.user_id and p.org_id = m.org_id)::int clients from memberships m join users u on u.id = m.user_id where m.org_id = $1`, [o1.id]));
   check("admin's staff list shows each member's client count", staff.length === 4 && staff.find((x) => x.user_id === C1)?.clients === 1, staff);

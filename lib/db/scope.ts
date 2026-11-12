@@ -7,6 +7,17 @@ export function mineOrOrg(param: string, alias = ""): string {
   return `(${alias}user_id = ${param} or ${alias}org_id in (select org_id from memberships where user_id = ${param} and active))`;
 }
 
+/**
+ * Rows a person may export in bulk: organization admins and supervisors get the
+ * whole organization's (like mineOrOrg); case managers and solo accounts only
+ * their own, so a departing staff member can't download the agency's caseload.
+ */
+export async function exportFilter(userId: string, param: string, alias = ""): Promise<string> {
+  const { queryOne } = await import("@/lib/db/client");
+  const m = await queryOne<{ role: string }>(`select role from memberships where user_id = $1 and active`, [userId]);
+  return m && m.role !== "case_manager" ? mineOrOrg(param, alias) : `${alias}user_id = ${param}`;
+}
+
 import type { QueryResultRow } from "pg";
 import { transaction } from "@/lib/db/client";
 

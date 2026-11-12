@@ -1,5 +1,6 @@
 "use server";
 
+import { assertCanWrite } from "@/lib/billing";
 import { revalidatePath } from "next/cache";
 import { query, queryOne } from "@/lib/db/client";
 import { requireUserId } from "@/lib/current-user";
@@ -25,6 +26,7 @@ export async function importPeopleToList(params: {
   rows: ImportRow[];
 }): Promise<ImportResult> {
   const userId = await requireUserId();
+  await assertCanWrite();
   params = validate(importPeopleSchema, params);
   const { list } = await findOrCreateListByName(params.listName, params.isGroup);
 
@@ -114,6 +116,7 @@ export type ListToPeopleResult = {
  */
 export async function addListItemsToPeople(listId: string): Promise<ListToPeopleResult> {
   const userId = await requireUserId();
+  await assertCanWrite();
   const list = await queryOne<{ id: string; name: string }>(
     `select id, name from lists where user_id = $1 and id = $2 and deleted_at is null`,
     [userId, listId],

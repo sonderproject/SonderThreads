@@ -1,5 +1,8 @@
 import { redirect } from "next/navigation";
+import { cookies, headers } from "next/headers";
 import { getAuthState } from "@/lib/session";
+import { KIOSK_COOKIE } from "@/lib/auth";
+import { inKioskAction } from "@/lib/kiosk-guard";
 
 /**
  * The id of the signed-in user whose data a request may read or write.
@@ -14,5 +17,10 @@ export async function requireUserId(): Promise<string> {
   const state = await getAuthState();
   if (state.status === "needs-2fa") redirect("/login/2fa");
   if (state.status !== "signed-in") redirect("/login");
+  // On a kiosk tablet, only the kiosk's own server actions may run (lib/kiosk-guard.ts).
+  if (!inKioskAction()) {
+    const [c, h] = await Promise.all([cookies(), headers()]);
+    if (c.get(KIOSK_COOKIE)?.value === "1" && h.get("next-action")) throw new Error("Not available on the kiosk.");
+  }
   return state.user.id;
 }

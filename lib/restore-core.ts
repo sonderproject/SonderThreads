@@ -32,6 +32,7 @@ const backupSchema = z.object({
         phone: text(50),
         email: text(320),
         birthday: date,
+        client_since: date,
         gender: text(100),
         ethnicity: text(100),
         income_level: text(100),
@@ -85,7 +86,17 @@ const backupSchema = z.object({
     )
     .default([]),
   check_ins: z
-    .array(z.object({ id, person_id: id, checked_in_at: date, reason: text(5000), created_at: date, updated_at: date }))
+    .array(
+      z.object({
+        id,
+        person_id: id,
+        checked_in_at: date,
+        reason: text(5000),
+        amount_cents: z.number().int().min(0).max(100000000).nullable().optional(),
+        created_at: date,
+        updated_at: date,
+      }),
+    )
     .default([]),
   activity: z
     .array(
@@ -223,8 +234,8 @@ export async function restoreInto(userId: string, b: Backup): Promise<RestoreCou
       for (const p of b.people) {
         added.people += await insert(
           `insert into people (id, user_id, first_name, last_name, display_name, phone, email, birthday, gender, ethnicity,
-             income_level, status, current_status, next_action, summary, needs_followup, created_at, updated_at, last_activity_at)
-           values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,coalesce($17,now()),coalesce($18,now()),coalesce($19,now()))
+             income_level, status, current_status, next_action, summary, needs_followup, created_at, updated_at, last_activity_at, client_since)
+           values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,coalesce($17,now()),coalesce($18,now()),coalesce($19,now()),$20)
            on conflict (id) do nothing`,
           [
             map.get("people")!.get(p.id),
@@ -246,6 +257,7 @@ export async function restoreInto(userId: string, b: Backup): Promise<RestoreCou
             ts(p.created_at),
             ts(p.updated_at),
             ts(p.last_activity_at),
+            day(p.client_since),
           ],
         );
       }
@@ -324,10 +336,10 @@ export async function restoreInto(userId: string, b: Backup): Promise<RestoreCou
         const personId = ref("people", c.person_id);
         if (!personId) continue; // a check-in needs its person
         added.check_ins += await insert(
-          `insert into check_ins (id, user_id, person_id, checked_in_at, reason, created_at, updated_at)
-           values ($1,$2,$3,coalesce($4,now()),$5,coalesce($6,now()),coalesce($7,now()))
+          `insert into check_ins (id, user_id, person_id, checked_in_at, reason, created_at, updated_at, amount_cents)
+           values ($1,$2,$3,coalesce($4,now()),$5,coalesce($6,now()),coalesce($7,now()),$8)
            on conflict (id) do nothing`,
-          [map.get("check_ins")!.get(c.id), userId, personId, ts(c.checked_in_at), c.reason ?? null, ts(c.created_at), ts(c.updated_at)],
+          [map.get("check_ins")!.get(c.id), userId, personId, ts(c.checked_in_at), c.reason ?? null, ts(c.created_at), ts(c.updated_at), c.amount_cents ?? null],
         );
       }
 

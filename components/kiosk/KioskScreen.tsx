@@ -15,11 +15,14 @@ export function KioskScreen({
   orgName,
   logoVersion,
   wrongPin,
+  pinLocked = false,
 }: {
   reasons: string[];
   orgName: string | null;
   logoVersion: string | null;
   wrongPin: boolean;
+  /** Too many wrong PINs: exiting is locked for 15 minutes. */
+  pinLocked?: boolean;
 }) {
   const [first, setFirst] = useState("");
   const [last, setLast] = useState("");
@@ -79,7 +82,9 @@ export function KioskScreen({
           <button type="submit" className="rounded-full bg-accent px-4 py-1.5 text-sm font-semibold text-bg">
             Unlock
           </button>
-          {wrongPin && <span className="text-sm text-danger">Wrong PIN.</span>}
+          {wrongPin && (
+            <span className="text-sm text-danger">{pinLocked ? "Too many wrong PINs. Try again in 15 minutes." : "Wrong PIN."}</span>
+          )}
         </form>
       )}
 

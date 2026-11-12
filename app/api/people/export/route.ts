@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { exportFilter } from "@/lib/db/scope";
 import { csvCell } from "@/lib/csv";
 import { query } from "@/lib/db/client";
 import { getSessionUser } from "@/lib/session";
@@ -43,7 +44,7 @@ export async function GET(request: Request) {
 
   const all = await query<Person>(
     `select id, display_name, phone, email, birthday, gender, ethnicity, income_level, current_status, next_action, needs_followup, last_activity_at, summary
-       from people where user_id = $1 and deleted_at is null
+       from people where ${await exportFilter(user.id, "$1")} and deleted_at is null
       order by last_activity_at desc`,
     [user.id],
   );

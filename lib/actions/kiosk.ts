@@ -1,5 +1,7 @@
 "use server";
 
+import { runAsKiosk } from "@/lib/kiosk-guard";
+import { logEvent } from "@/lib/events";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { mineOrOrg } from "@/lib/db/scope";
@@ -65,10 +67,17 @@ export async function startKiosk(): Promise<void> {
 
 /** Leave kiosk mode with the PIN. */
 export async function exitKiosk(formData: FormData): Promise<void> {
-  const userId = await requireUserId();
+  const userId = await runAsKiosk(() => requireUserId());
   const pin = formData.get("pin")?.toString() ?? "";
+  // 5 wrong PINs locks exiting for 15 minutes, so a 4-digit PIN can't be guessed.
+  const misses = await queryOne<{ n: number }>(
+    `select count(*)::int as n from app_events where kind = 'kiosk.wrong_pin' and meta->>'user' = $1 and created_at > now() - interval '15 minutes'`,
+    [userId],
+  );
+  if ((misses?.n ?? 0) >= 5) redirect("/kiosk?error=locked");
   const row = await queryOne<{ kiosk_pin_hash: string | null }>(`select kiosk_pin_hash from user_settings where user_id = $1`, [userId]);
   if (!/^\d{4}$/.test(pin) || !(await verifyPassword(pin, row?.kiosk_pin_hash ?? null))) {
+    await logEvent("kiosk.wrong_pin", "Wrong kiosk PIN", { level: "warn", meta: { user: userId } });
     await new Promise((r) => setTimeout(r, 1200)); // slow down guessing
     redirect("/kiosk?error=wrong-pin");
   }
@@ -82,7 +91,7 @@ export async function exitKiosk(formData: FormData): Promise<void> {
  * other clients is ever sent back to the screen.
  */
 export async function kioskCheckIn(firstName: string, lastName: string, reason: string): Promise<ActionResult<{ firstName: string }>> {
-  return toActionResult(async () => {
+  return toActionResult(() => runAsKiosk(async () => {
     const userId = await requireUserId();
     const first = firstName.trim().replace(/\s+/g, " ").slice(0, 80);
     const last = lastName.trim().replace(/\s+/g, " ").slice(0, 80);
@@ -103,5 +112,5 @@ export async function kioskCheckIn(firstName: string, lastName: string, reason: 
     // Same reason text as staff use, so kiosk check-ins count together in Impact.
     await createCheckIn({ personId, reason: why, serviceId: service?.id ?? null });
     return { firstName: first };
-  });
+  }));
 }

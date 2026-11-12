@@ -6,13 +6,13 @@ import type { Activity, CheckIn, Person, List, ListItem, Note, Task } from "@/li
 
 const COLUMNS = {
   people:
-    "id, first_name, last_name, display_name, phone, email, birthday, gender, ethnicity, income_level, status, current_status, next_action, summary, needs_followup, created_at, updated_at, last_activity_at",
+    "id, first_name, last_name, display_name, phone, email, birthday, gender, ethnicity, income_level, status, current_status, next_action, summary, needs_followup, client_since, created_at, updated_at, last_activity_at",
   notes: "id, person_id, content, category, created_at, updated_at",
   lists: "id, name, description, is_group, created_at, updated_at",
   list_items: "id, list_id, person_id, label, note, checked, position, created_at, updated_at",
   tasks: "id, title, notes, person_id, list_id, due_at, recurrence, completed, completed_at, created_at, updated_at",
   activity: "id, person_id, list_id, task_id, note_id, type, description, created_at",
-  check_ins: "id, person_id, checked_in_at, reason, created_at, updated_at",
+  check_ins: "id, person_id, checked_in_at, reason, amount_cents, created_at, updated_at",
 };
 
 function toCsv<T extends Record<string, unknown>>(rows: T[]): string {

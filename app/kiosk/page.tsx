@@ -46,7 +46,7 @@ export default async function KioskPage({ searchParams }: { searchParams: Promis
     : null;
 
   if (inKiosk) {
-    return <KioskScreen reasons={reasons} orgName={org} logoVersion={logo} wrongPin={error === "wrong-pin"} />;
+    return <KioskScreen reasons={reasons} orgName={org} logoVersion={logo} wrongPin={error === "wrong-pin" || error === "locked"} pinLocked={error === "locked"} />;
   }
 
   if (!org) {

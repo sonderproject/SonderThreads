@@ -17,13 +17,13 @@ function check(name: string, ok: boolean, detail?: unknown) {
 }
 
 const COLUMNS = {
-  people: "id, first_name, last_name, display_name, phone, email, birthday, gender, ethnicity, income_level, status, current_status, next_action, summary, needs_followup, created_at, updated_at, last_activity_at",
+  people: "id, first_name, last_name, display_name, phone, email, birthday, gender, ethnicity, income_level, status, current_status, next_action, summary, needs_followup, client_since, created_at, updated_at, last_activity_at",
   notes: "id, person_id, content, category, created_at, updated_at",
   lists: "id, name, description, is_group, created_at, updated_at",
   list_items: "id, list_id, person_id, label, note, checked, position, created_at, updated_at",
   tasks: "id, title, notes, person_id, list_id, due_at, recurrence, completed, completed_at, created_at, updated_at",
   activity: "id, person_id, list_id, task_id, note_id, type, description, created_at",
-  check_ins: "id, person_id, checked_in_at, reason, created_at, updated_at",
+  check_ins: "id, person_id, checked_in_at, reason, amount_cents, created_at, updated_at",
 };
 async function exportOf(u: string) {
   const out: Record<string, unknown> = { exported_at: new Date().toISOString() };
@@ -41,7 +41,7 @@ const counts = async (u: string) =>
 
 async function main() {
   await query(`insert into users (id, email) values ($1,'a@test.dev'),($2,'b@test.dev') on conflict do nothing`, [A, B]);
-  const [p1] = await query<{ id: string }>(`insert into people (user_id, first_name, last_name, display_name, birthday, gender, ethnicity, income_level) values ($1,'Maria','Lopez','Maria Lopez','1980-05-12','Female','Hispanic or Latino','Low') returning id`, [A]);
+  const [p1] = await query<{ id: string }>(`insert into people (user_id, first_name, last_name, display_name, birthday, gender, ethnicity, income_level, client_since) values ($1,'Maria','Lopez','Maria Lopez','1980-05-12','Female','Hispanic or Latino','Low','2020-02-03') returning id`, [A]);
   const [p2] = await query<{ id: string }>(`insert into people (user_id, first_name, display_name) values ($1,'Jo','Jo') returning id`, [A]);
   const [n1] = await query<{ id: string }>(`insert into notes (user_id, person_id, content) values ($1,$2,'Housing intake done') returning id`, [A, p1.id]);
   await query(`insert into notes (user_id, content) values ($1,'personal note')`, [A]);
@@ -51,7 +51,7 @@ async function main() {
   await query(`insert into list_items (user_id, list_id, person_id, label) values ($1,$2,$3,'Maria Lopez')`, [A, l2.id, p1.id]);
   const [t1] = await query<{ id: string }>(`insert into tasks (user_id, title, person_id, due_at, recurrence) values ($1,'Call Maria',$2, now() - interval '2 days','weekly') returning id`, [A, p1.id]);
   await query(`insert into tasks (user_id, title, due_at) values ($1,'Dentist', now() + interval '3 days')`, [A]);
-  await query(`insert into check_ins (user_id, person_id, reason) values ($1,$2,'Walk-in')`, [A, p1.id]);
+  await query(`insert into check_ins (user_id, person_id, reason, amount_cents) values ($1,$2,'Walk-in',2500)`, [A, p1.id]);
   await query(`insert into activity (user_id, person_id, task_id, note_id, type, description) values ($1,$2,$3,$4,'note_added','Added a note')`, [A, p1.id, t1.id, n1.id]);
   // B already has a "Groceries" list and one person of its own.
   const [bList] = await query<{ id: string }>(`insert into lists (user_id, name) values ($1,'groceries') returning id`, [B]);
@@ -79,6 +79,11 @@ async function main() {
   );
   check("no links into the other account", crossLinks?.n === 0, crossLinks);
   const maria = await queryOne<{ id: string; gender: string; birthday: string }>(`select id, gender, to_char(birthday,'YYYY-MM-DD') birthday from people where user_id=$1 and display_name='Maria Lopez'`, [B]);
+  const kept = await queryOne<{ since: string; amount: number }>(
+    `select to_char(p.client_since,'YYYY-MM-DD') since, (select amount_cents from check_ins where person_id = p.id) amount from people p where p.id = $1`,
+    [maria?.id],
+  );
+  check("restore keeps client-since dates and visit amounts", kept?.since === "2020-02-03" && kept?.amount === 2500, kept);
   const linked = await queryOne<{ notes: number; tasks: number; checkins: number; entries: number }>(
     `select (select count(*) from notes where person_id=$1)::int notes, (select count(*) from tasks where person_id=$1)::int tasks,
             (select count(*) from check_ins where person_id=$1)::int checkins, (select count(*) from list_items where person_id=$1)::int entries`,
