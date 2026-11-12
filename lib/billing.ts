@@ -1,4 +1,5 @@
 import { cache } from "react";
+import { ownerEmails } from "@/lib/owner";
 import Stripe from "stripe";
 import { query, queryOne } from "@/lib/db/client";
 import { requireUserId } from "@/lib/current-user";
@@ -144,6 +145,11 @@ async function computeAccess(userId: string): Promise<Access> {
     ),
   ]);
   const base = { scope: "individual" as const, orgId: null, orgName: null, canManage: true, seats: 1, row };
+  // The owner (OWNER_EMAILS) always has full, free access: no trial, never billed.
+  const me = await queryOne<{ email: string }>(`select email from users where id = $1`, [userId]);
+  if (me && ownerEmails().includes(me.email.toLowerCase())) {
+    return { ...base, state: "ok", plan: "comp", status: "comp", endsAt: null };
+  }
   if (invited && !row?.stripe_subscription_id && row?.plan !== "comp") {
     return { ...base, state: "ok", plan: row?.plan ?? null, status: row?.status ?? null, endsAt: null };
   }
