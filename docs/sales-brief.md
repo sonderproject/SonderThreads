@@ -132,7 +132,8 @@ Ask a program director these questions. Every "yes" is a reason to buy.
    - No overdue follow-ups at the end of each week.
    - The monthly board/funder report takes minutes, not days.
 4. **Check in at day 5 and day 12.** Show the director the Team view and the Impact report with their own numbers. That's the moment they decide.
-5. **Convert:** they choose the number of seats in Billing. Expand to the next program once the first one sticks.
+5. **Eager buyers:** if they already know they want it, point them to **"Skip the trial: 30% off your first month"** on the Billing page. They start paying today, and you skip the 14-day wait.
+6. **Convert:** they choose the number of seats in Billing. Expand to the next program once the first one sticks.
 
 **Your closing line:**
 > "Keep everything you're required to use. Give your team two weeks with Strynd for the day-to-day work, and if your follow-ups and reports aren't easier, you've lost nothing."

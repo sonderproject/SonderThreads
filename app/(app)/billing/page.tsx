@@ -215,9 +215,14 @@ export default async function BillingPage({
                 >
                   {a.state === "setup" ? "Start my free trial" : "Subscribe"}
                 </button>
+                {a.state === "setup" && (
+                  <button type="submit" name="skip" value="1" className={secondary} disabled={!billingEnabled()}>
+                    Skip the trial: 30% off your first month
+                  </button>
+                )}
                 <p className="text-xs text-text-muted">
                   {a.state === "setup"
-                    ? "Your plan renews automatically: after the 7-day free trial you're charged $9 every month until you cancel."
+                    ? "Your plan renews automatically: after the 7-day free trial you're charged $9 every month until you cancel. If you skip the trial, you're charged $6.30 today for your first month, then $9 every month."
                     : "Your plan renews automatically: you're charged $9 every month until you cancel."}{" "}
                   Cancel any time in Settings → Subscription; you keep access until the end of the month you paid for. By
                   continuing you agree to the{" "}
@@ -265,10 +270,17 @@ export default async function BillingPage({
                 <button type="submit" className={primary} disabled={!billingEnabled()}>
                   {a.state === "setup" ? "Start the free trial" : "Continue to payment"}
                 </button>
+                {(a.state === "setup" || a.state === "trial") && !a.row?.stripe_subscription_id && (
+                  <button type="submit" name="skip" value="1" className={secondary} disabled={!billingEnabled()}>
+                    Skip the trial: 30% off your first month
+                  </button>
+                )}
                 <p className="text-xs text-text-muted">
                   The plan renews automatically every month at the price shown for your seats (plus prorated changes when you
                   add or remove seats) until you cancel.
-                  {a.state === "trial" || a.state === "setup" ? " Nothing is charged before your free trial ends." : ""} Cancel any time in Settings →
+                  {a.state === "trial" || a.state === "setup"
+                    ? " Nothing is charged before your free trial ends. If you skip the trial, you're charged today, with 30% off your first month."
+                    : ""} Cancel any time in Settings →
                   Subscription; you keep access until the end of the month you paid for. By continuing you agree to the{" "}
                   <Link href="/terms#fees" className="text-accent hover:underline">
                     Terms of service

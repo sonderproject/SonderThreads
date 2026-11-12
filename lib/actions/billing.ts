@@ -13,6 +13,7 @@ import {
   ORG_TRIAL_DAYS,
   customerFor,
   enforceOneTrialPerCard,
+  skipTrialCoupon,
   getAccess,
   priceId,
   saveOfferCoupon,
@@ -60,8 +61,18 @@ export async function startCheckout(formData: FormData): Promise<void> {
       : undefined;
   // A first subscription starts the free trial: 7 days for individuals, 14 for organizations on card-first trials.
   const firstTrial = !access.row?.stripe_subscription_id && (kind === "user" || access.state === "setup");
+  // "Skip the trial": a first subscription can start paying today with 30% off the first month instead.
+  const skip =
+    formData.get("skip") === "1" && !access.row?.stripe_subscription_id && (access.state === "setup" || access.state === "trial");
+  const coupon = skip ? await skipTrialCoupon() : null;
   // card_trial marks a fresh card-first trial, which the one-trial-per-card check applies to.
-  const metadata = { kind, owner_id: ownerId, plan, ...(firstTrial && !trialEnd ? { card_trial: "1" } : {}) };
+  const metadata = {
+    kind,
+    owner_id: ownerId,
+    plan,
+    ...(firstTrial && !trialEnd && !skip ? { card_trial: "1" } : {}),
+    ...(skip ? { skipped_trial: "1" } : {}),
+  };
 
   const session = await s.checkout.sessions.create({
     mode: "subscription",
@@ -69,12 +80,13 @@ export async function startCheckout(formData: FormData): Promise<void> {
     line_items: [{ price: await priceId(plan), quantity }],
     subscription_data: {
       metadata,
-      ...(trialEnd ? { trial_end: trialEnd } : {}),
-      ...(firstTrial && !trialEnd ? { trial_period_days: kind === "org" ? ORG_TRIAL_DAYS : INDIVIDUAL_TRIAL_DAYS } : {}),
+      ...(trialEnd && !skip ? { trial_end: trialEnd } : {}),
+      ...(firstTrial && !trialEnd && !skip ? { trial_period_days: kind === "org" ? ORG_TRIAL_DAYS : INDIVIDUAL_TRIAL_DAYS } : {}),
     },
     payment_method_collection: "always",
     metadata,
-    allow_promotion_codes: true,
+    // Stripe takes either a set discount or customer-entered promo codes, not both.
+    ...(coupon ? { discounts: [{ coupon }] } : { allow_promotion_codes: true }),
     success_url: `${appUrl()}/billing?checkout={CHECKOUT_SESSION_ID}`,
     cancel_url: `${appUrl()}/billing`,
   });

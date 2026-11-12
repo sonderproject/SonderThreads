@@ -139,6 +139,10 @@ export default function TermsPage() {
           </li>
         </ul>
         <p>
+          <strong>Skipping the trial:</strong> instead of a free trial, you can start paying right away with 30% off
+          your first month (one time, on a first subscription). You&apos;re charged when you subscribe.
+        </p>
+        <p>
           <strong>How to cancel:</strong> any time, online, in Settings → Subscription (organization admins cancel for
           their organization). Cancelling stops the next renewal; you keep access until the end of the month you&apos;ve
           already paid for. When you cancel we may offer you a lower price to stay, which you&apos;re free to decline.

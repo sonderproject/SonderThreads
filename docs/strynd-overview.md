@@ -134,4 +134,6 @@ It's built for two kinds of users:
 
 Plans renew monthly and can be canceled any time in Settings → Subscription. Seat changes are prorated.
 
+**Ready to start today?** Skip the free trial and get **30% off your first month**.
+
 *Questions: dante@sonderproject.co*

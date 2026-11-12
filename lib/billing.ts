@@ -323,6 +323,29 @@ export async function saveOfferCoupon(): Promise<string> {
   }
 }
 
+/**
+ * "Skip the trial": start paying today and get 30% off the first month. Only
+ * for a first subscription (instead of the free trial). The coupon lives in
+ * Stripe and is created the first time anyone uses it.
+ */
+export const SKIP_TRIAL_OFFER = { couponId: "strynd_skip_trial_30_once", percentOff: 30 } as const;
+
+export async function skipTrialCoupon(): Promise<string> {
+  const s = stripe();
+  if (!s) throw new Error("Billing isn't set up yet.");
+  try {
+    return (await s.coupons.retrieve(SKIP_TRIAL_OFFER.couponId)).id;
+  } catch {
+    const c = await s.coupons.create({
+      id: SKIP_TRIAL_OFFER.couponId,
+      name: "Skipped the trial: 30% off the first month",
+      percent_off: SKIP_TRIAL_OFFER.percentOff,
+      duration: "once",
+    });
+    return c.id;
+  }
+}
+
 /** Can this account still get the "$5 for 2 months" offer when it cancels? */
 export function saveOfferEligible(a: Access): boolean {
   const r = a.row;
