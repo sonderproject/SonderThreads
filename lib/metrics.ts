@@ -81,13 +81,13 @@ type Col = "user_id" | "org_id";
 async function kpisFor(run: Run, col: Col, scopeId: string, tz: string, from: string, to: string): Promise<Kpis> {
   const [row] = await run<Record<keyof Kpis, number>>(
     `select
-       (select count(*) from check_ins c join people p on p.id = c.person_id and p.deleted_at is null
+       (select count(*) from check_ins c join people p on p.id = c.person_id
          where c.${col} = $1 and c.deleted_at is null
            and (c.checked_in_at at time zone $2)::date between $3::date and $4::date)::int as "checkIns",
-       (select count(distinct c.person_id) from check_ins c join people p on p.id = c.person_id and p.deleted_at is null
+       (select count(distinct c.person_id) from check_ins c join people p on p.id = c.person_id
          where c.${col} = $1 and c.deleted_at is null
            and (c.checked_in_at at time zone $2)::date between $3::date and $4::date)::int as "peopleServed",
-       (select count(*) from people where ${col} = $1 and deleted_at is null
+       (select count(*) from people where ${col} = $1
            and ${INTAKE_DATE} between $3::date and $4::date)::int as "newPeople",
        (select count(*) from notes where ${col} = $1 and deleted_at is null
            and (created_at at time zone $2)::date between $3::date and $4::date)::int as "notes",
@@ -124,7 +124,8 @@ async function compute(
   const prevFrom = addDays(prevTo, -(length - 1));
   const bucket = bucketFor(from, to);
   const range = [scopeId, tz, from, to];
-  const inRange = `${col} = $1 and deleted_at is null`;
+  // Clients deleted later still count in the periods they were served, so past reports never change.
+  const inRange = `${col} = $1`;
 
   const [sinceRows, kpis, prev, checkInRows, newPeopleRows, reasonRows, weekdayRows, visitorRows, demoRows, reachRows, heatRows, followRows] = await Promise.all([
     run<{ d: string | null }>(
@@ -135,7 +136,7 @@ async function compute(
     kpisFor(run, col, scopeId, tz, prevFrom, prevTo),
     run<{ k: string; n: number }>(
       `select to_char(date_trunc($5, c.checked_in_at at time zone $2), 'YYYY-MM-DD') as k, count(*)::int as n
-         from check_ins c join people p on p.id = c.person_id and p.deleted_at is null
+         from check_ins c join people p on p.id = c.person_id
         where c.${col} = $1 and c.deleted_at is null
           and (c.checked_in_at at time zone $2)::date between $3::date and $4::date
         group by 1`,
@@ -149,7 +150,7 @@ async function compute(
     ),
     run<{ label: string; n: number }>(
       `select coalesce(min(nullif(trim(c.reason), '')), 'No reason given') as label, count(*)::int as n
-         from check_ins c join people p on p.id = c.person_id and p.deleted_at is null
+         from check_ins c join people p on p.id = c.person_id
         where c.${col} = $1 and c.deleted_at is null
           and (c.checked_in_at at time zone $2)::date between $3::date and $4::date
         group by lower(coalesce(nullif(trim(c.reason), ''), ''))
@@ -158,7 +159,7 @@ async function compute(
     ),
     run<{ d: number; n: number }>(
       `select extract(isodow from c.checked_in_at at time zone $2)::int as d, count(*)::int as n
-         from check_ins c join people p on p.id = c.person_id and p.deleted_at is null
+         from check_ins c join people p on p.id = c.person_id
         where c.${col} = $1 and c.deleted_at is null
           and (c.checked_in_at at time zone $2)::date between $3::date and $4::date
         group by 1`,
@@ -177,7 +178,7 @@ async function compute(
     run<{ ethnicity: string | null; income_level: string | null; gender: string | null }>(
       `select p.ethnicity, p.income_level, p.gender
          from people p
-        where p.${col} = $1 and p.deleted_at is null
+        where p.${col} = $1
           and exists (select 1 from check_ins c
                        where c.person_id = p.id and c.${col} = $1 and c.deleted_at is null
                          and (c.checked_in_at at time zone $2)::date between $3::date and $4::date)`,
@@ -194,7 +195,7 @@ async function compute(
            select distinct to_char(date_trunc($5, c.checked_in_at at time zone $2), 'YYYY-MM-DD') as k, c.person_id,
                   date_trunc($5, f.f at time zone $2) = date_trunc($5, c.checked_in_at at time zone $2)
                     and coalesce(${INTAKE_DATE_P} >= $3::date, false) as is_first
-             from check_ins c join people p on p.id = c.person_id and p.deleted_at is null
+             from check_ins c join people p on p.id = c.person_id
              join firsts f on f.person_id = c.person_id
             where c.${col} = $1 and c.deleted_at is null
               and (c.checked_in_at at time zone $2)::date between $3::date and $4::date
@@ -204,7 +205,7 @@ async function compute(
     run<{ d: number; b: number; n: number }>(
       `select extract(isodow from c.checked_in_at at time zone $2)::int as d,
               (extract(hour from c.checked_in_at at time zone $2)::int / 2) as b, count(*)::int as n
-         from check_ins c join people p on p.id = c.person_id and p.deleted_at is null
+         from check_ins c join people p on p.id = c.person_id
         where c.${col} = $1 and c.deleted_at is null
           and (c.checked_in_at at time zone $2)::date between $3::date and $4::date
         group by 1, 2`,

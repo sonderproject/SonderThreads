@@ -112,7 +112,10 @@ export default async function PersonProfilePage({
               <Badge tone="attention">stale</Badge>
             </span>
           )}
-          <DeletePersonButton personId={person.id} name={person.display_name} />
+          {/* Agency clients can only be deleted by the organization's admins (keeps its history and reports intact). */}
+          {(!person.org_id || (membership?.active && membership.role === "admin")) && (
+            <DeletePersonButton personId={person.id} name={person.display_name} />
+          )}
         </div>
         {membership?.active && person.user_id === me && (
           <div className="mt-2">

@@ -26,13 +26,14 @@ export async function GET(request: Request) {
   if (format !== "pdf" && format !== "xlsx" && format !== "csv") {
     return NextResponse.json({ error: "format must be pdf, xlsx or csv" }, { status: 400 });
   }
-  const tz = await getTimeZone();
-  const { from, to } = normalizeRange(params.get("from"), params.get("to"), dayKey(new Date(), tz));
   // The designed PDF report is an Organization-plan feature.
   if (format === "pdf" && !m?.active) return NextResponse.json({ error: "PDF reports come with Organization plans" }, { status: 403 });
   const followUps = params.get("followups") === "1"; // optional section, off unless asked for
   const org = params.get("scope") === "org" ? await reportableOrg() : null;
   if (params.get("scope") === "org" && !org) return NextResponse.json({ error: "Not allowed" }, { status: 403 });
+  // Same days as on screen: the organization's time zone for organization reports.
+  const tz = org?.timeZone ?? (await getTimeZone());
+  const { from, to } = normalizeRange(params.get("from"), params.get("to"), dayKey(new Date(), tz));
   const metrics = await computeMetrics(user.id, tz, from, to, org);
   const disposition = `attachment; filename="${format === "pdf" ? "impact-report" : "metrics"}-${from}-to-${to}.${format}"`;
 

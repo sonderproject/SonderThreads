@@ -3,7 +3,8 @@
 import { randomBytes } from "crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { queryOne, transaction } from "@/lib/db/client";
+import { query, queryOne, transaction } from "@/lib/db/client";
+import { isValidTimeZone } from "@/lib/tz";
 import { asUser } from "@/lib/db/as-user";
 import { requireUserId } from "@/lib/current-user";
 import { hashToken } from "@/lib/session";
@@ -468,4 +469,14 @@ async function seatFree(orgId: string, alreadyMember: boolean): Promise<boolean>
     if (err instanceof SeatLimitError) return false;
     throw err;
   }
+}
+
+/** Admin: the organization's time zone (reports, exports and referral appointments). */
+export async function saveOrgTimeZone(formData: FormData): Promise<void> {
+  const { orgId } = await requireAdmin();
+  const tz = formData.get("timezone")?.toString() ?? "";
+  if (!isValidTimeZone(tz)) redirect("/settings/organization?error=timezone");
+  await query(`update organizations set referral_timezone = $2 where id = $1`, [orgId, tz]);
+  revalidatePath("/", "layout");
+  redirect("/settings/organization?saved=timezone");
 }

@@ -9,6 +9,9 @@ import { TimeZoneInput } from "@/components/notifications/TimeZoneInput";
 import { PendingInvites } from "@/components/org/PendingInvites";
 import { ManageSubscriptionCard } from "@/components/billing/ManageSubscriptionCard";
 import { CalendarSyncSettings } from "@/components/settings/CalendarSyncSettings";
+import { saveOrgTimeZone } from "@/lib/actions/org";
+import { getOrgTimeZone } from "@/lib/referral-settings";
+import { US_ZONES, zoneLabel } from "@/lib/time-zones";
 import { ContactSupportCard } from "@/components/settings/ContactSupportCard";
 import { getMyCalendarLink, listLinkedCalendars } from "@/lib/actions/calendar";
 import { requireUserId } from "@/lib/current-user";
@@ -72,7 +75,7 @@ export async function SettingsSection({ slug, q }: { slug: SettingsSlug; q: Sett
     case "security":
       return <SecuritySection q={q} />;
     case "organization":
-      return <OrganizationSection />;
+      return <OrganizationSection q={q} />;
     case "data":
       return <DataSection q={q} />;
     case "about":
@@ -275,8 +278,9 @@ async function SecuritySection({ q }: { q: SettingsQuery }) {
   );
 }
 
-async function OrganizationSection() {
+async function OrganizationSection({ q }: { q: SettingsQuery }) {
   const [membership, invites] = await Promise.all([getMembership(), getPendingInvites()]);
+  const orgTz = membership?.active ? await getOrgTimeZone(membership.orgId) : null;
   return (
     <>
       {invites.length > 0 && <PendingInvites invites={invites} />}
@@ -304,7 +308,38 @@ async function OrganizationSection() {
           )}
           <p className="text-xs text-text-faint">Your tasks, notes and lists that aren&apos;t about a client are always private.</p>
         </div>
-      ) : (
+      ) : null}
+      {membership?.active && orgTz ? (
+        membership.role === "admin" ? (
+          <form action={saveOrgTimeZone} className="card space-y-2 p-4">
+            <div>
+              <h3 className="text-sm font-semibold text-text">Organization time zone</h3>
+              <p className="text-xs text-text-muted">
+                Reports, exports and referral appointments count days in this zone, so every admin sees the same numbers.
+              </p>
+            </div>
+            {q.saved === "timezone" && <p className="text-xs text-accent">Time zone saved.</p>}
+            {q.error === "timezone" && <p className="text-xs text-danger">Choose a time zone.</p>}
+            <div className="flex gap-2">
+              <select name="timezone" defaultValue={orgTz} className="input" aria-label="Organization time zone">
+                {(US_ZONES.some(([z]) => z === orgTz) ? US_ZONES : [[orgTz, orgTz] as const, ...US_ZONES]).map(([z, label]) => (
+                  <option key={z} value={z}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+              <button type="submit" className={`shrink-0 ${buttonClass}`}>
+                Save
+              </button>
+            </div>
+          </form>
+        ) : (
+          <p className="text-xs text-text-muted">
+            {membership.orgName}&apos;s reports use {zoneLabel(orgTz)} time.
+          </p>
+        )
+      ) : null}
+      {membership ? null : (
         <div className="card flex flex-wrap items-center justify-between gap-3 p-4">
           <div className="min-w-0">
             <h3 className="text-sm font-semibold text-text">Run a team or agency?</h3>

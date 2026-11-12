@@ -206,11 +206,19 @@ export async function updatePersonSafe(
 }
 
 /** Soft-deletes a person — the row stays in the database (recoverable) but disappears from every view. */
+/**
+ * Who may delete a person: anyone for their own personal/solo records, but only
+ * an organization's admins for its clients, so the agency's history and reports
+ * can't be changed by any one staff member. ($1 = the signed-in user.)
+ */
+const MAY_DELETE = `(org_id is null or exists (select 1 from memberships m
+  where m.user_id = $1 and m.org_id = people.org_id and m.active and m.role = 'admin'))`;
+
 export async function deletePersonRecord(id: string): Promise<void> {
   const userId = await requireUserId();
   await assertCanWrite();
   const person = await actorQueryOne<Person>(userId, 
-    `update people set deleted_at = now() where ${mineOrOrg("$1")} and id = $2 and deleted_at is null returning *`,
+    `update people set deleted_at = now() where ${mineOrOrg("$1")} and ${MAY_DELETE} and id = $2 and deleted_at is null returning *`,
     [userId, id],
   );
 
@@ -239,7 +247,7 @@ export async function deletePeople(ids: string[]): Promise<number> {
   if (ids.length === 0) return 0;
   const deleted = await actorQuery<{ id: string }>(userId, 
     `update people set deleted_at = now()
-     where ${mineOrOrg("$1")} and id = any($2::uuid[]) and deleted_at is null
+     where ${mineOrOrg("$1")} and ${MAY_DELETE} and id = any($2::uuid[]) and deleted_at is null
      returning id`,
     [userId, ids],
   );

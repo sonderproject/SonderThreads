@@ -92,7 +92,7 @@ Ask a program director these questions. Every "yes" is a reason to buy.
 > "No. Client records belong to the agency. When someone leaves, an admin picks who takes over their clients, and everything (notes, tasks, check-ins) moves over in one step. The person who left loses access immediately. An admin can also move a single client to another worker any time. Each person's *personal* tasks and notes stay private to them, so staff aren't worried about being watched."
 
 **"Can we trust the report numbers?"**
-> "Each person is counted once per period, by the day they actually came in, in your time zone. Clients you import count as new only if their intake date falls in that period, so uploading your existing list doesn't inflate your numbers. The PDF and Excel exports show the same figures as the screen."
+> "Each person is counted once per period, by the day they actually came in, in your organization's time zone, so every admin sees the same numbers. Clients you import count as new only if their intake date falls in that period, so uploading your existing list doesn't inflate your numbers. Past reports never change after the fact: only admins can delete agency clients, and a deleted client still counts in the months they were served. The PDF and Excel exports show the same figures as the screen."
 
 **"Supervisors want visibility, but staff want privacy."**
 > "That's built in. Supervisors see every client and every worker's caseload, read-only. Admins manage staff. Personal tasks and lists are never visible to anyone else."

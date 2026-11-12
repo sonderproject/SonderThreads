@@ -1,4 +1,5 @@
 import { saveReferralSettings } from "@/lib/actions/referrals";
+import { US_ZONES } from "@/lib/time-zones";
 import type { ReferralSettings } from "@/lib/referral-settings";
 import { SLOT_CHOICES } from "@/lib/referral-slots";
 
@@ -12,15 +13,7 @@ const DAYS = [
   [0, "Sunday"],
 ] as const;
 
-const ZONES = [
-  ["America/Los_Angeles", "Pacific"],
-  ["America/Denver", "Mountain"],
-  ["America/Phoenix", "Arizona"],
-  ["America/Chicago", "Central"],
-  ["America/New_York", "Eastern"],
-  ["America/Anchorage", "Alaska"],
-  ["Pacific/Honolulu", "Hawaii"],
-] as const;
+const ZONES = US_ZONES;
 
 /** Admin: when referred clients can book, how many to take, and the services partners can pick. */
 export function ReferralSettingsCard({ settings }: { settings: ReferralSettings }) {

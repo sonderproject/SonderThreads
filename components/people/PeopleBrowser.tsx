@@ -55,11 +55,19 @@ export function PeopleBrowser({ people, orgName = null }: { people: Person[]; or
     const label = ids.length === 1 ? "1 person" : `${ids.length} people`;
     if (!confirm(`Delete ${label}? Their notes and tasks stay, unlinked.`)) return;
     setDeleting(true);
-    await deletePeople(ids);
+    const count = await deletePeople(ids);
     setDeleting(false);
     stopSelecting();
     router.refresh();
-    undo.show(`Deleted ${label}`, async () => {
+    if (count < ids.length) {
+      alert(
+        count === 0
+          ? `Only ${orgName ?? "your organization"}'s admins can delete agency clients.`
+          : `Deleted ${count} of ${ids.length}. Only admins can delete agency clients.`,
+      );
+      if (count === 0) return;
+    }
+    undo.show(`Deleted ${count === 1 ? "1 person" : `${count} people`}`, async () => {
       await restorePeople(ids);
       router.refresh();
     });

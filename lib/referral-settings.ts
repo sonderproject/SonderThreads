@@ -65,3 +65,18 @@ export async function openSlots(orgId: string, settings: ReferralSettings, now =
   );
   return planSlots({ slots, booked: booked.map((b) => new Date(b.appointment_at)), caps: settings.caps, tz: settings.tz });
 }
+
+/**
+ * The organization's time zone, used for referral appointments and for every
+ * organization report and export, so all admins see the same numbers for the
+ * same days. Set by an admin (Settings → Organization or Referral settings);
+ * until then, the creator's zone.
+ */
+export async function getOrgTimeZone(orgId: string): Promise<string> {
+  const r = await queryOne<{ tz: string | null; creator_tz: string | null }>(
+    `select o.referral_timezone as tz, u.timezone as creator_tz
+       from organizations o left join users u on u.id = o.created_by where o.id = $1`,
+    [orgId],
+  );
+  return [r?.tz, r?.creator_tz].find((z) => isValidTimeZone(z)) ?? FALLBACK_TZ;
+}
