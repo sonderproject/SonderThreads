@@ -33,7 +33,12 @@
 10. **Marketing pack:** gather photos/screenshots from the build (docs PDFs, landing page, app screens) + a prompt for a Kling AI promo video; plan posting.
 11. **Instagram:** a way to post directly from Claude (check connectors such as Zapier / Meta).
 12. **Agent team** to run parts of the business.
-13. **Sonder Project dashboard** covering all business models (Strynd, Sonder Protocol, etc.).
+13. **Sonder Project dashboard** covering all business models (Strynd, Sonder Protocol, etc.). It should also let the owner:
+    - run and control marketing campaigns,
+    - find potential users and organizations (lead finding),
+    - generate and send emails (outreach),
+    - and more along those lines.
+    The owner will share a GitHub repo in the morning that finds the best Claude skills for a given task and installs them automatically. Read that repo before installing or running anything it contains, and use it to pick skills for this dashboard and the agent team (#12).
 14. **More security** review after the above.
 
 Open decisions/notes: friction point "individuals pay before using" is solved (no-card trial). Phone verification was skipped on purpose (card blocks repeat trials). AI keys are still set in Vercel; add an AI section to /privacy before AI ships (see CLAUDE.md).
