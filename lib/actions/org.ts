@@ -15,7 +15,7 @@ import { recordAcceptance } from "@/lib/legal-server";
 import { notify } from "@/lib/notify";
 import { appUrl, emailConfigured, escapeHtml, sendEmail } from "@/lib/email";
 import { ROLE_LABELS } from "@/lib/org-roles";
-import { SeatLimitError, assertSeatAvailable, billingEnabled, syncOrgSeats } from "@/lib/billing";
+import { SeatLimitError, assertCanWrite, assertSeatAvailable, billingEnabled, syncOrgSeats } from "@/lib/billing";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const INVITE_DAYS = 14;
@@ -52,6 +52,7 @@ export async function createOrganization(formData: FormData): Promise<void> {
 export async function createInvite(email: string, role: string): Promise<ActionResult<{ link: string; emailed: boolean }>> {
   return toActionResult(async () => {
     const { userId, orgId } = await requireAdmin();
+    await assertCanWrite(); // not before the trial starts or after a subscription lapses (stops invite/referral email abuse)
     const clean = email.trim().toLowerCase();
     if (!EMAIL_RE.test(clean) || clean.length > 254) throw new Error("Enter a valid email address.");
     if (!isOrgRole(role)) throw new Error("Choose a role.");
@@ -406,6 +407,7 @@ export async function declineInviteInApp(formData: FormData): Promise<void> {
 export async function newInviteLink(inviteId: string): Promise<ActionResult<{ link: string }>> {
   return toActionResult(async () => {
     const { userId, orgId } = await requireAdmin();
+    await assertCanWrite(); // not before the trial starts or after a subscription lapses (stops invite/referral email abuse)
     const token = randomBytes(32).toString("base64url");
     const rows = await asUser(userId, (q) =>
       q(

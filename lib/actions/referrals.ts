@@ -203,6 +203,7 @@ async function sendReferralConfirmation(to: string, orgName: string, client: str
 /** Organization → Referral settings: appointment hours, slot length, limits and the services list. */
 export async function saveReferralSettings(formData: FormData): Promise<void> {
   const { orgId } = await requireAdmin();
+  await assertCanWrite(); // not before the trial starts or after a subscription lapses (stops invite/referral email abuse)
   const fail = (e: string) => redirect(`/organization?error=${e}#referral-settings`);
   const appointments = formData.get("appointments") === "1";
   const hours: WeeklyHours = {};
@@ -253,6 +254,7 @@ export async function saveReferralSettings(formData: FormData): Promise<void> {
 /** Turns the referral link on (making one the first time) or off. */
 export async function setReferralLink(formData: FormData): Promise<void> {
   const { orgId } = await requireAdmin();
+  await assertCanWrite(); // not before the trial starts or after a subscription lapses (stops invite/referral email abuse)
   const on = formData.get("enabled") === "1";
   await query(
     `update organizations set referral_enabled = $1, referral_code = coalesce(referral_code, $2) where id = $3`,
@@ -266,6 +268,7 @@ export async function setReferralLink(formData: FormData): Promise<void> {
 /** Makes a new link; the old one stops working right away. */
 export async function newReferralLink(): Promise<void> {
   const { orgId } = await requireAdmin();
+  await assertCanWrite(); // not before the trial starts or after a subscription lapses (stops invite/referral email abuse)
   await query(`update organizations set referral_code = $1 where id = $2`, [newCode(), orgId]);
   revalidatePath("/organization");
   redirect("/organization?saved=referral-new#referrals");
