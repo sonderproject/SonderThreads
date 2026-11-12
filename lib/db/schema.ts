@@ -980,4 +980,14 @@ end $$;
 alter table check_ins add column if not exists service_id uuid references services(id) on delete set null;
 alter table check_ins add column if not exists amount_cents int check (amount_cents >= 0 and amount_cents <= 100000000);
 create index if not exists check_ins_service_idx on check_ins (service_id) where service_id is not null;
+-- Checked at commit: deleting an organization removes its services (setting check_ins.service_id to null)
+-- while its people's org cascade updates the same check-ins; checking mid-statement fails on that order.
+do $$
+begin
+  if exists (select 1 from pg_constraint where conname = 'check_ins_service_id_fkey' and not condeferred) then
+    alter table check_ins drop constraint check_ins_service_id_fkey;
+    alter table check_ins add constraint check_ins_service_id_fkey foreign key (service_id)
+      references services(id) on delete set null deferrable initially deferred;
+  end if;
+end $$;
 `;

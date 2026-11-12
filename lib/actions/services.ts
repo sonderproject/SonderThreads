@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { query, queryOne } from "@/lib/db/client";
+import { actorQuery } from "@/lib/db/scope";
 import { assertCanWrite } from "@/lib/billing";
 import { listServices, scopeFilter, serviceScope, type Service } from "@/lib/services";
 import { parseMoney } from "@/lib/money";
@@ -75,7 +76,15 @@ export async function updateService(id: string, params: { name: string; price?: 
       [param, name, id],
     );
     if (dupe) throw new Error(`"${name}" is already on the list.`);
-    await query(`update services set name = $2, price_cents = $3 where ${where} and id = $4`, [param, name, cleanPrice(params.price), id]);
+    const updated = await queryOne<{ id: string }>(
+      `update services set name = $2, price_cents = $3 where ${where} and id = $4 returning id`,
+      [param, name, cleanPrice(params.price), id],
+    );
+    // Past visits carry the service's name as their reason; keep them in step so reports don't split one service in two.
+    if (updated) {
+      // As the admin, so the activity log shows who renamed it.
+      await actorQuery(scope.userId, `update check_ins set reason = $2 where service_id = $1 and reason is distinct from $2`, [id, name]);
+    }
     refresh();
     return null;
   });

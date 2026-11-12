@@ -236,8 +236,7 @@ async function compute(
          join services s on s.id = c.service_id
         where c.${col} = $1 and c.deleted_at is null and c.d between $5::date and $4::date
         group by s.id, s.name
-       having count(*) filter (where d between $3::date and $4::date) > 0
-        order by n desc, s.name`,
+        order by n desc, prev desc, s.name`,
       [...range, prevFrom, prevTo],
     ),
   ]);

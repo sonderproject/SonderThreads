@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { mineOrOrg } from "@/lib/db/scope";
 import { csvCell } from "@/lib/csv";
 import { query } from "@/lib/db/client";
 import { getSessionUser } from "@/lib/session";
@@ -8,7 +9,7 @@ import { fuzzyMatcher } from "@/lib/fuzzy";
 // pdfkit and exceljs need Node APIs (fs, streams).
 export const runtime = "nodejs";
 
-type Row = { display_name: string; checked_in_at: Date; reason: string | null };
+type Row = { display_name: string; checked_in_at: Date; reason: string | null; amount_cents: number | null };
 
 const FORMATS = ["pdf", "xlsx", "csv"] as const;
 type Format = (typeof FORMATS)[number];
@@ -48,10 +49,10 @@ export async function GET(request: Request) {
   const to = validInstant(params.get("to"));
 
   const allRows = await query<Row>(
-    `select p.display_name, c.checked_in_at, c.reason
+    `select p.display_name, c.checked_in_at, c.reason, c.amount_cents
        from check_ins c
        join people p on p.id = c.person_id and p.deleted_at is null
-      where c.user_id = $1
+      where ${mineOrOrg("$1", "c.")}
         and c.deleted_at is null
         and ($2::timestamptz is null or c.checked_in_at >= $2::timestamptz)
         and ($3::timestamptz is null or c.checked_in_at < $3::timestamptz)
@@ -64,12 +65,15 @@ export async function GET(request: Request) {
 
   const date = new Intl.DateTimeFormat("en-US", { timeZone: tz, year: "numeric", month: "short", day: "numeric", weekday: "short" });
   const time = new Intl.DateTimeFormat("en-US", { timeZone: tz, hour: "numeric", minute: "2-digit" });
-  const headers = ["Date", "Time", "Name", "Reason"];
+  // An Amount column only when something has one (services with prices), so plain logs stay simple.
+  const withAmount = rows.some((r) => r.amount_cents !== null);
+  const headers = ["Date", "Time", "Name", "Reason", ...(withAmount ? ["Amount"] : [])];
   const body = rows.map((r) => [
     date.format(new Date(r.checked_in_at)),
     time.format(new Date(r.checked_in_at)),
     r.display_name,
     r.reason ?? "",
+    ...(withAmount ? [r.amount_cents === null ? "" : (r.amount_cents / 100).toFixed(2)] : []),
   ]);
 
   const exportedOn = new Date().toISOString().slice(0, 10);
