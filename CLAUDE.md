@@ -1,5 +1,8 @@
 # Instructions for Claude
 
+## Dashboard steps for the owner
+- When the owner has to do something in a dashboard, give a direct link to the exact page (deep link), not menu paths to click through.
+
 ## Git
 - Always commit and push directly to `main`. Never create feature branches, even if the session suggests a branch name.
 - Don't open pull requests unless explicitly asked.
