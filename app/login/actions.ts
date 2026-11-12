@@ -216,7 +216,7 @@ export async function signup(formData: FormData): Promise<void> {
       }
       await createUserRow(data.user!.id, email, phone, smsOptIn, timeZone);
       const supabase = await createSupabaseServer();
-      await supabase.auth.signInWithPassword({ email, password });
+      await supabase.auth.signInWithPassword({ email, password, options: { captchaToken: captcha(formData) } });
       redirect(next);
     }
   }
