@@ -30,7 +30,12 @@ Ask a program director these questions. Every "yes" is a reason to buy.
 | "Can supervisors see who's falling behind?" | Not without asking everyone. | **Team** view: each worker's clients, open tasks and who needs follow-up. |
 | "How long does it take to log a contact in your current system?" | Minutes of clicking through forms, so staff put it off. | Seconds. Type or say it. |
 
-**The core value:** fewer clients falling through the cracks, less admin time per staff member, and reports without the scramble.
+**The core value:** fewer clients falling through the cracks, hours of admin saved every week, and reports without the scramble.
+
+**Where the hours come from:**
+- **Tracking:** no more rebuilding "who needs what" from notebooks, inboxes and memory. Every client's history and next step is in one place, shared by the whole team.
+- **Reporting:** the numbers funders ask for (people served, new vs returning, demographics, busiest times, follow-through) are counted as staff work, so the monthly report is an export, not a project.
+- **Turnover:** when someone leaves, an admin hands all of their clients, with every note, task and check-in, to another staff member in one step, and the person who left loses access right away. Nothing is lost and nobody starts from scratch.
 
 ---
 
@@ -84,7 +89,10 @@ Ask a program director these questions. Every "yes" is a reason to buy.
 > "If they can send a text, they can use this. They type a sentence or tap the mic and talk. It installs on any phone like an app."
 
 **"When a case manager leaves, do they take their clients?"**
-> "No. Client records belong to the agency and stay when someone leaves. Each person's *personal* tasks and notes stay private to them, so staff aren't worried about being watched."
+> "No. Client records belong to the agency. When someone leaves, an admin picks who takes over their clients, and everything (notes, tasks, check-ins) moves over in one step. The person who left loses access immediately. An admin can also move a single client to another worker any time. Each person's *personal* tasks and notes stay private to them, so staff aren't worried about being watched."
+
+**"Can we trust the report numbers?"**
+> "Each person is counted once per period, by the day they actually came in, in your time zone. Clients you import count as new only if their intake date falls in that period, so uploading your existing list doesn't inflate your numbers. The PDF and Excel exports show the same figures as the screen."
 
 **"Supervisors want visibility, but staff want privacy."**
 > "That's built in. Supervisors see every client and every worker's caseload, read-only. Admins manage staff. Personal tasks and lists are never visible to anyone else."

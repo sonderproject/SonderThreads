@@ -65,6 +65,15 @@ function bucketKeys(from: string, to: string, bucket: Bucket): string[] {
   return keys;
 }
 
+/**
+ * When someone became a client, for "new clients" counts: their "client since"
+ * date if known, else the day they were added. Clients brought in by a
+ * spreadsheet import with no "client since" date have none (null): they were
+ * existing clients, so they never count as new. $2 is the time zone.
+ */
+const INTAKE_DATE = `coalesce(client_since, case when import_batch is null then (created_at at time zone $2)::date end)`;
+const INTAKE_DATE_P = `coalesce(p.client_since, case when p.import_batch is null then (p.created_at at time zone $2)::date end)`;
+
 type Run = <T>(text: string, params?: unknown[]) => Promise<T[]>;
 /** The column that scopes a query: the owner for "me", the organization for "org". */
 type Col = "user_id" | "org_id";
@@ -79,7 +88,7 @@ async function kpisFor(run: Run, col: Col, scopeId: string, tz: string, from: st
          where c.${col} = $1 and c.deleted_at is null
            and (c.checked_in_at at time zone $2)::date between $3::date and $4::date)::int as "peopleServed",
        (select count(*) from people where ${col} = $1 and deleted_at is null
-           and (created_at at time zone $2)::date between $3::date and $4::date)::int as "newPeople",
+           and ${INTAKE_DATE} between $3::date and $4::date)::int as "newPeople",
        (select count(*) from notes where ${col} = $1 and deleted_at is null
            and (created_at at time zone $2)::date between $3::date and $4::date)::int as "notes",
        (select count(*) from tasks where ${col} = $1 and deleted_at is null and completed and completed_at is not null
@@ -133,8 +142,8 @@ async function compute(
       [...range, bucket],
     ),
     run<{ k: string; n: number }>(
-      `select to_char(date_trunc($5, created_at at time zone $2), 'YYYY-MM-DD') as k, count(*)::int as n
-         from people where ${inRange} and (created_at at time zone $2)::date between $3::date and $4::date
+      `select to_char(date_trunc($5, ${INTAKE_DATE}), 'YYYY-MM-DD') as k, count(*)::int as n
+         from people where ${inRange} and ${INTAKE_DATE} between $3::date and $4::date
         group by 1`,
       [...range, bucket],
     ),
@@ -184,7 +193,7 @@ async function compute(
          from (
            select distinct to_char(date_trunc($5, c.checked_in_at at time zone $2), 'YYYY-MM-DD') as k, c.person_id,
                   date_trunc($5, f.f at time zone $2) = date_trunc($5, c.checked_in_at at time zone $2)
-                    and coalesce(p.client_since, (p.created_at at time zone $2)::date) >= $3::date as is_first
+                    and coalesce(${INTAKE_DATE_P} >= $3::date, false) as is_first
              from check_ins c join people p on p.id = c.person_id and p.deleted_at is null
              join firsts f on f.person_id = c.person_id
             where c.${col} = $1 and c.deleted_at is null
