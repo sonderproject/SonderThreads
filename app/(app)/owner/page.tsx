@@ -105,8 +105,9 @@ export default async function OwnerPage({ searchParams }: { searchParams: Promis
         where u.created_at > now() - interval '30 days'
         order by u.created_at desc limit 200`,
     ),
-    queryOne<{ paying: number; trialing: number; past_due: number; canceling: number; saved: number; comp: number }>(
+    queryOne<{ paying: number; trialing: number; past_due: number; canceling: number; saved: number; comp: number; ended30: number }>(
       `select count(*) filter (where status = 'active' and plan <> 'comp')::int as paying,
+              (select count(*) from app_events where kind = 'billing.ended' and created_at > now() - interval '30 days')::int as ended30,
               count(*) filter (where status = 'trialing' and stripe_subscription_id is not null)::int as trialing,
               count(*) filter (where status in ('past_due', 'unpaid'))::int as past_due,
               count(*) filter (where cancel_at_period_end and status in ('active', 'trialing'))::int as canceling,
@@ -219,6 +220,16 @@ export default async function OwnerPage({ searchParams }: { searchParams: Promis
             <Row label="Canceling at period end" value={String(billing?.canceling ?? 0)} />
             <Row label="Took the $5 save offer" value={String(billing?.saved ?? 0)} />
             <Row label="Failed payments" value={String(billing?.past_due ?? 0)} />
+            <Row label="Ended, last 30 days" value={String(billing?.ended30 ?? 0)} />
+            <Row
+              label="Churn, last 30 days"
+              value={(() => {
+                const ended = billing?.ended30 ?? 0;
+                const base = (billing?.paying ?? 0) + ended;
+                return base === 0 ? "—" : `${Math.round((ended / base) * 1000) / 10}%`;
+              })()}
+            />
+            <p className="text-xs text-text-faint">Churn: subscriptions that ended ÷ (paying now + ended), past 30 days.</p>
             {money$ && (
               <>
                 <Row label="Stripe balance, available" value={money(money$.available)} />
