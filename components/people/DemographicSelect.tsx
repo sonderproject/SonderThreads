@@ -58,8 +58,8 @@ export function DemographicSelect({
           </option>
         ))}
       </select>
-      {state === "saved" && <p className="text-[11px] text-accent">Saved</p>}
-      {error && <p className="text-[11px] text-danger">{error}</p>}
+      {state === "saved" && <p role="status" className="text-[11px] text-accent">Saved</p>}
+      {error && <p role="alert" className="text-[11px] text-danger">{error}</p>}
     </div>
   );
 }

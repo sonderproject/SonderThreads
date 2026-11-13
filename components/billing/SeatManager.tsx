@@ -41,7 +41,7 @@ export function SeatManager({ purchased, inUse }: { purchased: number; inUse: nu
             max={MAX_SELF_SERVE_SEATS}
             value={Number.isFinite(seats) ? seats : ""}
             onChange={(e) => change(Number.parseInt(e.target.value, 10))}
-            className="w-16 bg-transparent text-center tabular-nums outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
+            className="w-16 bg-transparent text-center tabular-nums outline-none focus-visible:rounded focus-visible:ring-2 focus-visible:ring-accent [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
           />
           <button type="button" onClick={() => change(Math.min(MAX_SELF_SERVE_SEATS, seats + 1))} className="h-10 w-10 rounded-full text-lg hover:bg-bg-hover" aria-label="One seat more">
             +

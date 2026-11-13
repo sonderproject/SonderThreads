@@ -66,7 +66,7 @@ export function CommandDemo() {
         <span className="hidden rounded-full bg-accent px-3 py-1 text-xs font-semibold text-bg sm:inline">Enter</span>
       </div>
       <div
-        className={`flex items-center gap-3 rounded-2xl border border-border bg-bg-raised px-4 py-3 transition-all duration-300 ${
+        className={`flex items-center gap-3 rounded-2xl border border-border bg-bg-raised px-4 py-3 transition-[opacity,transform] duration-300 ${
           done ? "translate-y-0 opacity-100" : "translate-y-1 opacity-0"
         }`}
       >

@@ -1011,4 +1011,28 @@ create table if not exists usage_counters (
 );
 create index if not exists usage_counters_hour_idx on usage_counters (hour);
 alter table usage_counters enable row level security;
+
+-- Covering indexes for foreign keys (Supabase performance advisor, Nov 2026).
+create index if not exists activity_list_id_idx on activity(list_id);
+create index if not exists activity_note_id_idx on activity(note_id);
+create index if not exists activity_org_id_idx on activity(org_id);
+create index if not exists activity_task_id_idx on activity(task_id);
+create index if not exists client_comments_author_id_idx on client_comments(author_id);
+create index if not exists client_comments_org_id_idx on client_comments(org_id);
+create index if not exists invitations_accepted_by_idx on invitations(accepted_by);
+create index if not exists invitations_invited_by_idx on invitations(invited_by);
+create index if not exists legal_acceptances_org_id_idx on legal_acceptances(org_id);
+create index if not exists list_items_org_id_idx on list_items(org_id);
+create index if not exists notifications_note_id_idx on notifications(note_id);
+create index if not exists notifications_person_id_idx on notifications(person_id);
+create index if not exists notifications_task_id_idx on notifications(task_id);
+create index if not exists organizations_created_by_idx on organizations(created_by);
+create index if not exists organizations_terms_accepted_by_idx on organizations(terms_accepted_by);
+create index if not exists person_summaries_org_id_idx on person_summaries(org_id);
+create index if not exists referrals_handled_by_idx on referrals(handled_by);
+create index if not exists referrals_person_id_idx on referrals(person_id);
+create index if not exists services_user_id_idx on services(user_id);
+create index if not exists tasks_list_id_idx on tasks(list_id);
+create index if not exists tasks_recurs_from_idx on tasks(recurs_from);
+create index if not exists tasks_source_note_id_idx on tasks(source_note_id);
 `;

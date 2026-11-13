@@ -45,7 +45,7 @@ export function SeatCalculator({ min = 2, initial = 5, name }: { min?: number; i
             value={raw}
             onChange={(e) => setRaw(e.target.value)}
             onBlur={() => setRaw(String(seats))}
-            className="w-16 bg-transparent text-center text-base tabular-nums text-text outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
+            className="w-16 bg-transparent text-center text-base tabular-nums text-text outline-none focus-visible:rounded focus-visible:ring-2 focus-visible:ring-accent [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
           />
           <button type="button" onClick={() => step(1)} className="h-10 w-10 rounded-full text-lg text-text hover:bg-bg-hover" aria-label="One seat more">
             +

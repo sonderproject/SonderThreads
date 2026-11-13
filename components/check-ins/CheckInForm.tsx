@@ -120,8 +120,8 @@ export function CheckInForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-2 card p-3">
-      {error && <p className="text-xs text-danger">{error}</p>}
-      {saved && <p className="text-xs text-accent">{saved}</p>}
+      {error && <p role="alert" className="text-xs text-danger">{error}</p>}
+      {saved && <p role="status" className="text-xs text-accent">{saved}</p>}
 
       {!fixedPersonId && (
         <div className="space-y-2">

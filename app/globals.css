@@ -386,6 +386,12 @@ select {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Native dropdown lists: explicit colors so options stay readable in Windows dark mode. */
+select option {
+  background-color: var(--surface);
+  color: var(--fg);
+}
+
 /* Public legal pages (components/legal/LegalPage.tsx): plain readable lists and links. */
 .legal ul { list-style: disc; padding-left: 1.25rem; display: flex; flex-direction: column; gap: 0.25rem; }
 .legal a { color: var(--accent); text-decoration: underline; }
