@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { queryOne } from "@/lib/db/client";
 import { requireUserId } from "@/lib/current-user";
 
@@ -6,8 +7,8 @@ import type { OrgRole } from "@/lib/org-roles";
 
 export type Membership = { orgId: string; orgName: string; role: OrgRole; active: boolean };
 
-/** The signed-in person's organization, or null for a solo account. */
-export async function getMembership(): Promise<Membership | null> {
+/** The signed-in person's organization membership, looked up once per request (layout, terms, services and team checks all ask). */
+export const getMembership = cache(async (): Promise<Membership | null> => {
   const userId = await requireUserId();
   const row = await queryOne<{ org_id: string; name: string; role: OrgRole; active: boolean }>(
     `select m.org_id, o.name, m.role, m.active
@@ -16,7 +17,7 @@ export async function getMembership(): Promise<Membership | null> {
     [userId],
   );
   return row ? { orgId: row.org_id, orgName: row.name, role: row.role, active: row.active } : null;
-}
+});
 
 export type PendingInvite = { id: string; orgName: string; role: OrgRole; inviter: string | null };
 

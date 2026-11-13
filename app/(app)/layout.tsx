@@ -41,7 +41,11 @@ export default async function AppGroupLayout({ children }: { children: React.Rea
   // (Checking first added a full database round trip before every page.)
   let data;
   try {
-    data = await Promise.all([listPeople(), listLists(), getNotificationCount(), getTimeZone(), shouldOfferTwoFactor(), getUserSettings(), getMembership()]);
+    // Everything the shell needs, fetched together (the Terms and billing checks used to wait for the rest).
+    data = await Promise.all([
+      listPeople(), listLists(), getNotificationCount(), getTimeZone(), shouldOfferTwoFactor(), getUserSettings(), getMembership(),
+      pendingAgreements(), getAccess().catch(() => null),
+    ]);
   } catch (err) {
     unstable_rethrow(err); // let Next's redirect-to-sign-in through
     const diagnostic = await checkSetup();
@@ -53,14 +57,12 @@ export default async function AppGroupLayout({ children }: { children: React.Rea
     );
   }
 
-  const [people, lists, notificationCount, timeZone, offerTwoFactor, settings, membership] = data;
+  const [people, lists, notificationCount, timeZone, offerTwoFactor, settings, membership, agreements, access] = data;
   // Everyone agrees to the current Terms/Privacy policy (and admins for their organization) before using the app.
-  const agreements = await pendingAgreements();
   if (agreements.user || agreements.org) {
     const path = (await headers()).get("x-pathname") ?? "/";
     if (!path.startsWith("/settings/data")) redirect(`/accept-terms?next=${encodeURIComponent(path)}`);
   }
-  const access = await getAccess().catch(() => null);
   // New organizations start their free trial (card on Stripe) before using the app; individuals try it first without a card.
   if (access?.state === "setup") {
     const path = (await headers()).get("x-pathname") ?? "";

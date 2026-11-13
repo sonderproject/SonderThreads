@@ -21,7 +21,7 @@ export const dynamic = "force-dynamic";
  * anyone. During a user's quiet hours nothing is sent; their reminders wait
  * for the first run after quiet hours end.
  *
- * Times are only as precise as the schedule: once a day on Vercel Hobby.
+ * Runs every 5 minutes (vercel.json, Vercel Pro); every send is marked, so repeat runs never double-send.
  */
 export async function GET(request: NextRequest) {
   const secret = process.env.CRON_SECRET;
