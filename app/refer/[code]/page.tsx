@@ -82,6 +82,11 @@ export default async function ReferPage({
                 ) : (
                   <p className="text-sm text-text-muted">{org.name} will reach out to the client.</p>
                 )}
+                {settings?.location && (
+                  <p className="text-sm text-text">
+                    Location: <strong>{settings.location}</strong>
+                  </p>
+                )}
                 <p className="text-xs text-text-muted">We&apos;ve emailed you a confirmation.</p>
                 <a href={`/refer/${encodeURIComponent(code)}`} className="inline-block text-sm text-accent hover:underline">
                   Refer another client
@@ -98,6 +103,13 @@ export default async function ReferPage({
                 </div>
 
                 {error && ERRORS[error] && <p className="flag text-sm">{ERRORS[error]}</p>}
+
+                {settings?.location && (
+                  <div className="space-y-1 text-sm">
+                    <p className="section-label">Location</p>
+                    <p className="text-text">{settings.location}</p>
+                  </div>
+                )}
 
                 <fieldset className="space-y-3">
                   <legend className="section-label mb-2">Client</legend>

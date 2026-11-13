@@ -21,6 +21,8 @@ export type ReferralSettings = {
   tz: string;
   services: string[];
   caps: Caps;
+  /** Where referred clients go. Falls back to the organization's address. */
+  location: string;
 };
 
 /** An organization's referral settings, with the defaults (Mon–Fri 10–1, 30-minute slots) filled in. */
@@ -35,9 +37,12 @@ export async function loadReferralSettings(orgId: string): Promise<ReferralSetti
     referral_max_day: number | null;
     referral_max_week: number | null;
     referral_max_month: number | null;
+    referral_location: string | null;
+    address: string | null;
   }>(
     `select o.referral_appointments, o.referral_hours, o.referral_slot_minutes, o.referral_timezone, u.timezone as creator_tz,
-            o.referral_services, o.referral_max_day, o.referral_max_week, o.referral_max_month
+            o.referral_services, o.referral_max_day, o.referral_max_week, o.referral_max_month,
+            o.referral_location, o.address
        from organizations o left join users u on u.id = o.created_by
       where o.id = $1`,
     [orgId],
@@ -50,6 +55,7 @@ export async function loadReferralSettings(orgId: string): Promise<ReferralSetti
     tz,
     services: r?.referral_services ?? [],
     caps: { day: r?.referral_max_day ?? null, week: r?.referral_max_week ?? null, month: r?.referral_max_month ?? null },
+    location: (r?.referral_location || r?.address || "").trim(),
   };
 }
 

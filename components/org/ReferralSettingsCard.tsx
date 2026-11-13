@@ -96,6 +96,12 @@ export function ReferralSettingsCard({ settings }: { settings: ReferralSettings 
       </fieldset>
 
       <label className="block space-y-1 text-sm">
+        <span className="eyebrow text-text-faint">Location</span>
+        <textarea name="location" rows={2} maxLength={300} defaultValue={settings.location} placeholder="Where referred clients should go, e.g. 123 Main St, Suite 4" className="input" />
+        <span className="block text-xs text-text-muted">Shown to partners on the referral form and in their confirmation. They can&apos;t change it.</span>
+      </label>
+
+      <label className="block space-y-1 text-sm">
         <span className="eyebrow text-text-faint">Services you offer</span>
         <textarea
           name="services"

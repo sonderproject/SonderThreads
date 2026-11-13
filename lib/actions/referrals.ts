@@ -110,9 +110,9 @@ export async function submitReferral(formData: FormData): Promise<void> {
   try {
     ref = await queryOne<{ id: string }>(
       `insert into referrals (org_id, first_name, last_name, phone, dob, referrer_name, referrer_department, ip_hash,
-                              referrer_email, services, notes, appointment_at, waitlisted)
+                              referrer_email, services, notes, appointment_at, waitlisted, location)
        values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) returning id`,
-      [org!.id, first, last, phone, dob, referrer, dept, ipHash, referrerEmail, services, notes, appointment, waitlisted],
+      [org!.id, first, last, phone, dob, referrer, dept, ipHash, referrerEmail, services, notes, appointment, waitlisted, settings.location || null],
     );
   } catch (err) {
     // Someone booked the same time a moment earlier (one client per slot).
@@ -134,7 +134,7 @@ export async function submitReferral(formData: FormData): Promise<void> {
         [
           a.user_id,
           `Referral appointment: ${first} ${last}`,
-          [`Referred by ${referrer} (${dept}).`, services.length ? `Services: ${services.join(", ")}.` : "", notes ? `Notes: ${notes}` : ""]
+          [`Referred by ${referrer} (${dept}).`, settings.location ? `Location: ${settings.location}.` : "", services.length ? `Services: ${services.join(", ")}.` : "", notes ? `Notes: ${notes}` : ""]
             .filter(Boolean)
             .join("\n"),
           appointment,
@@ -167,7 +167,7 @@ export async function submitReferral(formData: FormData): Promise<void> {
   );
   const mayEmail = (sentToday?.n ?? 0) <= 5;
   if (!mayEmail) await logEvent("referral.email_capped", `Confirmation not sent: ${referrerEmail} got 5 today`, { level: "warn", email: referrerEmail });
-  if (mayEmail) await sendReferralConfirmation(referrerEmail, org!.name, `${first} ${last.charAt(0)}.`, when, waitlisted).catch(async (err) => {
+  if (mayEmail) await sendReferralConfirmation(referrerEmail, org!.name, `${first} ${last.charAt(0)}.`, when, waitlisted, settings.location).catch(async (err) => {
     console.error("[referrals] confirmation email failed", err);
     await logEvent("email.failed", `Referral confirmation to ${referrerEmail} failed: ${err instanceof Error ? err.message : err}`, {
       level: "warn",
@@ -179,7 +179,14 @@ export async function submitReferral(formData: FormData): Promise<void> {
 }
 
 /** Lets the person who referred know it arrived, and when the appointment is. */
-async function sendReferralConfirmation(to: string, orgName: string, client: string, when: string | null, waitlisted: boolean) {
+async function sendReferralConfirmation(
+  to: string,
+  orgName: string,
+  client: string,
+  when: string | null,
+  waitlisted: boolean,
+  location: string,
+) {
   const line = when
     ? `${client} has an appointment with ${orgName} on ${when}.`
     : waitlisted
@@ -188,10 +195,12 @@ async function sendReferralConfirmation(to: string, orgName: string, client: str
   await sendEmail({
     to,
     subject: when ? `Referral received: ${client}, ${when}` : `Referral received: ${client}`,
-    text: `Thank you for your referral.\n\n${line}\n\nSent with Strynd (${appUrl()}).`,
+    text: `Thank you for your referral.\n\n${line}${location ? `\nLocation: ${location}` : ""}\n\nSent with Strynd (${appUrl()}).`,
     html: `<div style="font-family:Inter,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:#141412">
       <p style="margin:0 0 12px">Thank you for your referral.</p>
-      <p style="margin:0 0 12px"><strong>${escapeHtml(line)}</strong></p>
+      <p style="margin:0 0 12px"><strong>${escapeHtml(line)}</strong></p>${
+        location ? `<p style="margin:0 0 12px">Location: ${escapeHtml(location)}</p>` : ""
+      }
       <p style="margin:16px 0 0;color:#6e5f4d;font-size:13px">Sent with Strynd.</p></div>`,
   });
 }
@@ -236,12 +245,13 @@ export async function saveReferralSettings(formData: FormData): Promise<void> {
         .filter(Boolean),
     ),
   ).slice(0, MAX_SERVICES);
+  const location = cleanText(formData.get("location"), 300).replace(/\s+/g, " ").trim() || null;
   await query(
     `update organizations set referral_appointments = $1, referral_hours = $2, referral_slot_minutes = $3,
             referral_max_day = $4, referral_max_week = $5, referral_max_month = $6, referral_services = $7,
-            referral_timezone = $8
+            referral_timezone = $8, referral_location = $10
       where id = $9`,
-    [appointments, JSON.stringify(hours), slot, cap("max_day"), cap("max_week"), cap("max_month"), services, tz, orgId],
+    [appointments, JSON.stringify(hours), slot, cap("max_day"), cap("max_week"), cap("max_month"), services, tz, orgId, location],
   );
   revalidatePath("/organization");
   redirect("/organization?saved=referral-settings#referral-settings");
