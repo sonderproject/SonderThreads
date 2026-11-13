@@ -1,0 +1,247 @@
+<!doctype html><html><head><meta charset="utf-8">
+<style>
+@font-face{font-family:Outfit;font-weight:100 900;src:url(fonts/QGYvz_MVcBeNP4NJtEtq.woff2) format("woff2")}
+@font-face{font-family:Outfit;font-weight:100 900;src:url(fonts/QGYvz_MVcBeNP4NJuktqQ4E.woff2) format("woff2");unicode-range:U+0100-02BA,U+1E00-1EFF}
+:root{--bg:#F6F4EF;--fg:#141412;--muted:#6E5F4D;--accent:#1C77B5;--line:#E2DBD0;--soft:#EEF6FC}
+*{box-sizing:border-box;margin:0}
+html,body{width:1080px;height:1350px;overflow:hidden;background:var(--bg);font-family:Inter,sans-serif;color:var(--fg)}
+.scene{position:absolute;inset:0;opacity:0}
+.eyebrow{position:absolute;left:90px;top:66px;font:600 24px Inter,sans-serif;letter-spacing:.24em;text-transform:uppercase;color:var(--muted)}
+.cap{position:absolute;left:90px;right:90px;top:112px;font:300 68px/1.05 Outfit,sans-serif;letter-spacing:-.02em}
+.cap b{font-weight:500;color:var(--accent)}
+.card{position:absolute;border-radius:40px;overflow:hidden;box-shadow:0 40px 90px rgba(60,45,20,.18),0 0 0 1px var(--line);background:var(--bg)}
+.card img{display:block;width:100%}
+.ripple{position:absolute;border-radius:50%;border:6px solid var(--accent);opacity:0}
+.note{position:absolute;width:300px;height:280px;padding:34px 30px;background:#F7E59A;box-shadow:0 18px 40px rgba(0,0,0,.12);font:400 40px/1.25 "Comic Sans MS","Marker Felt",Outfit,sans-serif;color:#4a3d10}
+.hook{position:absolute;left:90px;right:90px;top:860px;font:300 96px/1.02 Outfit,sans-serif;letter-spacing:-.025em}
+.cmd{position:absolute;left:90px;right:90px;top:420px;display:flex;align-items:center;gap:22px;background:#fff;border-radius:999px;padding:34px 40px;box-shadow:0 30px 70px rgba(60,45,20,.14),0 0 0 1px var(--line);font:400 42px Inter,sans-serif}
+.cmd .slash{color:var(--accent);font-weight:600}
+.cmd .caret{display:inline-block;width:4px;height:50px;background:var(--accent);vertical-align:-8px;margin-left:4px}
+.mic{margin-left:auto;width:76px;height:76px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;flex:none}
+.mic svg{width:36px;height:36px}
+.wave{position:absolute;border-radius:50%;border:4px solid var(--accent);opacity:0}
+.result{position:absolute;left:90px;right:90px;display:flex;align-items:center;gap:30px;background:#fff;border-radius:40px;padding:32px 40px;box-shadow:0 30px 70px rgba(60,45,20,.12),0 0 0 1px var(--line)}
+.result .tick{flex:none;width:80px;height:80px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font:600 44px Inter,sans-serif}
+.result b{display:block;font:600 38px Inter,sans-serif}
+.result span{display:block;font:400 32px Inter,sans-serif;color:var(--muted);margin-top:6px}
+.chips{position:absolute;left:90px;right:90px;display:flex;flex-wrap:wrap;gap:16px;justify-content:center}
+.chip{background:#fff;border:1px solid var(--line);border-radius:999px;padding:16px 30px;font:500 32px Inter,sans-serif}
+.chip.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.toast{position:absolute;left:150px;right:150px;top:1010px;display:flex;gap:24px;align-items:center;background:rgba(255,255,255,.96);border-radius:34px;padding:26px 30px;box-shadow:0 30px 70px rgba(30,20,0,.22)}
+.toast img{width:70px;height:70px;border-radius:18px;background:var(--soft);padding:10px}
+.toast b{display:block;font:600 30px Inter,sans-serif}
+.toast span{display:block;font:400 30px/1.3 Inter,sans-serif;color:var(--fg)}
+.toast small{position:absolute;right:30px;top:24px;font:400 24px Inter,sans-serif;color:var(--muted)}
+.logos{position:absolute;left:90px;right:90px;top:1170px;display:flex;justify-content:center;gap:16px}
+.page{position:absolute;width:470px;border-radius:10px;overflow:hidden;box-shadow:0 30px 70px rgba(30,20,0,.25);background:#fff}
+.page img{display:block;width:100%}
+.trust{position:absolute;left:120px;right:120px;top:360px;display:flex;flex-direction:column;gap:26px}
+.trust div{display:flex;align-items:center;gap:26px;font:400 46px Outfit,sans-serif}
+.trust i{flex:none;width:64px;height:64px;border-radius:50%;background:var(--accent);color:#fff;font:600 34px Inter,sans-serif;font-style:normal;display:flex;align-items:center;justify-content:center}
+#corner{position:absolute;right:56px;top:52px;display:flex;align-items:center;gap:12px;z-index:50;font:400 34px Outfit,sans-serif}
+#corner img{width:52px}
+#end{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+#end img{width:230px}
+#end h1{font:300 150px/1 Outfit,sans-serif;letter-spacing:-.03em;margin-top:30px}
+#end p{font:300 58px/1.2 Outfit,sans-serif;color:var(--muted);margin-top:26px}
+#end .pill{margin-top:50px;background:var(--accent);color:#fff;font:500 52px Outfit,sans-serif;padding:34px 64px;border-radius:999px}
+#end small{display:block;margin-top:28px;font:500 30px Inter,sans-serif;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+</style></head><body>
+<div id="corner"><img src="strynd-mark-blue.png">Strynd</div>
+
+<div class="scene" id="hook">
+  <div class="note" id="n1" style="left:90px;top:150px">Call Ana<br>re: intake??</div>
+  <div class="note" id="n2" style="left:430px;top:90px;background:#F4C9A8">Marcus came in Tue, OSHA?</div>
+  <div class="note" id="n3" style="left:690px;top:310px;background:#BFE3D0">Funder report due FRIDAY</div>
+  <div class="note" id="n4" style="left:220px;top:480px;background:#CFE0F5">Who saw Rosa last?</div>
+  <div class="hook" id="hookText"><span id="h1">Funder report</span><br><span id="h2">due Friday?</span></div>
+</div>
+
+<div class="scene" id="kiosk">
+  <div class="eyebrow">Front-desk kiosk</div>
+  <div class="cap">Clients check themselves in<br><b>at the front desk.</b></div>
+  <div class="card" id="kioskCard" style="left:200px;width:680px;top:330px"><img src="d-kiosk.png"></div>
+  <div class="ripple" id="kioskRip"></div>
+</div>
+
+<div class="scene" id="checkin">
+  <div class="eyebrow">Check-ins</div>
+  <div class="cap">Staff log a visit<br><b>in one tap.</b></div>
+  <div class="card" id="ciCard" style="left:160px;width:760px;top:320px"><img src="05-checkin-light.png"></div>
+  <div class="ripple" id="ciRip"></div>
+</div>
+
+<div class="scene" id="cmd">
+  <div class="eyebrow">Type it or say it</div>
+  <div class="cap">Type it, or just say it.<br><b>Strynd files it.</b></div>
+  <div class="cmd" id="cmdBox"><span class="slash">/</span><span id="typed"></span><span class="caret" id="caret"></span>
+    <span class="mic" id="mic"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></span></div>
+  <div class="wave" id="wave1"></div><div class="wave" id="wave2"></div>
+  <div class="result" id="res1" style="top:620px"><div class="tick">✓</div><div><b>Note added to Marcus Cole</b><span>“Starts at Costco Monday”</span></div></div>
+  <div class="result" id="res2" style="top:830px"><div class="tick">✓</div><div><b>Reminder set</b><span>Call Rosa · Friday 3:00 PM</span></div></div>
+</div>
+
+<div class="scene" id="profile">
+  <div class="eyebrow">Client profiles</div>
+  <div class="cap">Every client's story,<br><b>in one place.</b></div>
+  <div class="card" id="tlCard" style="left:70px;width:940px;top:380px"><img src="d-timeline.png"></div>
+  <div class="chips" id="tlChips" style="top:900px"><span class="chip">Notes</span><span class="chip">Visits</span><span class="chip">Services</span><span class="chip">Birthdays</span><span class="chip">Lists</span></div>
+</div>
+
+<div class="scene" id="people">
+  <div class="eyebrow">Clients</div>
+  <div class="cap">See who needs<br><b>a follow-up.</b></div>
+  <div class="card" id="pCard" style="left:70px;width:940px;top:380px"><img src="d-people.png"></div>
+  <div class="chips" id="pChips" style="top:960px"><span class="chip">Search</span><span class="chip">Import a spreadsheet</span><span class="chip">Export anytime</span></div>
+</div>
+
+<div class="scene" id="tasks">
+  <div class="eyebrow">Tasks &amp; reminders</div>
+  <div class="cap">Nothing slips<br><b>through the cracks.</b></div>
+  <div class="card" id="tCard" style="left:110px;width:860px;top:330px"><img src="d-tasks.png"></div>
+  <div class="toast" id="toast"><img src="strynd-mark-blue.png"><div><b>Strynd</b><span>Reminder: Call Marcus about Thursday’s interview</span></div><small>now</small></div>
+</div>
+
+<div class="scene" id="cal">
+  <div class="eyebrow">Calendar</div>
+  <div class="cap">Your whole month,<br><b>synced.</b></div>
+  <div class="card" id="calCard" style="left:70px;width:940px;top:330px"><img src="d-calendar.png" id="calImg" style="transform-origin:50% 25%"></div>
+  <div class="logos" id="calChips"><span class="chip">Google</span><span class="chip">Apple</span><span class="chip">Outlook</span><span class="chip">Calendly</span></div>
+</div>
+
+<div class="scene" id="team">
+  <div class="eyebrow">Team view</div>
+  <div class="cap" id="teamCap1">Your team's whole day,<br><b>at a glance.</b></div>
+  <div class="cap" id="teamCap2" style="opacity:0">Their personal tasks<br><b>stay private.</b></div>
+  <div class="card" id="c3" style="left:70px;width:940px;top:320px;height:855px"><img src="05-team-light.png" id="i3" style="transform-origin:18% 18%"></div>
+</div>
+
+<div class="scene" id="ref">
+  <div class="eyebrow">Referrals</div>
+  <div class="cap">Partners refer clients<br><b>straight to you.</b></div>
+  <div class="card" id="c4" style="left:200px;width:680px;top:320px"><img src="05-referral-light.png"></div>
+</div>
+
+<div class="scene" id="impact">
+  <div class="eyebrow">Impact</div>
+  <div class="cap">Your impact,<br><b>live.</b></div>
+  <div class="card" id="impCard" style="left:70px;width:940px;top:330px"><img src="d-impact.png"></div>
+</div>
+
+<div class="scene" id="pdf">
+  <div class="eyebrow">Reports</div>
+  <div class="cap">Funder-ready reports.<br><b>One click.</b></div>
+  <div class="page" id="p5"><img src="pdf-5.png"></div>
+  <div class="page" id="p4"><img src="pdf-4.png"></div>
+  <div class="page" id="p3"><img src="pdf-3.png"></div>
+  <div class="page" id="p2"><img src="pdf-2.png"></div>
+  <div class="page" id="p1"><img src="pdf-1.png"></div>
+  <div class="chips" id="pdfChips" style="top:1170px"><span class="chip on">PDF</span><span class="chip">Excel</span><span class="chip">CSV</span><span class="chip">Your logo</span></div>
+</div>
+
+<div class="scene" id="trust">
+  <div class="eyebrow">Private by design</div>
+  <div class="cap">Built for<br><b>sensitive work.</b></div>
+  <div class="trust" style="top:430px">
+    <div id="tr1"><i>✓</i>Two-step sign-in &amp; auto sign-out</div>
+    <div id="tr2"><i>✓</i>Database-level access rules</div>
+    <div id="tr3"><i>✓</i>Your data is never sold</div>
+    <div id="tr4"><i>✓</i>Export everything, anytime</div>
+    <div id="tr5"><i>✓</i>Works on any phone or computer</div>
+  </div>
+</div>
+
+<div class="scene" id="end">
+  <img src="strynd-mark-blue.png" id="logo">
+  <h1 id="name">Strynd</h1>
+  <p id="tag">Know every person you serve.</p>
+  <div class="pill" id="pill">Start a 14-day free team trial</div>
+  <small id="small">strynd.com · Nonprofits · Agencies · Programs</small>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const clamp = (x) => Math.max(0, Math.min(1, x));
+const ease = (x) => 1 - Math.pow(1 - clamp(x), 3);
+const io = (t, a, b) => ease((t - a) / (b - a));
+// Scene order and lengths (seconds); each fades over 0.35s into the next.
+const ORDER = [["hook", 3.2], ["kiosk", 3.2], ["checkin", 3.0], ["cmd", 4.6], ["profile", 3.2], ["people", 3.0], ["tasks", 3.6], ["cal", 3.4], ["team", 4.2], ["ref", 3.0], ["impact", 3.4], ["pdf", 4.0], ["trust", 3.8], ["end", 3.8]];
+const START = {}; let acc = 0;
+for (const [k, d] of ORDER) { START[k] = acc; acc += d; }
+window.DURATION = acc;
+const vis = (t, k) => {
+  const a = START[k], d = ORDER.find((o) => o[0] === k)[1], b = a + d;
+  const fadeIn = k === "hook" ? 1 : io(t, a - 0.15, a + 0.25);
+  const fadeOut = k === "end" ? 1 : 1 - io(t, b - 0.2, b + 0.2);
+  return Math.min(fadeIn, fadeOut);
+};
+const rise = (lt, d = 0.7) => `translateY(${(1 - io(lt, 0, d)) * 110}px)`;
+function ripple(el, cx, cy, lt, at) {
+  const r = io(lt, at, at + 0.9);
+  Object.assign(el.style, { left: cx - 30 - r * 70 + "px", top: cy - 30 - r * 70 + "px", width: 60 + r * 140 + "px", height: 60 + r * 140 + "px", opacity: lt > at && lt < at + 1 ? 1 - r : 0 });
+}
+window.render = (t) => {
+  for (const [k] of ORDER) $(k).style.opacity = vis(t, k);
+  const L = (k) => t - START[k];
+  $("corner").style.opacity = 1 - io(t, START.end - 0.3, START.end + 0.2);
+  // hook
+  ["n1", "n2", "n3", "n4"].forEach((id, i) => {
+    const pin = io(t, 0.05 + i * 0.15, 0.4 + i * 0.15), out = io(t, 2.5, 3.2), rot = [-6, 4, -3, 7][i];
+    $(id).style.transform = `translateY(${(1 - pin) * 60 - out * (900 + i * 120)}px) rotate(${rot + out * (i % 2 ? 25 : -25)}deg) scale(${(0.8 + 0.2 * pin) * (id === "n3" ? 1 + 0.12 * io(t, 0.8, 1.4) : 1)})`;
+    $(id).style.opacity = pin * (1 - out);
+  });
+  $("h1").style.opacity = io(t, 0.3, 0.7); $("h2").style.opacity = io(t, 0.6, 1.0);
+  $("hookText").style.transform = `translateY(${(1 - io(t, 0.3, 1.0)) * 40}px)`;
+  // kiosk: tap "Resume help", then "Check in"
+  { const lt = L("kiosk"); $("kioskCard").style.transform = rise(lt); const s = 680 / 1800;
+    ripple($("kioskRip"), 200 + 900 * s, 330 + 1513 * s, lt, 1.5); }
+  // staff check-in
+  { const lt = L("checkin"); $("ciCard").style.transform = rise(lt); ripple($("ciRip"), 160 + 634, 320 + 431, lt, 1.4); }
+  // command: type a note, then speak a reminder
+  { const lt = L("cmd"); $("cmdBox").style.transform = rise(lt);
+    const typedText = "Marcus – starts at Costco Monday";
+    const spoken = "Remind me to call Rosa Friday at 3";
+    let shown = typedText.slice(0, Math.floor(clamp((lt - 0.4) / 1.2) * typedText.length));
+    if (lt > 2.3) shown = spoken.slice(0, Math.floor(clamp((lt - 2.4) / 1.1) * spoken.length));
+    $("typed").textContent = shown;
+    $("caret").style.opacity = Math.floor(t * 2.5) % 2 ? 1 : 0;
+    $("res1").style.opacity = io(lt, 1.7, 2.0) * (1 - io(lt, 4.2, 4.5)); $("res1").style.transform = `translateY(${(1 - io(lt, 1.7, 2.0)) * 30}px)`;
+    $("res2").style.opacity = io(lt, 3.6, 3.9); $("res2").style.transform = `translateY(${(1 - io(lt, 3.6, 3.9)) * 30}px)`;
+    const listening = lt > 2.2 && lt < 3.6;
+    $("mic").style.transform = `scale(${listening ? 1 + 0.08 * Math.sin(lt * 14) : 1})`;
+    [["wave1", 0], ["wave2", 0.45]].forEach(([id, off]) => {
+      const ph = ((lt - 2.2 - off) % 0.9 + 0.9) % 0.9 / 0.9;
+      Object.assign($(id).style, { left: 1080 - 90 - 40 - 38 - ph * 50 + "px", top: 420 + 34 + 38 - 38 - ph * 50 - 4 + "px", width: 76 + ph * 100 + "px", height: 76 + ph * 100 + "px", opacity: listening ? 1 - ph : 0 });
+    }); }
+  // profile timeline
+  { const lt = L("profile"); $("tlCard").style.transform = rise(lt); $("tlChips").style.opacity = io(lt, 1.0, 1.4); }
+  // people
+  { const lt = L("people"); $("pCard").style.transform = rise(lt); $("pChips").style.opacity = io(lt, 1.0, 1.4); }
+  // tasks + reminder toast
+  { const lt = L("tasks"); $("tCard").style.transform = rise(lt);
+    $("toast").style.transform = `translateY(${(1 - io(lt, 1.4, 1.9)) * -500}px)`; $("toast").style.opacity = io(lt, 1.4, 1.7); }
+  // calendar
+  { const lt = L("cal"); $("calCard").style.transform = rise(lt); $("calImg").style.transform = `scale(${1 + 0.08 * io(lt, 0.8, 3.4)})`; $("calChips").style.opacity = io(lt, 1.0, 1.4); }
+  // team + privacy
+  { const lt = L("team"); $("c3").style.transform = rise(lt); $("i3").style.transform = `scale(${1 + 0.18 * io(lt, 0.6, 4.0)})`;
+    $("teamCap1").style.opacity = 1 - io(lt, 2.0, 2.3); $("teamCap2").style.opacity = io(lt, 2.2, 2.5); }
+  // referrals
+  { const lt = L("ref"); $("c4").style.transform = `translateY(${(1 - io(lt, 0, 0.7)) * 150 - io(lt, 0.7, 3.0) * 60}px)`; }
+  // impact dashboard
+  { const lt = L("impact"); $("impCard").style.transform = rise(lt) + ` scale(${1 + 0.04 * io(lt, 0.8, 3.4)})`; }
+  // pdf fan
+  { const lt = L("pdf"); const fan = io(lt, 1.0, 2.2);
+    [["p1", 0, 0], ["p2", 1, -1], ["p3", 2, 1], ["p4", 3, -2], ["p5", 4, 2]].forEach(([id, i, slot]) => {
+      const enter = io(lt, 0.1 + i * 0.1, 0.8 + i * 0.1);
+      const x = 305 + slot * 92 * fan, rot = slot * 6 * fan, y = 340 + Math.abs(slot) * 36 * fan + (1 - enter) * 300;
+      Object.assign($(id).style, { left: x + "px", top: y + "px", transform: `rotate(${rot}deg) scale(${(i === 0 ? 1 : 0.92) * (0.9 + 0.1 * enter)})`, opacity: enter, zIndex: 10 - Math.abs(slot) * 2 });
+    });
+    $("pdfChips").style.opacity = io(lt, 2.0, 2.5); }
+  // trust
+  { const lt = L("trust"); ["tr1", "tr2", "tr3", "tr4", "tr5"].forEach((id, i) => { const p = io(lt, 0.3 + i * 0.35, 0.8 + i * 0.35); $(id).style.opacity = p; $(id).style.transform = `translateX(${(1 - p) * -40}px)`; }); }
+  // end
+  { const lt = L("end"); $("logo").style.transform = `scale(${0.7 + 0.3 * io(lt, 0, 0.7)})`;
+    ["name", "tag", "pill", "small"].forEach((id, i) => { const p = io(lt, 0.3 + i * 0.25, 0.9 + i * 0.25); $(id).style.opacity = p; $(id).style.transform = `translateY(${(1 - p) * 30}px)`; }); }
+};
+render(0);
+</script></body></html>
