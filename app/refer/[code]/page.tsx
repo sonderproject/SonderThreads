@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ReferralServicePicker } from "@/components/referrals/ReferralServicePicker";
 import { queryOne } from "@/lib/db/client";
 import { submitReferral } from "@/lib/actions/referrals";
 import { loadReferralSettings, openSlots } from "@/lib/referral-settings";
@@ -133,19 +134,7 @@ export default async function ReferPage({
                   </label>
                 </fieldset>
 
-                {settings && settings.services.length > 0 && (
-                  <fieldset className="space-y-2">
-                    <legend className="section-label mb-2">Services the client is looking for</legend>
-                    <div className="grid gap-2 sm:grid-cols-2">
-                      {settings.services.map((svc) => (
-                        <label key={svc} className="flex items-center gap-2 rounded-xl border border-border-subtle p-2.5 text-sm">
-                          <input type="checkbox" name="services" value={svc} className="h-4 w-4 accent-[var(--accent)]" />
-                          {svc}
-                        </label>
-                      ))}
-                    </div>
-                  </fieldset>
-                )}
+                {settings && <ReferralServicePicker services={settings.services} />}
 
                 <label className="block space-y-1 text-sm">
                   <span className="section-label">Notes</span>

@@ -12,7 +12,7 @@ import { notify } from "@/lib/notify";
 import { logActivity } from "./activity";
 import { appUrl, escapeHtml, sendEmail } from "@/lib/email";
 import { logEvent } from "@/lib/events";
-import { MAX_SERVICES, loadReferralSettings, openSlots } from "@/lib/referral-settings";
+import { loadReferralSettings, openSlots } from "@/lib/referral-settings";
 import { SLOT_CHOICES, cleanHours, formatSlot, minutesOf, type WeeklyHours } from "@/lib/referral-slots";
 import { isValidTimeZone } from "@/lib/tz";
 
@@ -72,12 +72,11 @@ export async function submitReferral(formData: FormData): Promise<void> {
   if (!EMAIL_RE.test(referrerEmail)) back("error=email");
 
   const settings = await loadReferralSettings(org!.id);
-  const offered = new Set(settings.services);
-  const services = formData
-    .getAll("services")
-    .map((v) => clean(v, 80))
-    .filter((v) => offered.has(v))
-    .slice(0, MAX_SERVICES);
+  // One service: from the organization's list, or typed in under "Other".
+  const picked = clean(formData.get("service"), 80);
+  const typed = cleanText(formData.get("service_other"), 80).replace(/\s+/g, " ").trim();
+  const service = picked === "__other__" ? typed : settings.services.includes(picked) ? picked : "";
+  const services = service ? [service] : [];
 
   // Appointment: re-checked here against hours, bookings and limits. If every
   // time is full, the referral still goes through and waits for the next opening.
@@ -237,21 +236,13 @@ export async function saveReferralSettings(formData: FormData): Promise<void> {
   };
   const tz = clean(formData.get("timezone"), 64);
   if (!isValidTimeZone(tz)) fail("timezone");
-  const services = Array.from(
-    new Set(
-      cleanText(formData.get("services"), 4000)
-        .split("\n")
-        .map((x) => x.replace(/\s+/g, " ").trim().slice(0, 80))
-        .filter(Boolean),
-    ),
-  ).slice(0, MAX_SERVICES);
   const location = cleanText(formData.get("location"), 300).replace(/\s+/g, " ").trim() || null;
   await query(
     `update organizations set referral_appointments = $1, referral_hours = $2, referral_slot_minutes = $3,
-            referral_max_day = $4, referral_max_week = $5, referral_max_month = $6, referral_services = $7,
-            referral_timezone = $8, referral_location = $10
-      where id = $9`,
-    [appointments, JSON.stringify(hours), slot, cap("max_day"), cap("max_week"), cap("max_month"), services, tz, orgId, location],
+            referral_max_day = $4, referral_max_week = $5, referral_max_month = $6,
+            referral_timezone = $7, referral_location = $9
+      where id = $8`,
+    [appointments, JSON.stringify(hours), slot, cap("max_day"), cap("max_week"), cap("max_month"), tz, orgId, location],
   );
   revalidatePath("/organization");
   redirect("/organization?saved=referral-settings#referral-settings");

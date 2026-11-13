@@ -101,17 +101,16 @@ export function ReferralSettingsCard({ settings }: { settings: ReferralSettings 
         <span className="block text-xs text-text-muted">Shown to partners on the referral form and in their confirmation. They can&apos;t change it.</span>
       </label>
 
-      <label className="block space-y-1 text-sm">
-        <span className="eyebrow text-text-faint">Services you offer</span>
-        <textarea
-          name="services"
-          rows={4}
-          defaultValue={settings.services.join("\n")}
-          placeholder={"One per line, e.g.\nJob search\nHousing\nTraining"}
-          className="input"
-        />
-        <span className="block text-xs text-text-muted">Partners tick which ones the client needs.</span>
-      </label>
+      <div className="space-y-1 text-sm">
+        <span className="eyebrow block text-text-faint">Services</span>
+        <p className="text-xs text-text-muted">
+          Partners pick from your{" "}
+          <a href="/settings/services" className="text-accent hover:underline">
+            Settings → Services
+          </a>{" "}
+          list, or type something else.
+        </p>
+      </div>
 
       <button type="submit" className="rounded-full bg-accent px-4 py-2 text-sm font-semibold text-bg hover:bg-accent-dim">
         Save referral settings

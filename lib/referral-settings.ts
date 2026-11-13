@@ -48,12 +48,17 @@ export async function loadReferralSettings(orgId: string): Promise<ReferralSetti
     [orgId],
   );
   const tz = [r?.referral_timezone, r?.creator_tz].find((z) => isValidTimeZone(z)) ?? FALLBACK_TZ;
+  // The organization's Settings → Services list (one list for check-ins and referrals).
+  const serviceRows = await query<{ name: string }>(
+    `select name from services where org_id = $1 and archived_at is null order by position, lower(name) limit 100`,
+    [orgId],
+  );
   return {
     appointments: r?.referral_appointments ?? true,
     hours: r?.referral_hours == null ? DEFAULT_HOURS : cleanHours(r.referral_hours),
     slotMinutes: r?.referral_slot_minutes ?? DEFAULT_SLOT_MINUTES,
     tz,
-    services: r?.referral_services ?? [],
+    services: serviceRows.map((s) => s.name),
     caps: { day: r?.referral_max_day ?? null, week: r?.referral_max_week ?? null, month: r?.referral_max_month ?? null },
     location: (r?.referral_location || r?.address || "").trim(),
   };
