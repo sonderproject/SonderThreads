@@ -34,7 +34,9 @@ export async function logActivity(params: LogActivityParams): Promise<void> {
 export async function getPersonTimeline(personId: string): Promise<Activity[]> {
   const userId = await requireUserId();
   return query<Activity>(
-    `select * from activity where ${mineOrOrg("$1")} and person_id = $2 order by created_at desc`,
+    // Task history is private: only the member who owns the task sees those entries.
+    `select * from activity where ${mineOrOrg("$1")} and person_id = $2 and (type not like 'task%' or user_id = $1)
+      order by created_at desc`,
     [userId, personId],
   );
 }

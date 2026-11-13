@@ -26,7 +26,6 @@ type Person = {
   owner_email: string;
 };
 type Note = { id: string; content: string; created_at: string };
-type Task = { id: string; title: string; due_at: string | null; completed: boolean; completed_at: string | null };
 type CheckIn = { id: string; checked_in_at: string; reason: string | null };
 type Activity = { id: string; description: string; created_at: string };
 
@@ -67,15 +66,14 @@ export default async function TeamClientPage({
       [id, viewer.orgId],
     );
     if (!person) return null;
-    const [notes, tasks, checkIns, activity, staff, comments] = await Promise.all([
+    const [notes, checkIns, activity, staff, comments] = await Promise.all([
       q<Note>(`select id, content, created_at from notes where person_id = $1 and deleted_at is null order by created_at desc`, [id]),
-      q<Task>(
-        `select id, title, due_at, completed, completed_at from tasks where person_id = $1 and deleted_at is null
-          order by completed, due_at nulls last, created_at desc`,
+      q<CheckIn>(`select id, checked_in_at, reason from check_ins where person_id = $1 and deleted_at is null order by checked_in_at desc`, [id]),
+      // Task history stays private to the member who owns the task.
+      q<Activity>(
+        `select id, description, created_at from activity where person_id = $1 and type not like 'task%' order by created_at desc limit 30`,
         [id],
       ),
-      q<CheckIn>(`select id, checked_in_at, reason from check_ins where person_id = $1 and deleted_at is null order by checked_in_at desc`, [id]),
-      q<Activity>(`select id, description, created_at from activity where person_id = $1 order by created_at desc limit 30`, [id]),
       q<{ user_id: string; label: string }>(
         `select m.user_id, coalesce(u.name, u.email) as label from memberships m join users u on u.id = m.user_id
           where m.org_id = $1 and m.active order by 2`,
@@ -88,15 +86,12 @@ export default async function TeamClientPage({
         [id],
       ),
     ]);
-    return { person, notes, tasks, checkIns, activity, staff, comments };
+    return { person, notes, checkIns, activity, staff, comments };
   });
   if (!data) notFound();
   await logClientView(viewer.orgId, viewer.userId, id);
-  const { person, notes, tasks, checkIns, activity, staff, comments } = data;
+  const { person, notes, checkIns, activity, staff, comments } = data;
   const others = staff.filter((s) => s.user_id !== person.user_id);
-  const open = tasks.filter((t) => !t.completed);
-  const done = tasks.filter((t) => t.completed);
-  const now = Date.now();
 
   return (
     <div className="space-y-8">
@@ -133,7 +128,7 @@ export default async function TeamClientPage({
           <button type="submit" className="rounded-full border border-border px-3 py-1.5 text-sm font-medium text-text hover:bg-bg-hover">
             Reassign
           </button>
-          <p className="w-full text-xs text-text-muted">Their notes, tasks and check-ins move with them.</p>
+          <p className="w-full text-xs text-text-muted">Their notes, tasks and check-ins move with the client.</p>
         </form>
       )}
 
@@ -156,30 +151,6 @@ export default async function TeamClientPage({
           <Field label="Income level" value={person.income_level} />
           {person.summary && <p className="border-t border-border-subtle pt-2 text-sm text-text">{person.summary}</p>}
         </dl>
-      </section>
-
-      <section className="space-y-3">
-        <h2 className="section-label">Open tasks ({open.length})</h2>
-        {open.length === 0 ? (
-          <p className="text-sm text-text-muted">No open tasks.</p>
-        ) : (
-          <ul className="card divide-y divide-border-subtle">
-            {open.map((t) => {
-              const overdue = t.due_at && new Date(t.due_at).getTime() < now;
-              return (
-                <li key={t.id} className={`flex items-center justify-between gap-3 p-3 text-sm ${overdue ? "flag-urgent" : ""}`}>
-                  <span className="text-text">{t.title}</span>
-                  {t.due_at && (
-                    <span className={`shrink-0 text-xs ${overdue ? "text-urgent" : "text-text-muted"}`}>
-                      {overdue ? "Overdue · " : ""}
-                      {shortDate(t.due_at, tz)}
-                    </span>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
-        )}
       </section>
 
       <section className="space-y-3">
@@ -213,20 +184,6 @@ export default async function TeamClientPage({
           </ul>
         )}
       </section>
-
-      {done.length > 0 && (
-        <section className="space-y-3">
-          <h2 className="section-label">Completed tasks ({done.length})</h2>
-          <ul className="card divide-y divide-border-subtle">
-            {done.map((t) => (
-              <li key={t.id} className="flex items-center justify-between gap-3 p-3 text-sm">
-                <span className="text-text-muted line-through">{t.title}</span>
-                {t.completed_at && <span className="shrink-0 text-xs text-text-faint">{shortDate(t.completed_at, tz)}</span>}
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
 
       {activity.length > 0 && (
         <section className="space-y-3">

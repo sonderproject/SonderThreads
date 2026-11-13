@@ -674,8 +674,8 @@ begin
 
   drop policy if exists "owner" on tasks;
   create policy "owner" on tasks for all to authenticated using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()));
+  -- Tasks are private to the member who owns them (no organization-wide read).
   drop policy if exists "org read" on tasks;
-  create policy "org read" on tasks for select to authenticated using (app_private.app_org_viewer(org_id));
 
   drop policy if exists "owner" on check_ins;
   create policy "owner" on check_ins for all to authenticated using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()));
@@ -690,7 +690,7 @@ begin
   drop policy if exists "owner" on activity;
   create policy "owner" on activity for all to authenticated using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()));
   drop policy if exists "org read" on activity;
-  create policy "org read" on activity for select to authenticated using (app_private.app_org_viewer(org_id));
+  create policy "org read" on activity for select to authenticated using (app_private.app_org_viewer(org_id) and type not like 'task%');
 
   drop policy if exists "owner" on person_summaries;
   create policy "owner" on person_summaries for all to authenticated using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()));

@@ -80,7 +80,7 @@ type Run = <T>(text: string, params?: unknown[]) => Promise<T[]>;
 /** The column that scopes a query: the owner for "me", the organization for "org". */
 type Col = "user_id" | "org_id";
 
-async function kpisFor(run: Run, col: Col, scopeId: string, tz: string, from: string, to: string): Promise<Kpis> {
+async function kpisFor(run: Run, counts: Run, col: Col, scopeId: string, tz: string, from: string, to: string): Promise<Kpis> {
   const [row] = await run<Record<keyof Kpis, number>>(
     `select
        (select count(*) from check_ins c join people p on p.id = c.person_id
@@ -92,12 +92,16 @@ async function kpisFor(run: Run, col: Col, scopeId: string, tz: string, from: st
        (select count(*) from people where ${col} = $1
            and ${INTAKE_DATE} between $3::date and $4::date)::int as "newPeople",
        (select count(*) from notes where ${col} = $1 and deleted_at is null
-           and (created_at at time zone $2)::date between $3::date and $4::date)::int as "notes",
-       (select count(*) from tasks where ${col} = $1 and deleted_at is null and completed and completed_at is not null
-           and (completed_at at time zone $2)::date between $3::date and $4::date)::int as "tasksDone"`,
+           and (created_at at time zone $2)::date between $3::date and $4::date)::int as "notes"`,
     [scopeId, tz, from, to],
   );
-  return row;
+  // Tasks are private to each member: the organization's report counts them, never reads them.
+  const [tasks] = await counts<{ n: number }>(
+    `select count(*)::int as n from tasks where ${col} = $1 and deleted_at is null and completed and completed_at is not null
+        and (completed_at at time zone $2)::date between $3::date and $4::date`,
+    [scopeId, tz, from, to],
+  );
+  return { ...row, tasksDone: tasks?.n ?? 0 } as Kpis;
 }
 
 export async function computeMetrics(
@@ -107,12 +111,15 @@ export async function computeMetrics(
   to: string,
   org: { id: string; name: string } | null = null,
 ): Promise<Metrics> {
-  if (org) return asUser(userId, (q: UserQuery) => compute(q as Run, "org_id", org.id, tz, from, to, "org", org.name));
-  return compute(query as Run, "user_id", userId, tz, from, to, "me", null);
+  // Task totals for an organization come from a plain server query: members' tasks are private, so the
+  // database never shows them to admins; the report only ever gets counts. Callers check the viewer may see org reports.
+  if (org) return asUser(userId, (q: UserQuery) => compute(q as Run, query as Run, "org_id", org.id, tz, from, to, "org", org.name));
+  return compute(query as Run, query as Run, "user_id", userId, tz, from, to, "me", null);
 }
 
 async function compute(
   run: Run,
+  counts: Run,
   col: Col,
   scopeId: string,
   tz: string,
@@ -134,8 +141,8 @@ async function compute(
       `select to_char(min(c.checked_in_at at time zone $2), 'YYYY-MM-DD') as d from check_ins c where c.${col} = $1 and c.deleted_at is null`,
       [scopeId, tz],
     ),
-    kpisFor(run, col, scopeId, tz, from, to),
-    kpisFor(run, col, scopeId, tz, prevFrom, prevTo),
+    kpisFor(run, counts, col, scopeId, tz, from, to),
+    kpisFor(run, counts, col, scopeId, tz, prevFrom, prevTo),
     run<{ k: string; n: number }>(
       `select to_char(date_trunc($5, c.checked_in_at at time zone $2), 'YYYY-MM-DD') as k, count(*)::int as n
          from check_ins c join people p on p.id = c.person_id
@@ -213,7 +220,7 @@ async function compute(
         group by 1, 2`,
       range,
     ),
-    run<FollowThrough>(
+    counts<FollowThrough>(
       `select count(*)::int as due,
               count(*) filter (where completed and (completed_at at time zone $2)::date <= (due_at at time zone $2)::date)::int as "onTime",
               count(*) filter (where completed and (completed_at at time zone $2)::date > (due_at at time zone $2)::date)::int as late,

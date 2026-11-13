@@ -30,8 +30,9 @@ export async function regenerateSummaryFor(userId: string, personId: string): Pr
     [userId, personId],
     ),
     query<{ title: string; due_at: string | null }>(
+    // Only the user's own tasks on a personal client: organization summaries are shared, tasks are private.
     `select title, due_at from tasks
-     where ${mineOrOrg("$1")} and person_id = $2 and completed = false and deleted_at is null
+     where user_id = $1 and org_id is null and person_id = $2 and completed = false and deleted_at is null
      order by due_at asc nulls last
      limit 5`,
     [userId, personId],

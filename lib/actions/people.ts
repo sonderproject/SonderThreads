@@ -306,7 +306,7 @@ export async function getPeopleNeedingAttention(): Promise<Person[]> {
   return query<Person>(
     `select distinct c.* from people c
      left join tasks t on t.person_id = c.id
-       and ${mineOrOrg("$1", "t.")}
+       and t.user_id = $1
        and t.completed = false
        and t.due_at is not null
        and t.due_at < now()
