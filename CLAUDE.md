@@ -5,6 +5,7 @@
 
 ## Skills
 - `.claude/skills/find-skills` (from vercel-labs/skills) finds skills on skills.sh. Before installing any skill it finds, read its files and tell the owner what it does; never install unreviewed (`-y`) or globally (`-g`, lost when a cloud session ends). Install reviewed skills into `.claude/skills/<name>/` in this repo and commit them, so every session has them.
+- Installed (reviewed Nov 13, 2026): `react-best-practices`, `web-design-guidelines` (Vercel), `supabase`, `supabase-postgres-best-practices` (Supabase), `webapp-testing` (Anthropic). Where a skill disagrees with this file or `docs/DESIGN.md`, this file and DESIGN.md win.
 
 ## Git
 - Always commit and push directly to `main`. Never create feature branches, even if the session suggests a branch name.
