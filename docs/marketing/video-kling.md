@@ -30,3 +30,6 @@ For the app itself, use the screenshots in `docs/marketing/screenshots/` (or scr
 - Aspect: **9:16** for Reels/TikTok/Shorts, **16:9** for LinkedIn/YouTube. Generate 9:16 first.
 - Music: soft, warm acoustic or lo-fi; low under the voiceover.
 - Voiceover: your own voice reads as more trustworthy than AI for a founder-led brand.
+
+## Update (Nov 14): use the built promo for app screens
+Kling garbles app text (it rewrote the referral screen as "Ana Tokxres", "Food Haodlers"). The app part now comes from `docs/marketing/video/strynd-promo-9x16.mp4`, built frame by frame from the real screenshots (`promo.html` + `render.js`), so every word is exact. Use Kling only for real-world shots with people and no screens, then put them in front of the promo in CapCut.
