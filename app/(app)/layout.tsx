@@ -73,7 +73,7 @@ export default async function AppGroupLayout({ children }: { children: React.Rea
     membership?.active && membership.role === "admin" ? await countNewReferrals(membership.orgId).catch(() => 0) : null;
   return (
     <TimeZoneProvider timeZone={timeZone}>
-    <TermsProvider isOrg={Boolean(membership?.active)}>
+    <TermsProvider audience={membership?.active ? membership.orgKind : "individual"}>
     <AppShell
       people={people.map((p) => ({ id: p.id, display_name: p.display_name }))}
       lists={lists.map((l) => ({ id: l.id, name: l.name }))}

@@ -30,7 +30,7 @@ export function ImpactTeaser() {
 
   return (
     <Link href="/impact" className="card block space-y-3 p-4 transition-colors hover:bg-bg-hover">
-      <p className="text-sm text-text">{data ? buildStory(data)[0].replace(/check-ins/g, terms.checkInsLower) : "Loading the last 30 days…"}</p>
+      <p className="text-sm text-text">{data ? buildStory(data, { audience: terms.audience })[0].replace(/check-ins/g, terms.checkInsLower) : "Loading the last 30 days…"}</p>
       <div className="grid grid-cols-3 gap-2">
         {(tiles ?? [["", null], ["", null], ["", null]]).map(([label, n], i) => (
           <div key={i}>

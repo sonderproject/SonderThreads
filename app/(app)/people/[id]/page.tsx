@@ -123,6 +123,7 @@ export default async function PersonProfilePage({
             <DeletePersonButton personId={person.id} name={person.display_name} />
           )}
         </div>
+        <RegularStats checkIns={checkIns} visitWord={terms.checkInLower} visitsWord={terms.checkInsLower} formatDate={(iso) => shortDate(iso, tz)} />
         {membership?.active && person.user_id === me && (
           <div className="mt-2">
             <ShareToggle personId={person.id} shared={Boolean(person.org_id)} orgName={membership.orgName} />
@@ -306,5 +307,50 @@ function ServiceUsage({
         ))}
       </ul>
     </div>
+  );
+}
+
+/**
+ * A regular at a glance, from the visits already on this page:
+ * "Regular since Mar 2026 · 14 visits · $820 spent · usually every 6 weeks · last visit 23 days ago".
+ * Spending shows only when visits have amounts; the usual rhythm needs 3+ visits.
+ */
+function RegularStats({
+  checkIns,
+  visitWord,
+  visitsWord,
+  formatDate,
+}: {
+  checkIns: { checked_in_at: string; amount_cents?: number | null }[];
+  visitWord: string;
+  visitsWord: string;
+  formatDate: (iso: string) => string;
+}) {
+  if (checkIns.length === 0) return null;
+  const times = checkIns.map((c) => Date.parse(c.checked_in_at)).sort((a, b) => a - b);
+  const first = times[0];
+  const last = times[times.length - 1];
+  const spent = checkIns.reduce((n, c) => n + (c.amount_cents ?? 0), 0);
+  const DAY = 86_400_000;
+  // Usual gap between visits on different days (median, so one long break doesn't skew it).
+  const days = [...new Set(times.map((t) => Math.floor(t / DAY)))];
+  const gaps = days.slice(1).map((d, i) => d - days[i]).sort((a, b) => a - b);
+  const median = gaps.length >= 2 ? gaps[Math.floor(gaps.length / 2)] : null;
+  const rhythm =
+    median === null ? null : median <= 1 ? "most days" : median < 10 ? `every ${median} days` : median < 60 ? `every ${Math.round(median / 7)} weeks` : `every ${Math.round(median / 30)} months`;
+  const ago = Math.floor((Date.now() - last) / DAY);
+  const agoText = ago <= 0 ? "today" : ago === 1 ? "yesterday" : `${ago} days ago`;
+  const since = new Date(first).toLocaleDateString("en-US", { month: "short", year: "numeric" });
+  const parts = [
+    checkIns.length > 1 ? `Since ${since}` : null,
+    `${checkIns.length} ${checkIns.length === 1 ? visitWord : visitsWord}`,
+    spent > 0 ? `${formatMoney(spent)} spent` : null,
+    rhythm ? `usually ${rhythm}` : null,
+    `last ${agoText}`,
+  ].filter(Boolean);
+  return (
+    <p className="mt-1.5 text-sm tabular-nums text-text-muted" title={`First ${visitWord} ${formatDate(new Date(first).toISOString())}`}>
+      {parts.join(" · ")}
+    </p>
   );
 }

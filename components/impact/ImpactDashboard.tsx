@@ -119,7 +119,7 @@ export function ImpactDashboard({ orgName }: { orgName: string | null }) {
       ? `/api/metrics/export?${new URLSearchParams({ format, from: range.from, to: range.to, scope, ...(followUps ? { followups: "1" } : {}) })}`
       : "#";
   const bucketWord = data?.bucket === "day" ? "day" : data?.bucket === "week" ? "week" : "month";
-  const story = data ? buildStory(data, { followUps }).map((line) => line.replace(/check-ins/g, terms.checkInsLower)) : [];
+  const story = data ? buildStory(data, { followUps, audience: terms.audience }).map((line) => line.replace(/check-ins/g, terms.checkInsLower)) : [];
 
   return (
     <div className="space-y-10">

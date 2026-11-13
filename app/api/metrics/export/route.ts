@@ -39,7 +39,7 @@ export async function GET(request: Request) {
   const tz = org?.timeZone ?? (await getTimeZone());
   const { from, to } = normalizeRange(params.get("from"), params.get("to"), dayKey(new Date(), tz));
   const metrics = await computeMetrics(user.id, tz, from, to, org);
-  const disposition = `attachment; filename="${format === "pdf" ? "impact-report" : "metrics"}-${from}-to-${to}.${format}"`;
+  const disposition = `attachment; filename="${format === "pdf" ? (m?.orgKind === "business" ? "insights-report" : "impact-report") : "metrics"}-${from}-to-${to}.${format}"`;
 
   if (format === "csv") {
     return new NextResponse(metricsCsv(metrics), {
@@ -56,7 +56,7 @@ export async function GET(request: Request) {
       : null;
   const file =
     format === "pdf"
-      ? await metricsPdf(metrics, { preparedFor: user.name || user.email, org: orgInfo, followUps })
+      ? await metricsPdf(metrics, { preparedFor: user.name || user.email, org: orgInfo, followUps, audience: m?.orgKind ?? "nonprofit" })
       : await metricsXlsx(metrics, { followUps });
   return new NextResponse(new Uint8Array(file), {
     headers: { "Content-Type": CONTENT_TYPES[format], "Content-Disposition": disposition },

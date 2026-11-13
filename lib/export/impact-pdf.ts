@@ -40,10 +40,30 @@ const FONT = {
   bodyBold: path.join(ASSETS, "fonts/inter-latin-600-normal.woff"),
 };
 
-const KPI_TILES: [keyof Kpis, string][] = [
-  ["peopleServed", "People served"],
-  ["checkIns", "Check-ins"],
-  ["newPeople", "New clients"],
+/** Words for the two report audiences: a nonprofit's Impact report, or a business's Insights report. */
+const WORDS = {
+  nonprofit: {
+    report: "Impact report", people: "People served", peopleLower: "people served", events: "Check-ins", eventsLower: "check-ins",
+    newPeople: "New clients", newPeopleLower: "new clients", perPerson: "VISITS PER PERSON", perPersonSub: "Average check-ins per person",
+    reachTitle: "Who came through the door", whenMarker: "When people come", needsMarker: "Needs", reasonsTitle: "Why people came in",
+    servicesSub: "How often each was provided, to how many people, and versus the previous period.", valueCol: "Value",
+    countsOnce: "People served counts each person once.",
+    source: "Numbers come straight from case records. Client names are never included in this report, and staff members' personal (non-client) records are never counted.",
+  },
+  business: {
+    report: "Insights report", people: "Customers", peopleLower: "customers", events: "Visits", eventsLower: "visits",
+    newPeople: "New customers", newPeopleLower: "new customers", perPerson: "VISITS PER CUSTOMER", perPersonSub: "Average visits per customer",
+    reachTitle: "Who came in", whenMarker: "When customers come", needsMarker: "Services", reasonsTitle: "Why customers came in",
+    servicesSub: "How often each was provided, to how many customers, what it brought in, and versus the previous period.", valueCol: "Revenue",
+    countsOnce: "Customers counts each customer once.",
+    source: "Numbers come straight from your visit records. Customer names are never included in this report, and staff members' personal records are never counted.",
+  },
+};
+type ReportWords = (typeof WORDS)["nonprofit"];
+const kpiTiles = (w: ReportWords): [keyof Kpis, string][] => [
+  ["peopleServed", w.people],
+  ["checkIns", w.events],
+  ["newPeople", w.newPeople],
   ["tasksDone", "Tasks completed"],
   ["notes", "Notes written"],
 ];
@@ -95,10 +115,19 @@ export type ReportOrgInfo = {
 
 export function impactPdf(
   m: Metrics,
-  opts: { preparedFor: string; org?: ReportOrgInfo | null; /** Include follow-ups (optional; off unless asked for). */ followUps?: boolean },
+  opts: {
+    preparedFor: string;
+    org?: ReportOrgInfo | null;
+    /** Include follow-ups (optional; off unless asked for). */
+    followUps?: boolean;
+    /** Nonprofit (Impact report, demographics) or business (Insights report, revenue, no demographics). */
+    audience?: "nonprofit" | "business";
+  },
 ): Promise<Buffer> {
   return new Promise((resolve, reject) => {
-    const doc = new PDFDocument({ size: "LETTER", margin: PAGE.m, bufferPages: true, info: { Title: "Impact report" } });
+    const audience = opts.audience ?? "nonprofit";
+    const W = WORDS[audience];
+    const doc = new PDFDocument({ size: "LETTER", margin: PAGE.m, bufferPages: true, info: { Title: W.report } });
     const chunks: Buffer[] = [];
     doc.on("data", (c: Buffer) => chunks.push(c));
     doc.on("end", () => resolve(Buffer.concat(chunks)));
@@ -144,7 +173,7 @@ export function impactPdf(
     }
     rainbow(PAGE.m, 128, CONTENT_W);
 
-    doc.font("body-medium").fontSize(9).fillColor("#62b4e6").text("IMPACT REPORT", PAGE.m, 300, { characterSpacing: 3 });
+    doc.font("body-medium").fontSize(9).fillColor("#62b4e6").text(W.report.toUpperCase(), PAGE.m, 300, { characterSpacing: 3 });
     doc.font("display").fontSize(46).fillColor(C.warmWhite).text(who, PAGE.m, 322, { width: CONTENT_W, lineGap: -4 });
     doc.moveDown(0.5);
     doc.font("display").fontSize(18).fillColor(C.faint).text(period, { width: CONTENT_W });
@@ -155,7 +184,7 @@ export function impactPdf(
 
     const k = m.kpis;
     doc.font("display").fontSize(15).fillColor(C.warmWhite).text(
-      `${k.peopleServed.toLocaleString("en-US")} people served · ${k.checkIns.toLocaleString("en-US")} check-ins`,
+      `${k.peopleServed.toLocaleString("en-US")} ${W.peopleLower} · ${k.checkIns.toLocaleString("en-US")} ${W.eventsLower}`,
       PAGE.m,
       PAGE.h - 160,
       { width: CONTENT_W },
@@ -362,14 +391,14 @@ export function impactPdf(
         doc.roundedRect(kx, ky, 16, 8, 2).fill(c);
         kx += 19;
       }
-      doc.font("body").fontSize(7).fillColor(C.muted).text("More check-ins", kx + 3, ky + 1, { lineBreak: false });
+      doc.font("body").fontSize(7).fillColor(C.muted).text(`More ${W.eventsLower}`, kx + 3, ky + 1, { lineBreak: false });
       return ky + 14;
     };
 
     // ── Executive summary ────────────────────────────────────────────────
     newPage();
     marker(null, "The story");
-    const story = buildStory(m, { followUps: opts.followUps });
+    const story = buildStory(m, { followUps: opts.followUps, audience });
     doc.font("display").fontSize(21).fillColor(C.ink).text(story[0] ?? "", PAGE.m, y, { width: CONTENT_W, lineGap: 2 });
     y = doc.y + 8;
     if (story.length > 1) {
@@ -382,7 +411,7 @@ export function impactPdf(
     const tileGap = 10;
     const tileW = (CONTENT_W - tileGap * 2) / 3;
     const tileH = 78;
-    KPI_TILES.forEach(([key, label], i) => {
+    kpiTiles(W).forEach(([key, label], i) => {
       const row = Math.floor(i / 3);
       const col = i % 3;
       const tx = PAGE.m + col * (tileW + tileGap);
@@ -401,7 +430,7 @@ export function impactPdf(
       const visits = m.kpis.peopleServed ? m.kpis.checkIns / m.kpis.peopleServed : 0;
       const prevVisits = m.prev.peopleServed ? m.prev.checkIns / m.prev.peopleServed : 0;
       doc.roundedRect(tx, ty, tileW, tileH, 10).fill(C.obsidian);
-      doc.font("body-medium").fontSize(7.5).fillColor(C.faint).text(useFollowUps ? "FOLLOW-UPS DONE" : "VISITS PER PERSON", tx + 14, ty + 13, { characterSpacing: 1.5, lineBreak: false });
+      doc.font("body-medium").fontSize(7.5).fillColor(C.faint).text(useFollowUps ? "FOLLOW-UPS DONE" : W.perPerson, tx + 14, ty + 13, { characterSpacing: 1.5, lineBreak: false });
       doc.font("display").fontSize(28).fillColor(C.warmWhite).text(
         useFollowUps ? `${f.onTime + f.late}` : visits ? visits.toFixed(1) : "–",
         tx + 14,
@@ -409,7 +438,7 @@ export function impactPdf(
         { lineBreak: false },
       );
       doc.font("body").fontSize(7.5).fillColor(C.faint).text(
-        useFollowUps ? `of ${f.due} due this period` : prevVisits ? `${prevVisits.toFixed(1)} the period before` : "Average check-ins per person",
+        useFollowUps ? `of ${f.due} due this period` : prevVisits ? `${prevVisits.toFixed(1)} the period before` : W.perPersonSub,
         tx + 14,
         ty + 60,
         { lineBreak: false },
@@ -417,7 +446,7 @@ export function impactPdf(
     }
     y += tileH * 2 + tileGap + 18;
     doc.font("body").fontSize(8).fillColor(C.muted).text(
-      `Compared with ${fmtDay(m.prevFrom)} – ${fmtDay(m.prevTo)}. People served counts each person once.`,
+      `Compared with ${fmtDay(m.prevFrom)} – ${fmtDay(m.prevTo)}. ${W.countsOnce}`,
       PAGE.m,
       y,
       { width: CONTENT_W },
@@ -427,7 +456,7 @@ export function impactPdf(
     rainbow(PAGE.m, y, CONTENT_W, 1);
     y += 14;
     doc.font("body").fontSize(8).fillColor(C.muted).text(
-      "Numbers come straight from case records. Client names are never included in this report, and staff members' personal (non-client) records are never counted.",
+      W.source,
       PAGE.m,
       y,
       { width: CONTENT_W },
@@ -439,14 +468,14 @@ export function impactPdf(
     const bucketWord = m.bucket === "day" ? "day" : m.bucket === "week" ? "week" : "month";
     ensure(330);
     marker("01", "Reach");
-    heading("Who came through the door", "People served each period, split by whether it was their first visit.");
+    heading(W.reachTitle, `${W.people} each period, split by whether it was their first visit.`);
     {
       const ret = m.reach.reduce((n, p) => n + p.returning, 0);
       const first = m.reach.reduce((n, p) => n + p.first, 0);
       y = chartTitle(
         PAGE.m,
         y,
-        "People served",
+        W.people,
         `Per ${bucketWord} · ${ret.toLocaleString("en-US")} returning, ${first.toLocaleString("en-US")} first visit`,
         CONTENT_W,
         totalLabel(ret + first, "visits"),
@@ -455,33 +484,33 @@ export function impactPdf(
     y = reachChart(PAGE.m, y, CONTENT_W, 170, m.reach) + 24;
     ensure(170);
     const half = (CONTENT_W - 24) / 2;
-    let yl = chartTitle(PAGE.m, y, "Check-ins", `Per ${bucketWord}`, half, totalLabel(sum(m.checkInsOverTime), "check-ins"));
-    let yr = chartTitle(PAGE.m + half + 24, y, "New clients added", `Per ${bucketWord}`, half, totalLabel(sum(m.newPeopleOverTime), "new clients"));
+    let yl = chartTitle(PAGE.m, y, W.events, `Per ${bucketWord}`, half, totalLabel(sum(m.checkInsOverTime), W.eventsLower));
+    let yr = chartTitle(PAGE.m + half + 24, y, `${W.newPeople} added`, `Per ${bucketWord}`, half, totalLabel(sum(m.newPeopleOverTime), W.newPeopleLower));
     yl = columns(PAGE.m, yl, half, 120, m.checkInsOverTime, C.blue);
     yr = columns(PAGE.m + half + 24, yr, half, 120, m.newPeopleOverTime, C.blue);
     y = Math.max(yl, yr) + 34;
 
     // ── 02 When people come ──────────────────────────────────────────────
     ensure(290);
-    marker("02", "When people come");
-    heading("Busiest times", "Check-ins by day of the week and time of day.");
+    marker("02", W.whenMarker);
+    heading("Busiest times", `${W.events} by day of the week and time of day.`);
     const heatBottom = heatmap(PAGE.m, y, CONTENT_W * 0.62, m.heatmap);
     const wx = PAGE.m + CONTENT_W * 0.66;
-    const wy = chartTitle(wx, y - 4, "By day of week", "Check-ins", CONTENT_W * 0.34, `Total: ${sum(m.byWeekday).toLocaleString("en-US")}`);
-    const wBottom = columns(wx, wy, CONTENT_W * 0.34, 110, m.byWeekday, C.blue);
+    const wy = chartTitle(wx, y - 4, "By day of week", W.events, CONTENT_W * 0.34, `Total: ${sum(m.byWeekday).toLocaleString("en-US")}`);
+    const wBottom = columns(wx, wy, CONTENT_W * 0.34, 110, m.byWeekday.map((p) => ({ ...p, label: p.label.slice(0, 3) })), C.blue);
     y = Math.max(heatBottom, wBottom) + 34;
 
     // ── 03 Needs ─────────────────────────────────────────────────────────
     ensure(70 + Math.max(1, m.byReason.length) * 19 + (m.services.length ? 60 + m.services.length * 18 : 0));
-    marker("03", "Needs");
+    marker("03", W.needsMarker);
     if (m.services.length) {
-      heading("Services", "How often each was provided, to how many people, and versus the previous period.");
+      heading("Services", W.servicesSub);
       const showValue = m.services.some((s) => s.valueCents > 0);
       const cols: [string, number, "left" | "right"][] = [
         ["Service", CONTENT_W * (showValue ? 0.34 : 0.48), "left"],
         ["Times", CONTENT_W * 0.1, "right"],
         ["People", CONTENT_W * 0.1, "right"],
-        ...(showValue ? ([["Value", CONTENT_W * 0.14, "right"]] as [string, number, "left" | "right"][]) : []),
+        ...(showValue ? ([[W.valueCol, CONTENT_W * 0.14, "right"]] as [string, number, "left" | "right"][]) : []),
         ["Change", CONTENT_W * 0.12, "right"],
         ["Busiest", CONTENT_W * 0.2, "left"],
       ];
@@ -527,7 +556,7 @@ export function impactPdf(
       }
       y += 22;
     }
-    heading("Why people came in", "Check-ins by reason, most common first.");
+    heading(W.reasonsTitle, `${W.events} by reason, most common first.`);
     y = hbars(PAGE.m, y, CONTENT_W, m.byReason, C.blue, 170) + 34;
 
     // ── 04 Who we serve ──────────────────────────────────────────────────
@@ -536,6 +565,7 @@ export function impactPdf(
       ["Ethnicity", m.byEthnicity],
       ["Income level", m.byIncome],
     ];
+    if (audience === "nonprofit") {
     ensure(150 + demo[0][1].filter((p) => p.value > 0).length * 19);
     marker("04", "Who we serve");
     heading("The people behind the numbers", "People served in this period, each counted once.");
@@ -546,11 +576,12 @@ export function impactPdf(
       y = hbars(PAGE.m, y, CONTENT_W, pts, C.blue, 190) + 18;
     }
     y += 16;
+    }
 
     if (opts.followUps) {
       // ── 05 Follow-through ────────────────────────────────────────────────
       ensure(170);
-      marker("05", "Follow-through");
+      marker(audience === "nonprofit" ? "05" : "04", "Follow-through");
       heading("Commitments kept", "Follow-ups that were due in this period, and how they turned out.");
       const f = m.followThrough;
       if (!f.due) {
@@ -597,7 +628,7 @@ export function impactPdf(
       doc.switchToPage(i);
       doc.page.margins.bottom = 0; // the footer sits in the margin; don't let it start a new page
       doc.rect(PAGE.m, FOOTER_Y - 8, CONTENT_W, 0.5).fill(C.line);
-      doc.font("body").fontSize(7.5).fillColor(C.muted).text(`Impact report · ${who} · ${period}`, PAGE.m, FOOTER_Y, {
+      doc.font("body").fontSize(7.5).fillColor(C.muted).text(`${W.report} · ${who} · ${period}`, PAGE.m, FOOTER_Y, {
         width: CONTENT_W - 60,
         lineBreak: false,
         ellipsis: true,

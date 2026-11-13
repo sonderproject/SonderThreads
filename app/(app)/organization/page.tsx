@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ORG_KINDS } from "@/lib/terms";
 import { SeatSummary } from "@/components/org/SeatSummary";
 import { redirect } from "next/navigation";
 import { asUser } from "@/lib/db/as-user";
@@ -66,6 +67,7 @@ type OrgInfo = {
   logo_version: string | null;
   referral_code: string | null;
   referral_enabled: boolean;
+  kind: "nonprofit" | "business";
 };
 type Invite = { id: string; email: string; role: OrgRole; expires_at: string; expired: boolean };
 
@@ -94,7 +96,7 @@ export default async function OrganizationPage({ searchParams }: { searchParams:
         where org_id = $1 and accepted_at is null order by created_at desc`,
       [m.orgId],
     ),
-    (await q<OrgInfo>(`select name, phone, email, website, address, about, extract(epoch from logo_updated_at)::bigint::text as logo_version, referral_code, referral_enabled from organizations where id = $1`, [m.orgId]))[0],
+    (await q<OrgInfo>(`select name, phone, email, website, address, about, extract(epoch from logo_updated_at)::bigint::text as logo_version, referral_code, referral_enabled, kind from organizations where id = $1`, [m.orgId]))[0],
   ]);
   const active = members.filter((x) => x.active);
 
@@ -169,7 +171,17 @@ export default async function OrganizationPage({ searchParams }: { searchParams:
             <textarea name="address" defaultValue={info?.address ?? ""} maxLength={500} rows={2} className="input" />
           </label>
           <label className="space-y-1 sm:col-span-2">
-            <span className="text-xs text-text-muted">About (one or two sentences, shown on Impact reports)</span>
+            <span className="text-xs text-text-muted">Type (sets the app&apos;s words: check-ins and Impact, or visits and Insights)</span>
+            <select name="kind" defaultValue={info?.kind ?? "nonprofit"} className="input">
+              {ORG_KINDS.map((k) => (
+                <option key={k.value} value={k.value}>
+                  {k.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="space-y-1 sm:col-span-2">
+            <span className="text-xs text-text-muted">About (one or two sentences, shown on your PDF reports)</span>
             <textarea name="about" defaultValue={info?.about ?? ""} maxLength={1000} rows={2} placeholder="Hope House helps families in San Diego find and keep stable housing." className="input" />
           </label>
           <div className="flex items-center gap-3 sm:col-span-2">

@@ -1,6 +1,7 @@
 "use server";
 
 import { randomBytes } from "crypto";
+import { isOrgKind } from "@/lib/terms";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { query, queryOne, transaction } from "@/lib/db/client";
@@ -33,9 +34,11 @@ export async function createOrganization(formData: FormData): Promise<void> {
   const name = (formData.get("name")?.toString() ?? "").trim().slice(0, 200);
   if (!name) redirect("/organization/new?error=name");
   if (formData.get("agree") !== "on") redirect("/organization/new?error=agree");
+  const kindRaw = formData.get("kind");
+  const kind = isOrgKind(kindRaw) ? kindRaw : "nonprofit";
   if (await getMembership()) redirect("/organization");
   const orgId = await transaction(async (q) => {
-    const res = (await q(`insert into organizations (name, created_by) values ($1, $2) returning id`, [name, userId])) as {
+    const res = (await q(`insert into organizations (name, created_by, kind) values ($1, $2, $3) returning id`, [name, userId, kind])) as {
       rows: { id: string }[];
     };
     await q(`insert into memberships (org_id, user_id, role) values ($1, $2, 'admin')`, [res.rows[0].id, userId]);
@@ -226,9 +229,10 @@ export async function saveOrganizationInfo(formData: FormData): Promise<void> {
   if (website && !/^https?:\/\//i.test(website)) website = `https://${website}`;
   await asUser(userId, (q) =>
     q(
-      `update organizations set name = $1, phone = $2, email = $3, website = $4, address = $5, about = $6, updated_at = now()
+      `update organizations set name = $1, phone = $2, email = $3, website = $4, address = $5, about = $6,
+              kind = coalesce($8, kind), updated_at = now()
         where id = $7`,
-      [name, field("phone", 40), email, website, field("address", 500), field("about", 1000), orgId],
+      [name, field("phone", 40), email, website, field("address", 500), field("about", 1000), orgId, isOrgKind(formData.get("kind")) ? formData.get("kind") : null],
     ),
   );
   revalidatePath("/", "layout");

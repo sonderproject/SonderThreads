@@ -824,6 +824,8 @@ alter table referrals add column if not exists referrer_email text check (length
 -- Where referred clients go: set by the organization (Referral settings), shown read-only to partners, kept on each referral.
 alter table organizations add column if not exists referral_location text check (length(referral_location) <= 300);
 alter table referrals add column if not exists location text check (length(location) <= 300);
+-- Organization type: sets the app's words (nonprofit: check-ins/Impact; business: visits/Insights).
+alter table organizations add column if not exists kind text not null default 'nonprofit' check (kind in ('nonprofit', 'business'));
 -- One client per slot; a declined referral frees its slot.
 create unique index if not exists referrals_slot_idx on referrals(org_id, appointment_at)
   where appointment_at is not null and status <> 'declined';

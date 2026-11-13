@@ -97,26 +97,39 @@ function changePhrase(cur: number, prev: number): string {
  * Follow-ups are optional (tracking them is extra work), so they're only
  * mentioned when the viewer turns them on.
  */
-export function buildStory(m: Metrics, opts: { followUps?: boolean } = {}): string[] {
+/** Report words: nonprofits serve people across check-ins; businesses and individuals see customers or clients across visits or meetings. */
+export function storyWords(audience: "individual" | "nonprofit" | "business" = "nonprofit") {
+  if (audience === "business")
+    return { verb: "saw", one: "customer", many: "customers", events: "visits", newOne: "a new customer", newMany: "new customers", need: "The most popular service was" };
+  if (audience === "individual")
+    return { verb: "met with", one: "client", many: "clients", events: "meetings", newOne: "a new client", newMany: "new clients", need: "The most common reason was" };
+  return { verb: "served", one: "person", many: "people", events: "check-ins", newOne: "a new client", newMany: "new clients", need: "The most common need was" };
+}
+
+export function buildStory(m: Metrics, opts: { followUps?: boolean; audience?: "individual" | "nonprofit" | "business" } = {}): string[] {
   const who = m.scope === "org" ? (m.orgName ?? "Your organization") : "You";
+  const w = storyWords(opts.audience);
   const out: string[] = [];
   const k = m.kpis;
   if (k.peopleServed === 0) {
-    out.push(`${who} didn't record any check-ins ${periodWord(m)}.`);
+    out.push(`${who} didn't record any ${w.events} ${periodWord(m)}.`);
   } else {
     out.push(
-      `${who} served ${k.peopleServed.toLocaleString()} ${k.peopleServed === 1 ? "person" : "people"} across ${k.checkIns.toLocaleString()} check-ins ${periodWord(m)}${changePhrase(k.peopleServed, m.prev.peopleServed)}.`,
+      `${who} ${w.verb} ${k.peopleServed.toLocaleString()} ${k.peopleServed === 1 ? w.one : w.many} across ${k.checkIns.toLocaleString()} ${w.events} ${periodWord(m)}${changePhrase(k.peopleServed, m.prev.peopleServed)}.`,
     );
     const firsts = m.reach.reduce((s, r) => s + r.first, 0);
-    if (firsts > 0) out.push(`${firsts.toLocaleString()} of them ${firsts === 1 ? "was a new client" : "were new clients"} on their first visit.`);
+    if (firsts > 0) out.push(`${firsts.toLocaleString()} of them ${firsts === 1 ? `was ${w.newOne}` : `were ${w.newMany}`} on their first visit.`);
     if (m.trackingSince && m.trackingSince > m.from)
       out.push(`Strynd started recording on ${shortDay(m.trackingSince)}, so visits before then aren't counted.`);
     const visits = k.checkIns / k.peopleServed;
-    if (visits >= 1.5) out.push(`On average, each person visited ${visits.toFixed(1)} times.`);
+    if (visits >= 1.5) out.push(`On average, each ${w.one} visited ${visits.toFixed(1)} times.`);
   }
   const reasons = m.byReason.filter((r) => r.key !== "__other" && r.label !== "No reason given");
   const total = m.byReason.reduce((s, r) => s + r.value, 0);
-  if (reasons.length) out.push(`The most common need was ${reasons[0].label.toLowerCase()} (${pct(reasons[0].value, total)}% of check-ins).`);
+  if (reasons.length) out.push(`${w.need} ${reasons[0].label.toLowerCase()} (${pct(reasons[0].value, total)}% of ${w.events}).`);
+  const revenue = m.services.reduce((n, s) => n + s.valueCents, 0);
+  if (opts.audience === "business" && revenue > 0 && k.checkIns > 0)
+    out.push(`Services brought in $${Math.round(revenue / 100).toLocaleString()}, about $${Math.round(revenue / 100 / k.checkIns)} per visit.`);
   let best = { d: -1, b: -1, n: 0 };
   m.heatmap.forEach((row, d) => row.forEach((n, b) => n > best.n && (best = { d, b, n })));
   if (best.n >= 3) out.push(`The busiest time was ${WEEKDAY_NAMES[best.d]}s around ${HEATMAP_BLOCKS[best.b]}m.`);

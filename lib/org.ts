@@ -4,19 +4,20 @@ import { requireUserId } from "@/lib/current-user";
 
 export * from "@/lib/org-roles";
 import type { OrgRole } from "@/lib/org-roles";
+import type { OrgKind } from "@/lib/terms";
 
-export type Membership = { orgId: string; orgName: string; role: OrgRole; active: boolean };
+export type Membership = { orgId: string; orgName: string; role: OrgRole; active: boolean; orgKind: OrgKind };
 
 /** The signed-in person's organization membership, looked up once per request (layout, terms, services and team checks all ask). */
 export const getMembership = cache(async (): Promise<Membership | null> => {
   const userId = await requireUserId();
-  const row = await queryOne<{ org_id: string; name: string; role: OrgRole; active: boolean }>(
-    `select m.org_id, o.name, m.role, m.active
+  const row = await queryOne<{ org_id: string; name: string; role: OrgRole; active: boolean; kind: OrgKind }>(
+    `select m.org_id, o.name, m.role, m.active, o.kind
        from memberships m join organizations o on o.id = m.org_id
       where m.user_id = $1`,
     [userId],
   );
-  return row ? { orgId: row.org_id, orgName: row.name, role: row.role, active: row.active } : null;
+  return row ? { orgId: row.org_id, orgName: row.name, role: row.role, active: row.active, orgKind: row.kind === "business" ? "business" : "nonprofit" } : null;
 });
 
 export type PendingInvite = { id: string; orgName: string; role: OrgRole; inviter: string | null };

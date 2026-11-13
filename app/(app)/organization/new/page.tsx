@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getMembership } from "@/lib/org";
 import { createOrganization } from "@/lib/actions/org";
+import { ORG_KINDS } from "@/lib/terms";
 
 /** Set up an organization (agency or team). The creator becomes its admin. */
 export default async function NewOrganizationPage({ searchParams }: { searchParams: Promise<{ error?: string; offer?: string }> }) {
@@ -12,7 +13,7 @@ export default async function NewOrganizationPage({ searchParams }: { searchPara
       <div className="space-y-1">
         <h1 className="page-title">Set up an organization</h1>
         <p className="text-sm text-text-muted">
-          For agencies and teams: invite your staff, give managers a read-only view of every client, and keep each
+          For nonprofits, agencies and businesses with a team: invite your staff, give managers a read-only view of every client, and keep each
           person&apos;s personal tasks and notes private.
         </p>
       </div>
@@ -20,9 +21,22 @@ export default async function NewOrganizationPage({ searchParams }: { searchPara
         {offer === "skip" && <input type="hidden" name="offer" value="skip" />}
         <label className="block space-y-1">
           <span className="text-xs text-text-muted">Organization name</span>
-          <input name="name" required maxLength={200} placeholder="Hope House" className="input" />
+          <input name="name" required maxLength={200} placeholder="Hope House, or Pawsome Grooming" className="input" />
         </label>
         {error === "name" && <p className="text-xs text-danger">Enter a name.</p>}
+        <fieldset className="space-y-1.5">
+          <legend className="text-xs text-text-muted">What kind of organization?</legend>
+          {ORG_KINDS.map((k, i) => (
+            <label key={k.value} className="flex items-start gap-2 rounded-xl border border-border-subtle p-2.5 text-sm">
+              <input type="radio" name="kind" value={k.value} defaultChecked={i === 0} required className="mt-1 accent-[var(--accent)]" />
+              <span>
+                <span className="block font-medium text-text">{k.label}</span>
+                <span className="block text-xs text-text-muted">{k.hint}</span>
+              </span>
+            </label>
+          ))}
+        </fieldset>
+
         {error === "agree" && (
           <p className="text-xs text-danger">Please confirm the agreement below to create the organization.</p>
         )}
