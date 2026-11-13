@@ -1,0 +1,151 @@
+<!doctype html><html><head><meta charset="utf-8">
+<style>
+@font-face{font-family:Outfit;font-weight:100 900;src:url(fonts/QGYvz_MVcBeNP4NJtEtq.woff2) format("woff2")}
+@font-face{font-family:Outfit;font-weight:100 900;src:url(fonts/QGYvz_MVcBeNP4NJuktqQ4E.woff2) format("woff2");unicode-range:U+0100-02BA,U+1E00-1EFF}
+:root{--bg:#F6F4EF;--fg:#141412;--muted:#6E5F4D;--accent:#1C77B5;--line:#E2DBD0;--soft:#EEF6FC}
+*{box-sizing:border-box;margin:0}
+html,body{width:1080px;height:1350px;overflow:hidden;background:var(--bg);font-family:Inter,sans-serif;color:var(--fg)}
+.scene{position:absolute;inset:0;opacity:0}
+.cap{position:absolute;left:90px;right:90px;top:112px;font:300 68px/1.05 Outfit,sans-serif;letter-spacing:-.02em}
+.cap b{font-weight:500;color:var(--accent)}
+.eyebrow{position:absolute;left:90px;top:66px;font:600 24px Inter,sans-serif;letter-spacing:.24em;text-transform:uppercase;color:var(--muted)}
+.card{position:absolute;left:70px;width:940px;border-radius:44px;overflow:hidden;box-shadow:0 40px 90px rgba(60,45,20,.18),0 0 0 1px var(--line);background:#fff}
+.card img{display:block;width:100%}
+.ripple{position:absolute;border-radius:50%;border:6px solid var(--accent);opacity:0}
+.note{position:absolute;width:300px;height:280px;padding:34px 30px;background:#F7E59A;box-shadow:0 18px 40px rgba(0,0,0,.12);font:400 40px/1.25 "Comic Sans MS","Marker Felt",Outfit,sans-serif;color:#4a3d10}
+.hook{position:absolute;left:90px;right:90px;top:860px;font:300 96px/1.02 Outfit,sans-serif;letter-spacing:-.025em}
+.hook .strike{position:absolute;left:0;height:10px;background:var(--accent);border-radius:5px}
+/* command box */
+.cmd{position:absolute;left:90px;right:90px;top:420px;display:flex;align-items:center;gap:22px;background:#fff;border-radius:999px;padding:34px 40px;box-shadow:0 30px 70px rgba(60,45,20,.14),0 0 0 1px var(--line);font:400 42px Inter,sans-serif}
+.cmd .slash{color:var(--accent);font-weight:600}
+.cmd .caret{display:inline-block;width:4px;height:52px;background:var(--accent);vertical-align:-8px;margin-left:4px}
+.cmd .enter{margin-left:auto;background:var(--accent);color:#fff;font:600 30px Inter,sans-serif;padding:14px 28px;border-radius:999px}
+.result{position:absolute;left:90px;right:90px;top:620px;display:flex;align-items:center;gap:30px;background:#fff;border-radius:40px;padding:36px 40px;box-shadow:0 30px 70px rgba(60,45,20,.12),0 0 0 1px var(--line)}
+.result .tick{flex:none;width:84px;height:84px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font:600 46px Inter,sans-serif}
+.result b{display:block;font:600 42px Inter,sans-serif}
+.result span{display:block;font:400 34px Inter,sans-serif;color:var(--muted);margin-top:6px}
+.chips{position:absolute;left:90px;right:90px;display:flex;flex-wrap:wrap;gap:16px}
+.chip{background:#fff;border:1px solid var(--line);border-radius:999px;padding:16px 30px;font:500 32px Inter,sans-serif;color:var(--fg)}
+.chip.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.page{position:absolute;width:470px;border-radius:10px;overflow:hidden;box-shadow:0 30px 70px rgba(30,20,0,.25);background:#fff}
+.page img{display:block;width:100%}
+#end{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+#end img{width:230px}
+#end h1{font:300 150px/1 Outfit,sans-serif;letter-spacing:-.03em;margin-top:30px}
+#end p{font:300 58px/1.2 Outfit,sans-serif;color:var(--muted);margin-top:26px}
+#end .pill{margin-top:50px;background:var(--accent);color:#fff;font:500 52px Outfit,sans-serif;padding:34px 64px;border-radius:999px}
+#end small{display:block;margin-top:28px;font:500 30px Inter,sans-serif;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+</style></head><body><div id="corner" style="position:absolute;right:56px;top:52px;display:flex;align-items:center;gap:12px;z-index:50;font:400 34px Outfit,sans-serif"><img src="strynd-mark-blue.png" style="width:52px">Strynd</div>
+
+<div class="scene" id="hookS">
+  <div class="note" id="n1" style="left:90px;top:150px">Call Ana<br>re: intake??</div>
+  <div class="note" id="n2" style="left:430px;top:90px;background:#F4C9A8">Marcus came in Tue, OSHA?</div>
+  <div class="note" id="n3" style="left:690px;top:310px;background:#BFE3D0">Funder report due FRIDAY</div>
+  <div class="note" id="n4" style="left:220px;top:480px;background:#CFE0F5">Who saw Rosa last?</div>
+  <div class="hook" id="hook"><span id="h1">Funder report</span><br><span id="h2">due Friday?</span><div class="strike" id="strike"></div></div>
+</div>
+
+<div class="scene" id="cmdS">
+  <div class="eyebrow">Type it</div>
+  <div class="cap">Just type it.<br><b>Strynd files it.</b></div>
+  <div class="cmd" id="cmd"><span class="slash">/</span><span id="typed"></span><span class="caret" id="caret"></span><span class="enter" id="enter">Enter</span></div>
+  <div class="result" id="res"><div class="tick">✓</div><div><b>Check-in logged for Rosa Medina</b><span>Resume help · Bus pass · today 10:42 AM</span></div></div>
+  <div class="chips" id="cmdChips" style="top:880px"><span class="chip">“Note: Marcus starts his new job Monday”</span><span class="chip">“Remind me to call Ana Friday at 3”</span></div>
+</div>
+
+<div class="scene" id="ciS">
+  <div class="eyebrow">Check-ins</div>
+  <div class="cap">Check someone in<br><b>in one tap.</b></div>
+  <div class="card" id="c2" style="top:320px;left:160px;width:760px"><img src="05-checkin-light.png"></div>
+  <div class="ripple" id="rip"></div>
+</div>
+
+<div class="scene" id="teamS">
+  <div class="eyebrow">Team view</div>
+  <div class="cap" id="teamCap1">Your team's whole day,<br><b>at a glance.</b></div><div class="cap" id="teamCap2" style="opacity:0">Their personal tasks<br><b>stay private.</b></div>
+  <div class="card" id="c3" style="top:320px;height:855px"><img src="05-team-light.png" id="i3" style="transform-origin:18% 18%"></div>
+</div>
+
+<div class="scene" id="refS">
+  <div class="eyebrow">Referrals</div>
+  <div class="cap">Partners refer clients<br><b>straight to you.</b></div>
+  <div class="card" id="c4" style="top:320px;left:200px;width:680px"><img src="05-referral-light.png"></div>
+</div>
+
+<div class="scene" id="pdfS">
+  <div class="eyebrow">Impact reports</div>
+  <div class="cap">Funder-ready reports.<br><b>One click.</b></div>
+  <div class="page" id="p5"><img src="pdf-5.png"></div>
+  <div class="page" id="p4"><img src="pdf-4.png"></div>
+  <div class="page" id="p3"><img src="pdf-3.png"></div>
+  <div class="page" id="p2"><img src="pdf-2.png"></div>
+  <div class="page" id="p1"><img src="pdf-1.png"></div>
+  <div class="chips" id="pdfChips" style="top:1170px;justify-content:center"><span class="chip on">PDF</span><span class="chip">Excel</span><span class="chip">CSV</span><span class="chip">Your logo, no Strynd branding</span></div>
+</div>
+
+<div class="scene" id="end">
+  <img src="strynd-mark-blue.png" id="logo">
+  <h1 id="name">Strynd</h1>
+  <p id="tag">Know every person you serve.</p>
+  <div class="pill" id="pill">Start a 14-day free team trial</div>
+  <small id="small">strynd.com · Nonprofits · Agencies · Programs</small>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const clamp = (x) => Math.max(0, Math.min(1, x));
+const ease = (x) => 1 - Math.pow(1 - clamp(x), 3);
+const io = (t, a, b) => ease((t - a) / (b - a));
+const S = { hookS: [0, 3.2], pdfS: [3.0, 8.4], ciS: [8.2, 11.6], cmdS: [11.4, 15.6], teamS: [15.4, 20.2], refS: [20.0, 23.2], end: [23.0, 27.0] };
+window.DURATION = 27;
+function vis(t, [a, b]) { return Math.min(io(t, a, a + 0.4), b >= 27 ? 1 : 1 - io(t, b - 0.4, b)); }
+const rise = (t, a) => `translateY(${(1 - io(t, a, a + 0.8)) * 120}px)`;
+window.render = (t) => {
+  for (const k in S) $(k).style.opacity = vis(t, S[k]);
+  $("corner").style.opacity = 1 - io(t, 22.8, 23.3);
+  // hook: notes pop in, caption, notes fly off
+  ["n1","n2","n3","n4"].forEach((id, i) => {
+    const pin = io(t, 0.05 + i * 0.15, 0.4 + i * 0.15), out = io(t, 2.4, 3.1), rot = [-6, 4, -3, 7][i];
+    $(id).style.transform = `translateY(${(1 - pin) * 60 - out * (900 + i * 120)}px) rotate(${rot + out * (i % 2 ? 25 : -25)}deg) scale(${(0.8 + 0.2 * pin) * (id === "n3" ? 1 + 0.12 * io(t, 0.8, 1.4) : 1)})`;
+    $(id).style.opacity = pin * (1 - out);
+  });
+  $("h1").style.opacity = io(t, 0.3, 0.7); $("h2").style.opacity = io(t, 0.6, 1.0);
+  $("hook").style.transform = `translateY(${(1 - io(t, 0.3, 1.0)) * 40}px)`;
+  $("strike").style.width = "0px";
+  // report pages fan out (seconds 3-8)
+  const fan = io(t, 4.2, 5.6);
+  [["p1", 0, 0], ["p2", 1, -1], ["p3", 2, 1], ["p4", 3, -2], ["p5", 4, 2]].forEach(([id, i, slot]) => {
+    const enter = io(t, 3.2 + i * 0.12, 4.0 + i * 0.12);
+    const x = 305 + slot * 92 * fan, rot = slot * 6 * fan, y = 340 + Math.abs(slot) * 36 * fan + (1 - enter) * 300;
+    Object.assign($(id).style, { left: x + "px", top: y + "px", transform: `rotate(${rot}deg) scale(${(i === 0 ? 1 : 0.92) * (0.9 + 0.1 * enter)})`, opacity: enter, zIndex: 10 - Math.abs(slot) * 2 });
+  });
+  $("pdfChips").style.opacity = io(t, 5.4, 6.0);
+  // one-tap check-in
+  $("c2").style.transform = rise(t, 8.2);
+  const r = io(t, 9.7, 10.6);
+  Object.assign($("rip").style, { left: 160 + 634 - 30 - r * 70 + "px", top: 320 + 431 - 30 - r * 70 + "px", width: 60 + r * 140 + "px", height: 60 + r * 140 + "px", opacity: t > 9.7 && t < 10.7 ? 1 - r : 0 });
+  // type it
+  const text = "Rosa M. – resume help, bus pass";
+  const n = Math.floor(clamp((t - 12.0) / 1.6) * text.length);
+  $("typed").textContent = text.slice(0, n);
+  $("caret").style.opacity = Math.floor(t * 2.5) % 2 || t < 13.8 ? 1 : 0;
+  $("cmd").style.transform = rise(t, 11.4);
+  $("enter").style.transform = `scale(${t > 13.8 && t < 14.05 ? 0.9 : 1})`;
+  $("res").style.opacity = io(t, 14.0, 14.4); $("res").style.transform = `translateY(${(1 - io(t, 14.0, 14.4)) * 40}px)`;
+  $("cmdChips").style.opacity = io(t, 14.5, 15.0);
+  // team view, then the privacy line
+  $("c3").style.transform = rise(t, 15.4);
+  $("i3").style.transform = `scale(${1 + 0.2 * io(t, 16.0, 19.8)})`;
+  $("teamCap1").style.opacity = 1 - io(t, 17.8, 18.2);
+  $("teamCap2").style.opacity = io(t, 18.1, 18.5);
+  // referrals
+  $("c4").style.transform = `translateY(${(1 - io(t, 20.0, 20.8)) * 160 - io(t, 20.8, 23.0) * 60}px)`;
+  // end card (held 3.5s)
+  $("logo").style.transform = `scale(${0.7 + 0.3 * io(t, 23.1, 23.8)})`;
+  ["name", "tag", "pill", "small"].forEach((id, i) => {
+    const p = io(t, 23.4 + i * 0.25, 24.0 + i * 0.25);
+    $(id).style.opacity = p; $(id).style.transform = `translateY(${(1 - p) * 30}px)`;
+  });
+};
+render(0);
+</script></body></html>
