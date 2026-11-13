@@ -11,6 +11,7 @@ import { listTasksForPerson } from "@/lib/actions/tasks";
 import { listLists, listListsForPerson } from "@/lib/actions/lists";
 import { AddToListButton } from "@/components/people/AddToListButton";
 import { DemographicSelect } from "@/components/people/DemographicSelect";
+import { RefreshOnShow } from "@/components/ui/RefreshOnShow";
 import { ETHNICITIES, GENDERS, INCOME_LEVELS } from "@/lib/demographics";
 import { listNotesForPerson } from "@/lib/actions/notes";
 import { listCheckInsForPerson, listCheckInReasons } from "@/lib/actions/check-ins";
@@ -97,6 +98,7 @@ export default async function PersonProfilePage({
 
   return (
     <div className="space-y-8">
+      <RefreshOnShow />
       <div>
         <div className="flex items-center gap-2">
           <h1>
@@ -162,11 +164,13 @@ export default async function PersonProfilePage({
             />
           </Detail>
           <Detail label="Gender">
-            <DemographicSelect personId={person.id} field="gender" value={person.gender} options={GENDERS} label="Gender" />
+            <DemographicSelect personId={person.id} key={`gender-${person.gender ?? ""}`}
+              field="gender" value={person.gender} options={GENDERS} label="Gender" />
           </Detail>
           <Detail label="Ethnicity">
             <DemographicSelect
               personId={person.id}
+              key={`ethnicity-${person.ethnicity ?? ""}`}
               field="ethnicity"
               value={person.ethnicity}
               options={ETHNICITIES}
@@ -176,6 +180,7 @@ export default async function PersonProfilePage({
           <Detail label="Income level">
             <DemographicSelect
               personId={person.id}
+              key={`income_level-${person.income_level ?? ""}`}
               field="income_level"
               value={person.income_level}
               options={INCOME_LEVELS}
