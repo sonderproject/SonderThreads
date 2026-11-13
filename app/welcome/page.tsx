@@ -26,8 +26,8 @@ export const metadata: Metadata = {
 const AUDIENCES = ["Freelancers", "Business owners", "Coaches", "Realtors", "Consultants", "Case managers", "Students", "Parents", "Teams"];
 
 const TEAMS = [
-  "A Team view of everyone's clients, follow-ups and overdue tasks.",
-  "Managers can read client records and leave comments. Never anyone's personal notes.",
+  "A Team view of each person's clients, today's check-ins and services, and their calendar.",
+  "Managers can read client records and leave comments. Never anyone's tasks or personal notes.",
   "Invite your team, reassign clients, and see an activity log of who did what.",
   "Impact reports with your logo, ready for your boss, your board or your funders.",
 ];
@@ -40,7 +40,7 @@ const COMPARE: [string, boolean][] = [
   ["Export everything (Excel, full backup)", true],
   ["One shared client list the whole team works from", false],
   ["Roles for admins, managers and members", false],
-  ["Team dashboard: everyone's clients, follow-ups, overdue", false],
+  ["Team dashboard: each person's clients, check-ins and services today", false],
   ["Activity log of who changed what", false],
   ["Impact reports (PDF) with your logo", false],
   ["Referral link and referral log", false],

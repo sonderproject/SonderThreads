@@ -1,0 +1,53 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Strynd sales sheet</title>
+<style>
+:root{--bg:#F6F4EF;--surface:#fff;--fg:#141412;--muted:#6E5F4D;--line:#E2DBD0;--accent:#1C77B5}
+@page{size:Letter;margin:0}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:9.6pt/1.4 Inter,"Helvetica Neue",Arial,sans-serif;width:8.5in;height:11in;padding:.45in .55in}
+h1{font:300 28pt/1.05 Outfit,"Helvetica Neue",Arial,sans-serif;letter-spacing:-.02em;margin:.1in 0 .08in}
+h2{font:500 13pt/1.2 Outfit,"Helvetica Neue",Arial,sans-serif;margin:0 0 .06in}
+.eyebrow{font-size:7pt;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+.top{display:flex;justify-content:space-between;align-items:center}
+.brand{display:flex;align-items:center;gap:.12in;font:500 15pt Outfit,Arial,sans-serif}
+.brand img{height:.32in}
+.lead{color:var(--muted);font-size:11pt;max-width:6in;margin:0 0 .2in}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:.18in;margin-bottom:.18in}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:.16in .18in}
+ul{margin:.04in 0 0;padding-left:.16in}li{margin:.02in 0}
+.outcomes{display:grid;grid-template-columns:repeat(3,1fr);gap:.14in;margin-bottom:.18in}
+.outcomes b{display:block;color:var(--accent);font-weight:600}
+.shot{width:100%;max-height:2.45in;object-fit:cover;object-position:top;border-radius:10px;border:1px solid var(--line);display:block}
+.shots{display:grid;grid-template-columns:1.35fr 1fr;gap:.14in;margin-bottom:.18in;align-items:start}
+.price{display:grid;grid-template-columns:repeat(3,1fr);gap:.12in;margin-bottom:.16in}
+.price div{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:.1in .12in}
+.price b{font:300 17pt Outfit,Arial,sans-serif;display:block}
+.foot{display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line);padding-top:.12in;font-size:9.5pt}
+.cta{color:var(--accent);font-weight:600;font-size:12pt}
+</style></head><body>
+<div class="top"><div class="brand"><img src="../brand/strynd-mark-blue.png" alt="">Strynd</div><span class="eyebrow">By Sonder Project</span></div>
+<h1>Know every person you serve.</h1>
+<p class="lead">Clients, check-ins, services, notes and referrals in one calm app, with reports that prove the work. On any phone or computer.</p>
+
+<div class="outcomes">
+  <div class="card"><b>Know every person</b>Their story, history and what's next, in one place.</div>
+  <div class="card"><b>Log it in seconds</b>One-tap check-ins. Type or say it once; Strynd files it.</div>
+  <div class="card"><b>Prove it</b>Impact and Insights reports as PDF or Excel, in one click.</div>
+</div>
+
+<div class="cols">
+  <div class="card"><h2>For organizations</h2><span class="eyebrow">Nonprofits · agencies · workforce programs</span>
+    <ul><li>Shared client records for the whole team</li><li>Check-ins with services, plus a walk-in kiosk</li><li>Partner referrals with booked appointments</li><li>Team view of today's check-ins and services</li><li>Funder-ready Impact reports with your logo</li></ul></div>
+  <div class="card"><h2>For businesses with regulars</h2><span class="eyebrow">Salons · groomers · vets · trainers · tutors</span>
+    <ul><li>A profile for every regular, with full visit history</li><li>Services and amounts on every visit</li><li>Birthdays, preferences and follow-ups</li><li>Busiest days, top services, who hasn't been back</li><li>Works alongside your booking app</li></ul></div>
+</div>
+
+<div class="shots"><img class="shot" src="screenshots/05-team-light.png" alt="Team view"><img class="shot" src="screenshots/05-checkin-light.png" alt="Check-in"></div>
+
+<div class="price">
+  <div><span class="eyebrow">Individual</span><b>$9<small style="font-size:9pt"> / month</small></b>7-day free trial, no card</div>
+  <div><span class="eyebrow">Small Team</span><b>$19<small style="font-size:9pt"> / user / mo</small></b>2–18 people · 14-day trial</div>
+  <div><span class="eyebrow">Organization</span><b>$349<small style="font-size:9pt"> / month</small></b>20 seats · extra seats $15</div>
+</div>
+
+<div class="foot"><div><b>DeAnte Spruill</b> · Founder · dante@sonderproject.co</div><div class="cta">Start free at strynd.com</div></div>
+</body></html>
