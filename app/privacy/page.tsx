@@ -26,7 +26,8 @@ export default function PrivacyPage() {
           <li>
             <strong>Your account:</strong> email address, password (stored only as a secure hash by our sign-in
             provider), name and mobile number if you add them, two-factor authentication settings, and your
-            settings.
+            settings. If you sign up from one of our ads, we note which campaign the link came from (no cookies or
+            third-party trackers are used for this).
           </li>
           <li>
             <strong>What you enter:</strong> people and client profiles (such as name, date of birth, phone, email,

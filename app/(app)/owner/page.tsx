@@ -98,6 +98,22 @@ export default async function OwnerPage({ searchParams }: { searchParams: Promis
   await requireOwner();
   const { resend, email: resentTo } = await searchParams;
 
+  // Sign-ups by the ad campaign that brought them (utm tags carried to the sign-up form), and how many
+  // went on to a card on file / paid subscription (their own account, or an organization they're in).
+  const sources = await query<{ source: string; signups: number; converted: number }>(
+    `select coalesce(e.meta->>'utm_campaign', e.meta->>'utm_source', 'Direct / unknown') as source,
+            count(*)::int as signups,
+            count(*) filter (where exists (
+              select 1 from users u
+               where lower(u.email) = lower(e.email)
+                 and (exists (select 1 from billing_accounts b where b.user_id = u.id and b.stripe_subscription_id is not null)
+                      or exists (select 1 from memberships m join billing_accounts b2 on b2.org_id = m.org_id
+                                  where m.user_id = u.id and m.active and b2.stripe_subscription_id is not null))
+            ))::int as converted
+       from app_events e
+      where e.kind = 'auth.signup' and e.message not ilike '%bot%' and e.created_at > now() - interval '30 days'
+      group by 1 order by 2 desc limit 20`,
+  ).catch(() => []);
   const [signups, billing, trialsEnding, events, errors24, money$] = await Promise.all([
     query<Signup>(
       `select u.email, u.created_at, u.email_confirmed_at, u.last_sign_in_at, b.plan, b.status
@@ -279,6 +295,38 @@ export default async function OwnerPage({ searchParams }: { searchParams: Promis
             ))}
           </div>
         )}
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="section-label">Sign-ups by source (30 days)</h2>
+        <div className="card overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="eyebrow border-b border-border text-left text-text-faint">
+                <th className="px-4 py-2 font-semibold">Campaign</th>
+                <th className="px-3 py-2 text-right font-semibold">Sign-ups</th>
+                <th className="px-4 py-2 text-right font-semibold">Card or paid</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border-subtle">
+              {sources.length === 0 && (
+                <tr>
+                  <td colSpan={3} className="px-4 py-3 text-text-muted">No sign-ups yet.</td>
+                </tr>
+              )}
+              {sources.map((r) => (
+                <tr key={r.source}>
+                  <td className="px-4 py-2 text-text">{r.source}</td>
+                  <td className="px-3 py-2 text-right tabular-nums">{r.signups}</td>
+                  <td className="px-4 py-2 text-right tabular-nums">{r.converted}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p className="text-xs text-text-faint">
+          From ad links tagged with utm_campaign (see docs/marketing/linkedin-ads.md). Likely bots excluded.
+        </p>
       </section>
 
       <section className="space-y-3">

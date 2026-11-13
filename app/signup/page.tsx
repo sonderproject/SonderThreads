@@ -23,9 +23,11 @@ const ERRORS: Record<string, string> = {
 export default async function SignupPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; next?: string; email?: string; phone?: string; deleted?: string }>;
+  searchParams: Promise<{ error?: string; next?: string; email?: string; phone?: string; deleted?: string; utm_source?: string; utm_medium?: string; utm_campaign?: string; utm_content?: string }>;
 }) {
-  const { error, next, email, phone, deleted } = await searchParams;
+  const { error, next, email, phone, deleted, utm_source, utm_medium, utm_campaign, utm_content } = await searchParams;
+  // Which ad brought them (see components/landing/CampaignLinks.tsx); recorded with the sign-up.
+  const utm = { utm_source, utm_medium, utm_campaign, utm_content };
   const showLegacy = await legacyDataUnclaimed();
   const loginHref = next ? `/login?next=${encodeURIComponent(next)}` : "/login";
 
@@ -36,6 +38,7 @@ export default async function SignupPage({
         {deleted && <p className="text-xs text-text-muted">Your account and data were deleted.</p>}
         {error && <p className="text-xs text-danger">{ERRORS[error] ?? "Something went wrong."}</p>}
         <input type="hidden" name="next" value={next ?? ""} />
+        {Object.entries(utm).map(([k, v]) => (v ? <input key={k} type="hidden" name={k} value={v.slice(0, 80)} /> : null))}
         <TimeZoneInput />
         <input
           type="email"

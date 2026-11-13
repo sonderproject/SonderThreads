@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { CampaignLinks } from "@/components/landing/CampaignLinks";
 import { CommandDemo } from "@/components/landing/CommandDemo";
 import { CalendarIcon, MicIcon, PeopleIcon, TasksIcon } from "@/components/ui/icons";
 import Link from "next/link";
@@ -182,6 +183,7 @@ function Cta({ className = "" }: { className?: string }) {
 export default function WelcomePage() {
   return (
     <div className="min-h-screen bg-bg text-text">
+      <CampaignLinks />
       <header className="glass pt-safe sticky top-0 z-20 border-b">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-8">
           <Link href="/" className="flex items-center gap-3" aria-label="Strynd">

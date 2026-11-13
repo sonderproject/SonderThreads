@@ -260,7 +260,12 @@ export async function signup(formData: FormData): Promise<void> {
   }
 
   await createUserRow(userId, email, phone, smsOptIn, timeZone);
-  await logEvent("auth.signup", isLikelyBot(email) ? "New sign-up (likely bot)" : "New sign-up", { email, path: "/signup" });
+  const source = Object.fromEntries(
+    ["utm_source", "utm_medium", "utm_campaign", "utm_content"]
+      .map((k) => [k, formData.get(k)?.toString().trim().slice(0, 80) || null])
+      .filter(([, v]) => v),
+  );
+  await logEvent("auth.signup", isLikelyBot(email) ? "New sign-up (likely bot)" : "New sign-up", { email, path: "/signup", meta: source });
   redirect(`/signup/check-email?${new URLSearchParams({ email, next })}`);
 }
 
