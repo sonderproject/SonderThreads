@@ -80,14 +80,14 @@ Start a 14-day free team trial at strynd.com
 
 ## 2. Local businesses with regulars (1 variant)
 
-Only if you test this lane on LinkedIn. Instagram and Facebook are the better home for it (see `posting-plan.md`).
+Video: `docs/marketing/video/strynd-linkedin-business-4x5.mp4` (22s, pet-grooming example: "Your regulars expect you to remember."). The owner is running this lane on LinkedIn too; also post it on Instagram and Facebook (see `posting-plan.md`).
 
 **Introductory text** (398 characters; hook ends at 129)
 
 ```text
 Your booking app knows when your regulars come in. Strynd remembers who they are: their usual, their last visit, what they spent.
 
-Type "Ana Ortiz, haircut $45" and it's filed under Ana. Next time she walks in, it's all there.
+Type "Max, full groom $65" and it's filed under Max, with the note that he's allergic to oatmeal shampoo. Next time he comes in, it's all there.
 
 Strynd works alongside the booking app you already use, on any phone or computer. Your data is never sold.
 
@@ -145,7 +145,12 @@ The video is clear and works muted. The problem is the order: it opens like a sm
 
 ### Local-business variant
 
-Leave it out of round 1. If you want to try it, give it its own $10-a-day campaign for 7 days ($70), titles Owner / Founder / Salon Owner, company size 1–10, and judge it by the same click-through rule. Expect Instagram and Facebook to do this job for less.
+Run it as its own campaign alongside round 1: $10 a day for 14 days (about $140), objective Website visits, same click-through rule.
+- **Job titles:** Owner, Co-Owner, Founder, Practice Manager, Clinic Manager, Office Manager, Studio Owner, Salon Owner, General Manager.
+- **AND industries (closest names in Campaign Manager; written from memory, confirm there):** Veterinary Services, Pet Services, Personal Care Services (salons, spas, barbers), Wellness and Fitness Services, Education (tutoring), Consumer Services.
+- **Company size:** 1–10 and 11–50.
+- **Location:** start with your metro area or state; local owners respond better to a local founder.
+- Expect Instagram and Facebook to reach these owners more cheaply; use LinkedIn results to see which business type responds, then put more budget there.
 
 ### Before launch
 
