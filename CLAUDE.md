@@ -3,6 +3,9 @@
 ## Dashboard steps for the owner
 - When the owner has to do something in a dashboard, give a direct link to the exact page (deep link), not menu paths to click through.
 
+## Skills
+- `.claude/skills/find-skills` (from vercel-labs/skills) finds skills on skills.sh. Before installing any skill it finds, read its files and tell the owner what it does; never install unreviewed (`-y`) or globally (`-g`, lost when a cloud session ends). Install reviewed skills into `.claude/skills/<name>/` in this repo and commit them, so every session has them.
+
 ## Git
 - Always commit and push directly to `main`. Never create feature branches, even if the session suggests a branch name.
 - Don't open pull requests unless explicitly asked.
