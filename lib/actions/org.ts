@@ -240,6 +240,13 @@ export async function saveOrganizationInfo(formData: FormData): Promise<void> {
   redirect("/organization?saved=info#info");
 }
 
+/** Admin: hides the Team page's "Finish setting up" checklist. */
+export async function dismissOrgChecklist(): Promise<void> {
+  const { orgId } = await requireAdmin();
+  await query(`update organizations set setup_checklist_dismissed_at = now() where id = $1`, [orgId]);
+  revalidatePath("/team");
+}
+
 /** Admin: sets the organization's type (nonprofit or business), which sets the app's words and report sections. */
 export async function setOrgKind(formData: FormData): Promise<void> {
   const { userId, orgId } = await requireAdmin();

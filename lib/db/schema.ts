@@ -1060,4 +1060,8 @@ alter table users add column if not exists email_tips_opt_out boolean not null d
 
 -- "Try it with sample clients" (lib/actions/sample.ts): marked so one click removes them all.
 alter table people add column if not exists is_sample boolean not null default false;
+
+-- Team page "Finish setting up" checklist (lib/org-checklist.ts): hidden by an admin, and the first report download.
+alter table organizations add column if not exists setup_checklist_dismissed_at timestamptz;
+alter table organizations add column if not exists first_report_at timestamptz;
 `;

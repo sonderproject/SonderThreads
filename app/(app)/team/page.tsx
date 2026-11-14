@@ -7,6 +7,10 @@ import { ROLE_LABELS, type OrgRole } from "@/lib/org";
 import { countNewReferrals } from "@/lib/referrals";
 import { getOrgTimeZone } from "@/lib/referral-settings";
 import { getTerms } from "@/lib/terms-server";
+import { getOrgChecklist } from "@/lib/org-checklist";
+import { OrgChecklist } from "@/components/org/OrgChecklist";
+import { SampleData } from "@/components/home/SampleData";
+import { canLoadSampleData, hasSampleData } from "@/lib/actions/sample";
 
 type Row = {
   user_id: string;
@@ -49,6 +53,10 @@ export default async function TeamPage() {
 
   const newReferrals = viewer.role === "admin" ? await countNewReferrals(viewer.orgId) : 0;
   const seats = viewer.role === "admin" ? await seatUsage(viewer.orgId) : null;
+  const [checklist, sampleIn, sampleOffer] =
+    viewer.role === "admin"
+      ? await Promise.all([getOrgChecklist(viewer.orgId, terms.impact), hasSampleData(), canLoadSampleData()])
+      : [null, false, false];
   return (
     <div className="space-y-6">
       <div className="space-y-1">
@@ -71,6 +79,8 @@ export default async function TeamPage() {
           </div>
         )}
       </div>
+      {checklist && <OrgChecklist items={checklist} />}
+      {sampleIn ? <SampleData mode="loaded" /> : sampleOffer && <SampleData mode="offer" />}
       {seats && <SeatSummary seats={seats} canManage />}
 
       <div className="grid gap-3 sm:grid-cols-4">

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { query } from "@/lib/db/client";
 import { takeQuota } from "@/lib/usage";
 import { getSessionUser } from "@/lib/session";
 import { getTimeZone } from "@/lib/timezone";
@@ -39,6 +40,8 @@ export async function GET(request: Request) {
   const tz = org?.timeZone ?? (await getTimeZone());
   const { from, to } = normalizeRange(params.get("from"), params.get("to"), dayKey(new Date(), tz));
   const metrics = await computeMetrics(user.id, tz, from, to, org);
+  // Ticks "Download your first report" on the Team page checklist.
+  if (m?.active) await query(`update organizations set first_report_at = now() where id = $1 and first_report_at is null`, [m.orgId]).catch(() => undefined);
   const disposition = `attachment; filename="${format === "pdf" ? (m?.orgKind === "business" ? "insights-report" : "impact-report") : "metrics"}-${from}-to-${to}.${format}"`;
 
   if (format === "csv") {
