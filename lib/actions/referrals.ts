@@ -191,16 +191,21 @@ async function sendReferralConfirmation(
     : waitlisted
       ? `${orgName} is fully booked right now, so ${client} will be contacted for the next available appointment.`
       : `${orgName} will reach out to ${client}.`;
+  // A small, low-key "try it yourself" note: the person referring often works at another agency.
+  const tryUrl = `${appUrl()}/get-started?${new URLSearchParams({ utm_source: "referral", utm_medium: "email", utm_campaign: "referral-confirmation" })}`;
   await sendEmail({
     to,
     subject: when ? `Referral received: ${client}, ${when}` : `Referral received: ${client}`,
-    text: `Thank you for your referral.\n\n${line}${location ? `\nLocation: ${location}` : ""}\n\nSent with Surfdesk (${appUrl()}).`,
+    text: `Thank you for your referral.\n\n${line}${location ? `\nLocation: ${location}` : ""}\n\n${orgName} uses Surfdesk to track clients, follow-ups and referrals. Want the same for your team? Try it free: ${tryUrl}`,
     html: `<div style="font-family:Inter,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:#141412">
       <p style="margin:0 0 12px">Thank you for your referral.</p>
       <p style="margin:0 0 12px"><strong>${escapeHtml(line)}</strong></p>${
         location ? `<p style="margin:0 0 12px">Location: ${escapeHtml(location)}</p>` : ""
       }
-      <p style="margin:16px 0 0;color:#6e5f4d;font-size:13px">Sent with Surfdesk.</p></div>`,
+      <div style="margin:24px 0 0;padding:14px 16px;border:1px solid #e2dbd0;border-radius:12px;background:#f6f4ef">
+        <p style="margin:0 0 6px;font-size:13px;color:#6e5f4d">${escapeHtml(orgName)} uses Surfdesk to keep track of clients, follow-ups and referrals.</p>
+        <p style="margin:0;font-size:14px"><strong>Want the same for your team?</strong> <a href="${escapeHtml(tryUrl)}" style="color:#1c77b5;font-weight:600">Try Surfdesk free &rarr;</a></p>
+      </div></div>`,
   });
 }
 

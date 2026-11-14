@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { FormMemory } from "@/components/referrals/FormMemory";
 import { ReferralServicePicker } from "@/components/referrals/ReferralServicePicker";
 import { queryOne } from "@/lib/db/client";
 import { submitReferral } from "@/lib/actions/referrals";
@@ -15,7 +16,7 @@ const ERRORS: Record<string, string> = {
   dob: "Enter the client's date of birth.",
   referrer: "Enter your name and department.",
   email: "Enter your email address so we can confirm the referral.",
-  slot: "Choose an appointment time from the list.",
+  slot: "That time is no longer available. Please choose another; everything else you entered is still here.",
   taken: "Someone just booked that time. Please choose another.",
   busy: "Too many referrals from this device just now. Please try again in a little while.",
 };
@@ -88,13 +89,26 @@ export default async function ReferPage({
                     Location: <strong>{settings.location}</strong>
                   </p>
                 )}
+                <FormMemory storageKey={`referral:${code}`} restore={false} clear />
                 <p className="text-xs text-text-muted">We&apos;ve emailed you a confirmation.</p>
                 <a href={`/refer/${encodeURIComponent(code)}`} className="inline-block text-sm text-accent hover:underline">
                   Refer another client
                 </a>
               </div>
+            ) : null}
+            {sent ? (
+              <a
+                href="/get-started?utm_source=referral&utm_medium=thankyou&utm_campaign=referral-thankyou"
+                className="card block space-y-1 p-4 text-left transition-colors hover:bg-bg-hover"
+              >
+                <span className="block text-sm font-semibold text-text">Your team could use this too.</span>
+                <span className="block text-xs text-text-muted">
+                  {org.name} uses Surfdesk for clients, follow-ups and referrals like this one. Try it free →
+                </span>
+              </a>
             ) : (
-              <form action={submitReferral} className="card space-y-5 p-5">
+              <form action={submitReferral} data-memory={`referral:${code}`} className="card space-y-5 p-5">
+                <FormMemory storageKey={`referral:${code}`} restore={Boolean(error)} clear={false} />
                 <input type="hidden" name="code" value={code} />
                 {/* Spam trap: hidden from people. */}
                 <div aria-hidden className="absolute -left-[9999px] h-0 w-0 overflow-hidden">
