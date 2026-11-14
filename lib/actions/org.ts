@@ -243,7 +243,9 @@ export async function saveOrganizationInfo(formData: FormData): Promise<void> {
 export async function setOrgKind(formData: FormData): Promise<void> {
   const { userId, orgId } = await requireAdmin();
   const kind = formData.get("kind");
-  if (!isOrgKind(kind)) redirect("/organization");
+  if (!isOrgKind(kind)) redirect("/organization#type");
+  const current = await asUser(userId, (q) => q<{ kind: string }>(`select kind from organizations where id = $1`, [orgId]));
+  if (current[0]?.kind === kind) redirect("/organization#type");
   await asUser(userId, (q) => q(`update organizations set kind = $1, updated_at = now() where id = $2`, [kind, orgId]));
   revalidatePath("/", "layout");
   redirect("/organization?saved=kind#type");

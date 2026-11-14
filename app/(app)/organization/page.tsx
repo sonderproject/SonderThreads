@@ -121,28 +121,34 @@ export default async function OrganizationPage({ searchParams }: { searchParams:
 
       <section id="type" className="scroll-mt-20 space-y-3">
         <h2 className="section-label">Organization type</h2>
-        <form action={setOrgKind} className="grid gap-3 sm:grid-cols-2">
-          {ORG_KINDS.map((k) => {
-            const current = (info?.kind ?? "nonprofit") === k.value;
-            return (
-              <button
-                key={k.value}
-                type="submit"
-                name="kind"
-                value={k.value}
-                aria-pressed={current}
-                className={`card space-y-1 p-4 text-left transition-colors ${
-                  current ? "border-accent ring-1 ring-accent" : "hover:bg-bg-hover"
-                }`}
-              >
-                <span className="flex items-center justify-between gap-2">
-                  <span className="font-semibold text-text">{k.label}</span>
-                  {current ? <span className="tag">Current</span> : <span className="text-xs text-accent">Switch</span>}
-                </span>
-                <span className="block text-xs text-text-muted">{k.hint}</span>
-              </button>
-            );
-          })}
+        <form key={info?.kind} action={setOrgKind} className="space-y-3">
+          <fieldset className="grid gap-3 sm:grid-cols-2">
+            <legend className="sr-only">Organization type</legend>
+            {ORG_KINDS.map((k) => {
+              const current = (info?.kind ?? "nonprofit") === k.value;
+              return (
+                <label
+                  key={k.value}
+                  className="card flex cursor-pointer items-start gap-3 p-4 transition-colors hover:bg-bg-hover has-[:checked]:border-accent has-[:checked]:ring-1 has-[:checked]:ring-accent"
+                >
+                  <input type="radio" name="kind" value={k.value} defaultChecked={current} required className="mt-1 accent-[var(--accent)]" />
+                  <span className="space-y-1">
+                    <span className="flex items-center gap-2">
+                      <span className="font-semibold text-text">{k.label}</span>
+                      {current && <span className="tag">Current</span>}
+                    </span>
+                    <span className="block text-xs text-text-muted">{k.hint}</span>
+                  </span>
+                </label>
+              );
+            })}
+          </fieldset>
+          <div className="flex flex-wrap items-center gap-3">
+            <button type="submit" className="rounded-full bg-accent px-4 py-1.5 text-sm font-semibold text-bg hover:bg-accent-dim">
+              Save type
+            </button>
+            <p className="text-xs text-text-muted">Changes the words and reports for everyone in your organization.</p>
+          </div>
         </form>
       </section>
 
