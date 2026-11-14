@@ -48,6 +48,13 @@ const m: Metrics = {
     { name: "Puppy cut", count: 121, prevCount: 92, people: 64, valueCents: 665500, busiestDay: "Wednesday", busiestTime: "10a" },
     { name: "De-shedding", count: 86, prevCount: 62, people: 49, valueCents: 516000, busiestDay: "Saturday", busiestTime: "10a" },
   ],
+  outcomes: [
+    { name: "Became a regular", people: 22, prevPeople: 15 },
+    { name: "Joined membership", people: 8, prevPeople: 5 },
+    { name: "Referred a friend", people: 6, prevPeople: 7 },
+  ],
+  outcomePeople: 31,
+  prevOutcomePeople: 24,
 };
 
 impactPdf(m, {

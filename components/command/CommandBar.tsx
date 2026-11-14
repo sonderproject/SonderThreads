@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { executeCommand, previewCommand, type CommandPreview, type CommandResult } from "@/lib/actions/command";
+import { recordOutcome } from "@/lib/actions/outcomes";
 import { SearchResultsPanel } from "@/components/search/SearchResultsPanel";
 import { useVoiceInput } from "@/components/voice/useVoiceInput";
 import { MicIcon, SendIcon } from "@/components/ui/icons";
@@ -329,6 +330,38 @@ export function CommandBar({
   );
 }
 
+/** After a note like "Marcus got the job": one tap records the matching outcome (dated today). */
+function OutcomeOffer({ personId, outcomeId, name }: { personId: string; outcomeId: string; name: string }) {
+  const [state, setState] = useState<"idle" | "saving" | "done" | "error">("idle");
+  const [error, setError] = useState<string | null>(null);
+  if (state === "done") return <p className="text-xs text-accent">✓ Outcome recorded: {name}</p>;
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <button
+        type="button"
+        disabled={state === "saving"}
+        onClick={async () => {
+          setState("saving");
+          const r = await recordOutcome({ personId, outcomeId });
+          if (r.ok) setState("done");
+          else {
+            setError(r.error);
+            setState("error");
+          }
+        }}
+        className="rounded-full border border-accent px-3 py-1 text-xs font-semibold text-accent hover:bg-bg-hover disabled:opacity-60"
+      >
+        {state === "saving" ? "Recording…" : `Record outcome: ${name}`}
+      </button>
+      {error && (
+        <span role="alert" className="text-xs text-danger">
+          {error}
+        </span>
+      )}
+    </div>
+  );
+}
+
 function ResultView({ result, onClose }: { result: CommandResult; onClose: () => void }) {
   if (result.kind === "batch") {
     return (
@@ -341,15 +374,18 @@ function ResultView({ result, onClose }: { result: CommandResult; onClose: () =>
   }
   if (result.kind === "confirmation") {
     return (
-      <p className="mt-2 tabular-nums text-xs text-accent">
-        {result.href ? (
-          <Link href={result.href} className="hover:underline">
-            {result.message}
-          </Link>
-        ) : (
-          result.message
-        )}
-      </p>
+      <div className="mt-2 space-y-1.5">
+        <p className="tabular-nums text-xs text-accent">
+          {result.href ? (
+            <Link href={result.href} className="hover:underline">
+              {result.message}
+            </Link>
+          ) : (
+            result.message
+          )}
+        </p>
+        {result.outcome && <OutcomeOffer {...result.outcome} />}
+      </div>
     );
   }
   if (result.kind === "error") return <p className="mt-2 tabular-nums text-xs text-danger">{result.message}</p>;

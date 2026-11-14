@@ -1,5 +1,7 @@
 "use server";
 
+import { listOutcomes } from "@/lib/outcomes";
+import { matchOutcome } from "@/lib/outcome-match";
 import { takeQuota } from "@/lib/usage";
 import { query } from "@/lib/db/client";
 import { requireUserId } from "@/lib/current-user";
@@ -38,7 +40,14 @@ async function serviceCommand(
 }
 
 export type CommandResult =
-  | { kind: "confirmation"; message: string; href?: string; listName?: string }
+  | {
+      kind: "confirmation";
+      message: string;
+      href?: string;
+      listName?: string;
+      /** The note mentioned one of the account's outcomes: offer to record it (one tap). */
+      outcome?: { personId: string; outcomeId: string; name: string };
+    }
   | { kind: "batch"; results: CommandResult[] }
   | { kind: "search_results"; query: string; results: SearchResults }
   | { kind: "error"; message: string };
@@ -215,10 +224,13 @@ async function executeOne(trimmed: string, tzOffset: number): Promise<CommandRes
         }
         await createNote({ content: parsed.content ?? trimmed, personId, category: parsed.category, tzOffset });
         const person = await findPersonByName(parsed.names[0] ?? "");
+        // "Marcus got the job" → offer to record the "Got a job" outcome.
+        const match = matchOutcome(parsed.content ?? trimmed, await listOutcomes().catch(() => []));
         return {
           kind: "confirmation",
           message: `✓ Added note to ${person?.display_name ?? "person"}`,
           href: `/people/${personId}`,
+          ...(match ? { outcome: { personId, outcomeId: match.id, name: match.name } } : {}),
         };
       }
 

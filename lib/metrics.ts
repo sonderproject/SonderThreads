@@ -136,7 +136,7 @@ async function compute(
   // Clients deleted later still count in the periods they were served, so past reports never change.
   const inRange = `${col} = $1`;
 
-  const [sinceRows, kpis, prev, checkInRows, newPeopleRows, reasonRows, weekdayRows, visitorRows, demoRows, reachRows, heatRows, followRows, serviceRows] = await Promise.all([
+  const [sinceRows, kpis, prev, checkInRows, newPeopleRows, reasonRows, weekdayRows, visitorRows, demoRows, reachRows, heatRows, followRows, serviceRows, outcomeRows, outcomeTotals] = await Promise.all([
     run<{ d: string | null }>(
       `select to_char(min(c.checked_in_at at time zone $2), 'YYYY-MM-DD') as d from check_ins c where c.${col} = $1 and c.deleted_at is null`,
       [scopeId, tz],
@@ -246,6 +246,25 @@ async function compute(
         order by n desc, prev desc, s.name`,
       [...range, prevFrom, prevTo],
     ),
+    // Outcomes: people who reached each one, this period and last (each person once per outcome).
+    // achieved_on is already a local date, so no time zone conversion.
+    run<{ name: string; people: number; prev: number }>(
+      `select o.name,
+              count(distinct po.person_id) filter (where po.achieved_on between $3::date and $4::date)::int as people,
+              count(distinct po.person_id) filter (where po.achieved_on between $5::date and $6::date)::int as prev
+         from person_outcomes po join outcomes o on o.id = po.outcome_id
+        where po.${col} = $1 and po.deleted_at is null and po.achieved_on between $5::date and $4::date
+        group by o.id, o.name
+        order by people desc, prev desc, o.name`,
+      [...range, prevFrom, prevTo],
+    ),
+    run<{ now: number; prev: number }>(
+      `select count(distinct person_id) filter (where achieved_on between $3::date and $4::date)::int as now,
+              count(distinct person_id) filter (where achieved_on between $5::date and $6::date)::int as prev
+         from person_outcomes
+        where ${col} = $1 and deleted_at is null and achieved_on between $5::date and $4::date`,
+      [...range, prevFrom, prevTo],
+    ),
   ]);
 
   // Every category in the standard order (zeros included) so exports are complete tables.
@@ -313,6 +332,9 @@ async function compute(
       busiestDay: r.dow ? WEEKDAY_NAMES[r.dow - 1] : null,
       busiestTime: r.block === null ? null : HEATMAP_BLOCKS[r.block],
     })),
+    outcomes: outcomeRows.filter((r) => r.people > 0 || r.prev > 0).map((r) => ({ name: r.name, people: r.people, prevPeople: r.prev })),
+    outcomePeople: outcomeTotals[0]?.now ?? 0,
+    prevOutcomePeople: outcomeTotals[0]?.prev ?? 0,
   };
 }
 

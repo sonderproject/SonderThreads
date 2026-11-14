@@ -25,6 +25,9 @@ export type FollowThrough = { due: number; onTime: number; late: number; open: n
 export type MetricsScope = "me" | "org";
 
 /** One service's numbers for the period (Settings → Services). */
+/** One outcome in the period: how many people reached it (each person once), and in the previous period. */
+export type OutcomeStat = { name: string; people: number; prevPeople: number };
+
 export type ServiceStat = {
   name: string;
   /** Times provided in the period, and in the previous period of the same length. */
@@ -67,6 +70,11 @@ export type Metrics = {
   trackingSince: string | null;
   /** Services provided in the period, most used first (empty when none are logged). */
   services: ServiceStat[];
+  /** Outcomes reached in the period, most reached first (empty when none were recorded). */
+  outcomes: OutcomeStat[];
+  /** Different people who reached at least one outcome in the period, and in the previous period. */
+  outcomePeople: number;
+  prevOutcomePeople: number;
 };
 
 export const HEATMAP_BLOCKS = ["12a", "2a", "4a", "6a", "8a", "10a", "12p", "2p", "4p", "6p", "8p", "10p"];
@@ -127,6 +135,14 @@ export function buildStory(m: Metrics, opts: { followUps?: boolean; audience?: "
   const reasons = m.byReason.filter((r) => r.key !== "__other" && r.label !== "No reason given");
   const total = m.byReason.reduce((s, r) => s + r.value, 0);
   if (reasons.length) out.push(`${w.need} ${reasons[0].label.toLowerCase()} (${pct(reasons[0].value, total)}% of ${w.events}).`);
+  // Outcomes: results, not just activity ("41 people reached an outcome in November. Most often: got a job (18).").
+  if (m.outcomePeople > 0) {
+    const top = m.outcomes[0];
+    out.push(
+      `${m.outcomePeople.toLocaleString()} ${m.outcomePeople === 1 ? w.one : w.many} reached an outcome ${periodWord(m)}${changePhrase(m.outcomePeople, m.prevOutcomePeople)}.` +
+        (top && top.people > 0 ? ` Most often: ${top.name.toLowerCase()} (${top.people.toLocaleString()}).` : ""),
+    );
+  }
   const revenue = m.services.reduce((n, s) => n + s.valueCents, 0);
   if (opts.audience === "business" && revenue > 0 && k.checkIns > 0)
     out.push(`Services brought in $${Math.round(revenue / 100).toLocaleString()}, about $${Math.round(revenue / 100 / k.checkIns)} per visit.`);

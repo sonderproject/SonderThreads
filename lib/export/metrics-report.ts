@@ -54,11 +54,20 @@ export function metricsCsv(m: Metrics): string {
         ...m.services.map((s) => [s.name, String(s.count), String(s.prevCount), String(s.people), (s.valueCents / 100).toFixed(2)].map(esc).join(",")),
       ]
     : [];
+  const outcomes = m.outcomes.length
+    ? [
+        "",
+        ["Outcome", "People", "Previous period"].map(esc).join(","),
+        ...m.outcomes.map((o) => [o.name, String(o.people), String(o.prevPeople)].map(esc).join(",")),
+        ["Reached any outcome", String(m.outcomePeople), String(m.prevOutcomePeople)].map(esc).join(","),
+      ]
+    : [];
   return [
     `Period,${esc(periodLabel(m))}`,
     `Previous period,${esc(`${fmtDay(m.prevFrom)} – ${fmtDay(m.prevTo)}`)}`,
     "",
     ...rows.map((r) => r.map(esc).join(",")),
+    ...outcomes,
     ...services,
   ].join("\n");
 }
@@ -89,6 +98,15 @@ export async function metricsXlsx(m: Metrics, opts: { followUps?: boolean } = {}
   story.addRow([m.scope === "org" && m.orgName ? `${m.orgName}: ${periodLabel(m)}` : periodLabel(m)]).font = { bold: true, size: 13 };
   for (const line of buildStory(m, opts)) story.addRow([line]);
   story.columns = [{ width: 110 }];
+
+  if (m.outcomes.length) {
+    const out = wb.addWorksheet("Outcomes");
+    out.addRow(["Outcome", "People", "Previous period"]).font = { bold: true };
+    for (const o of m.outcomes) out.addRow([o.name, o.people, o.prevPeople]);
+    out.addRow(["Reached any outcome", m.outcomePeople, m.prevOutcomePeople]).font = { bold: true };
+    out.columns = [{ width: 30 }, { width: 10 }, { width: 16 }];
+    out.views = [{ state: "frozen", ySplit: 1 }];
+  }
 
   if (m.services.length) {
     const svc = wb.addWorksheet("Services");

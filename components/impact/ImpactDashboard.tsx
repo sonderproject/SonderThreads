@@ -1,7 +1,7 @@
 "use client";
 
 import { formatMoney } from "@/lib/money";
-import type { ServiceStat } from "@/lib/metrics-shared";
+import type { OutcomeStat, ServiceStat } from "@/lib/metrics-shared";
 import { useTerms } from "@/components/TermsProvider";
 
 import { useCallback, useEffect, useState } from "react";
@@ -260,7 +260,11 @@ export function ImpactDashboard({ orgName }: { orgName: string | null }) {
             </div>
           </Chapter>
 
-          <Chapter n="02" title="When people come" lead="Plan staffing around your busiest hours.">
+          <Chapter n="02" title="Outcomes" lead="Results people reached, each person counted once per outcome.">
+            <OutcomesSummary data={data} periodName={periodName} />
+          </Chapter>
+
+          <Chapter n="03" title="When people come" lead="Plan staffing around your busiest hours.">
             <div className="grid gap-3 lg:grid-cols-[2fr_1fr]">
               <section className="card space-y-3 p-4">
                 <h3 className="text-sm font-semibold text-text">Busiest times</h3>
@@ -272,14 +276,14 @@ export function ImpactDashboard({ orgName }: { orgName: string | null }) {
             </div>
           </Chapter>
 
-          <Chapter n="03" title="Needs" lead="Why people came in.">
+          <Chapter n="04" title="Needs" lead="Why people came in.">
             {data.services.length > 0 && <ServicesTable services={data.services} />}
             <ChartCard title="Reasons for visits" subtitle={`${terms.checkIns} by reason`} table={data.byReason} unit={terms.checkInsLower} wide>
               {data.byReason.length ? <BarList data={data.byReason} unit={terms.checkInsLower} /> : <Empty />}
             </ChartCard>
           </Chapter>
 
-          <Chapter n="04" title="Who we serve" lead="People served in this period, each counted once.">
+          <Chapter n="05" title="Who we serve" lead="People served in this period, each counted once.">
             <div className="grid gap-3 lg:grid-cols-3">
               <ChartCard title="Gender" subtitle="People served" table={data.byGender} unit="people">
                 <Demographic data={data.byGender} />
@@ -294,14 +298,14 @@ export function ImpactDashboard({ orgName }: { orgName: string | null }) {
           </Chapter>
 
           {followUps && (
-            <Chapter n="05" title="Follow-through" lead="Follow-ups (tasks with a due date) that were due in this period.">
+            <Chapter n="06" title="Follow-through" lead="Follow-ups (tasks with a due date) that were due in this period.">
               <section className="card p-5">
                 <FollowThroughBar data={data.followThrough} />
               </section>
             </Chapter>
           )}
 
-          <Chapter n={followUps ? "06" : "05"} title="Regulars" lead="The people who came in most. Not included in exported reports.">
+          <Chapter n={followUps ? "07" : "06"} title="Regulars" lead="The people who came in most. Not included in exported reports.">
             {scope === "me" ? (
                 <ChartCard title="Most frequent visitors" subtitle={`Top 10 by ${terms.checkInsLower}`} table={data.topVisitors} unit={terms.checkInsLower}>
                   {data.topVisitors.length ? <BarList data={data.topVisitors} unit={terms.checkInsLower} hrefFor={(p) => `/people/${p.personId}`} /> : <Empty />}
@@ -393,6 +397,70 @@ function Empty() {
 function Demographic({ data }: { data: Point[] }) {
   const shown = data.filter((d) => d.value > 0);
   return shown.length ? <BarList data={shown} unit="people" /> : <Empty />;
+}
+
+/** Outcomes: how many people reached any outcome, then each one with its trend. */
+export function OutcomesSummary({ data, periodName }: { data: Metrics; periodName: string }) {
+  if (data.outcomes.length === 0) {
+    return (
+      <section className="card space-y-1 p-4 text-sm">
+        <p className="text-text">No outcomes recorded in this period.</p>
+        <p className="text-xs text-text-muted">
+          When someone gets a job, finds housing or becomes a regular, record it on their profile (Outcomes). Your list is in{" "}
+          <a href="/settings/outcomes" className="text-accent hover:underline">
+            Settings → Outcomes
+          </a>
+          .
+        </p>
+      </section>
+    );
+  }
+  const trend = (now: number, prev: number) => {
+    if (prev === 0) return now > 0 ? { text: "new", tone: "text-accent" } : { text: "–", tone: "text-text-muted" };
+    const pct = Math.round(((now - prev) / prev) * 100);
+    if (pct === 0) return { text: "same", tone: "text-text-muted" };
+    return { text: `${pct > 0 ? "↑" : "↓"} ${Math.abs(pct)}%`, tone: pct > 0 ? "text-accent" : "text-urgent" };
+  };
+  const total = trend(data.outcomePeople, data.prevOutcomePeople);
+  return (
+    <div className="grid gap-3 lg:grid-cols-[1fr_2fr]">
+      <section className="card space-y-1 p-4" style={{ borderColor: "var(--accent)" }}>
+        <p className="eyebrow text-text-faint">People who reached an outcome</p>
+        <p className="font-display text-4xl font-light tabular-nums">{data.outcomePeople.toLocaleString("en-US")}</p>
+        <p className="text-xs text-text-muted">
+          <span className={total.tone}>{total.text}</span> vs {periodName} ({data.prevOutcomePeople.toLocaleString("en-US")})
+        </p>
+      </section>
+      <OutcomesTable outcomes={data.outcomes} />
+    </div>
+  );
+}
+
+function OutcomesTable({ outcomes }: { outcomes: OutcomeStat[] }) {
+  return (
+    <section className="card space-y-2 p-4">
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[20rem] text-sm">
+          <thead>
+            <tr className="eyebrow text-left">
+              <th className="py-1.5 pr-3 font-medium">Outcome</th>
+              <th className="py-1.5 pr-3 text-right font-medium">People</th>
+              <th className="py-1.5 text-right font-medium">Previous period</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border-subtle">
+            {outcomes.map((o) => (
+              <tr key={o.name}>
+                <td className="py-2 pr-3 text-text">{o.name}</td>
+                <td className="py-2 pr-3 text-right tabular-nums">{o.people.toLocaleString("en-US")}</td>
+                <td className="py-2 text-right tabular-nums text-text-muted">{o.prevPeople.toLocaleString("en-US")}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  );
 }
 
 /** Services: how often each was provided, to how many people, what it brought in, its trend and its busiest time. */

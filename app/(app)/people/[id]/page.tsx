@@ -34,6 +34,9 @@ import { shortDate } from "@/lib/team";
 import { ClientComments, type ClientComment } from "@/components/org/ClientComments";
 import { ShareToggle } from "@/components/people/ShareToggle";
 import { getMembership } from "@/lib/org";
+import { listOutcomes, listPersonOutcomes } from "@/lib/outcomes";
+import { PersonOutcomes } from "@/components/people/PersonOutcomes";
+import { dayKey } from "@/lib/tz";
 
 /** Supervisor comments on one of my clients (read through the database's access rules). */
 async function listCommentsForPerson(personId: string): Promise<ClientComment[]> {
@@ -76,7 +79,7 @@ export default async function PersonProfilePage({
   if (!isUuid(id)) notFound();
   const me = await requireUserId();
   // Everything loads at once (each query is scoped to the user, so a bad id just returns nothing).
-  const [person, activity, tasks, lists, notes, checkIns, reasons, allLists, comments, tz, membership, services, scope] = await Promise.all([
+  const [person, activity, tasks, lists, notes, checkIns, reasons, allLists, comments, tz, membership, services, scope, outcomes, recordedOutcomes] = await Promise.all([
     getPerson(id),
     getPersonTimeline(id),
     listTasksForPerson(id),
@@ -90,6 +93,8 @@ export default async function PersonProfilePage({
     getMembership(),
     listServices(),
     serviceScope(),
+    listOutcomes(),
+    listPersonOutcomes(id),
   ]);
   if (!person) notFound();
 
@@ -215,6 +220,17 @@ export default async function PersonProfilePage({
             </div>
           )}
         </div>
+      </Section>
+
+      <Section title={`Outcomes${recordedOutcomes.length ? ` · ${recordedOutcomes.length}` : ""}`}>
+        <PersonOutcomes
+          personId={person.id}
+          recorded={recordedOutcomes.map((o) => ({ ...o, dateLabel: shortDate(`${o.achievedOn}T12:00:00Z`, "UTC") }))}
+          outcomes={outcomes}
+          me={me}
+          isAdmin={Boolean(membership?.active && membership.role === "admin")}
+          today={dayKey(new Date(), tz)}
+        />
       </Section>
 
       <Section title="Timeline">

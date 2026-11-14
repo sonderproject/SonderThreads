@@ -340,7 +340,8 @@ export function impactPdf(
     };
 
     /** Ranked horizontal bars with the value at the tip. Returns the bottom y. */
-    const hbars = (x: number, top: number, w: number, pts: Point[], color: string, labelW = 150) => {
+    /** `share`: show each bar's % of the total (off where one person can be in several bars, e.g. outcomes). */
+    const hbars = (x: number, top: number, w: number, pts: Point[], color: string, labelW = 150, share = true) => {
       const shown = pts.filter((p) => p.value > 0);
       if (!shown.length) {
         doc.font("body").fontSize(9).fillColor(C.muted).text("Nothing recorded in this period.", x, top);
@@ -354,8 +355,10 @@ export function impactPdf(
         doc.font("body").fontSize(8.5).fillColor(C.ink).text(p.label, x, by + 1, { width: labelW - 10, ellipsis: true, lineBreak: false });
         const bw = Math.max(2, (p.value / max) * barMax);
         doc.path(rightRounded(x + labelW, by + 1, bw, 10, 3)).fill(color);
-        doc.font("body-medium").fontSize(8).fillColor(C.ink).text(String(p.value), x + labelW + bw + 6, by + 1.5, { lineBreak: false, continued: true })
-          .font("body").fillColor(C.muted).text(`  ${Math.round((p.value / total) * 100)}%`, { lineBreak: false });
+        if (share)
+          doc.font("body-medium").fontSize(8).fillColor(C.ink).text(String(p.value), x + labelW + bw + 6, by + 1.5, { lineBreak: false, continued: true })
+            .font("body").fillColor(C.muted).text(`  ${Math.round((p.value / total) * 100)}%`, { lineBreak: false });
+        else doc.font("body-medium").fontSize(8).fillColor(C.ink).text(String(p.value), x + labelW + bw + 6, by + 1.5, { lineBreak: false });
       });
       return top + shown.length * 19;
     };
@@ -466,8 +469,11 @@ export function impactPdf(
 
     // ── 01 Reach ─────────────────────────────────────────────────────────
     const bucketWord = m.bucket === "day" ? "day" : m.bucket === "week" ? "week" : "month";
+    // Sections are numbered in order; Outcomes and Who we serve only appear when they apply.
+    let section = 0;
+    const num = () => String(++section).padStart(2, "0");
     ensure(330);
-    marker("01", "Reach");
+    marker(num(), "Reach");
     heading(W.reachTitle, `${W.people} each period, split by whether it was their first visit.`);
     {
       const ret = m.reach.reduce((n, p) => n + p.returning, 0);
@@ -490,9 +496,27 @@ export function impactPdf(
     yr = columns(PAGE.m + half + 24, yr, half, 120, m.newPeopleOverTime, C.blue);
     y = Math.max(yl, yr) + 34;
 
-    // ── 02 When people come ──────────────────────────────────────────────
+    // ── Outcomes (when any were recorded in either period) ─────────────
+    if (m.outcomes.length) {
+      // Heading, big number and every row on one page.
+      ensure(190 + m.outcomes.length * 19);
+      marker(num(), "Outcomes");
+      heading("Results people reached", "Each person counted once per outcome. The large number is everyone who reached at least one.");
+      const big = m.outcomePeople.toLocaleString("en-US");
+      doc.font("display").fontSize(40).fillColor(C.ink).text(big, PAGE.m, y, { lineBreak: false });
+      const bigW = doc.widthOfString(big);
+      doc
+        .font("body")
+        .fontSize(11)
+        .fillColor(C.muted)
+        .text(`reached an outcome (${m.prevOutcomePeople.toLocaleString("en-US")} in the previous period)`, PAGE.m + bigW + 10, y + 27, { lineBreak: false });
+      y += 60;
+      y = hbars(PAGE.m, y, CONTENT_W, m.outcomes.map((o) => ({ key: o.name, label: o.name, value: o.people })), C.blue, 170, false) + 34;
+    }
+
+    // ── When people come ─────────────────────────────────────────────────
     ensure(290);
-    marker("02", W.whenMarker);
+    marker(num(), W.whenMarker);
     heading("Busiest times", `${W.events} by day of the week and time of day.`);
     const heatBottom = heatmap(PAGE.m, y, CONTENT_W * 0.62, m.heatmap);
     const wx = PAGE.m + CONTENT_W * 0.66;
@@ -502,7 +526,7 @@ export function impactPdf(
 
     // ── 03 Needs ─────────────────────────────────────────────────────────
     ensure(70 + Math.max(1, m.byReason.length) * 19 + (m.services.length ? 60 + m.services.length * 18 : 0));
-    marker("03", W.needsMarker);
+    marker(num(), W.needsMarker);
     if (m.services.length) {
       heading("Services", W.servicesSub);
       const showValue = m.services.some((s) => s.valueCents > 0);
@@ -567,7 +591,7 @@ export function impactPdf(
     ];
     if (audience === "nonprofit") {
     ensure(150 + demo[0][1].filter((p) => p.value > 0).length * 19);
-    marker("04", "Who we serve");
+    marker(num(), "Who we serve");
     heading("The people behind the numbers", "People served in this period, each counted once.");
     for (const [title, pts] of demo) {
       ensure(40 + pts.filter((p) => p.value > 0).length * 19);
@@ -581,7 +605,7 @@ export function impactPdf(
     if (opts.followUps) {
       // ── 05 Follow-through ────────────────────────────────────────────────
       ensure(170);
-      marker(audience === "nonprofit" ? "05" : "04", "Follow-through");
+      marker(num(), "Follow-through");
       heading("Commitments kept", "Follow-ups that were due in this period, and how they turned out.");
       const f = m.followThrough;
       if (!f.due) {

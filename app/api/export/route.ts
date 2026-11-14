@@ -32,7 +32,7 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const format = searchParams.get("format") === "csv" ? "csv" : "json";
 
-  const [people, notes, lists, listItems, tasks, activity, checkIns] = await Promise.all([
+  const [people, notes, lists, listItems, tasks, activity, checkIns, outcomes] = await Promise.all([
     query<Person>(`select ${COLUMNS.people} from people where user_id = $1 and deleted_at is null order by display_name`, [userId]),
     query<Note>(`select ${COLUMNS.notes} from notes where user_id = $1 and deleted_at is null order by created_at`, [userId]),
     query<List>(`select ${COLUMNS.lists} from lists where user_id = $1 and deleted_at is null order by name`, [userId]),
@@ -40,6 +40,13 @@ export async function GET(request: Request) {
     query<Task>(`select ${COLUMNS.tasks} from tasks where user_id = $1 and deleted_at is null order by due_at nulls last`, [userId]),
     query<Activity>(`select ${COLUMNS.activity} from activity where user_id = $1 order by created_at`, [userId]),
     query<CheckIn>(`select ${COLUMNS.check_ins} from check_ins where user_id = $1 and deleted_at is null order by checked_in_at`, [userId]),
+    // Outcomes this person recorded (Settings → Outcomes), with the outcome's name.
+    query<Record<string, unknown>>(
+      `select po.id, po.person_id, o.name as outcome, to_char(po.achieved_on, 'YYYY-MM-DD') as achieved_on, po.note, po.created_at
+         from person_outcomes po join outcomes o on o.id = po.outcome_id
+        where po.user_id = $1 and po.deleted_at is null order by po.achieved_on`,
+      [userId],
+    ),
   ]);
 
   const timestamp = new Date().toISOString().slice(0, 10);
@@ -53,6 +60,7 @@ export async function GET(request: Request) {
       lists,
       list_items: listItems,
       check_ins: checkIns,
+      outcomes,
       activity,
     };
     const name = searchParams.get("table") ?? "people";
@@ -76,6 +84,7 @@ export async function GET(request: Request) {
     tasks,
     activity,
     check_ins: checkIns,
+    outcomes,
   };
 
   return new NextResponse(JSON.stringify(payload, null, 2), {

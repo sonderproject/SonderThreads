@@ -107,7 +107,8 @@ export type ActivityType =
   | "status_changed"
   | "summary_updated"
   | "list_created"
-  | "check_in";
+  | "check_in"
+  | "outcome";
 
 export type Activity = {
   id: string;

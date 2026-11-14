@@ -497,6 +497,8 @@ begin
     update list_items set org_id = new.org_id where person_id = new.id;
     update activity set org_id = new.org_id where person_id = new.id;
     update person_summaries set org_id = new.org_id where person_id = new.id;
+    -- Outcomes (added later in this file; the table exists by the time this runs).
+    update person_outcomes set org_id = new.org_id where person_id = new.id;
   end if;
   return new;
 end $$;
@@ -1064,4 +1066,62 @@ alter table people add column if not exists is_sample boolean not null default f
 -- Team page "Finish setting up" checklist (lib/org-checklist.ts): hidden by an admin, and the first report download.
 alter table organizations add column if not exists setup_checklist_dismissed_at timestamptz;
 alter table organizations add column if not exists first_report_at timestamptz;
+
+-- Outcomes (Settings → Outcomes, lib/outcomes.ts): results a client or customer
+-- reached ("Got a job", "Became a regular"). The list is per organization (admins
+-- manage it) or per person for solo accounts, like services. Recording one on a
+-- person dates it; reports count them per period. Retired outcomes keep their history.
+create table if not exists outcomes (
+  id uuid primary key default gen_random_uuid(),
+  org_id uuid references organizations(id) on delete cascade,
+  user_id uuid references users(id) on delete cascade,
+  name text not null check (length(name) between 1 and 80),
+  position int not null default 0,
+  archived_at timestamptz,
+  created_at timestamptz not null default now(),
+  check (org_id is not null or user_id is not null)
+);
+create unique index if not exists outcomes_name_idx on outcomes (coalesce(org_id, user_id), lower(name)) where archived_at is null;
+create index if not exists outcomes_scope_idx on outcomes (org_id, user_id, position);
+create index if not exists outcomes_user_id_idx on outcomes (user_id);
+alter table outcomes enable row level security;
+
+create table if not exists person_outcomes (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references users(id) on delete cascade,
+  person_id uuid not null references people(id) on delete cascade,
+  outcome_id uuid not null references outcomes(id) on delete cascade,
+  achieved_on date not null,
+  note text check (length(note) <= 500),
+  org_id uuid references organizations(id) on delete set null,
+  created_at timestamptz not null default now(),
+  deleted_at timestamptz
+);
+create index if not exists person_outcomes_person_idx on person_outcomes (person_id, achieved_on desc);
+create index if not exists person_outcomes_org_idx on person_outcomes (org_id, achieved_on) where org_id is not null;
+create index if not exists person_outcomes_user_idx on person_outcomes (user_id, achieved_on);
+create index if not exists person_outcomes_outcome_idx on person_outcomes (outcome_id);
+alter table person_outcomes enable row level security;
+drop trigger if exists person_outcomes_inherit_org on person_outcomes;
+create trigger person_outcomes_inherit_org before insert or update of person_id on person_outcomes for each row execute function inherit_person_org();
+drop trigger if exists person_outcomes_audit on person_outcomes;
+create trigger person_outcomes_audit after insert or update or delete on person_outcomes for each row execute function audit_client_change();
+do $$
+begin
+  if not exists (select 1 from pg_policies where tablename = 'outcomes' and policyname = 'owner') then
+    create policy "owner" on outcomes for all to authenticated
+      using (org_id is null and user_id = (select auth.uid())) with check (org_id is null and user_id = (select auth.uid()));
+  end if;
+  if not exists (select 1 from pg_policies where tablename = 'outcomes' and policyname = 'org read') then
+    create policy "org read" on outcomes for select to authenticated using (app_private.app_org_viewer(org_id));
+  end if;
+  if not exists (select 1 from pg_policies where tablename = 'person_outcomes' and policyname = 'owner') then
+    create policy "owner" on person_outcomes for all to authenticated using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()));
+  end if;
+  if not exists (select 1 from pg_policies where tablename = 'person_outcomes' and policyname = 'org read') then
+    create policy "org read" on person_outcomes for select to authenticated using (app_private.app_org_viewer(org_id));
+  end if;
+exception when undefined_function or invalid_schema_name or undefined_object then
+  null;
+end $$;
 `;

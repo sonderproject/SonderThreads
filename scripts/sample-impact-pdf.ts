@@ -47,6 +47,14 @@ const m: Metrics = {
     { name: "OSHA 10 class", count: 288, prevCount: 204, people: 196, valueCents: 0, busiestDay: "Wednesday", busiestTime: "12p" },
     { name: "Food Handlers card", count: 241, prevCount: 199, people: 233, valueCents: 0, busiestDay: "Thursday", busiestTime: "2p" },
   ],
+  outcomes: [
+    { name: "Got a job", people: 18, prevPeople: 12 },
+    { name: "Found housing", people: 11, prevPeople: 9 },
+    { name: "Enrolled in benefits", people: 9, prevPeople: 10 },
+    { name: "Completed program", people: 6, prevPeople: 4 },
+  ],
+  outcomePeople: 41,
+  prevOutcomePeople: 32,
 };
 
 impactPdf(m, {

@@ -14,6 +14,9 @@ import { getOrgTimeZone } from "@/lib/referral-settings";
 import { US_ZONES, zoneLabel } from "@/lib/time-zones";
 import { ContactSupportCard } from "@/components/settings/ContactSupportCard";
 import { ServicesSettings } from "@/components/settings/ServicesSettings";
+import { OutcomesSettings } from "@/components/settings/OutcomesSettings";
+import { listOutcomes } from "@/lib/outcomes";
+import { getTerms } from "@/lib/terms-server";
 import { listServices, serviceScope } from "@/lib/services";
 import { getMyCalendarLink, listLinkedCalendars } from "@/lib/actions/calendar";
 import { requireUserId } from "@/lib/current-user";
@@ -74,6 +77,8 @@ export async function SettingsSection({ slug, q }: { slug: SettingsSlug; q: Sett
       return <NotificationsSection q={q} />;
     case "services":
       return <ServicesSection />;
+    case "outcomes":
+      return <OutcomesSection />;
     case "calendar":
       return <CalendarSection />;
     case "security":
@@ -90,6 +95,11 @@ export async function SettingsSection({ slug, q }: { slug: SettingsSlug; q: Sett
 async function ServicesSection() {
   const [services, scope, membership] = await Promise.all([listServices({ includeArchived: true }), serviceScope(), getMembership()]);
   return <ServicesSettings services={services} canManage={scope.canManage} orgName={membership?.active ? membership.orgName : null} />;
+}
+
+async function OutcomesSection() {
+  const [outcomes, scope, membership] = await Promise.all([listOutcomes({ includeArchived: true }), serviceScope(), getMembership()]);
+  return <OutcomesSettings outcomes={outcomes} canManage={scope.canManage} orgName={membership?.active ? membership.orgName : null} />;
 }
 
 async function CalendarSection() {
@@ -366,13 +376,14 @@ async function OrganizationSection({ q }: { q: SettingsQuery }) {
 }
 
 async function DataSection({ q }: { q: SettingsQuery }) {
-  const membership = await getMembership();
+  const [membership, terms] = await Promise.all([getMembership(), getTerms()]);
   const { error, saved } = q;
   const exports = [
     { table: "people", label: "People" },
     { table: "notes", label: "Notes" },
     { table: "tasks", label: "Tasks" },
-    { table: "check_ins", label: membership?.active ? "Check-ins" : "Meetings" },
+    { table: "check_ins", label: terms.checkIns },
+    { table: "outcomes", label: "Outcomes" },
     { table: "lists", label: "Lists" },
     { table: "list_items", label: "List entries" },
     { table: "activity", label: "Activity history" },
