@@ -80,6 +80,27 @@ export default function TermsPage() {
             they&apos;re used, including telling clients and referrers how their information will be handled.
           </li>
         </ul>
+        <p>
+          <strong>How we handle an organization&apos;s client data.</strong> For client information an organization
+          keeps in the app, the organization is in charge and we act as its service provider. We:
+        </p>
+        <ul>
+          <li>process it only to provide the app, following the organization&apos;s instructions in its use of the app;</li>
+          <li>don&apos;t sell it, share it for advertising, or use it for any other purpose;</li>
+          <li>
+            use only the service providers listed in our <a href="/privacy">privacy policy</a>, who are bound to protect
+            it, and list any new ones there before we start using them;
+          </li>
+          <li>keep it protected with access controls and encryption, and limit our own access to what&apos;s needed to run and support the app;</li>
+          <li>tell the organization&apos;s admins without undue delay if we learn of a breach affecting its data;</li>
+          <li>
+            help the organization answer clients&apos; requests to see, correct or delete their information; and
+          </li>
+          <li>
+            when the organization closes its account, let its admins export the data first, then delete it (backups
+            are overwritten within 30 days).
+          </li>
+        </ul>
       </LegalSection>
 
       <LegalSection title="Acceptable use">
@@ -97,6 +118,21 @@ export default function TermsPage() {
           Surfdesk is a work and organizing tool. It doesn&apos;t replace any official system of record (such as
           HMIS or an agency case file) that you&apos;re required to use, and you remain responsible for keeping those
           systems accurate.
+        </p>
+      </LegalSection>
+
+      <LegalSection title="Reports, outcomes and AI">
+        <p>
+          Reports, outcomes, summaries and insights are built from what you and your staff enter. They&apos;re only as
+          complete and accurate as that information, and you&apos;re responsible for checking them before you rely on
+          them or share them (for example with a funder, board or government agency). They aren&apos;t official
+          reporting for any government program, and nothing in the app is legal, medical, financial or other
+          professional advice.
+        </p>
+        <p>
+          Some features use AI to understand what you type or say and to write summaries (see the{" "}
+          <a href="/privacy">privacy policy</a>). AI can make mistakes: check what it creates, and don&apos;t rely on it
+          alone for decisions about people.
         </p>
       </LegalSection>
 
@@ -200,12 +236,79 @@ export default function TermsPage() {
         </p>
       </LegalSection>
 
-      <LegalSection title="Governing law">
+      <LegalSection title="Resolving disputes" id="disputes">
         <p>
-          These terms are governed by the laws of the State of California, without regard to its conflict-of-law
-          rules. Any dispute will be handled in the state or federal courts located in California, unless the law
-          where you live requires otherwise.
+          <strong>
+            Please read this section carefully. It says disputes are settled by individual arbitration instead of in
+            court, and that class actions aren&apos;t allowed. You can opt out within 30 days (see below).
+          </strong>
         </p>
+        <p>
+          <strong>Talk to us first.</strong> If you have a problem with the app or these terms, email {mail} with a
+          description and what you&apos;d like us to do. We&apos;ll try to resolve it with you informally within 30
+          days, and we&apos;ll do the same before bringing any claim against you.
+        </p>
+        <p>
+          <strong>Arbitration.</strong> If we can&apos;t resolve it, any dispute between you and us relating to the app or
+          these terms will be decided by binding individual arbitration administered by the American Arbitration
+          Association (AAA) under its Consumer Arbitration Rules (or its Commercial Arbitration Rules if you use the app
+          for an organization), instead of in court. The Federal Arbitration Act governs this section. The arbitration
+          can take place by video or phone, or in the county where you live. For claims under $10,000 by an individual,
+          we&apos;ll pay the AAA filing, administration and arbitrator fees, unless the arbitrator finds the claim was
+          frivolous.
+        </p>
+        <p>
+          <strong>Exceptions.</strong> Either of us may instead bring an individual claim in small claims court if it
+          qualifies, and either of us may ask a court to stop infringement or misuse of intellectual property or the
+          app.
+        </p>
+        <p>
+          <strong>No class actions.</strong> Claims may be brought only individually, not as a plaintiff or class member
+          in any class, collective or representative action, and the arbitrator can&apos;t combine claims of more than
+          one person. If this class-action waiver is found unenforceable for a claim, that claim must be decided in
+          court, not arbitration.
+        </p>
+        <p>
+          <strong>Opting out.</strong> You can opt out of arbitration by emailing {mail} within 30 days of first agreeing
+          to these terms, with your name, account email and a statement that you opt out of arbitration. Opting out
+          doesn&apos;t affect anything else in these terms.
+        </p>
+        <p>
+          <strong>Governing law and courts.</strong> These terms are governed by the laws of the State of California and
+          applicable U.S. federal law, without regard to conflict-of-law rules. Anything not decided in arbitration or
+          small claims court will be handled in the state or federal courts located in California, unless the law where
+          you live requires otherwise.
+        </p>
+      </LegalSection>
+
+      <LegalSection title="General">
+        <ul>
+          <li>
+            <strong>Events outside our control:</strong> we aren&apos;t responsible for delays or failures caused by
+            things we can&apos;t reasonably control, such as outages at our hosting or service providers, internet or
+            power failures, natural disasters or government actions.
+          </li>
+          <li>
+            <strong>Assignment:</strong> you can&apos;t transfer these terms to someone else without our written
+            permission. We may transfer them as part of a reorganization, merger or sale of the business (for example
+            to a company we form), and they&apos;ll continue to apply.
+          </li>
+          <li>
+            <strong>Severability:</strong> if any part of these terms can&apos;t be enforced, the rest still applies.
+          </li>
+          <li>
+            <strong>No waiver:</strong> if we don&apos;t enforce a part of these terms right away, we can still enforce it
+            later.
+          </li>
+          <li>
+            <strong>Entire agreement:</strong> these terms and the privacy policy are the whole agreement between you
+            and us about the app, and replace any earlier ones.
+          </li>
+          <li>
+            <strong>What continues after your account ends:</strong> the sections on your content, fees owed,
+            disclaimer, limitation of liability, indemnity and resolving disputes.
+          </li>
+        </ul>
       </LegalSection>
 
       <LegalSection title="Changes to these terms">

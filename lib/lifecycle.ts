@@ -57,6 +57,11 @@ function unsubscribeUrl(userId: string): string | null {
   return t ? `${appUrl()}/api/email/unsubscribe?${new URLSearchParams({ u: userId, t })}` : null;
 }
 
+/** The business's mailing address for promotional emails (CAN-SPAM). Set POSTAL_ADDRESS in Vercel. */
+function postalAddress(): string | null {
+  return process.env.POSTAL_ADDRESS?.trim() || null;
+}
+
 /** Plain, readable email (no images): greeting, paragraphs, one button. */
 function compose(opts: {
   to: Recipient;
@@ -77,6 +82,7 @@ function compose(opts: {
     sign,
     "Just reply to this email if you have a question.",
     ...(unsub ? ["", `Don't want tips like this? ${unsub}`] : []),
+    ...(postalAddress() ? ["", `Sonder Project, ${postalAddress()}`] : []),
   ].join("\n");
   const p = (s: string) => `<p style="margin:0 0 14px;line-height:1.55">${escapeHtml(s)}</p>`;
   const html = `<div style="font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:15px;color:#1d1d1b;max-width:520px">
@@ -90,6 +96,7 @@ ${
 ${p(sign)}
 <p style="margin:0 0 14px;line-height:1.55;color:#6b6b66;font-size:13px">Just reply to this email if you have a question.</p>
 ${unsub ? `<p style="margin:18px 0 0;color:#6b6b66;font-size:12px"><a href="${escapeHtml(unsub)}" style="color:#6b6b66">Unsubscribe from tips</a></p>` : ""}
+${postalAddress() ? `<p style="margin:6px 0 0;color:#6b6b66;font-size:12px">Sonder Project, ${escapeHtml(postalAddress()!)}</p>` : ""}
 </div>`;
   return { to: opts.to.email, subject: opts.subject, text, html };
 }
@@ -205,8 +212,11 @@ export async function runLifecycleEmails(since: Date = LIFECYCLE_FROM): Promise<
   );
   for (const r of welcome) if (!skip(r) && (await send(r, "welcome", "", welcomeFor(r)))) sent++;
 
-  // Day 3 tip.
-  const tips = await query<Who>(
+  // Day 3 tip. It's promotional, so (US CAN-SPAM) it needs the business's mailing address:
+  // it only sends once POSTAL_ADDRESS is set in Vercel.
+  const tips = !postalAddress()
+    ? []
+    : await query<Who>(
     `${WHO}
       where u.created_at > $1 and u.created_at < now() - interval '3 days' and u.created_at > now() - interval '6 days'
         and (m.user_id is null or m.role = 'admin')

@@ -153,6 +153,9 @@ export function KioskScreen({
             >
               {pending ? "Checking in…" : "Check in"}
             </button>
+            <p className="text-center text-xs text-text-muted">
+              Your name and reason go only to {orgName ?? "this organization"} to help with your visit.
+            </p>
           </form>
         )}
       </main>

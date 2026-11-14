@@ -31,7 +31,8 @@ export default function PrivacyPage() {
           </li>
           <li>
             <strong>What you enter:</strong> people and client profiles (such as name, date of birth, phone, email,
-            gender, income level and ethnicity), notes, tasks, lists, check-ins and reminders.
+            gender, income level and ethnicity), notes, tasks, lists, check-ins, services and amounts, outcomes (such as
+            &quot;got a job&quot;) and reminders.
           </li>
           <li>
             <strong>Billing:</strong> your plan, seat count, trial and payment status, and the Stripe customer and
@@ -51,7 +52,9 @@ export default function PrivacyPage() {
           </li>
           <li>
             <strong>Device and usage data:</strong> time zone, push notification subscriptions, and standard server
-            logs (such as IP address, browser type and the time of requests) used for security and troubleshooting.
+            logs (such as IP address, browser type and the time of requests) used for security and troubleshooting. We
+            also record key events in your account (such as signing up, finishing each set-up step, starting a trial or
+            hitting a usage limit) to fix problems and see where people get stuck.
           </li>
           <li>
             <strong>Approximate location:</strong> the home screen shows local weather using the approximate location
@@ -115,7 +118,14 @@ export default function PrivacyPage() {
         <ul>
           <li>To run the app: show your records, send the reminders and summaries you turn on, and keep you signed in.</li>
           <li>To keep accounts secure: sign-in, email confirmation, password reset, two-factor authentication and abuse prevention.</li>
-          <li>To send account emails, such as confirmations and password resets.</li>
+          <li>
+            To send emails about your account: confirmations, password resets, a welcome, trial reminders (before a
+            trial ends and when it has ended) and payment problems.
+          </li>
+          <li>
+            To send occasional tips on using the app. Every tip email has a one-click unsubscribe link; emails about your
+            account and billing still arrive.
+          </li>
           <li>To answer your support requests and fix problems.</li>
           <li>To bill your subscription, and to keep records of payments and of your agreement to these terms.</li>
         </ul>
@@ -135,6 +145,31 @@ export default function PrivacyPage() {
         </p>
       </LegalSection>
 
+      <LegalSection title="AI features">
+        <p>Some features use AI providers to understand what you type or say:</p>
+        <ul>
+          <li>
+            <strong>Command bar:</strong> the sentence you type or say (for example &quot;Remind me to call Ana Friday at
+            3&quot;) can be sent to the AI provider to work out what to create. It may include names you mention.
+          </li>
+          <li>
+            <strong>Voice:</strong> on devices without built-in speech recognition (such as iPhone), your recording is
+            sent to OpenAI to turn it into text. Elsewhere your browser&apos;s own speech recognition is used.
+          </li>
+          <li>
+            <strong>Person summaries:</strong> when you add a note, the person&apos;s name, their five most recent notes
+            and their open task titles can be sent to the AI provider to write a short summary on their profile.
+          </li>
+        </ul>
+        <p>
+          We use OpenAI and Anthropic through their business APIs. Under their terms they don&apos;t use this data to
+          train their models; they may keep it for a short time (up to 30 days) to detect abuse, then delete it. We
+          send only what the feature needs, never your whole account. If an AI provider isn&apos;t available, the app
+          falls back to its own built-in rules, which don&apos;t send anything. Please don&apos;t say or type sensitive
+          details (such as medical information) into these features. AI can make mistakes, so check what it creates.
+        </p>
+      </LegalSection>
+
       <LegalSection title="Who processes data for us">
         <p>We use these service providers, which process data only on our instructions and only to run the app:</p>
         <ul>
@@ -146,10 +181,11 @@ export default function PrivacyPage() {
           <li>Apple, Google and Mozilla push services: delivering push notifications you turn on.</li>
           <li>Cloudflare: bot protection on sign-in forms.</li>
           <li>Open-Meteo: local weather (receives only a rounded, approximate location).</li>
+          <li>OpenAI and Anthropic: AI features (see AI features above).</li>
         </ul>
         <p>
-          Voice dictation uses your device&apos;s or browser&apos;s built-in speech recognition. Depending on your
-          browser, the browser maker (such as Apple or Google) may process that audio under its own privacy policy.
+          Where voice uses your browser&apos;s built-in speech recognition, the browser maker (such as Google) may
+          process that audio under its own privacy policy.
         </p>
         <p>
           We may also disclose information if the law requires it, to protect the safety of any person, or as part of a

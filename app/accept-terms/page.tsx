@@ -41,7 +41,11 @@ export default async function AcceptTermsPage({ searchParams }: { searchParams: 
           <label className="flex items-start gap-2 text-sm text-text">
             <input type="checkbox" name="agree" required className="mt-1" />
             <span>
-              I agree to the {terms} and {privacy}.
+              I agree to the {terms} and {privacy}, including{" "}
+              <Link href="/terms#disputes" target="_blank" className="text-accent hover:underline">
+                individual arbitration
+              </Link>
+              .
             </span>
           </label>
         )}

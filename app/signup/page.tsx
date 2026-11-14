@@ -116,6 +116,10 @@ export default async function SignupPage({
             <Link href="/privacy" target="_blank" className="text-accent hover:underline">
               Privacy policy
             </Link>
+            , including{" "}
+            <Link href="/terms#disputes" target="_blank" className="text-accent hover:underline">
+              individual arbitration
+            </Link>
             , and I&apos;m at least 18.
           </span>
         </label>

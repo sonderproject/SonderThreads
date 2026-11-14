@@ -57,7 +57,9 @@ export function CancelSubscriptionButton({
             <form action={cancelSubscription}>
               <Submit className={plain}>No thanks, cancel</Submit>
             </form>
-            <p className="text-xs text-text-muted">If you cancel: {after}</p>
+            <p className="text-xs text-text-muted">
+              You can cancel now. This offer is optional. If you cancel: {after}
+            </p>
           </div>
         ) : (
           <div className="space-y-4">

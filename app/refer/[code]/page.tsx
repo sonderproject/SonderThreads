@@ -200,7 +200,13 @@ export default async function ReferPage({
                 )}
 
                 <p className="text-xs text-text-muted">
-                  Please don&apos;t include Social Security numbers, ID numbers or medical details.
+                  Please don&apos;t include Social Security numbers, ID numbers or medical details. What you send goes
+                  only to {org.name} to arrange services for the client; by sending it you confirm the client agreed to
+                  be referred. See our{" "}
+                  <a href="/privacy" className="underline">
+                    privacy policy
+                  </a>
+                  .
                 </p>
                 <button
                   type="submit"
