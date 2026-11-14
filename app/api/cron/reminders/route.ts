@@ -4,6 +4,7 @@ import { query, queryOne } from "@/lib/db/client";
 import { deliver } from "@/lib/notify";
 import { inQuietHoursSql } from "@/lib/notify/quiet-hours";
 import { alertOwner, isLikelyBot, logEvent } from "@/lib/events";
+import { runLifecycleEmails } from "@/lib/lifecycle";
 
 export const dynamic = "force-dynamic";
 
@@ -64,7 +65,12 @@ export async function GET(request: NextRequest) {
     console.error("[cron/reminders] stuck sign-up check failed", err);
     return 0;
   });
-  return NextResponse.json({ reminded: due.length, summaries, stuck });
+  // Trial emails: welcome, day-3 tip, trial ending/ended (lib/lifecycle.ts).
+  const emails = await runLifecycleEmails().catch((err) => {
+    console.error("[cron/reminders] trial emails failed", err);
+    return 0;
+  });
+  return NextResponse.json({ reminded: due.length, summaries, stuck, emails });
 }
 
 /**

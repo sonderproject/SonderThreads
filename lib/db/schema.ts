@@ -1045,4 +1045,16 @@ alter table users add column if not exists use_case text;
 alter table organizations add column if not exists planned_seats int;
 -- The set-up answers, copied to the account at sign-up, so the email link also works on another device.
 alter table users add column if not exists setup_draft jsonb;
+
+-- Trial emails (lib/lifecycle.ts): each kind sent once per account (ref: e.g. an invoice id). Server-only.
+create table if not exists lifecycle_emails (
+  user_id uuid not null references users(id) on delete cascade,
+  kind text not null,
+  ref text not null default '',
+  sent_at timestamptz not null default now(),
+  primary key (user_id, kind, ref)
+);
+alter table lifecycle_emails enable row level security;
+-- One-click unsubscribe from welcome/tip emails (billing emails always send).
+alter table users add column if not exists email_tips_opt_out boolean not null default false;
 `;

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { sendPaymentFailedEmail } from "@/lib/lifecycle";
 import type Stripe from "stripe";
 import { enforceOneTrialPerCard, saveSubscription, stripe } from "@/lib/billing";
 import { alertOwner, logEvent } from "@/lib/events";
@@ -40,6 +41,9 @@ export async function POST(request: Request) {
         await alertOwner("A payment failed", [`${inv.customer_email ?? "A customer"}'s payment of ${amount} didn't go through.`, "Stripe retries automatically; they keep full access for 14 days."], { key: `payfail:${inv.id}` });
         const id = typeof inv.subscription === "string" ? inv.subscription : inv.subscription?.id;
         if (id) await saveSubscription(await s.subscriptions.retrieve(id));
+        // Tell the person who pays (once per invoice), so they can fix the card before access is limited.
+        const customer = typeof inv.customer === "string" ? inv.customer : (inv.customer?.id ?? null);
+        if (inv.id) await sendPaymentFailedEmail(inv.id, customer, amount).catch((err) => console.error("[stripe webhook] payment-failed email", err));
         break;
       }
       case "checkout.session.completed":

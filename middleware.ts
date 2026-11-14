@@ -93,6 +93,6 @@ export const config = {
   // Everything except sign-in/up/password pages, the calendar subscribe feed (its link carries its own secret), the public legal pages, the email-link handler (/auth/...), the landing page and its guided set-up questions (/get-started; nothing is saved before sign-up), the sitemap
   // and static assets (icons and the manifest must load before sign-in so "Add to Home Screen" works).
   matcher: [
-    "/((?!login|signup|refer/|api/stripe/webhook|api/calendar/feed/|privacy|terms|account-deletion|brand/|forgot-password|reset-password|auth/|api/auth/status|welcome|get-started|sitemap.xml|sw.js|_next/static|_next/image|favicon.ico|robots.txt|manifest.webmanifest|icon-.*\\.png|apple-touch-icon.*\\.png).*)",
+    "/((?!login|signup|refer/|api/stripe/webhook|api/calendar/feed/|api/email/unsubscribe|privacy|terms|account-deletion|brand/|forgot-password|reset-password|auth/|api/auth/status|welcome|get-started|sitemap.xml|sw.js|_next/static|_next/image|favicon.ico|robots.txt|manifest.webmanifest|icon-.*\\.png|apple-touch-icon.*\\.png).*)",
   ],
 };
