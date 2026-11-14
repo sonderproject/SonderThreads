@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SubmitButton } from "@/components/setup/SubmitButton";
 import { SetupFrame } from "@/components/setup/SetupFrame";
 import { TimeZoneInput } from "@/components/notifications/TimeZoneInput";
 import { saveOrgBasics } from "@/lib/actions/setup";
@@ -25,7 +26,7 @@ export default async function OrgBasicsPage({ searchParams }: { searchParams: Pr
   return (
     <SetupFrame flow="org" step={1} title="Tell us about your organization" intro="This sets up Strynd's words, reports and seats for your team. You can change it later.">
       <form action={saveOrgBasics} className="space-y-5">
-        {error && ERRORS[error] && <p className="flag text-sm">{ERRORS[error]}</p>}
+        {error && ERRORS[error] && <p role="alert" className="flag text-sm">{ERRORS[error]}</p>}
         {offer === "skip" && <input type="hidden" name="offer" value="skip" />}
         {Object.entries(utm).map(([k, v]) => (v ? <input key={k} type="hidden" name={k} value={v.slice(0, 80)} /> : null))}
         <TimeZoneInput />
@@ -65,7 +66,7 @@ export default async function OrgBasicsPage({ searchParams }: { searchParams: Pr
             {TEAM_SIZES.map((t) => (
               <label
                 key={t.value}
-                className="cursor-pointer rounded-full border border-border px-3 py-1.5 text-sm text-text transition-colors hover:bg-bg-hover has-[:checked]:border-accent has-[:checked]:bg-accent has-[:checked]:text-bg"
+                className="cursor-pointer rounded-full border border-border px-3 py-1.5 text-sm text-text transition-colors hover:bg-bg-hover has-[:checked]:border-accent has-[:checked]:bg-accent has-[:checked]:text-bg has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-accent has-[:focus-visible]:ring-offset-2"
               >
                 <input type="radio" name="size" value={t.value} required defaultChecked={draft?.size === t.value} className="sr-only" />
                 {t.label}
@@ -79,9 +80,9 @@ export default async function OrgBasicsPage({ searchParams }: { searchParams: Pr
           <Link href="/get-started" className="text-sm text-text-muted hover:text-text">
             ← Back
           </Link>
-          <button type="submit" className="rounded-full bg-accent px-5 py-2 text-sm font-semibold text-bg hover:bg-accent-dim">
+          <SubmitButton pendingLabel="Saving…" className="rounded-full bg-accent px-5 py-2 text-sm font-semibold text-bg hover:bg-accent-dim">
             Continue
-          </button>
+          </SubmitButton>
         </div>
       </form>
     </SetupFrame>

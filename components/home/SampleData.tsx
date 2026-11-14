@@ -33,12 +33,14 @@ export function SampleData({ mode }: { mode: "offer" | "loaded" }) {
         <button
           type="button"
           disabled={pending}
-          onClick={() => run(removeSampleData)}
+          onClick={() => {
+            if (window.confirm("Remove all sample people and their " + terms.checkInsLower + "? Your own data isn't touched.")) run(removeSampleData);
+          }}
           className="rounded-full border border-border px-3 py-1.5 text-sm font-medium text-text hover:bg-bg-hover disabled:opacity-60"
         >
           {pending ? "Removing…" : "Remove sample data"}
         </button>
-        {error && <p className="w-full text-xs text-danger">{error}</p>}
+        {error && <p role="alert" className="w-full text-xs text-danger">{error}</p>}
       </div>
     );
   }
@@ -57,7 +59,7 @@ export function SampleData({ mode }: { mode: "offer" | "loaded" }) {
       >
         {pending ? "Adding…" : "Try it with sample people"}
       </button>
-      {error && <p className="text-xs text-danger">{error}</p>}
+      {error && <p role="alert" className="text-xs text-danger">{error}</p>}
     </div>
   );
 }

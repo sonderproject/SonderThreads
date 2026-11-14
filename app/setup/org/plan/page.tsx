@@ -5,6 +5,7 @@ import { getMembership } from "@/lib/org";
 import { billingEnabled, getAccess, ORG_TRIAL_DAYS, SKIP_TRIAL_OFFER } from "@/lib/billing";
 import { calculateMonthlyPriceCents, formatCents, MAX_SELF_SERVE_SEATS, MIN_ORG_SEATS } from "@/lib/pricing";
 import { startCheckout } from "@/lib/actions/billing";
+import { SubmitButton } from "@/components/setup/SubmitButton";
 import { SetupFrame } from "@/components/setup/SetupFrame";
 
 export const metadata = { title: "Start · Strynd" };
@@ -30,26 +31,27 @@ export default async function SetupPlanPage({ searchParams }: { searchParams: Pr
   const leadWithOffer = offer === "skip";
 
   const trialButton = (
-    <button key="trial" type="submit" className={leadWithOffer ? secondary : primary}>
+    <SubmitButton key="trial" name="skip" value="0" pendingLabel="Opening secure checkout…" className={leadWithOffer ? secondary : primary}>
       Start my {ORG_TRIAL_DAYS}-day free trial
-    </button>
+    </SubmitButton>
   );
   const offerButton = (
-    <button key="offer" type="submit" name="skip" value="1" className={leadWithOffer ? primary : secondary}>
+    <SubmitButton key="offer" name="skip" value="1" pendingLabel="Opening secure checkout…" className={leadWithOffer ? primary : secondary}>
       Skip the trial: {SKIP_TRIAL_OFFER.percentOff}% off your first month
-    </button>
+    </SubmitButton>
   );
 
   return (
     <SetupFrame
       flow="org"
       step={5}
+      signedIn
       title={`Start ${m.orgName}`}
       intro={`Pick your seats (one per staff member), then try it free for ${ORG_TRIAL_DAYS} days or start today with ${SKIP_TRIAL_OFFER.percentOff}% off.`}
     >
       <form action={startCheckout} className="space-y-5">
         <input type="hidden" name="from" value="setup" />
-        {error && ERRORS[error] && <p className="flag text-sm">{ERRORS[error]}</p>}
+        {error && ERRORS[error] && <p role="alert" className="flag text-sm">{ERRORS[error]}</p>}
         <section className="card space-y-3 p-5">
           <label className="flex flex-wrap items-center justify-between gap-3">
             <span>

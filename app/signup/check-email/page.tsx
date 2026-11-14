@@ -35,8 +35,8 @@ export default async function CheckEmailPage({
           )}
           {email && <input type="hidden" name="email" value={email} />}
           <CodeInput />
-          {error === "code" && <p className="text-xs text-danger">That code didn&apos;t work. Check it and try again, or use the newest email.</p>}
-          {error === "code-expired" && <p className="text-xs text-danger">That code has expired. Send a new email below.</p>}
+          {error === "code" && <p role="alert" className="text-xs text-danger">That code didn&apos;t work. Check it and try again, or use the newest email.</p>}
+          {error === "code-expired" && <p role="alert" className="text-xs text-danger">That code has expired. Send a new email below.</p>}
           <button type="submit" className="w-full rounded-full bg-accent px-3 py-1.5 text-sm font-semibold text-bg hover:bg-accent-dim">
             Confirm with code
           </button>

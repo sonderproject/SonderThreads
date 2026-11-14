@@ -36,10 +36,10 @@ function utmFrom(formData: FormData): Record<string, string> | undefined {
 /** Checked suggestions ("svc", with "price:<name>") plus up to three typed-in ones ("custom" / "custom_price"). */
 function servicesFrom(formData: FormData): DraftService[] {
   const out: DraftService[] = [];
-  for (const name of formData.getAll("svc").map(String)) {
+  for (const name of formData.getAll("svc").map(String).slice(0, 20)) {
     out.push({ name, price: formData.get(`price:${name}`)?.toString().trim() || null });
   }
-  const customs = formData.getAll("custom").map(String);
+  const customs = formData.getAll("custom").map(String).slice(0, 3);
   const prices = formData.getAll("custom_price").map(String);
   customs.forEach((name, i) => {
     if (name.trim()) out.push({ name: name.trim(), price: prices[i]?.trim() || null });
@@ -72,7 +72,7 @@ export async function saveOrgBasics(formData: FormData): Promise<void> {
   if (!next.name) redirect("/get-started/org?error=name");
   if (!next.kind) redirect("/get-started/org?error=kind");
   if (!next.size) redirect("/get-started/org?error=size");
-  await funnel("funnel.org.basics", next.fid, { kind: next.kind, size: next.size });
+  await funnel(next, "funnel.org.basics", { kind: next.kind, size: next.size });
   redirect("/get-started/org/services");
 }
 
@@ -84,7 +84,7 @@ export async function saveOrgServices(formData: FormData): Promise<void> {
   const next: OrgDraft = { ...prev, services: servicesFrom(formData), agreed };
   await writeDraft(next);
   if (!agreed) redirect("/get-started/org/services?error=agree");
-  await funnel("funnel.org.services", next.fid, { services: next.services?.length ?? 0 });
+  await funnel(next, "funnel.org.services", { services: next.services?.length ?? 0 });
   redirect(signupHref("org", next.utm));
 }
 
@@ -103,13 +103,18 @@ export async function saveSoloBasics(formData: FormData): Promise<void> {
   };
   await writeDraft(next);
   if (!next.use) redirect("/get-started/solo?error=use");
-  await funnel("funnel.solo.basics", next.fid, { use: next.use });
+  await funnel(next, "funnel.solo.basics", { use: next.use });
   redirect(signupHref("solo", next.utm));
 }
 
-/** One row per step reached, for the owner's sign-up drop-off view (counted once per set-up id). */
-async function funnel(kind: string, fid: string | undefined, meta: Record<string, unknown> = {}): Promise<void> {
-  await logEvent(kind, "Set-up step", { meta: { fid: fid ?? null, ...meta } }).catch(() => undefined);
+/**
+ * One row per step reached, for the owner's sign-up drop-off view. Logged
+ * once per browser (draft.seen), so resubmitting a step can't flood app_events.
+ */
+async function funnel(draft: OrgDraft | SoloDraft, kind: string, meta: Record<string, unknown> = {}): Promise<void> {
+  if (draft.seen?.includes(kind)) return;
+  await writeDraft({ ...draft, seen: [...(draft.seen ?? []), kind] });
+  await logEvent(kind, "Set-up step", { meta: { fid: draft.fid ?? null, ...meta } }).catch(() => undefined);
 }
 
 // ---- After the account exists ----

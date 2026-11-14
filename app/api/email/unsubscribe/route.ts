@@ -13,7 +13,8 @@ export const dynamic = "force-dynamic";
 export async function GET(request: NextRequest) {
   const u = request.nextUrl.searchParams.get("u") ?? "";
   const t = request.nextUrl.searchParams.get("t") ?? "";
-  const ok = /^[0-9a-f-]{36}$/i.test(u) && safeEqual(t, unsubscribeToken(u));
+  const expected = /^[0-9a-f-]{36}$/i.test(u) ? unsubscribeToken(u) : null;
+  const ok = Boolean(expected && t) && safeEqual(t, expected!);
   if (ok) await query(`update users set email_tips_opt_out = true where id = $1`, [u]);
   const msg = ok
     ? "You're unsubscribed from Strynd tips. You'll still get emails about your account and billing."

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { SubmitButton } from "@/components/setup/SubmitButton";
 import { SetupFrame } from "@/components/setup/SetupFrame";
 import { ServicePicker } from "@/components/setup/ServicePicker";
 import { saveOrgServices } from "@/lib/actions/setup";
@@ -26,7 +27,7 @@ export default async function OrgServicesPage({ searchParams }: { searchParams: 
       }
     >
       <form action={saveOrgServices} className="space-y-5">
-        {error === "agree" && <p className="flag text-sm">Please confirm the agreement below to continue.</p>}
+        {error === "agree" && <p role="alert" className="flag text-sm">Please confirm the agreement below to continue.</p>}
         <ServicePicker suggestions={SUGGESTED_SERVICES[d.kind]} withPrices={business} chosen={d.services ?? []} />
 
         <label className="flex items-start gap-2 text-xs text-text-muted">
@@ -48,9 +49,9 @@ export default async function OrgServicesPage({ searchParams }: { searchParams: 
           <Link href="/get-started/org" className="text-sm text-text-muted hover:text-text">
             ← Back
           </Link>
-          <button type="submit" className="rounded-full bg-accent px-5 py-2 text-sm font-semibold text-bg hover:bg-accent-dim">
+          <SubmitButton pendingLabel="Saving…" className="rounded-full bg-accent px-5 py-2 text-sm font-semibold text-bg hover:bg-accent-dim">
             Continue to your account
-          </button>
+          </SubmitButton>
         </div>
       </form>
     </SetupFrame>

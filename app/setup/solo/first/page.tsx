@@ -1,5 +1,6 @@
 import { requireUserId } from "@/lib/current-user";
 import { finishSoloSetup } from "@/lib/actions/setup";
+import { SubmitButton } from "@/components/setup/SubmitButton";
 import { SetupFrame } from "@/components/setup/SetupFrame";
 
 export const metadata = { title: "Your first person · Strynd" };
@@ -13,6 +14,7 @@ export default async function SoloFirstPage({ searchParams }: { searchParams: Pr
     <SetupFrame
       flow="solo"
       step={4}
+      signedIn
       title="Who's the first person you want to keep track of?"
       intro="A client, a customer, a friend. Add notes, reminders and visits to them once you're in."
     >
@@ -21,9 +23,9 @@ export default async function SoloFirstPage({ searchParams }: { searchParams: Pr
         <input name="name" maxLength={200} autoFocus placeholder="Full name, e.g. Ana Lopez" className="input" />
         {/* The main button comes first, so pressing Enter adds the person. */}
         <div className="flex flex-row-reverse items-center justify-between gap-3 pt-2">
-          <button type="submit" className="rounded-full bg-accent px-5 py-2 text-sm font-semibold text-bg hover:bg-accent-dim">
+          <SubmitButton pendingLabel="Adding…" className="rounded-full bg-accent px-5 py-2 text-sm font-semibold text-bg hover:bg-accent-dim">
             Add and start
-          </button>
+          </SubmitButton>
           <button name="skip" value="1" className="text-sm text-text-muted hover:text-text">
             Skip for now
           </button>

@@ -46,11 +46,15 @@ function firstName(r: Recipient): string {
 }
 
 /** Signed one-click unsubscribe link for welcome/tip emails (not billing). */
-export function unsubscribeToken(userId: string): string {
-  return createHmac("sha256", process.env.CRON_SECRET || "dev-only").update(`tips:${userId}`).digest("base64url").slice(0, 32);
+export function unsubscribeToken(userId: string): string | null {
+  // Signed with CRON_SECRET; without it (never in production) links aren't made and none are accepted.
+  const secret = process.env.CRON_SECRET || (process.env.NODE_ENV === "production" ? "" : "dev-only");
+  if (!secret) return null;
+  return createHmac("sha256", secret).update(`tips:${userId}`).digest("base64url").slice(0, 32);
 }
-function unsubscribeUrl(userId: string): string {
-  return `${appUrl()}/api/email/unsubscribe?${new URLSearchParams({ u: userId, t: unsubscribeToken(userId) })}`;
+function unsubscribeUrl(userId: string): string | null {
+  const t = unsubscribeToken(userId);
+  return t ? `${appUrl()}/api/email/unsubscribe?${new URLSearchParams({ u: userId, t })}` : null;
 }
 
 /** Plain, readable email (no images): greeting, paragraphs, one button. */

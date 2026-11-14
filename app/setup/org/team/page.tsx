@@ -6,6 +6,7 @@ import { billingEnabled, getFreshAccess } from "@/lib/billing";
 import { confirmCheckout } from "@/lib/actions/billing";
 import { inviteTeamFromSetup, skipTeamStep } from "@/lib/actions/setup";
 import { ORG_ROLES, ROLE_HELP, ROLE_LABELS } from "@/lib/org-roles";
+import { SubmitButton } from "@/components/setup/SubmitButton";
 import { SetupFrame } from "@/components/setup/SetupFrame";
 import { logEvent } from "@/lib/events";
 
@@ -34,12 +35,13 @@ export default async function SetupTeamPage({
     <SetupFrame
       flow="org"
       step={6}
+      signedIn
       title="Invite your team"
       intro="Each person gets an email to join. You can invite more people any time from the Organization page."
     >
       {checkout && <p className="text-sm text-accent">You&apos;re all set: {access.state === "trial" ? "your free trial has started." : "your plan is active."}</p>}
       {failed && (
-        <div className="flag space-y-1 text-sm">
+        <div role="alert" className="flag space-y-1 text-sm">
           {sent && Number(sent) > 0 && <p>{sent} invite(s) sent. These didn&apos;t go through:</p>}
           {failed.split("\n").map((f) => (
             <p key={f}>{f}</p>
@@ -50,7 +52,7 @@ export default async function SetupTeamPage({
         <div className="space-y-2">
           {[0, 1, 2, 3, 4].map((i) => (
             <div key={i} className="flex gap-2">
-              <input type="email" name="email" placeholder={i === 0 ? "teammate@example.org" : "Email"} autoComplete="off" className="input flex-1" />
+              <input type="email" name="email" spellCheck={false} placeholder={i === 0 ? "teammate@example.org" : "Email"} autoComplete="off" className="input flex-1" />
               <select name="role" defaultValue="case_manager" className="input w-36" aria-label="Role">
                 {roles.map((r) => (
                   <option key={r} value={r}>
@@ -70,9 +72,9 @@ export default async function SetupTeamPage({
         </ul>
         {/* The main button comes first, so pressing Enter sends the invites. */}
         <div className="flex flex-row-reverse items-center justify-between gap-3 pt-2">
-          <button type="submit" className="rounded-full bg-accent px-5 py-2 text-sm font-semibold text-bg hover:bg-accent-dim">
+          <SubmitButton pendingLabel="Sending…" className="rounded-full bg-accent px-5 py-2 text-sm font-semibold text-bg hover:bg-accent-dim">
             Send invites
-          </button>
+          </SubmitButton>
           <button formAction={skipTeamStep} formNoValidate className="text-sm text-text-muted hover:text-text">
             I&apos;ll do this later
           </button>

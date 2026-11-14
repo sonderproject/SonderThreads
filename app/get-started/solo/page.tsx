@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SubmitButton } from "@/components/setup/SubmitButton";
 import { SetupFrame } from "@/components/setup/SetupFrame";
 import { SoloUsePicker } from "@/components/setup/SoloUsePicker";
 import { saveSoloBasics } from "@/lib/actions/setup";
@@ -17,7 +18,7 @@ export default async function SoloBasicsPage({ searchParams }: { searchParams: P
   return (
     <SetupFrame flow="solo" step={1} title="What will you use Strynd for?" intro="So we can set it up for you. 7 days free, no card needed.">
       <form action={saveSoloBasics} className="space-y-5">
-        {error === "use" && <p className="flag text-sm">Choose one to continue.</p>}
+        {error === "use" && <p role="alert" className="flag text-sm">Choose one to continue.</p>}
         {offer === "skip" && <input type="hidden" name="offer" value="skip" />}
         {Object.entries(utm).map(([k, v]) => (v ? <input key={k} type="hidden" name={k} value={v.slice(0, 80)} /> : null))}
         <SoloUsePicker uses={SOLO_USES.map((u) => ({ ...u }))} services={SUGGESTED_SERVICES.solo} initialUse={draft?.use ?? null} chosen={draft?.services ?? []} />
@@ -25,9 +26,9 @@ export default async function SoloBasicsPage({ searchParams }: { searchParams: P
           <Link href="/get-started" className="text-sm text-text-muted hover:text-text">
             ← Back
           </Link>
-          <button type="submit" className="rounded-full bg-accent px-5 py-2 text-sm font-semibold text-bg hover:bg-accent-dim">
+          <SubmitButton pendingLabel="Saving…" className="rounded-full bg-accent px-5 py-2 text-sm font-semibold text-bg hover:bg-accent-dim">
             Continue to your account
-          </button>
+          </SubmitButton>
         </div>
       </form>
     </SetupFrame>

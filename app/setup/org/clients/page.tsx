@@ -18,6 +18,7 @@ export default async function SetupClientsPage({ searchParams }: { searchParams:
     <SetupFrame
       flow="org"
       step={7}
+      signedIn
       title="Bring in your clients"
       intro="Upload your client list from Excel or a CSV file (name, phone, email and notes columns are picked up automatically), or add them as you go."
     >

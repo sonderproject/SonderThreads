@@ -68,22 +68,29 @@ export type OrgDraft = {
   utm?: Record<string, string>;
   /** Random id for this set-up, so the owner's drop-off view counts each person once per step. */
   fid?: string;
+  /** Steps already logged for the drop-off view (each logged once per browser). */
+  seen?: string[];
 };
-export type SoloDraft = { flow: "solo"; use?: SoloUse; services?: DraftService[]; offer?: boolean; utm?: Record<string, string>; fid?: string };
+export type SoloDraft = { flow: "solo"; use?: SoloUse; services?: DraftService[]; offer?: boolean; utm?: Record<string, string>; fid?: string; seen?: string[] };
 export type Draft = OrgDraft | SoloDraft;
 
 function cleanServices(v: unknown): DraftService[] {
   if (!Array.isArray(v)) return [];
   const seen = new Set<string>();
   const out: DraftService[] = [];
-  for (const s of v.slice(0, 30)) {
-    const name = typeof s?.name === "string" ? s.name.trim().replace(/\s+/g, " ").slice(0, 80) : "";
+  // Kept small: the draft lives in a cookie (4 KB limit).
+  for (const s of v.slice(0, 20)) {
+    const name = typeof s?.name === "string" ? s.name.trim().replace(/\s+/g, " ").slice(0, 60) : "";
     if (!name || seen.has(name.toLowerCase())) continue;
     seen.add(name.toLowerCase());
     const price = typeof s?.price === "string" && s.price.trim() ? s.price.trim().slice(0, 20) : null;
     out.push({ name, price });
   }
   return out;
+}
+
+function cleanSeen(v: unknown): string[] {
+  return Array.isArray(v) ? v.filter((x): x is string => typeof x === "string" && x.length < 40).slice(0, 10) : [];
 }
 
 function cleanFid(v: unknown): string | undefined {
@@ -145,6 +152,7 @@ function parseDraft(raw: string | undefined): Draft | null {
         offer: d.offer === true,
         utm: cleanUtm(d.utm),
         fid: cleanFid(d.fid),
+        seen: cleanSeen(d.seen),
       };
     }
     if (d.flow === "solo") {
@@ -155,6 +163,7 @@ function parseDraft(raw: string | undefined): Draft | null {
         offer: d.offer === true,
         utm: cleanUtm(d.utm),
         fid: cleanFid(d.fid),
+        seen: cleanSeen(d.seen),
       };
     }
   } catch {

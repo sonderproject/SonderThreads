@@ -8,6 +8,7 @@ export function CodeInput() {
       required
       inputMode="numeric"
       autoComplete="one-time-code"
+      spellCheck={false}
       autoFocus
       pattern="[0-9 ]{6,12}"
       maxLength={12}

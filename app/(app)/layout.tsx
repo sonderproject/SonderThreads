@@ -71,7 +71,8 @@ export default async function AppGroupLayout({ children }: { children: React.Rea
   const setupPath = flags.setupStep ? SETUP_PATHS[flags.setupStep] : undefined;
   if (setupPath) {
     const path = (await headers()).get("x-pathname") ?? "";
-    if (!path.startsWith("/owner")) redirect(setupPath);
+    // Settings and Billing stay reachable, so nobody is ever stuck (e.g. if checkout fails).
+    if (!["/owner", "/settings", "/billing"].some((p) => path.startsWith(p))) redirect(setupPath);
   }
   const offerTwoFactor = flags.offerTwoFactor;
   // New organizations start their free trial (card on Stripe) before using the app; individuals try it first without a card.

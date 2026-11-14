@@ -1,4 +1,5 @@
 import { BrandLockup } from "@/components/BrandLockup";
+import { logout } from "@/app/login/actions";
 import { ORG_STEPS, SOLO_STEPS } from "@/lib/setup";
 
 /** The full-screen frame for each set-up step: brand, "Step 2 of 7", a progress bar, the step's title. */
@@ -7,8 +8,11 @@ export function SetupFrame({
   step,
   title,
   intro,
+  signedIn,
   children,
 }: {
+  /** After the account exists: offers "Sign out" so nobody is ever stuck in set-up. */
+  signedIn?: boolean;
   flow: "org" | "solo";
   /** 1-based. */
   step: number;
@@ -25,6 +29,16 @@ export function SetupFrame({
           {intro && <p className="text-sm text-text-muted">{intro}</p>}
         </div>
         {children}
+        {signedIn && (
+          <form action={logout} className="border-t border-border-subtle pt-4 text-center">
+            <p className="text-xs text-text-muted">
+              Need to stop here? Your progress is saved.{" "}
+              <button type="submit" className="text-accent hover:underline">
+                Sign out
+              </button>
+            </p>
+          </form>
+        )}
       </div>
     </div>
   );
