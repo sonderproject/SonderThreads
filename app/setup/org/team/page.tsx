@@ -7,6 +7,7 @@ import { confirmCheckout } from "@/lib/actions/billing";
 import { inviteTeamFromSetup, skipTeamStep } from "@/lib/actions/setup";
 import { ORG_ROLES, ROLE_HELP, ROLE_LABELS } from "@/lib/org-roles";
 import { SetupFrame } from "@/components/setup/SetupFrame";
+import { logEvent } from "@/lib/events";
 
 export const metadata = { title: "Your team · Strynd" };
 export const dynamic = "force-dynamic";
@@ -25,6 +26,7 @@ export default async function SetupTeamPage({
   if (checkout) await confirmCheckout(checkout).catch((err) => console.error("[setup] confirm checkout failed", err));
   const access = await getFreshAccess();
   if (billingEnabled() && access.state === "setup") redirect("/setup/org/plan");
+  if (checkout) await logEvent("funnel.org.started", "Set-up step", { meta: { user: userId, state: access.state } }).catch(() => undefined);
   await query(`update users set setup_step = 'org:team' where id = $1 and setup_step is distinct from 'org:clients'`, [userId]);
 
   const roles = ORG_ROLES;

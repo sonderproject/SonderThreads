@@ -1,6 +1,6 @@
 "use server";
 
-import { saveDraftToAccount, setupFlowFor } from "@/lib/setup";
+import { readDraft, saveDraftToAccount, setupFlowFor } from "@/lib/setup";
 import { recordAcceptance } from "@/lib/legal-server";
 import { headers } from "next/headers";
 import { isLikelyBot, logEvent } from "@/lib/events";
@@ -268,7 +268,14 @@ export async function signup(formData: FormData): Promise<void> {
       .map((k) => [k, formData.get(k)?.toString().trim().slice(0, 80) || null])
       .filter(([, v]) => v),
   );
-  await logEvent("auth.signup", isLikelyBot(email) ? "New sign-up (likely bot)" : "New sign-up", { email, path: "/signup", meta: source });
+  // Which guided set-up this sign-up came from (owner's drop-off view).
+  const flow = setupFlowFor(next);
+  const fid = flow ? (await readDraft())?.fid : undefined;
+  await logEvent("auth.signup", isLikelyBot(email) ? "New sign-up (likely bot)" : "New sign-up", {
+    email,
+    path: "/signup",
+    meta: { ...source, ...(flow ? { flow, fid: fid ?? null } : {}) },
+  });
   redirect(`/signup/check-email?${new URLSearchParams({ email, next })}`);
 }
 

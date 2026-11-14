@@ -1,5 +1,6 @@
 "use server";
 
+import { randomUUID } from "crypto";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { query } from "@/lib/db/client";
@@ -65,11 +66,13 @@ export async function saveOrgBasics(formData: FormData): Promise<void> {
     timezone: isValidTimeZone(tz) ? tz : base.timezone,
     offer,
     utm: utmFrom(formData) ?? base.utm,
+    fid: base.fid ?? randomUUID(),
   };
   await writeDraft(next);
   if (!next.name) redirect("/get-started/org?error=name");
   if (!next.kind) redirect("/get-started/org?error=kind");
   if (!next.size) redirect("/get-started/org?error=size");
+  await funnel("funnel.org.basics", next.fid, { kind: next.kind, size: next.size });
   redirect("/get-started/org/services");
 }
 
@@ -81,6 +84,7 @@ export async function saveOrgServices(formData: FormData): Promise<void> {
   const next: OrgDraft = { ...prev, services: servicesFrom(formData), agreed };
   await writeDraft(next);
   if (!agreed) redirect("/get-started/org/services?error=agree");
+  await funnel("funnel.org.services", next.fid, { services: next.services?.length ?? 0 });
   redirect(signupHref("org", next.utm));
 }
 
@@ -95,10 +99,17 @@ export async function saveSoloBasics(formData: FormData): Promise<void> {
     services: isSoloUse(use) && use === "business" ? servicesFrom(formData) : [],
     offer: formData.get("offer") === "skip" || base.offer,
     utm: utmFrom(formData) ?? base.utm,
+    fid: base.fid ?? randomUUID(),
   };
   await writeDraft(next);
   if (!next.use) redirect("/get-started/solo?error=use");
+  await funnel("funnel.solo.basics", next.fid, { use: next.use });
   redirect(signupHref("solo", next.utm));
+}
+
+/** One row per step reached, for the owner's sign-up drop-off view (counted once per set-up id). */
+async function funnel(kind: string, fid: string | undefined, meta: Record<string, unknown> = {}): Promise<void> {
+  await logEvent(kind, "Set-up step", { meta: { fid: fid ?? null, ...meta } }).catch(() => undefined);
 }
 
 // ---- After the account exists ----
@@ -138,7 +149,7 @@ export async function skipTeamStep(): Promise<void> {
 export async function finishOrgSetup(formData: FormData): Promise<void> {
   const userId = await requireUserId();
   await setStep(userId, null);
-  await logEvent("setup.done", "Organization set-up finished", { meta: { user: userId } }).catch(() => undefined);
+  await logEvent("setup.done", "Organization set-up finished", { meta: { user: userId, flow: "org" } }).catch(() => undefined);
   revalidatePath("/", "layout");
   redirect(formData.get("go") === "import" ? "/settings/data#import" : "/team");
 }
@@ -157,7 +168,7 @@ export async function finishSoloSetup(formData: FormData): Promise<void> {
     }
   }
   await setStep(userId, null);
-  await logEvent("setup.done", "Individual set-up finished", { meta: { user: userId, added: Boolean(personId) } }).catch(() => undefined);
+  await logEvent("setup.done", "Individual set-up finished", { meta: { user: userId, flow: "solo", added: Boolean(personId) } }).catch(() => undefined);
   revalidatePath("/", "layout");
   if (offer) redirect("/billing?offer=skip");
   redirect(personId ? `/people/${personId}` : "/");

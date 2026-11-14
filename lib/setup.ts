@@ -66,8 +66,10 @@ export type OrgDraft = {
   agreed?: boolean;
   offer?: boolean;
   utm?: Record<string, string>;
+  /** Random id for this set-up, so the owner's drop-off view counts each person once per step. */
+  fid?: string;
 };
-export type SoloDraft = { flow: "solo"; use?: SoloUse; services?: DraftService[]; offer?: boolean; utm?: Record<string, string> };
+export type SoloDraft = { flow: "solo"; use?: SoloUse; services?: DraftService[]; offer?: boolean; utm?: Record<string, string>; fid?: string };
 export type Draft = OrgDraft | SoloDraft;
 
 function cleanServices(v: unknown): DraftService[] {
@@ -82,6 +84,10 @@ function cleanServices(v: unknown): DraftService[] {
     out.push({ name, price });
   }
   return out;
+}
+
+function cleanFid(v: unknown): string | undefined {
+  return typeof v === "string" && /^[0-9a-f-]{36}$/.test(v) ? v : undefined;
 }
 
 function cleanUtm(v: unknown): Record<string, string> | undefined {
@@ -138,10 +144,18 @@ function parseDraft(raw: string | undefined): Draft | null {
         agreed: d.agreed === true,
         offer: d.offer === true,
         utm: cleanUtm(d.utm),
+        fid: cleanFid(d.fid),
       };
     }
     if (d.flow === "solo") {
-      return { flow: "solo", use: isSoloUse(d.use) ? d.use : undefined, services: cleanServices(d.services), offer: d.offer === true, utm: cleanUtm(d.utm) };
+      return {
+        flow: "solo",
+        use: isSoloUse(d.use) ? d.use : undefined,
+        services: cleanServices(d.services),
+        offer: d.offer === true,
+        utm: cleanUtm(d.utm),
+        fid: cleanFid(d.fid),
+      };
     }
   } catch {
     // A damaged cookie just means starting the questions again.

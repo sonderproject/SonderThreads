@@ -5,6 +5,7 @@ import { query, queryOne } from "@/lib/db/client";
 import { isLikelyBot } from "@/lib/events";
 import { stripe } from "@/lib/billing";
 import { ownerResendConfirmation } from "@/lib/actions/owner";
+import { setupFunnel, type FunnelStep } from "@/lib/funnel-stats";
 
 export const metadata: Metadata = { title: "Command center", robots: { index: false, follow: false } };
 export const dynamic = "force-dynamic";
@@ -100,6 +101,7 @@ export default async function OwnerPage({ searchParams }: { searchParams: Promis
 
   // Sign-ups by the ad campaign that brought them (utm tags carried to the sign-up form), and how many
   // went on to a card on file / paid subscription (their own account, or an organization they're in).
+  const [funnel7, funnel30] = await Promise.all([setupFunnel(7), setupFunnel(30)]);
   const sources = await query<{ source: string; signups: number; converted: number }>(
     `select coalesce(e.meta->>'utm_campaign', e.meta->>'utm_source', 'Direct / unknown') as source,
             count(*)::int as signups,
@@ -298,6 +300,18 @@ export default async function OwnerPage({ searchParams }: { searchParams: Promis
       </section>
 
       <section className="space-y-3">
+        <h2 className="section-label">Sign-up drop-off</h2>
+        <div className="grid gap-3 lg:grid-cols-2">
+          <FunnelTable title="Organizations" week={funnel7.org} month={funnel30.org} />
+          <FunnelTable title="Individuals" week={funnel7.solo} month={funnel30.solo} />
+        </div>
+        <p className="text-xs text-text-faint">
+          People who reached each step of the guided set-up. &ldquo;Lost&rdquo; is the share who didn&apos;t make it to the next step (30 days). Likely
+          bots excluded. Counting started Nov 14, 2026.
+        </p>
+      </section>
+
+      <section className="space-y-3">
         <h2 className="section-label">Sign-ups by source (30 days)</h2>
         <div className="card overflow-x-auto">
           <table className="w-full text-sm">
@@ -374,6 +388,39 @@ export default async function OwnerPage({ searchParams }: { searchParams: Promis
           </div>
         </section>
       )}
+    </div>
+  );
+}
+
+function FunnelTable({ title, week, month }: { title: string; week: FunnelStep[]; month: FunnelStep[] }) {
+  return (
+    <div className="card overflow-x-auto">
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="eyebrow border-b border-border text-left text-text-faint">
+            <th className="px-4 py-2 font-semibold">{title}</th>
+            <th className="px-3 py-2 text-right font-semibold">7 days</th>
+            <th className="px-3 py-2 text-right font-semibold">30 days</th>
+            <th className="px-4 py-2 text-right font-semibold">Lost</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-border-subtle">
+          {month.map((step, i) => {
+            const next = month[i + 1];
+            const lost = next && step.count > 0 ? Math.round(((step.count - next.count) / step.count) * 100) : null;
+            return (
+              <tr key={step.label}>
+                <td className="px-4 py-2 text-text">{step.label}</td>
+                <td className="px-3 py-2 text-right tabular-nums">{week[i]?.count ?? 0}</td>
+                <td className="px-3 py-2 text-right tabular-nums">{step.count}</td>
+                <td className={`px-4 py-2 text-right tabular-nums ${lost !== null && lost >= 50 ? "text-urgent" : "text-text-muted"}`}>
+                  {lost === null ? "" : `${Math.max(0, lost)}%`}
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
     </div>
   );
 }
