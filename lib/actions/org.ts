@@ -239,6 +239,16 @@ export async function saveOrganizationInfo(formData: FormData): Promise<void> {
   redirect("/organization?saved=info#info");
 }
 
+/** Admin: sets the organization's type (nonprofit or business), which sets the app's words and report sections. */
+export async function setOrgKind(formData: FormData): Promise<void> {
+  const { userId, orgId } = await requireAdmin();
+  const kind = formData.get("kind");
+  if (!isOrgKind(kind)) redirect("/organization");
+  await asUser(userId, (q) => q(`update organizations set kind = $1, updated_at = now() where id = $2`, [kind, orgId]));
+  revalidatePath("/", "layout");
+  redirect("/organization?saved=kind#type");
+}
+
 /**
  * Supervisor or admin: hands one organization client (with everything
  * attached) to another active staff member, who gets a notification.

@@ -13,6 +13,7 @@ import {
   removeOrgLogo,
   revokeInvite,
   saveOrganizationInfo,
+  setOrgKind,
   uploadOrgLogo,
 } from "@/lib/actions/org";
 import { InviteForm } from "@/components/org/InviteForm";
@@ -48,6 +49,7 @@ const SAVED: Record<string, string> = {
   "referral-settings": "Referral settings saved.",
   name: "Name updated.",
   info: "Organization info saved.",
+  kind: "Organization type updated. The app's words and reports now match it.",
   logo: "Logo updated.",
   "logo-removed": "Logo removed.",
   moved: "Clients moved. The person they're now assigned to was notified.",
@@ -117,6 +119,33 @@ export default async function OrganizationPage({ searchParams }: { searchParams:
       {error && ERRORS[error] && <p className="flag text-sm">{ERRORS[error]}</p>}
       {saved && SAVED[saved] && <p className="text-sm text-accent">{SAVED[saved]}</p>}
 
+      <section id="type" className="scroll-mt-20 space-y-3">
+        <h2 className="section-label">Organization type</h2>
+        <form action={setOrgKind} className="grid gap-3 sm:grid-cols-2">
+          {ORG_KINDS.map((k) => {
+            const current = (info?.kind ?? "nonprofit") === k.value;
+            return (
+              <button
+                key={k.value}
+                type="submit"
+                name="kind"
+                value={k.value}
+                aria-pressed={current}
+                className={`card space-y-1 p-4 text-left transition-colors ${
+                  current ? "border-accent ring-1 ring-accent" : "hover:bg-bg-hover"
+                }`}
+              >
+                <span className="flex items-center justify-between gap-2">
+                  <span className="font-semibold text-text">{k.label}</span>
+                  {current ? <span className="tag">Current</span> : <span className="text-xs text-accent">Switch</span>}
+                </span>
+                <span className="block text-xs text-text-muted">{k.hint}</span>
+              </button>
+            );
+          })}
+        </form>
+      </section>
+
       <section id="info" className="scroll-mt-20 space-y-3">
         <h2 className="section-label">Organization info</h2>
         <div className="card flex flex-wrap items-center gap-4 p-4">
@@ -147,7 +176,7 @@ export default async function OrganizationPage({ searchParams }: { searchParams:
               </button>
             </form>
           )}
-          <p className="w-full text-xs text-text-muted">PNG or JPG, up to 1 MB. Shown on your Team page and on Impact report covers.</p>
+          <p className="w-full text-xs text-text-muted">PNG or JPG, up to 1 MB. Shown on your Team page and on {info?.kind === "business" ? "Insights" : "Impact"} report covers.</p>
         </div>
         <form key={JSON.stringify(info)} action={saveOrganizationInfo} className="card grid gap-3 p-4 sm:grid-cols-2">
           <label className="space-y-1 sm:col-span-2">
@@ -169,16 +198,6 @@ export default async function OrganizationPage({ searchParams }: { searchParams:
           <label className="space-y-1 sm:col-span-2">
             <span className="text-xs text-text-muted">Address</span>
             <textarea name="address" defaultValue={info?.address ?? ""} maxLength={500} rows={2} className="input" />
-          </label>
-          <label className="space-y-1 sm:col-span-2">
-            <span className="text-xs text-text-muted">Type (sets the app&apos;s words: check-ins and Impact, or visits and Insights)</span>
-            <select name="kind" defaultValue={info?.kind ?? "nonprofit"} className="input">
-              {ORG_KINDS.map((k) => (
-                <option key={k.value} value={k.value}>
-                  {k.label}
-                </option>
-              ))}
-            </select>
           </label>
           <label className="space-y-1 sm:col-span-2">
             <span className="text-xs text-text-muted">About (one or two sentences, shown on your PDF reports)</span>
