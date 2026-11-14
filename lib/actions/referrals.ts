@@ -1,5 +1,6 @@
 "use server";
 
+import { after } from "next/server";
 import { isEmail } from "@/lib/email-check";
 import { assertCanWrite } from "@/lib/billing";
 import { createHash, randomBytes } from "node:crypto";
@@ -119,59 +120,74 @@ export async function submitReferral(formData: FormData): Promise<void> {
     throw err;
   }
   const when = appointment ? formatSlot(appointment, settings.tz) : null;
+  const savedId = ref!.id;
+  const orgId = org!.id;
+  const orgName = org!.name;
+  // The referral is saved: show the thank-you page now, and let notifications, calendar
+  // tasks and the confirmation email finish right after the response (Vercel keeps the
+  // function running for them), so the partner doesn't wait on them.
+  after(async () => {
+    try {
+      // Every active admin gets it in Notifications (and by push if they turned it on).
+      const admins = await query<{ user_id: string }>(
+        `select user_id from memberships where org_id = $1 and active and role = 'admin'`,
+        [orgId],
+      );
+      // Each admin gets the appointment on their Calendar and task list.
+      if (appointment) {
+        for (const a of admins) {
+          await query(
+            `insert into tasks (user_id, title, notes, due_at, referral_id) values ($1, $2, $3, $4, $5)`,
+            [
+              a.user_id,
+              `Referral appointment: ${first} ${last}`,
+              [`Referred by ${referrer} (${dept}).`, settings.location ? `Location: ${settings.location}.` : "", services.length ? `Services: ${services.join(", ")}.` : "", notes ? `Notes: ${notes}` : ""]
+                .filter(Boolean)
+                .join("\n"),
+              appointment,
+              savedId,
+            ],
+          ).catch((err) => console.error("[referrals] appointment task failed", err));
+        }
+      }
+      await Promise.all(
+        admins.map((a) =>
+          notify(a.user_id, {
+            type: "referral",
+            title: `New referral: ${first} ${last.charAt(0)}.`,
+            body: `From ${referrer}, ${dept}. ${when ? `Appointment ${when}.` : waitlisted ? "Fully booked: needs the next opening." : ""}`.trim(),
+            href: `/referrals#r-${savedId}`,
+            channels: ["push"],
+          }).catch((err) => console.error("[referrals] notify failed", err)),
+        ),
+      );
 
-  // Every active admin gets it in Notifications (and by push if they turned it on).
-  const admins = await query<{ user_id: string }>(
-    `select user_id from memberships where org_id = $1 and active and role = 'admin'`,
-    [org!.id],
-  );
-  // Each admin gets the appointment on their Calendar and task list.
-  if (appointment) {
-    for (const a of admins) {
-      await query(
-        `insert into tasks (user_id, title, notes, due_at, referral_id) values ($1, $2, $3, $4, $5)`,
-        [
-          a.user_id,
-          `Referral appointment: ${first} ${last}`,
-          [`Referred by ${referrer} (${dept}).`, settings.location ? `Location: ${settings.location}.` : "", services.length ? `Services: ${services.join(", ")}.` : "", notes ? `Notes: ${notes}` : ""]
-            .filter(Boolean)
-            .join("\n"),
-          appointment,
-          ref!.id,
-        ],
-      ).catch((err) => console.error("[referrals] appointment task failed", err));
+      await logEvent("referral.received", `Referral to ${orgName}${when ? ` · ${when}` : waitlisted ? " · waitlisted" : ""}`, {
+        email: referrerEmail,
+        meta: { org: orgId, referral: savedId },
+      });
+      // Anyone can type any address here, so cap confirmations per address: the form
+      // can't be used to flood a stranger's inbox (or hurt our sender reputation).
+      const sentToday = await queryOne<{ n: number }>(
+        `select count(*)::int as n from referrals where lower(referrer_email) = $1 and created_at > now() - interval '1 day'`,
+        [referrerEmail],
+      );
+      const mayEmail = (sentToday?.n ?? 0) <= 5;
+      if (!mayEmail) await logEvent("referral.email_capped", `Confirmation not sent: ${referrerEmail} got 5 today`, { level: "warn", email: referrerEmail });
+      if (mayEmail) await sendReferralConfirmation(referrerEmail, orgName, `${first} ${last.charAt(0)}.`, when, waitlisted, settings.location).catch(async (err) => {
+        console.error("[referrals] confirmation email failed", err);
+        await logEvent("email.failed", `Referral confirmation to ${referrerEmail} failed: ${err instanceof Error ? err.message : err}`, {
+          level: "warn",
+          email: referrerEmail,
+        });
+      });
+    } catch (err) {
+      console.error("[referrals] follow-up work failed", err);
+      await logEvent("referral.followup_failed", `After a referral to ${orgName}: ${err instanceof Error ? err.message : err}`, {
+        level: "error",
+        meta: { org: orgId, referral: savedId },
+      }).catch(() => undefined);
     }
-  }
-  await Promise.all(
-    admins.map((a) =>
-      notify(a.user_id, {
-        type: "referral",
-        title: `New referral: ${first} ${last.charAt(0)}.`,
-        body: `From ${referrer}, ${dept}. ${when ? `Appointment ${when}.` : waitlisted ? "Fully booked: needs the next opening." : ""}`.trim(),
-        href: `/referrals#r-${ref!.id}`,
-        channels: ["push"],
-      }).catch((err) => console.error("[referrals] notify failed", err)),
-    ),
-  );
-
-  await logEvent("referral.received", `Referral to ${org!.name}${when ? ` · ${when}` : waitlisted ? " · waitlisted" : ""}`, {
-    email: referrerEmail,
-    meta: { org: org!.id, referral: ref!.id },
-  });
-  // Anyone can type any address here, so cap confirmations per address: the form
-  // can't be used to flood a stranger's inbox (or hurt our sender reputation).
-  const sentToday = await queryOne<{ n: number }>(
-    `select count(*)::int as n from referrals where lower(referrer_email) = $1 and created_at > now() - interval '1 day'`,
-    [referrerEmail],
-  );
-  const mayEmail = (sentToday?.n ?? 0) <= 5;
-  if (!mayEmail) await logEvent("referral.email_capped", `Confirmation not sent: ${referrerEmail} got 5 today`, { level: "warn", email: referrerEmail });
-  if (mayEmail) await sendReferralConfirmation(referrerEmail, org!.name, `${first} ${last.charAt(0)}.`, when, waitlisted, settings.location).catch(async (err) => {
-    console.error("[referrals] confirmation email failed", err);
-    await logEvent("email.failed", `Referral confirmation to ${referrerEmail} failed: ${err instanceof Error ? err.message : err}`, {
-      level: "warn",
-      email: referrerEmail,
-    });
   });
 
   back(appointment ? `sent=1&at=${appointment.getTime()}` : waitlisted ? "sent=1&wait=1" : "sent=1");

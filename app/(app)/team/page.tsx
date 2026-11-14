@@ -25,7 +25,17 @@ type Row = {
 /** Team: each staff member's clients and today's check-ins and services (admins and supervisors). Tasks and follow-ups stay private to each member. */
 export default async function TeamPage() {
   const viewer = await requireTeamViewer();
-  const [tz, terms] = await Promise.all([getOrgTimeZone(viewer.orgId), getTerms()]);
+  const isAdmin = viewer.role === "admin";
+  // Admin-only extras start now, alongside the main queries below, instead of one after another.
+  const termsPromise = getTerms();
+  const extras = Promise.all([
+    isAdmin ? countNewReferrals(viewer.orgId) : Promise.resolve(0),
+    isAdmin ? seatUsage(viewer.orgId) : Promise.resolve(null),
+    isAdmin ? termsPromise.then((t) => getOrgChecklist(viewer.orgId, t.impact)) : Promise.resolve(null),
+    isAdmin ? hasSampleData() : Promise.resolve(false),
+    isAdmin ? canLoadSampleData() : Promise.resolve(false),
+  ]);
+  const [tz, terms] = await Promise.all([getOrgTimeZone(viewer.orgId), termsPromise]);
   const [staff, logo] = await asUser(viewer.userId, async (q) => [
     await q<Row>(
       `select m.user_id, u.name, u.email, m.role,
@@ -51,12 +61,7 @@ export default async function TeamPage() {
     { clients: 0, checkIns: 0, services: 0 },
   );
 
-  const newReferrals = viewer.role === "admin" ? await countNewReferrals(viewer.orgId) : 0;
-  const seats = viewer.role === "admin" ? await seatUsage(viewer.orgId) : null;
-  const [checklist, sampleIn, sampleOffer] =
-    viewer.role === "admin"
-      ? await Promise.all([getOrgChecklist(viewer.orgId, terms.impact), hasSampleData(), canLoadSampleData()])
-      : [null, false, false];
+  const [newReferrals, seats, checklist, sampleIn, sampleOffer] = await extras;
   return (
     <div className="space-y-6">
       <div className="space-y-1">
