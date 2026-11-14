@@ -1057,4 +1057,7 @@ create table if not exists lifecycle_emails (
 alter table lifecycle_emails enable row level security;
 -- One-click unsubscribe from welcome/tip emails (billing emails always send).
 alter table users add column if not exists email_tips_opt_out boolean not null default false;
+
+-- "Try it with sample clients" (lib/actions/sample.ts): marked so one click removes them all.
+alter table people add column if not exists is_sample boolean not null default false;
 `;

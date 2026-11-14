@@ -140,7 +140,7 @@ export async function finishOrgSetup(formData: FormData): Promise<void> {
   await setStep(userId, null);
   await logEvent("setup.done", "Organization set-up finished", { meta: { user: userId } }).catch(() => undefined);
   revalidatePath("/", "layout");
-  redirect(formData.get("go") === "import" ? "/people?import=1" : "/team");
+  redirect(formData.get("go") === "import" ? "/settings/data#import" : "/team");
 }
 
 /** Individual step 4 (last): add a first person, or skip. */

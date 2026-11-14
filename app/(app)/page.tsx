@@ -10,6 +10,8 @@ import { SkyCard } from "@/components/home/SkyCard";
 import { ImpactTeaser } from "@/components/impact/ImpactTeaser";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { WelcomeChecklist } from "@/components/home/WelcomeChecklist";
+import { SampleData } from "@/components/home/SampleData";
+import { canLoadSampleData, hasSampleData } from "@/lib/actions/sample";
 import { getWelcome } from "@/lib/onboarding";
 import { getPendingInvites } from "@/lib/org";
 import { PendingInvites } from "@/components/org/PendingInvites";
@@ -29,7 +31,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const todayKey = dayKey(new Date(), timeZone);
   const { year, month } = dateParts(new Date(), timeZone);
 
-  const [people, tasks, notes, needsAttention, { tasks: monthTasks, birthdays }, welcome, invites] = await Promise.all([
+  const [people, tasks, notes, needsAttention, { tasks: monthTasks, birthdays }, welcome, invites, sampleIn, sampleOffer] = await Promise.all([
     listPeople(),
     listTasks(),
     listRecentNotes(6),
@@ -37,6 +39,8 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     getCalendarMonth(year, month, timeZone),
     getWelcome(),
     getPendingInvites(),
+    hasSampleData(),
+    canLoadSampleData(),
   ]);
 
   const peopleById = new Map(people.map((c) => [c.id, c]));
@@ -55,6 +59,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     <div className="space-y-8">
       <PendingInvites invites={invites} error={inviteError} />
       {welcome && <WelcomeChecklist steps={welcome} />}
+      {sampleIn ? <SampleData mode="loaded" /> : sampleOffer && <SampleData mode="offer" />}
       <section>
         <CommandBar />
         <QuickActions people={people.map((c) => ({ id: c.id, display_name: c.display_name }))} />

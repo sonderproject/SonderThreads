@@ -423,7 +423,7 @@ export function noCardYet(a: Access): boolean {
  */
 export async function importAllowance(userId: string): Promise<number | null> {
   if (!noCardYet(await getAccess())) return null;
-  const r = await queryOne<{ n: number }>(`select count(*)::int as n from people where user_id = $1 and deleted_at is null`, [userId]);
+  const r = await queryOne<{ n: number }>(`select count(*)::int as n from people where user_id = $1 and deleted_at is null and not is_sample`, [userId]);
   return Math.max(0, TRIAL_IMPORT_LIMIT - (r?.n ?? 0));
 }
 

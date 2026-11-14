@@ -3,17 +3,21 @@ import { PeopleBrowser } from "@/components/people/PeopleBrowser";
 import { listPeople } from "@/lib/actions/people";
 import { getMembership } from "@/lib/org";
 import { listServices, peopleServiceIds } from "@/lib/services";
+import { SampleData } from "@/components/home/SampleData";
+import { canLoadSampleData, hasSampleData } from "@/lib/actions/sample";
 
 /**
  * People. Organization members share one caseload: everyone sees, edits and
  * can delete every agency client. Personal (private) people stay with their owner.
  */
 export default async function PeoplePage() {
-  const [people, membership, services, serviceUse] = await Promise.all([
+  const [people, membership, services, serviceUse, sampleIn, sampleOffer] = await Promise.all([
     listPeople(),
     getMembership(),
     listServices({ includeArchived: true }),
     peopleServiceIds(),
+    hasSampleData(),
+    canLoadSampleData(),
   ]);
   return (
     <div className="space-y-4">
@@ -23,6 +27,7 @@ export default async function PeoplePage() {
           Import a client list
         </Link>
       </div>
+      {sampleIn ? <SampleData mode="loaded" /> : sampleOffer && <SampleData mode="offer" />}
       <PeopleBrowser
         people={people}
         orgName={membership?.active ? membership.orgName : null}

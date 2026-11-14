@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
@@ -9,12 +9,8 @@ import { importPeopleToListSafe } from "@/lib/actions/import";
 import { Dictate } from "@/components/voice/Dictate";
 import { PROSE_INPUT } from "@/lib/input-props";
 
-/** Arriving with ?import=1 (the last set-up step's "Upload a spreadsheet") opens it straight away. */
 export function ImportPeopleButton() {
   const [open, setOpen] = useState(false);
-  useEffect(() => {
-    if (new URLSearchParams(window.location.search).get("import") === "1") setOpen(true);
-  }, []);
 
   return (
     <>
