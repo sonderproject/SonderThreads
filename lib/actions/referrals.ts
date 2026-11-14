@@ -110,7 +110,7 @@ export async function submitReferral(formData: FormData): Promise<void> {
     ref = await queryOne<{ id: string }>(
       `insert into referrals (org_id, first_name, last_name, phone, dob, referrer_name, referrer_department, ip_hash,
                               referrer_email, services, notes, appointment_at, waitlisted, location)
-       values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) returning id`,
+       values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) returning id`,
       [org!.id, first, last, phone, dob, referrer, dept, ipHash, referrerEmail, services, notes, appointment, waitlisted, settings.location || null],
     );
   } catch (err) {
