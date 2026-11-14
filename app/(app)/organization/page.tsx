@@ -119,39 +119,6 @@ export default async function OrganizationPage({ searchParams }: { searchParams:
       {error && ERRORS[error] && <p className="flag text-sm">{ERRORS[error]}</p>}
       {saved && SAVED[saved] && <p className="text-sm text-accent">{SAVED[saved]}</p>}
 
-      <section id="type" className="scroll-mt-20 space-y-3">
-        <h2 className="section-label">Organization type</h2>
-        <form key={info?.kind} action={setOrgKind} className="space-y-3">
-          <fieldset className="grid gap-3 sm:grid-cols-2">
-            <legend className="sr-only">Organization type</legend>
-            {ORG_KINDS.map((k) => {
-              const current = (info?.kind ?? "nonprofit") === k.value;
-              return (
-                <label
-                  key={k.value}
-                  className="card flex cursor-pointer items-start gap-3 p-4 transition-colors hover:bg-bg-hover has-[:checked]:border-accent has-[:checked]:ring-1 has-[:checked]:ring-accent"
-                >
-                  <input type="radio" name="kind" value={k.value} defaultChecked={current} required className="mt-1 accent-[var(--accent)]" />
-                  <span className="space-y-1">
-                    <span className="flex items-center gap-2">
-                      <span className="font-semibold text-text">{k.label}</span>
-                      {current && <span className="tag">Current</span>}
-                    </span>
-                    <span className="block text-xs text-text-muted">{k.hint}</span>
-                  </span>
-                </label>
-              );
-            })}
-          </fieldset>
-          <div className="flex flex-wrap items-center gap-3">
-            <button type="submit" className="rounded-full bg-accent px-4 py-1.5 text-sm font-semibold text-bg hover:bg-accent-dim">
-              Save type
-            </button>
-            <p className="text-xs text-text-muted">Changes the words and reports for everyone in your organization.</p>
-          </div>
-        </form>
-      </section>
-
       <section id="info" className="scroll-mt-20 space-y-3">
         <h2 className="section-label">Organization info</h2>
         <div className="card flex flex-wrap items-center gap-4 p-4">
@@ -396,6 +363,39 @@ export default async function OrganizationPage({ searchParams }: { searchParams:
         )}
       </section>
 
+      <section id="type" className="scroll-mt-20 space-y-3">
+        <h2 className="section-label">Organization type</h2>
+        {saved === "kind" && <p className="text-sm text-accent">{SAVED.kind}</p>}
+        <form key={info?.kind} action={setOrgKind} className="space-y-3">
+          <fieldset className="grid gap-3 sm:grid-cols-2">
+            <legend className="sr-only">Organization type</legend>
+            {ORG_KINDS.map((k) => {
+              const current = (info?.kind ?? "nonprofit") === k.value;
+              return (
+                <label
+                  key={k.value}
+                  className="card flex cursor-pointer items-start gap-3 p-4 transition-colors hover:bg-bg-hover has-[:checked]:border-accent has-[:checked]:ring-1 has-[:checked]:ring-accent"
+                >
+                  <input type="radio" name="kind" value={k.value} defaultChecked={current} required className="mt-1 accent-[var(--accent)]" />
+                  <span className="space-y-1">
+                    <span className="flex items-center gap-2">
+                      <span className="font-semibold text-text">{k.label}</span>
+                      {current && <span className="tag">Current</span>}
+                    </span>
+                    <span className="block text-xs text-text-muted">{k.hint}</span>
+                  </span>
+                </label>
+              );
+            })}
+          </fieldset>
+          <div className="flex flex-wrap items-center gap-3">
+            <button type="submit" className="rounded-full bg-accent px-4 py-1.5 text-sm font-semibold text-bg hover:bg-accent-dim">
+              Save type
+            </button>
+            <p className="text-xs text-text-muted">Changes the words and reports for everyone in your organization.</p>
+          </div>
+        </form>
+      </section>
     </div>
   );
 }
