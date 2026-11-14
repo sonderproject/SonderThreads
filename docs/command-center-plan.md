@@ -56,3 +56,13 @@ organizations' client-data terms promise that). Account emails and names are fin
 
 No extra discounts (decided Nov 14): no mid-trial offer and no abandoned-sign-up offer. The only offers
 are "skip the trial" (30% off month 1) and the cancel-flow save.
+
+## 7. Email marketing opt-in (agreed Nov 14; email only, no texts)
+- Sign-up: one optional, unchecked box "Send me tips and offers from Sonder Project." Existing
+  users get a one-time dismissible prompt in the app with the same wording.
+- Store each opt-in/opt-out with time, the exact wording shown, IP and browser (like
+  `legal_acceptances`). Every marketing email has an unsubscribe link that turns it off.
+- Privacy policy: say marketing emails can include offers from Sonder Project's other products,
+  opt-in and unsubscribe anytime; bump `LEGAL_VERSION`.
+- Command center: opted-in count and opt-in rate, plus a CSV export of opted-in emails only.
+- Sending stays off until `POSTAL_ADDRESS` is set (CAN-SPAM).
