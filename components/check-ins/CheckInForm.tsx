@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { createCheckInSafe } from "@/lib/actions/check-ins";
@@ -15,6 +15,7 @@ import type { Service } from "@/lib/services";
 const NEW_PERSON = "__new__";
 const NEW_SERVICE = "__new_service__";
 const OTHER = "__other__";
+const LAST_SERVICE_KEY = "strynd:last-service";
 
 /**
  * Logs a check-in. With `personId` set (on a profile) the person picker is
@@ -51,6 +52,18 @@ export function CheckInForm({
     setReason("");
     setAmount(s.priceCents === null ? "" : (s.priceCents / 100).toFixed(s.priceCents % 100 ? 2 : 0));
   }
+  // Most people log the same service all day: preselect the last one used on this device.
+  useEffect(() => {
+    let last: string | null = null;
+    try {
+      last = localStorage.getItem(LAST_SERVICE_KEY);
+    } catch {
+      // storage blocked: just start empty
+    }
+    const s = last ? initialServices.find((x) => x.id === last) : null;
+    if (s) pickService(s);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   function chooseService(value: string) {
     const s = services.find((x) => x.id === value);
     if (s) return pickService(s);
@@ -109,9 +122,19 @@ export function CheckInForm({
       setPersonId("");
       setNewName("");
       setReason("");
-      setServiceId(null);
-      setServiceChoice("");
-      setAmount("");
+      // Keep the service picked (and remember it) for the next one; clear anything else.
+      try {
+        if (service) localStorage.setItem(LAST_SERVICE_KEY, service.id);
+        else localStorage.removeItem(LAST_SERVICE_KEY);
+      } catch {
+        // storage blocked: nothing to remember
+      }
+      if (service) pickService(service);
+      else {
+        setServiceId(null);
+        setServiceChoice("");
+        setAmount("");
+      }
       setWhen(toLocalInputValue(new Date()));
       setSaved(name ? `${name} checked in.` : "Checked in.");
       router.refresh();

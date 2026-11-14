@@ -36,6 +36,7 @@ import { ShareToggle } from "@/components/people/ShareToggle";
 import { getMembership } from "@/lib/org";
 import { listOutcomes, listPersonOutcomes } from "@/lib/outcomes";
 import { PersonOutcomes } from "@/components/people/PersonOutcomes";
+import { ContactActions } from "@/components/people/ContactActions";
 import { dayKey } from "@/lib/tz";
 
 /** Supervisor comments on one of my clients (read through the database's access rules). */
@@ -129,6 +130,11 @@ export default async function PersonProfilePage({
           )}
         </div>
         <RegularStats checkIns={checkIns} visitWord={terms.checkInLower} visitsWord={terms.checkInsLower} formatDate={(iso) => shortDate(iso, tz)} />
+        {(person.phone || person.email) && (
+          <div className="mt-3">
+            <ContactActions personId={person.id} phone={person.phone} email={person.email} />
+          </div>
+        )}
         {membership?.active && person.user_id === me && (
           <div className="mt-2">
             <ShareToggle personId={person.id} shared={Boolean(person.org_id)} orgName={membership.orgName} />
@@ -194,7 +200,7 @@ export default async function PersonProfilePage({
             />
           </Detail>
         </div>
-      </Section>
+</Section>
 
       <Section title="Summary">
         <p className="card px-3 py-2.5 text-sm text-text-muted">{person.summary ?? "No summary yet."}</p>
