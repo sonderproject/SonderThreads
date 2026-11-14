@@ -33,7 +33,7 @@ import { formatPhone } from "@/lib/notify/phone";
 import packageJson from "@/package.json";
 import type { SettingsSlug } from "@/lib/settings-sections";
 
-export type SettingsQuery = { error?: string; saved?: string; email?: string; billing?: string };
+export type SettingsQuery = { error?: string; saved?: string; email?: string; billing?: string; owner?: string };
 
 const EMAIL_ERRORS: Record<string, string> = {
   "email-invalid": "Enter a valid email address.",
@@ -246,6 +246,11 @@ async function SecuritySection({ q }: { q: SettingsQuery }) {
   const [user, prefs] = await Promise.all([me(), getUserSettings()]);
   return (
     <>
+      {q.owner === "2fa" && !user?.mfa_enabled && (
+        <p role="alert" className="flag text-sm">
+          The command center needs two-step sign-in. Turn it on below, then open the command center again.
+        </p>
+      )}
       <ChangePasswordCard />
       <TwoFactorCard enabled={Boolean(user?.mfa_enabled)} />
 

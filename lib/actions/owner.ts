@@ -1,7 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { requireOwner } from "@/lib/owner";
+import { logOwnerAction, requireOwner } from "@/lib/owner";
 import { logEvent } from "@/lib/events";
 import { createSupabaseAdmin } from "@/lib/supabase/admin";
 import { appUrl } from "@/lib/email";
@@ -21,6 +21,6 @@ export async function ownerResendConfirmation(formData: FormData): Promise<void>
     await logEvent("owner.resend_failed", error.message, { level: "warn", email });
     redirect(`/owner?resend=failed&email=${encodeURIComponent(email)}#attention`);
   }
-  await logEvent("owner.resent_confirmation", "Owner resent the confirmation email", { email });
+  await logOwnerAction("resent_confirmation", "Owner resent the confirmation email", { email });
   redirect(`/owner?resend=sent&email=${encodeURIComponent(email)}#attention`);
 }

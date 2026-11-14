@@ -3,6 +3,11 @@
 Owner-only (`/owner`, behind `requireOwner()`; master account `sonderproject.co@gmail.com`).
 Build in this order. Show the owner a short plan per part before building; push each part to `main`.
 
+**Owner-only, airtight (done Nov 14):** `requireOwner()` needs the pinned account id AND the owner
+email AND two-step sign-in; everyone else gets a 404. Every new page and action must call it (a test
+checks) and log with `logOwnerAction()`. Every control must skip the owner's own account (it can't
+be suspended, and maintenance mode never locks it out), and every action also emails the owner a copy.
+
 **Privacy rule for everything here:** the command center shows counts, plans, dates and settings,
 never the contents of anyone's client records, notes or tasks (the privacy policy and the
 organizations' client-data terms promise that). Account emails and names are fine.
