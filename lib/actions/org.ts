@@ -5,6 +5,7 @@ import { isOrgKind } from "@/lib/terms";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { query, queryOne, transaction } from "@/lib/db/client";
+import { logEvent } from "@/lib/events";
 import { isValidTimeZone } from "@/lib/tz";
 import { asUser } from "@/lib/db/as-user";
 import { requireUserId } from "@/lib/current-user";
@@ -230,9 +231,9 @@ export async function saveOrganizationInfo(formData: FormData): Promise<void> {
   await asUser(userId, (q) =>
     q(
       `update organizations set name = $1, phone = $2, email = $3, website = $4, address = $5, about = $6,
-              kind = coalesce($8, kind), updated_at = now()
+              updated_at = now()
         where id = $7`,
-      [name, field("phone", 40), email, website, field("address", 500), field("about", 1000), orgId, isOrgKind(formData.get("kind")) ? formData.get("kind") : null],
+      [name, field("phone", 40), email, website, field("address", 500), field("about", 1000), orgId],
     ),
   );
   revalidatePath("/", "layout");
@@ -244,9 +245,11 @@ export async function setOrgKind(formData: FormData): Promise<void> {
   const { userId, orgId } = await requireAdmin();
   const kind = formData.get("kind");
   if (!isOrgKind(kind)) redirect("/organization#type");
-  const current = await asUser(userId, (q) => q<{ kind: string }>(`select kind from organizations where id = $1`, [orgId]));
-  if (current[0]?.kind === kind) redirect("/organization#type");
-  await asUser(userId, (q) => q(`update organizations set kind = $1, updated_at = now() where id = $2`, [kind, orgId]));
+  // The type isn't editable through the database API (column grants), so the server
+  // changes it here, after requireAdmin() has checked this person runs the organization.
+  const changed = await query(`update organizations set kind = $1, updated_at = now() where id = $2 and kind <> $1 returning id`, [kind, orgId]);
+  if (!changed.length) redirect("/organization#type");
+  await logEvent("org.kind", `Organization type changed to ${kind}`, { meta: { org: orgId, by: userId } }).catch(() => undefined);
   revalidatePath("/", "layout");
   redirect("/organization?saved=kind#type");
 }
