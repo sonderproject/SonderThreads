@@ -103,13 +103,67 @@ export default function TermsPage() {
         </ul>
       </LegalSection>
 
+      <LegalSection title="Our app and brand" id="ip">
+        <p>
+          Your content is yours. Everything else is ours: the Surfdesk app and website, including its software and code,
+          design, look and feel, screens and layouts, workflows and features, text, reports, templates, graphics and
+          documentation, and the Surfdesk and Sonder Project names, logos and brand (&quot;our materials&quot;). Our
+          materials are protected by copyright, trademark and other laws.
+        </p>
+        <p>
+          While your account is in good standing, we give you a personal, limited, non-exclusive, non-transferable right
+          to use the app for your own work or your organization&apos;s work, under these terms. Nothing else is licensed
+          to you, and we keep all rights we don&apos;t expressly give.
+        </p>
+        <p>
+          <strong>You agree not to copy us.</strong> You won&apos;t, and won&apos;t help anyone else to:
+        </p>
+        <ul>
+          <li>
+            copy, reproduce, imitate or create derivative works from our materials, including recreating the app&apos;s
+            design, screens, workflows, features or text in another product;
+          </li>
+          <li>
+            use the app, or what you learn from using it, to design, build, train or market a product or service that
+            competes with Surfdesk;
+          </li>
+          <li>
+            access the app to research or benchmark it for a competing product, or sign up on behalf of a competitor,
+            without our written permission;
+          </li>
+          <li>
+            decompile, disassemble or reverse engineer the app, or copy its source code, except where the law expressly
+            allows it despite this limit;
+          </li>
+          <li>
+            scrape, crawl or extract content or data from the app by automated means, other than exporting your own
+            data with the app&apos;s export features;
+          </li>
+          <li>
+            use the Surfdesk or Sonder Project names, logos or brand, or anything confusingly similar, in a product name,
+            domain, account name or ad, or suggest we endorse you, without our written permission; or
+          </li>
+          <li>remove or hide any copyright, trademark or other notices in the app.</li>
+        </ul>
+        <p>
+          If you break this section, we may close your account immediately and seek every remedy the law allows,
+          including a court order to stop the copying. Because copying could cause harm money alone can&apos;t fix, you
+          agree we may ask a court for that order (see the exceptions in Resolving disputes).
+        </p>
+        <p>
+          <strong>Feedback:</strong> if you send us ideas or suggestions, we may use them freely, without owing you
+          anything, and you won&apos;t claim any rights in what we build with them.
+        </p>
+      </LegalSection>
+
       <LegalSection title="Acceptable use">
         <p>Don&apos;t:</p>
         <ul>
           <li>break the law, or harass, harm or spam anyone using the app;</li>
           <li>try to access other people&apos;s accounts or data, or get around security features;</li>
-          <li>disrupt, overload, scrape or reverse engineer the app, except where the law allows it;</li>
-          <li>resell the app or use it to build a competing product.</li>
+          <li>disrupt or overload the app, or test its security without our written permission;</li>
+          <li>resell, rent or share access to the app, or let someone outside your account or organization use it;</li>
+          <li>break the &quot;Our app and brand&quot; section above.</li>
         </ul>
       </LegalSection>
 
@@ -305,8 +359,8 @@ export default function TermsPage() {
             and us about the app, and replace any earlier ones.
           </li>
           <li>
-            <strong>What continues after your account ends:</strong> the sections on your content, fees owed,
-            disclaimer, limitation of liability, indemnity and resolving disputes.
+            <strong>What continues after your account ends:</strong> the sections on your content, our app and brand,
+            fees owed, disclaimer, limitation of liability, indemnity and resolving disputes.
           </li>
         </ul>
       </LegalSection>
