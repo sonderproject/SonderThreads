@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { CampaignLinks } from "@/components/landing/CampaignLinks";
 import { CommandDemo } from "@/components/landing/CommandDemo";
+import { AgencyPreviews } from "@/components/landing/AgencyPreviews";
 import { CalendarIcon, MicIcon, PeopleIcon, TasksIcon } from "@/components/ui/icons";
 import Link from "next/link";
 import { SITE_DESCRIPTION } from "@/lib/site";
@@ -57,6 +58,13 @@ const TEAM_SIGNUP = "/get-started/org";
 /** "Get started now": the same set-up, with "Skip the trial: 30% off your first month" up front at the end. */
 const OFFER_SIGNUP = "/get-started/solo?offer=skip";
 const TEAM_OFFER_SIGNUP = "/get-started/org?offer=skip";
+/** "Your data" section. Accurate on purpose: we store data to run the app, so never say we don't keep it. */
+const DATA_PROMISES = [
+  { title: "Never sold", body: "We never sell your data or use it for ads. It's used only to run Strynd for you." },
+  { title: "Encrypted", body: "Encrypted in transit and at rest, with two-step sign-in and automatic sign-out on shared computers." },
+  { title: "Walled off", body: "Database-level access rules keep every account and organization separate. Staff see only what their role allows." },
+  { title: "Yours to take or delete", body: "Export everything to Excel, CSV or a full backup any time. Delete your account and your data is deleted with it." },
+];
 const SALES = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent("Strynd Enterprise")}`;
 
 const PLANS: {
@@ -422,7 +430,7 @@ export default function WelcomePage() {
 
         <section className="grid gap-10 border-t border-border py-16 lg:grid-cols-2">
           <div className="space-y-5">
-            <Marker n="03">For teams</Marker>
+            <Marker n="03">For teams and agencies</Marker>
             <h2 className="font-display text-3xl font-light leading-tight tracking-[-0.02em] sm:text-4xl">
               Even better together.
             </h2>
@@ -445,19 +453,35 @@ export default function WelcomePage() {
                 See team pricing
               </a>
             </div>
+            <ul className="card divide-y divide-border-subtle">
+              {TEAMS.map((line) => (
+                <li key={line} className="flex gap-3 p-4 text-sm leading-relaxed">
+                  <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" aria-hidden />
+                  {line}
+                </li>
+              ))}
+            </ul>
           </div>
-          <ul className="card divide-y divide-border-subtle">
-            {TEAMS.map((line) => (
-              <li key={line} className="flex gap-3 p-4 text-sm leading-relaxed">
-                <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" aria-hidden />
-                {line}
-              </li>
+          <AgencyPreviews />
+        </section>
+
+        <section className="space-y-8 border-t border-border py-16">
+          <Marker n="04">Your data</Marker>
+          <h2 className="max-w-2xl font-display text-3xl font-light leading-tight tracking-[-0.02em] sm:text-4xl">
+            Your data is yours. Full stop.
+          </h2>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {DATA_PROMISES.map((d) => (
+              <div key={d.title} className="card space-y-1.5 p-5">
+                <p className="font-semibold text-text">{d.title}</p>
+                <p className="text-sm text-text-muted">{d.body}</p>
+              </div>
             ))}
-          </ul>
+          </div>
         </section>
 
         <section id="pricing" className="scroll-mt-20 space-y-8 border-t border-border py-16">
-          <Marker n="04">Pricing</Marker>
+          <Marker n="05">Pricing</Marker>
           <h2 className="max-w-2xl font-display text-3xl font-light leading-tight tracking-[-0.02em] sm:text-4xl">
             Simple pricing that gets cheaper as your team grows.
           </h2>
@@ -547,7 +571,7 @@ export default function WelcomePage() {
         </section>
 
         <section className="space-y-6 border-t border-border py-16">
-          <Marker n="05">Put it on your phone</Marker>
+          <Marker n="06">Put it on your phone</Marker>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="card space-y-1 p-5">
               <h2 className="font-display text-lg font-normal">iPhone</h2>
