@@ -44,7 +44,9 @@ export function MobileNav({
   showTeam = false,
   showImpact = true,
   referralCount = null,
+  showOwner = false,
 }: {
+  showOwner?: boolean;
   referralCount?: number | null;
   people: Pick<Person, "id" | "display_name">[];
   showTeam?: boolean;
@@ -63,7 +65,8 @@ export function MobileNav({
     referralCount !== null
       ? [{ href: "/referrals", label: referralCount ? `Referrals (${referralCount})` : "Referrals" }, ...baseLinks]
       : baseLinks;
-  const moreLinks = showTeam ? [{ href: "/team", label: "Team" }, ...withReferrals] : withReferrals;
+  const teamLinks = showTeam ? [{ href: "/team", label: "Team" }, ...withReferrals] : withReferrals;
+  const moreLinks = showOwner ? [{ href: "/owner", label: "Command center" }, ...teamLinks] : teamLinks;
   const moreActive = moreLinks.some((l) => isActive(pathname, l.href));
 
   function openCommand(opts: OpenCommandDetail = {}) {

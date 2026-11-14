@@ -35,7 +35,10 @@ export function AppShell({
   showTeam = false,
   showImpact = true,
   referralCount = null,
+  showOwner = false,
 }: {
+  /** The owner's master account gets a Command center tab (/owner). */
+  showOwner?: boolean;
   /** Admins get a Referrals tab; the number waiting (null = no tab). */
   referralCount?: number | null;
   /** Case managers in an organization don't get reports. */
@@ -66,7 +69,7 @@ export function AppShell({
               <div className="flex items-center">
                 <div className="hidden items-center gap-2 sm:flex">
                   <nav className="flex gap-1">
-                    {[...NAV_ITEMS.filter((i) => showImpact || i.href !== "/impact").map((i) => ({ ...i, label: i.href === "/check-ins" ? terms.checkIns : i.href === "/impact" ? terms.impact : i.label })), ...(showTeam ? [{ href: "/team", label: "Team" }] : []), ...(referralCount !== null ? [{ href: "/referrals", label: referralCount ? `Referrals (${referralCount})` : "Referrals" }] : [])].map((item) => {
+                    {[...NAV_ITEMS.filter((i) => showImpact || i.href !== "/impact").map((i) => ({ ...i, label: i.href === "/check-ins" ? terms.checkIns : i.href === "/impact" ? terms.impact : i.label })), ...(showTeam ? [{ href: "/team", label: "Team" }] : []), ...(referralCount !== null ? [{ href: "/referrals", label: referralCount ? `Referrals (${referralCount})` : "Referrals" }] : []), ...(showOwner ? [{ href: "/owner", label: "Command center" }] : [])].map((item) => {
                       const isActive =
                         item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
                       return (
@@ -141,7 +144,7 @@ export function AppShell({
             <div className="nav-glow-line" aria-hidden />
           </header>
           <main className="pb-tabbar mx-auto max-w-4xl px-4 pt-5 sm:px-6 sm:py-6">{children}</main>
-          <MobileNav people={people} showTeam={showTeam} showImpact={showImpact} referralCount={referralCount} />
+          <MobileNav people={people} showTeam={showTeam} showImpact={showImpact} referralCount={referralCount} showOwner={showOwner} />
           <SearchPalette />
         </div>
       </UndoProvider>

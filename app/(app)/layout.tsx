@@ -19,6 +19,7 @@ import { billingEnabled, getAccess } from "@/lib/billing";
 import { BillingBanner } from "@/components/billing/BillingBanner";
 import { pendingAgreements } from "@/lib/actions/legal";
 import { SETUP_PATHS } from "@/lib/setup";
+import { isOwner } from "@/lib/owner";
 
 /**
  * Two per-user flags, in one read: whether to offer optional 2FA (from day 3,
@@ -48,7 +49,7 @@ export default async function AppGroupLayout({ children }: { children: React.Rea
     // Everything the shell needs, fetched together (the Terms and billing checks used to wait for the rest).
     data = await Promise.all([
       listPeople(), listLists(), getNotificationCount(), getTimeZone(), userFlags(), getUserSettings(), getMembership(),
-      pendingAgreements(), getAccess().catch(() => null),
+      pendingAgreements(), getAccess().catch(() => null), isOwner().catch(() => false),
     ]);
   } catch (err) {
     unstable_rethrow(err); // let Next's redirect-to-sign-in through
@@ -61,7 +62,7 @@ export default async function AppGroupLayout({ children }: { children: React.Rea
     );
   }
 
-  const [people, lists, notificationCount, timeZone, flags, settings, membership, agreements, access] = data;
+  const [people, lists, notificationCount, timeZone, flags, settings, membership, agreements, access, showOwner] = data;
   // Everyone agrees to the current Terms/Privacy policy (and admins for their organization) before using the app.
   if (agreements.user || agreements.org) {
     const path = (await headers()).get("x-pathname") ?? "/";
@@ -97,6 +98,7 @@ export default async function AppGroupLayout({ children }: { children: React.Rea
       showTeam={Boolean(membership?.active && membership.role !== "case_manager")}
       referralCount={referralCount}
       showImpact={!(membership?.active && membership.role === "case_manager")}
+      showOwner={showOwner}
     >
       {access && billingEnabled() && <BillingBanner access={access} />}
       {children}
