@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Surfdesk",
     short_name: "Surfdesk",
-    description: "Clients, tasks, notes and check-ins in one calm place. By Sonder Project.",
+    description: "Never lose track of a client. Clients, follow-ups, notes and reports in one app. By Sonder Project.",
     start_url: "/",
     display: "standalone",
     orientation: "portrait",

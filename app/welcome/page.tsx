@@ -230,8 +230,8 @@ export default function WelcomePage() {
               Everything you need to stay organized. One app.
             </h1>
             <p className="max-w-xl text-base leading-relaxed text-text-muted sm:text-lg">
-              Your tasks, to-do lists, notes and the people you work with, in one calm place. Type it or say it once, and
-              Surfdesk files it, reminds you and keeps it all together. No more juggling five apps.
+              Your clients, follow-ups, tasks and notes in one app. Type it or say it once, and Surfdesk files it, reminds
+              you and keeps it all together, so nothing slips. No more juggling five apps.
             </p>
             <Cta />
             <p className="text-xs text-text-muted">7-day free trial · Works on any phone or computer</p>

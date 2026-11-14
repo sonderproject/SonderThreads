@@ -3,7 +3,7 @@ import { ImageResponse } from "next/og";
 // The preview card shown when someone shares a Surfdesk link in a text,
 // email or social post. (Image rendering can't read CSS variables, so the
 // Sonder Studio palette is written out here: obsidian, warm white, surf blue.)
-export const alt = "Surfdesk: clients, tasks and notes in one calm place";
+export const alt = "Surfdesk: never lose track of a client again";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -30,7 +30,7 @@ export default function OpengraphImage() {
         <div style={{ fontSize: 72, marginTop: 36, lineHeight: 1.05, maxWidth: 950 }}>
           The daily tool for the people you serve.
         </div>
-        <div style={{ fontSize: 30, marginTop: 28, color: "#aea08d" }}>Clients, tasks, notes and check-ins in one calm place.</div>
+        <div style={{ fontSize: 30, marginTop: 28, color: "#aea08d" }}>Clients, follow-ups, notes and reports in one app. Nothing slips.</div>
       </div>
     ),
     size,
