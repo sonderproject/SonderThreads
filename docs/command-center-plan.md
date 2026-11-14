@@ -54,7 +54,12 @@ organizations' client-data terms promise that). Account emails and names are fin
 - Green/red: last successful email, last Stripe webhook, last cron run, errors in the last 24h,
   database size vs plan limit.
 
-## Growth ideas to offer after (not agreed yet)
-- In-app "invite another organization, both get a month free" referral reward.
-- One-question satisfaction survey (NPS) after 14 days of use.
-- Upgrade nudges: a trial account that hits a limit sees the offer right there.
+## 7. Mid-trial offer (agreed Nov 14): subscribe now, 15% off
+- Organizations on the 14-day card trial: from day 7 of the trial, admins see a prompt (Home/Team
+  banner and Billing) "Subscribe now and get 15% off your first month" (the exact wording/length of
+  the discount to confirm before building). Accepting ends the trial today and starts the paid plan
+  with a one-time 15% Stripe coupon (new coupon id, e.g. `surfdesk_midtrial_15_once`).
+- Shown once per organization, dismissible, never to accounts that already pay or used the 30%
+  "skip the trial" offer. Logged so the command center can show how many take it.
+- Terms/pricing copy: add the offer to the "Fees, renewal and cancellation" section and bump
+  `LEGAL_VERSION`; the cancel-anytime and auto-renewal wording stays as is.
