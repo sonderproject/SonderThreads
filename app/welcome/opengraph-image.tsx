@@ -30,7 +30,7 @@ export default function OpengraphImage() {
         <div style={{ fontSize: 72, marginTop: 36, lineHeight: 1.05, maxWidth: 950 }}>
           The daily tool for the people you serve.
         </div>
-        <div style={{ fontSize: 30, marginTop: 28, color: "#aea08d" }}>Clients, follow-ups, notes and reports in one app. Nothing slips.</div>
+        <div style={{ fontSize: 30, marginTop: 28, color: "#aea08d" }}>Clients, follow-ups, notes and reports in one app. Everything organized.</div>
       </div>
     ),
     size,

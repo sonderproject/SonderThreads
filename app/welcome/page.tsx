@@ -227,11 +227,11 @@ export default function WelcomePage() {
           <div className="space-y-6">
             <Marker n="01">Tasks · To-dos · Notes · Clients</Marker>
             <h1 className="font-display text-4xl font-light leading-[1.05] tracking-[-0.02em] sm:text-6xl">
-              Everything you need to stay organized. One app.
+              Every client. Every follow-up. <span className="text-accent">Everything organized.</span>
             </h1>
             <p className="max-w-xl text-base leading-relaxed text-text-muted sm:text-lg">
               Your clients, follow-ups, tasks and notes in one app. Type it or say it once, and Surfdesk files it, reminds
-              you and keeps it all together, so nothing slips. No more juggling five apps.
+              you and keeps it all together. No more juggling five apps.
             </p>
             <Cta />
             <p className="text-xs text-text-muted">7-day free trial · Works on any phone or computer</p>
