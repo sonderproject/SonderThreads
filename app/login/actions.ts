@@ -1,5 +1,6 @@
 "use server";
 
+import { isEmail } from "@/lib/email-check";
 import { readDraft, saveDraftToAccount, setupFlowFor } from "@/lib/setup";
 import { recordAcceptance } from "@/lib/legal-server";
 import { headers } from "next/headers";
@@ -15,7 +16,6 @@ import { normalizePhone, validTimeZone } from "@/lib/notify/phone";
 import { phoneTaken } from "@/lib/phone-unique";
 import { otherActiveAdmin, transferOrgClients } from "@/lib/org-admin";
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MIN_PASSWORD_LENGTH = 8;
 
 function back(
@@ -113,7 +113,7 @@ async function ensureSupabaseUser(email: string): Promise<void> {
  */
 export async function requestPasswordReset(formData: FormData): Promise<void> {
   const email = formData.get("email")?.toString().trim().toLowerCase() ?? "";
-  if (!EMAIL_RE.test(email)) redirect("/forgot-password?error=email");
+  if (!isEmail(email)) redirect("/forgot-password?error=email");
   await ensureSupabaseUser(email).catch((err) => console.error("[auth] reset prep failed", err));
   const supabase = await createSupabaseServer();
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
@@ -189,7 +189,7 @@ export async function signup(formData: FormData): Promise<void> {
   const agreed = formData.get("agree") === "on";
 
   if (!agreed) back("/signup", "agree", email, next, rawPhone);
-  if (!EMAIL_RE.test(email) || email.length > 254) back("/signup", "email", email, next, rawPhone);
+  if (!isEmail(email) || email.length > 254) back("/signup", "email", email, next, rawPhone);
   if (rawPhone && !phone) back("/signup", "phone", email, next, rawPhone);
   if (phone && (await phoneTaken(phone))) back("/signup", "phone-used", email, next, rawPhone);
   if (password.length < MIN_PASSWORD_LENGTH) back("/signup", "short", email, next, rawPhone);
@@ -299,7 +299,7 @@ export async function resendConfirmation(formData: FormData): Promise<void> {
   // Keep where they were headed (e.g. the guided set-up), so the new email's link and code continue there.
   const next = safeNextPath(formData.get("next")?.toString());
   const params = new URLSearchParams({ email, next });
-  if (!EMAIL_RE.test(email)) redirect(`/signup/check-email?${params}`);
+  if (!isEmail(email)) redirect(`/signup/check-email?${params}`);
   const supabase = await createSupabaseServer();
   const { error } = await supabase.auth.resend({
     type: "signup",
@@ -336,7 +336,7 @@ export async function requestEmailChange(formData: FormData): Promise<void> {
   const state = await getAuthState();
   if (state.status !== "signed-in") redirect("/login");
   const email = (formData.get("email")?.toString() ?? "").trim().toLowerCase();
-  if (!EMAIL_RE.test(email)) redirect("/settings?error=email-invalid#email");
+  if (!isEmail(email)) redirect("/settings?error=email-invalid#email");
   if (email === state.user.email.toLowerCase()) redirect("/settings?error=email-same#email");
   const supabase = await createSupabaseServer();
   const { error } = await supabase.auth.updateUser(
@@ -432,7 +432,7 @@ export async function verifySignupCode(formData: FormData): Promise<void> {
   const code = (formData.get("code")?.toString() ?? "").replace(/\s/g, "");
   const next = safeNextPath(formData.get("next")?.toString());
   const back = (error: string) => redirect(`/signup/check-email?${new URLSearchParams({ email, next, error })}`);
-  if (!EMAIL_RE.test(email)) back("code-email");
+  if (!isEmail(email)) back("code-email");
   if (!/^\d{6,10}$/.test(code)) back("code");
   const supabase = await createSupabaseServer();
   // Newer Supabase accepts sign-up codes as "email"; older projects as "signup".

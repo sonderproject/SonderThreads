@@ -1,5 +1,6 @@
 "use server";
 
+import { isEmail } from "@/lib/email-check";
 import { randomBytes } from "crypto";
 import { isOrgKind } from "@/lib/terms";
 import { revalidatePath } from "next/cache";
@@ -19,7 +20,6 @@ import { appUrl, emailConfigured, escapeHtml, sendEmail } from "@/lib/email";
 import { ROLE_LABELS } from "@/lib/org-roles";
 import { SeatLimitError, assertCanWrite, assertSeatAvailable, billingEnabled, syncOrgSeats } from "@/lib/billing";
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const INVITE_DAYS = 14;
 
 async function requireAdmin(): Promise<{ userId: string; orgId: string }> {
@@ -58,7 +58,7 @@ export async function createInvite(email: string, role: string): Promise<ActionR
     const { userId, orgId } = await requireAdmin();
     await assertCanWrite(); // not before the trial starts or after a subscription lapses (stops invite/referral email abuse)
     const clean = email.trim().toLowerCase();
-    if (!EMAIL_RE.test(clean) || clean.length > 254) throw new Error("Enter a valid email address.");
+    if (!isEmail(clean) || clean.length > 254) throw new Error("Enter a valid email address.");
     if (!isOrgRole(role)) throw new Error("Choose a role.");
     const member = await queryOne(
       `select 1 from memberships m join users u on u.id = m.user_id where m.org_id = $1 and lower(u.email) = $2 and m.active`,
@@ -225,7 +225,7 @@ export async function saveOrganizationInfo(formData: FormData): Promise<void> {
   const name = field("name", 200);
   if (!name) redirect("/organization?error=name#info");
   const email = field("email", 254);
-  if (email && !EMAIL_RE.test(email)) redirect("/organization?error=org-email#info");
+  if (email && !isEmail(email)) redirect("/organization?error=org-email#info");
   let website = field("website", 300);
   if (website && !/^https?:\/\//i.test(website)) website = `https://${website}`;
   await asUser(userId, (q) =>

@@ -1,5 +1,6 @@
 "use server";
 
+import { isEmail } from "@/lib/email-check";
 import { assertCanWrite } from "@/lib/billing";
 import { createHash, randomBytes } from "node:crypto";
 import { headers } from "next/headers";
@@ -16,7 +17,6 @@ import { loadReferralSettings, openSlots } from "@/lib/referral-settings";
 import { SLOT_CHOICES, cleanHours, formatSlot, minutesOf, type WeeklyHours } from "@/lib/referral-slots";
 import { isValidTimeZone } from "@/lib/tz";
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 /** Multi-line text: trims and caps, keeps line breaks. */
 const cleanText = (v: FormDataEntryValue | null, max: number) =>
   (v?.toString() ?? "").replace(/\r\n?/g, "\n").replace(/[ \t]+/g, " ").replace(/\n{3,}/g, "\n\n").trim().slice(0, max);
@@ -69,7 +69,7 @@ export async function submitReferral(formData: FormData): Promise<void> {
   const year = dob ? Number(dob.slice(0, 4)) : 0;
   if (!dob || year < 1900 || new Date(dob) > new Date()) back("error=dob");
   if (!referrer || !dept) back("error=referrer");
-  if (!EMAIL_RE.test(referrerEmail)) back("error=email");
+  if (!isEmail(referrerEmail)) back("error=email");
 
   const settings = await loadReferralSettings(org!.id);
   // One service: from the organization's list, or typed in under "Other".
