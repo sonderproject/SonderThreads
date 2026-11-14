@@ -1,5 +1,6 @@
 "use server";
 
+import { saveDraftToAccount, setupFlowFor } from "@/lib/setup";
 import { recordAcceptance } from "@/lib/legal-server";
 import { headers } from "next/headers";
 import { isLikelyBot, logEvent } from "@/lib/events";
@@ -260,6 +261,8 @@ export async function signup(formData: FormData): Promise<void> {
   }
 
   await createUserRow(userId, email, phone, smsOptIn, timeZone);
+  // Guided set-up: keep the answers on the account too, for a confirmation link opened on another device.
+  if (setupFlowFor(next)) await saveDraftToAccount(userId).catch((err) => console.error("[setup] saving answers failed", err));
   const source = Object.fromEntries(
     ["utm_source", "utm_medium", "utm_campaign", "utm_content"]
       .map((k) => [k, formData.get(k)?.toString().trim().slice(0, 80) || null])

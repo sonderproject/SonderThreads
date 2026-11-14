@@ -5,16 +5,16 @@ import { requireUserId } from "@/lib/current-user";
 import { getMembership } from "@/lib/org";
 import { parseMoney } from "@/lib/money";
 import { logEvent } from "@/lib/events";
-import { clearDraft, readDraft } from "@/lib/setup";
+import { clearDraftEverywhere, draftForAccount } from "@/lib/setup";
 
 export const dynamic = "force-dynamic";
 
 /** Right after the email is verified: saves what they'll use Strynd for (and any services), then on to the first person. */
 export async function GET() {
   const userId = await requireUserId();
-  const d = await readDraft();
+  const d = await draftForAccount(userId);
   if (d?.flow !== "solo" || (await getMembership())) {
-    await clearDraft();
+    await clearDraftEverywhere(userId);
     redirect("/");
   }
   await query(`update users set use_case = $2, setup_step = 'solo:first' where id = $1`, [userId, d.use ?? null]);
@@ -31,7 +31,7 @@ export async function GET() {
   await logEvent("setup.solo_started", "Individual set-up: account verified", {
     meta: { user: userId, use: d.use ?? null, services: d.services?.length ?? 0, offer: Boolean(d.offer), ...(d.utm ?? {}) },
   }).catch(() => undefined);
-  await clearDraft();
+  await clearDraftEverywhere(userId);
   revalidatePath("/", "layout");
   redirect(`/setup/solo/first${d.offer ? "?offer=skip" : ""}`);
 }

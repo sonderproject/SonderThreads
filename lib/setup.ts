@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { query, queryOne } from "@/lib/db/client";
 import { isOrgKind, type OrgKind } from "@/lib/terms";
 import { isValidTimeZone } from "@/lib/tz";
 
@@ -95,7 +96,33 @@ function cleanUtm(v: unknown): Record<string, string> | undefined {
 
 /** The draft in this browser, checked field by field (it's only ever this person's own answers). */
 export async function readDraft(): Promise<Draft | null> {
-  const raw = (await cookies()).get(DRAFT_COOKIE)?.value;
+  return parseDraft((await cookies()).get(DRAFT_COOKIE)?.value);
+}
+
+/**
+ * At sign-up: copies this browser's answers onto the new account, so opening
+ * the confirmation email on another device still finishes the set-up.
+ */
+export async function saveDraftToAccount(userId: string): Promise<void> {
+  const d = await readDraft();
+  if (d) await query(`update users set setup_draft = $2 where id = $1`, [userId, JSON.stringify(d)]);
+}
+
+/** The answers for the finish step: this browser's, or the copy saved on the account at sign-up. */
+export async function draftForAccount(userId: string): Promise<Draft | null> {
+  const here = await readDraft();
+  if (here) return here;
+  const row = await queryOne<{ setup_draft: unknown }>(`select setup_draft from users where id = $1`, [userId]);
+  return row?.setup_draft ? parseDraft(JSON.stringify(row.setup_draft)) : null;
+}
+
+/** Once applied: removes the answers from the browser and the account. */
+export async function clearDraftEverywhere(userId: string): Promise<void> {
+  await clearDraft();
+  await query(`update users set setup_draft = null where id = $1`, [userId]);
+}
+
+function parseDraft(raw: string | undefined): Draft | null {
   if (!raw) return null;
   try {
     const d = JSON.parse(raw) as Record<string, unknown>;

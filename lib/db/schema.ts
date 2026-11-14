@@ -1043,4 +1043,6 @@ create index if not exists tasks_source_note_id_idx on tasks(source_note_id);
 alter table users add column if not exists setup_step text;
 alter table users add column if not exists use_case text;
 alter table organizations add column if not exists planned_seats int;
+-- The set-up answers, copied to the account at sign-up, so the email link also works on another device.
+alter table users add column if not exists setup_draft jsonb;
 `;

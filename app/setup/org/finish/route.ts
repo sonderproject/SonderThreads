@@ -7,7 +7,7 @@ import { recordAcceptance } from "@/lib/legal-server";
 import { billingEnabled } from "@/lib/billing";
 import { parseMoney } from "@/lib/money";
 import { logEvent } from "@/lib/events";
-import { clearDraft, readDraft, seatsForTeamSize } from "@/lib/setup";
+import { clearDraftEverywhere, draftForAccount, seatsForTeamSize } from "@/lib/setup";
 
 export const dynamic = "force-dynamic";
 
@@ -19,11 +19,11 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   const userId = await requireUserId();
   if (await getMembership()) {
-    await clearDraft();
+    await clearDraftEverywhere(userId);
     redirect("/");
   }
-  const d = await readDraft();
-  // Verified on another device (no answers here), or the answers expired: the short form still works.
+  const d = await draftForAccount(userId);
+  // No answers anywhere (expired, or signed up without the set-up): the short form still works.
   if (d?.flow !== "org" || !d.name || !d.kind || !d.agreed) redirect("/organization/new");
 
   const orgId = await transaction(async (q) => {
@@ -50,7 +50,7 @@ export async function GET() {
   await logEvent("setup.org_created", `Organization set up: ${d.name}`, {
     meta: { org: orgId, kind: d.kind, size: d.size ?? null, services: d.services?.length ?? 0, offer: Boolean(d.offer), ...(d.utm ?? {}) },
   }).catch(() => undefined);
-  await clearDraft();
+  await clearDraftEverywhere(userId);
   revalidatePath("/", "layout");
   redirect(billingEnabled() ? `/setup/org/plan${d.offer ? "?offer=skip" : ""}` : "/setup/org/team");
 }
