@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { ORG_KINDS } from "@/lib/terms";
+import { ORG_KINDS, ORG_KINDS_SAME } from "@/lib/terms";
+import { OrgKindText } from "@/components/org/OrgKindText";
 import { SeatSummary } from "@/components/org/SeatSummary";
 import { redirect } from "next/navigation";
 import { asUser } from "@/lib/db/as-user";
@@ -377,17 +378,12 @@ export default async function OrganizationPage({ searchParams }: { searchParams:
                   className="card flex cursor-pointer items-start gap-3 p-4 transition-colors hover:bg-bg-hover has-[:checked]:border-accent has-[:checked]:ring-1 has-[:checked]:ring-accent"
                 >
                   <input type="radio" name="kind" value={k.value} defaultChecked={current} required className="mt-1 accent-[var(--accent)]" />
-                  <span className="space-y-1">
-                    <span className="flex items-center gap-2">
-                      <span className="font-semibold text-text">{k.label}</span>
-                      {current && <span className="tag">Current</span>}
-                    </span>
-                    <span className="block text-xs text-text-muted">{k.hint}</span>
-                  </span>
+                  <OrgKindText {...k} current={current} />
                 </label>
               );
             })}
           </fieldset>
+          <p className="text-xs text-text-muted">{ORG_KINDS_SAME}</p>
           <div className="flex flex-wrap items-center gap-3">
             <button type="submit" className="rounded-full bg-accent px-4 py-1.5 text-sm font-semibold text-bg hover:bg-accent-dim">
               Save type

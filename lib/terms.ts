@@ -27,10 +27,31 @@ export function termsFor(audience: Audience | boolean): Terms {
 }
 
 export type OrgKind = "nonprofit" | "business";
-export const ORG_KINDS: { value: OrgKind; label: string; hint: string }[] = [
-  { value: "nonprofit", label: "Nonprofit or agency", hint: "Programs, case management, community services. Words: check-ins, Impact reports." },
-  { value: "business", label: "Business", hint: "Salons, groomers, vets, studios, coaching, any business with regulars. Words: visits, Insights reports." },
+/** The organization type cards (set-up, Organization page): who each is for and what changes. */
+export const ORG_KINDS: { value: OrgKind; label: string; hint: string; features: string[] }[] = [
+  {
+    value: "nonprofit",
+    label: "Nonprofit or agency",
+    hint: "Programs, case management, community and social services.",
+    features: [
+      "Staff log check-ins with clients",
+      "Impact report: people served, new vs returning, busiest times",
+      "Includes demographics for funders and your board",
+    ],
+  },
+  {
+    value: "business",
+    label: "Business",
+    hint: "Salons, groomers, vets, studios, coaching: any business with regular customers.",
+    features: [
+      "Staff log visits with customers",
+      "Insights report: customers served, new vs repeat, busiest times",
+      "Shows revenue from your service prices; no demographics",
+    ],
+  },
 ];
+/** Shown under the type cards. */
+export const ORG_KINDS_SAME = "Everything else is the same for both: clients, tasks, notes, team roles, kiosk, referrals and exports.";
 export function isOrgKind(v: unknown): v is OrgKind {
   return v === "nonprofit" || v === "business";
 }

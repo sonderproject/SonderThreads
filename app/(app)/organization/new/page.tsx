@@ -2,7 +2,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getMembership } from "@/lib/org";
 import { createOrganization } from "@/lib/actions/org";
-import { ORG_KINDS } from "@/lib/terms";
+import { ORG_KINDS, ORG_KINDS_SAME } from "@/lib/terms";
+import { OrgKindText } from "@/components/org/OrgKindText";
 
 /** Set up an organization (agency or team). The creator becomes its admin. */
 export default async function NewOrganizationPage({ searchParams }: { searchParams: Promise<{ error?: string; offer?: string }> }) {
@@ -29,12 +30,10 @@ export default async function NewOrganizationPage({ searchParams }: { searchPara
           {ORG_KINDS.map((k, i) => (
             <label key={k.value} className="flex items-start gap-2 rounded-xl border border-border-subtle p-2.5 text-sm">
               <input type="radio" name="kind" value={k.value} defaultChecked={i === 0} required className="mt-1 accent-[var(--accent)]" />
-              <span>
-                <span className="block font-medium text-text">{k.label}</span>
-                <span className="block text-xs text-text-muted">{k.hint}</span>
-              </span>
+              <OrgKindText {...k} />
             </label>
           ))}
+          <p className="text-xs text-text-muted">{ORG_KINDS_SAME}</p>
         </fieldset>
 
         {error === "agree" && (

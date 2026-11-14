@@ -2,7 +2,8 @@ import Link from "next/link";
 import { SetupFrame } from "@/components/setup/SetupFrame";
 import { TimeZoneInput } from "@/components/notifications/TimeZoneInput";
 import { saveOrgBasics } from "@/lib/actions/setup";
-import { ORG_KINDS } from "@/lib/terms";
+import { ORG_KINDS, ORG_KINDS_SAME } from "@/lib/terms";
+import { OrgKindText } from "@/components/org/OrgKindText";
 import { TEAM_SIZES, readDraft } from "@/lib/setup";
 
 export const metadata = { title: "Set up your organization · Strynd" };
@@ -51,13 +52,11 @@ export default async function OrgBasicsPage({ searchParams }: { searchParams: Pr
                 className="card flex cursor-pointer items-start gap-3 p-4 transition-colors hover:bg-bg-hover has-[:checked]:border-accent has-[:checked]:ring-1 has-[:checked]:ring-accent"
               >
                 <input type="radio" name="kind" value={k.value} required defaultChecked={draft?.kind === k.value} className="mt-1 accent-[var(--accent)]" />
-                <span className="space-y-1">
-                  <span className="block font-semibold text-text">{k.label}</span>
-                  <span className="block text-xs text-text-muted">{k.hint}</span>
-                </span>
+                <OrgKindText {...k} />
               </label>
             ))}
           </div>
+          <p className="text-xs text-text-muted">{ORG_KINDS_SAME}</p>
         </fieldset>
 
         <fieldset className="space-y-2">
