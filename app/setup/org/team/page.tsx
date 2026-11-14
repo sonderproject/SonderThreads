@@ -10,7 +10,7 @@ import { SubmitButton } from "@/components/setup/SubmitButton";
 import { SetupFrame } from "@/components/setup/SetupFrame";
 import { logEvent } from "@/lib/events";
 
-export const metadata = { title: "Your team · Strynd" };
+export const metadata = { title: "Your team · Surfdesk" };
 export const dynamic = "force-dynamic";
 
 /** Organization set-up, step 6 of 7: invite staff (each invite holds a seat), or later. */

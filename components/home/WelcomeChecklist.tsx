@@ -14,7 +14,7 @@ const COPY: Record<WelcomeStep["key"], { title: string; body: string; href?: str
     title: "Write a note or a task",
     body: "Type it in the box below, like “note: Maria starts work Monday” or “remind me to call Maria Thursday”.",
   },
-  phone: { title: "Put Strynd on your phone", body: "It opens like an app from your home screen." },
+  phone: { title: "Put Surfdesk on your phone", body: "It opens like an app from your home screen." },
 };
 
 /** First-run checklist on Home: a few steps that tick themselves off, dismissible. */
@@ -31,7 +31,7 @@ export function WelcomeChecklist({ steps }: { steps: WelcomeStep[] }) {
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="section-label">Getting started</p>
-          <h2 className="mt-2 font-display text-xl font-light text-text">Welcome to Strynd</h2>
+          <h2 className="mt-2 font-display text-xl font-light text-text">Welcome to Surfdesk</h2>
           <p className="text-sm text-text-muted">
             {done} of {steps.length} done
           </p>
@@ -87,7 +87,7 @@ export function WelcomeChecklist({ steps }: { steps: WelcomeStep[] }) {
                     {showPhone && (
                       <ul className="space-y-1 text-xs text-text-muted">
                         <li>
-                          <strong className="text-text">iPhone:</strong> open strynd.com in Safari, tap Share, then Add to Home
+                          <strong className="text-text">iPhone:</strong> open thesurfdesk.app in Safari, tap Share, then Add to Home
                           Screen.
                         </li>
                         <li>

@@ -145,7 +145,7 @@ export function splitFullName(s: string): { first: string; last: string | null }
 }
 
 /**
- * A phone number as stored in Strynd: 10 digits for US/Canada ("6195551234"),
+ * A phone number as stored in Surfdesk: 10 digits for US/Canada ("6195551234"),
  * "+<country><number>" otherwise. Extensions are dropped. null = can't be a real number.
  */
 export function cleanPhone(s: string): string | null {

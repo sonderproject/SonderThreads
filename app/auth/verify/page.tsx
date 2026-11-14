@@ -26,7 +26,7 @@ export default async function VerifyPage({
       <main className="mx-auto max-w-sm space-y-6 text-center">
         <div className="flex items-center justify-center gap-3">
           <span className="brand-mark h-7 w-[37px]" aria-hidden />
-          <span className="font-display text-sm font-light uppercase tracking-[0.25em] text-text">Strynd</span>
+          <span className="font-display text-sm font-light uppercase tracking-[0.25em] text-text">Surfdesk</span>
         </div>
         {token_hash && type ? (
           <form action="/auth/confirm" method="post" className="card space-y-4 p-6">

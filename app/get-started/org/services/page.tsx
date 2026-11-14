@@ -6,7 +6,7 @@ import { ServicePicker } from "@/components/setup/ServicePicker";
 import { saveOrgServices } from "@/lib/actions/setup";
 import { SUGGESTED_SERVICES, readDraft } from "@/lib/setup";
 
-export const metadata = { title: "Your services · Strynd" };
+export const metadata = { title: "Your services · Surfdesk" };
 export const dynamic = "force-dynamic";
 
 /** Organization set-up, step 2 of 7: what they offer (optional), and the organization agreement. */
@@ -41,7 +41,7 @@ export default async function OrgServicesPage({ searchParams }: { searchParams: 
             <Link href="/privacy" target="_blank" className="text-accent hover:underline">
               Privacy policy
             </Link>{" "}
-            for this organization, and it has its clients&apos; permission (or another lawful basis) to keep their information in Strynd.
+            for this organization, and it has its clients&apos; permission (or another lawful basis) to keep their information in Surfdesk.
           </span>
         </label>
 

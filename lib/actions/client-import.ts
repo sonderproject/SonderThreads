@@ -98,7 +98,7 @@ const commitSchema = z.object({
 
 /**
  * Step 2: creates the client profiles, all at once or not at all. Every value
- * is checked again here. Clients already in Strynd (same email, phone, or name
+ * is checked again here. Clients already in Surfdesk (same email, phone, or name
  * and date of birth) are skipped, as are repeats within the file.
  */
 export async function importClients(input: unknown): Promise<ActionResult<ImportOutcome>> {

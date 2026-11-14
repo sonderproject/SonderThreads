@@ -3,8 +3,8 @@ import { LegalPage, LegalSection } from "@/components/legal/LegalPage";
 import { SUPPORT_EMAIL } from "@/lib/settings-options";
 
 export const metadata: Metadata = {
-  title: "Delete your account · Strynd",
-  description: "How to delete your Strynd account and all of its data.",
+  title: "Delete your account · Surfdesk",
+  description: "How to delete your Surfdesk account and all of its data.",
   alternates: { canonical: "/account-deletion" },
 };
 
@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 export default function AccountDeletionPage() {
   return (
     <LegalPage title="Delete your account" updated="November 9, 2026">
-      <p>You can delete your Strynd account and everything in it at any time.</p>
+      <p>You can delete your Surfdesk account and everything in it at any time.</p>
 
       <LegalSection title="In the app (fastest)">
         <ul>

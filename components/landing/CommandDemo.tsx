@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-/** What a person types, and what Strynd makes of it. */
+/** What a person types, and what Surfdesk makes of it. */
 const EXAMPLES = [
   { said: "Remind me to call Sarah Friday at 3", kind: "Task", detail: "Fri 3:00 PM · linked to Sarah" },
   { said: "Marcus got the job at Amazon", kind: "Note", detail: "Added to Marcus's profile" },
@@ -12,7 +12,7 @@ const EXAMPLES = [
 
 /**
  * Landing page: a sentence types itself into a command bar, then shows what
- * Strynd did with it. Cycles through a few examples; with reduced motion it
+ * Surfdesk did with it. Cycles through a few examples; with reduced motion it
  * shows them all, still.
  */
 export function CommandDemo() {

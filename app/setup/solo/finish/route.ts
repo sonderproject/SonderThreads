@@ -9,7 +9,7 @@ import { clearDraftEverywhere, draftForAccount } from "@/lib/setup";
 
 export const dynamic = "force-dynamic";
 
-/** Right after the email is verified: saves what they'll use Strynd for (and any services), then on to the first person. */
+/** Right after the email is verified: saves what they'll use Surfdesk for (and any services), then on to the first person. */
 export async function GET() {
   const userId = await requireUserId();
   const d = await draftForAccount(userId);

@@ -20,7 +20,7 @@ export function SoloUsePicker({
   return (
     <div className="space-y-5">
       <fieldset className="grid gap-3">
-        <legend className="sr-only">What will you use Strynd for?</legend>
+        <legend className="sr-only">What will you use Surfdesk for?</legend>
         {uses.map((u) => (
           <label
             key={u.value}

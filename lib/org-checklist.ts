@@ -37,7 +37,7 @@ export async function getOrgChecklist(orgId: string, reportWord: string): Promis
     {
       key: "intake",
       label: "Turn on the front-desk kiosk or referral link",
-      hint: "Sign-ins and referrals land in Strynd by themselves.",
+      hint: "Sign-ins and referrals land in Surfdesk by themselves.",
       href: "/organization#referrals",
       done: r.intake,
     },

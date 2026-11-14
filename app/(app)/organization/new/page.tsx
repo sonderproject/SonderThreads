@@ -55,7 +55,7 @@ export default async function NewOrganizationPage({ searchParams }: { searchPara
               Privacy policy
             </Link>{" "}
             for this organization, and it has its clients&apos; permission (or another lawful basis) to keep their
-            information in Strynd.
+            information in Surfdesk.
           </span>
         </label>
         <div className="flex gap-2">

@@ -3,7 +3,7 @@ import { queryOne } from "@/lib/db/client";
 import { requireUserId } from "@/lib/current-user";
 
 /**
- * The owner of Strynd (Sonder Project), who alone can open /owner.
+ * The owner of Surfdesk (Sonder Project), who alone can open /owner.
  * OWNER_EMAILS in Vercel overrides the default (comma-separated).
  */
 export function ownerEmails(): string[] {

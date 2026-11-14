@@ -20,8 +20,8 @@ export function BillingBanner({ access: a }: { access: Access }) {
       a.scope === "org" && !a.canManage
         ? !a.row?.stripe_subscription_id && a.endsAt === null
           ? `${a.orgName}'s free trial hasn't started yet. Ask your admin to start it in Billing.`
-          : `${a.orgName}'s subscription has ended, so Strynd is view-only. Ask your admin to renew it.`
-        : "Your free trial has ended, so Strynd is view-only. Everything is still here.";
+          : `${a.orgName}'s subscription has ended, so Surfdesk is view-only. Ask your admin to renew it.`
+        : "Your free trial has ended, so Surfdesk is view-only. Everything is still here.";
     tone = "flag";
   }
   if (!text) return null;

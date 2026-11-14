@@ -27,7 +27,7 @@ export default async function TwoFactorPage({ searchParams }: { searchParams: Pr
         <form action={verifyLogin2fa} className="space-y-3">
           <h1 className="section-title">Enter your code</h1>
           <p className="text-sm text-text-muted">
-            Open your authenticator app and enter the 6-digit code for Strynd ({state.email}).
+            Open your authenticator app and enter the 6-digit code for Surfdesk ({state.email}).
           </p>
           {error && <p className="text-xs text-danger">{ERRORS[error] ?? ERRORS.code}</p>}
           <input type="hidden" name="next" value={next} />

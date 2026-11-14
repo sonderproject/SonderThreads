@@ -56,7 +56,7 @@ export async function sendSupportMessage(params: { topic: string; message: strin
       await sendEmail({
         to: SUPPORT_EMAIL,
         replyTo: user.email,
-        subject: `Strynd support: ${topic}`,
+        subject: `Surfdesk support: ${topic}`,
         text: `${message}\n\n---\n${details.join("\n")}`,
         html: `<div style="font-family:Inter,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6"><p style="white-space:pre-wrap">${escapeHtml(
           message,

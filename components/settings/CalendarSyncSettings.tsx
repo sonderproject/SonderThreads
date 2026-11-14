@@ -45,12 +45,12 @@ function syncedLabel(c: LinkedCalendar): string {
   return `${c.host} · updated ${ago}`;
 }
 
-/** Settings → Calendar: show outside calendars in Strynd, and subscribe to Strynd from them. */
+/** Settings → Calendar: show outside calendars in Surfdesk, and subscribe to Surfdesk from them. */
 export function CalendarSyncSettings({ linked, myLink }: { linked: LinkedCalendar[]; myLink: string }) {
   return (
     <>
       <LinkedCalendars linked={linked} />
-      <SubscribeToStrynd initialLink={myLink} />
+      <SubscribeToSurfdesk initialLink={myLink} />
     </>
   );
 }
@@ -82,10 +82,10 @@ function LinkedCalendars({ linked }: { linked: LinkedCalendar[] }) {
   return (
     <div className="card space-y-4 p-4">
       <div>
-        <h3 className="text-sm font-semibold text-text">Show other calendars in Strynd</h3>
+        <h3 className="text-sm font-semibold text-text">Show other calendars in Surfdesk</h3>
         <p className="text-xs text-text-muted">
-          Google, Apple, Outlook, or Calendly and Cal.com bookings. Events show on your Strynd calendar and stay read-only.
-          Strynd checks for changes every few minutes while you&apos;re looking.
+          Google, Apple, Outlook, or Calendly and Cal.com bookings. Events show on your Surfdesk calendar and stay read-only.
+          Surfdesk checks for changes every few minutes while you&apos;re looking.
         </p>
       </div>
 
@@ -170,7 +170,7 @@ function LinkedRow({ cal }: { cal: LinkedCalendar }) {
   }
 
   function remove() {
-    if (!confirm(`Unlink ${cal.name}? Its events will stop showing in Strynd.`)) return;
+    if (!confirm(`Unlink ${cal.name}? Its events will stop showing in Surfdesk.`)) return;
     startTransition(async () => {
       const r = await removeLinkedCalendar(cal.id);
       if (!r.ok) return setError(r.error);
@@ -223,7 +223,7 @@ function LinkedRow({ cal }: { cal: LinkedCalendar }) {
   );
 }
 
-function SubscribeToStrynd({ initialLink }: { initialLink: string }) {
+function SubscribeToSurfdesk({ initialLink }: { initialLink: string }) {
   const [link, setLink] = useState(initialLink);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -256,9 +256,9 @@ function SubscribeToStrynd({ initialLink }: { initialLink: string }) {
   return (
     <div className="card space-y-4 p-4">
       <div>
-        <h3 className="text-sm font-semibold text-text">See Strynd in Google, Apple or Outlook</h3>
+        <h3 className="text-sm font-semibold text-text">See Surfdesk in Google, Apple or Outlook</h3>
         <p className="text-xs text-text-muted">
-          Subscribe to this private link and your open Strynd tasks show up in your other calendar. It includes task titles
+          Subscribe to this private link and your open Surfdesk tasks show up in your other calendar. It includes task titles
           and due times only, never notes. Google can take several hours to pick up changes.
         </p>
       </div>

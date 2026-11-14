@@ -1,5 +1,5 @@
 /**
- * Strynd pricing: the single source of truth for what a plan costs. Pure (no
+ * Surfdesk pricing: the single source of truth for what a plan costs. Pure (no
  * imports), so the server, the pricing page calculator and the tests all use
  * the same numbers. Amounts are integer cents.
  *

@@ -256,7 +256,7 @@ export async function addLinkedCalendar(params: { name: string; url: string; col
     try {
       parseIcs(text, new Date(), new Date(Date.now() + 86_400_000), "UTC");
     } catch {
-      throw new Error("That link isn't a calendar Strynd can read. Use the private iCal / .ics address.");
+      throw new Error("That link isn't a calendar Surfdesk can read. Use the private iCal / .ics address.");
     }
 
     const row = await queryOne<FeedRow>(
@@ -293,7 +293,7 @@ export async function removeLinkedCalendar(id: string): Promise<ActionResult<nul
   });
 }
 
-// ── Your Strynd calendar, to subscribe to from Google/Apple/Outlook ─────
+// ── Your Surfdesk calendar, to subscribe to from Google/Apple/Outlook ─────
 
 function newToken(): string {
   return randomBytes(24).toString("base64url");

@@ -1,8 +1,8 @@
-# Strynd — what it is and what it does
+# Surfdesk — what it is and what it does
 
 ## What it's for
 
-Strynd is a command-first personal organizer for the people, notes, lists and dates in your life. You type or say something in plain English and it files it where it belongs. "Remind me to call Marcus Friday" becomes a task due Friday, linked to Marcus.
+Surfdesk is a command-first personal organizer for the people, notes, lists and dates in your life. You type or say something in plain English and it files it where it belongs. "Remind me to call Marcus Friday" becomes a task due Friday, linked to Marcus.
 
 It's built for someone who keeps track of a lot of people: a coach, mentor, recruiter, program lead, small-business owner or community organizer. They need to remember who said what, who needs a follow-up, and what's due. It's **not a CRM** (customer relationship management system). There are no sales stages, pipelines or deal values, just fast capture plus a clear view of what matters today.
 
@@ -101,7 +101,7 @@ A month view of every task with a due date, plus everyone's birthdays. **+ New**
 
 - **Voice:** tap the mic on any text field, or hold the **+** button on a phone, and speak.
 - **Install it like an app:** "Add to Home Screen" gives it its own icon and full-screen mode. Long-press the icon (Android) for New task / New note / Voice shortcuts.
-- **Share into it:** on Android, share text from any app into Strynd and it lands in the command bar.
+- **Share into it:** on Android, share text from any app into Surfdesk and it lands in the command bar.
 - **Keyboard:** `/` opens the command bar, and `⌘K` / `Ctrl+K` searches everything.
 - **Undo everywhere:** complete, delete, snooze or move anything and you get 5 seconds to take it back.
 

@@ -1,4 +1,4 @@
-# Strynd vs Clarity Human Services
+# Surfdesk vs Clarity Human Services
 
 *Updated November 12, 2026. Clarity details come from Bitfocus's public website, help center and software directories. Check with Bitfocus for current specifics.*
 
@@ -7,15 +7,15 @@
 **They do different jobs, and many agencies will use both.**
 
 - **Clarity Human Services** (by Bitfocus) is a **Homeless Management Information System (HMIS)**: the official, HUD-compliant database a Continuum of Care (CoC) uses to report to federal funders and run coordinated entry across agencies.
-- **Strynd** is the **day-to-day workspace for staff**: fast notes, follow-ups, reminders, check-ins and team visibility, at a published price you can start today.
+- **Surfdesk** is the **day-to-day workspace for staff**: fast notes, follow-ups, reminders, check-ins and team visibility, at a published price you can start today.
 
-If your funding requires HMIS reporting, Clarity (or another approved HMIS) stays your **system of record**. Strynd is where your team actually keeps up with clients between HMIS entries, and where small programs without an HMIS requirement can run everything.
+If your funding requires HMIS reporting, Clarity (or another approved HMIS) stays your **system of record**. Surfdesk is where your team actually keeps up with clients between HMIS entries, and where small programs without an HMIS requirement can run everything.
 
 ---
 
 ## What each is built for
 
-| | **Strynd** | **Clarity Human Services** |
+| | **Surfdesk** | **Clarity Human Services** |
 |---|---|---|
 | Main purpose | Daily caseload and follow-up workspace | HMIS: federal data collection and reporting |
 | Built for | Individuals, small teams, nonprofits and agencies of any size | CoCs, HMIS lead agencies and HUD-funded providers |
@@ -27,7 +27,7 @@ If your funding requires HMIS reporting, Clarity (or another approved HMIS) stay
 
 ✅ = yes · ◐ = partly · — = no · ? = not confirmed publicly
 
-| Capability | Strynd | Clarity |
+| Capability | Surfdesk | Clarity |
 |---|:---:|:---:|
 | **Federal compliance** | | |
 | HUD reports (APR, CAPER, LSA, SPM, PIT) | — | ✅ |
@@ -70,7 +70,7 @@ If your funding requires HMIS reporting, Clarity (or another approved HMIS) stay
 
 Bitfocus says Clarity ships with the HUD data elements, entry screens and standard reports for HMIS compliance, a library of more than 175 prebuilt reports, and coordinated entry built into the workflow.
 
-## Where Strynd is the right tool
+## Where Surfdesk is the right tool
 
 - **Speed for staff.** Logging a note or follow-up is one sentence, not a multi-screen form, so more actually gets written down.
 - **Nothing slips.** Reminders, suggested tasks from notes, "needs attention" and stale-client flags keep follow-ups on time.
@@ -81,11 +81,11 @@ Bitfocus says Clarity ships with the HUD data elements, entry screens and standa
 
 ## Using them together
 
-1. Staff use **Strynd** all day: check-ins, notes, follow-ups, reminders and the kiosk.
+1. Staff use **Surfdesk** all day: check-ins, notes, follow-ups, reminders and the kiosk.
 2. Required HUD data elements and services are entered in **Clarity** as your CoC requires.
-3. Managers use Strynd's **Team** view and **Impact** reports for day-to-day management and quick funder updates. Clarity remains the source for official HUD reports.
+3. Managers use Surfdesk's **Team** view and **Impact** reports for day-to-day management and quick funder updates. Clarity remains the source for official HUD reports.
 
-*Strynd doesn't sync with Clarity yet. An HMIS-ready export is on our list of possible organization features.*
+*Surfdesk doesn't sync with Clarity yet. An HMIS-ready export is on our list of possible organization features.*
 
 ---
 

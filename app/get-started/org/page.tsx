@@ -7,13 +7,13 @@ import { ORG_KINDS, ORG_KINDS_SAME } from "@/lib/terms";
 import { OrgKindText } from "@/components/org/OrgKindText";
 import { TEAM_SIZES, readDraft } from "@/lib/setup";
 
-export const metadata = { title: "Set up your organization · Strynd" };
+export const metadata = { title: "Set up your organization · Surfdesk" };
 export const dynamic = "force-dynamic";
 
 const ERRORS: Record<string, string> = {
   name: "Enter your organization's name.",
   kind: "Choose what kind of organization it is.",
-  size: "Choose how many people will use Strynd.",
+  size: "Choose how many people will use Surfdesk.",
 };
 
 type Params = { error?: string; offer?: string; utm_source?: string; utm_medium?: string; utm_campaign?: string; utm_content?: string };
@@ -24,7 +24,7 @@ export default async function OrgBasicsPage({ searchParams }: { searchParams: Pr
   const d = await readDraft();
   const draft = d?.flow === "org" ? d : null;
   return (
-    <SetupFrame flow="org" step={1} title="Tell us about your organization" intro="This sets up Strynd's words, reports and seats for your team. You can change it later.">
+    <SetupFrame flow="org" step={1} title="Tell us about your organization" intro="This sets up Surfdesk's words, reports and seats for your team. You can change it later.">
       <form action={saveOrgBasics} className="space-y-5">
         {error && ERRORS[error] && <p role="alert" className="flag text-sm">{ERRORS[error]}</p>}
         {offer === "skip" && <input type="hidden" name="offer" value="skip" />}
@@ -61,7 +61,7 @@ export default async function OrgBasicsPage({ searchParams }: { searchParams: Pr
         </fieldset>
 
         <fieldset className="space-y-2">
-          <legend className="mb-2 text-sm font-medium text-text">How many people will use Strynd?</legend>
+          <legend className="mb-2 text-sm font-medium text-text">How many people will use Surfdesk?</legend>
           <div className="flex flex-wrap gap-2">
             {TEAM_SIZES.map((t) => (
               <label

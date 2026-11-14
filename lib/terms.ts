@@ -1,5 +1,5 @@
 /**
- * Words that depend on who's using Strynd:
+ * Words that depend on who's using Surfdesk:
  *   Nonprofit or agency organization: Check-ins, Impact
  *   Business organization:            Visits,    Insights
  *   Individual (no organization):     Meetings,  Insights

@@ -60,7 +60,7 @@ export async function alertOwner(
     const html = `<div style="font-family:Inter,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6">${lines
       .map((l) => `<p style="margin:0 0 8px">${escapeHtml(l)}</p>`)
       .join("")}<p style="margin:16px 0 0"><a href="${link}">Open the command center</a></p></div>`;
-    await Promise.all(ownerEmails().map((to) => sendEmail({ to, subject: `Strynd: ${subject}`, text, html })));
+    await Promise.all(ownerEmails().map((to) => sendEmail({ to, subject: `Surfdesk: ${subject}`, text, html })));
   } catch (err) {
     console.error("[events] owner alert failed", subject, err);
   }

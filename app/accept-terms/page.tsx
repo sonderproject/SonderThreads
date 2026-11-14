@@ -33,7 +33,7 @@ export default async function AcceptTermsPage({ searchParams }: { searchParams: 
         <p className="text-sm text-text-muted">
           Our {terms} and {privacy} changed on {LEGAL_UPDATED}. They now spell out how plans renew and how to cancel,
           calendar sync, the front-desk kiosk, referral links and who&apos;s responsible for client information in an
-          organization. Please read them and agree to keep using Strynd.
+          organization. Please read them and agree to keep using Surfdesk.
         </p>
         {error === "agree" && <p className="text-xs text-danger">Tick the box{pending.org ? "es" : ""} to continue.</p>}
         <input type="hidden" name="next" value={next} />
@@ -50,7 +50,7 @@ export default async function AcceptTermsPage({ searchParams }: { searchParams: 
             <input type="checkbox" name="agree_org" required className="mt-1" />
             <span>
               As an admin, I agree to them for <strong>{pending.org.name}</strong>, and it has its clients&apos;
-              permission (or another lawful basis) to keep their information in Strynd.
+              permission (or another lawful basis) to keep their information in Surfdesk.
             </span>
           </label>
         )}

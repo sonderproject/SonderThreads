@@ -12,17 +12,17 @@ import { SeatCalculator } from "@/components/billing/SeatCalculator";
 // Signed-out visitors to "/" are shown this page (middleware rewrites to it),
 // so "/" is the canonical address search engines should index.
 export const metadata: Metadata = {
-  title: "Strynd: tasks, to-dos, notes and clients in one place",
+  title: "Surfdesk: tasks, to-dos, notes and clients in one place",
   description: SITE_DESCRIPTION,
   alternates: { canonical: "/" },
   openGraph: {
-    title: "Strynd",
+    title: "Surfdesk",
     description: SITE_DESCRIPTION,
     url: "/",
-    siteName: "Strynd",
+    siteName: "Surfdesk",
     type: "website",
   },
-  twitter: { card: "summary_large_image", title: "Strynd", description: SITE_DESCRIPTION },
+  twitter: { card: "summary_large_image", title: "Surfdesk", description: SITE_DESCRIPTION },
 };
 
 const AUDIENCES = ["Freelancers", "Business owners", "Coaches", "Realtors", "Consultants", "Case managers", "Students", "Parents", "Teams"];
@@ -60,12 +60,12 @@ const OFFER_SIGNUP = "/get-started/solo?offer=skip";
 const TEAM_OFFER_SIGNUP = "/get-started/org?offer=skip";
 /** "Your data" section. Accurate on purpose: we store data to run the app, so never say we don't keep it. */
 const DATA_PROMISES = [
-  { title: "Never sold", body: "We never sell your data or use it for ads. It's used only to run Strynd for you." },
+  { title: "Never sold", body: "We never sell your data or use it for ads. It's used only to run Surfdesk for you." },
   { title: "Encrypted", body: "Encrypted in transit and at rest, with two-step sign-in and automatic sign-out on shared computers." },
   { title: "Walled off", body: "Database-level access rules keep every account and organization separate. Staff see only what their role allows." },
   { title: "Yours to take or delete", body: "Export everything to Excel, CSV or a full backup any time. Delete your account and your data is deleted with it." },
 ];
-const SALES = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent("Strynd Enterprise")}`;
+const SALES = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent("Surfdesk Enterprise")}`;
 
 const PLANS: {
   name: string;
@@ -197,9 +197,9 @@ export default function WelcomePage() {
       <CampaignLinks />
       <header className="glass pt-safe sticky top-0 z-20 border-b">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-8">
-          <Link href="/" className="flex items-center gap-3" aria-label="Strynd">
+          <Link href="/" className="flex items-center gap-3" aria-label="Surfdesk">
             <span className="brand-mark h-7 w-[37px]" aria-hidden />
-            <span className="font-display text-sm font-light uppercase tracking-[0.25em] text-text">Strynd</span>
+            <span className="font-display text-sm font-light uppercase tracking-[0.25em] text-text">Surfdesk</span>
             <span className="hidden h-4 w-px sm:block" style={{ background: "color-mix(in srgb, var(--accent) 50%, transparent)" }} aria-hidden />
             <span className="hidden text-[11px] uppercase tracking-[0.25em] text-text-muted sm:block">by Sonder Project</span>
           </Link>
@@ -231,7 +231,7 @@ export default function WelcomePage() {
             </h1>
             <p className="max-w-xl text-base leading-relaxed text-text-muted sm:text-lg">
               Your tasks, to-do lists, notes and the people you work with, in one calm place. Type it or say it once, and
-              Strynd files it, reminds you and keeps it all together. No more juggling five apps.
+              Surfdesk files it, reminds you and keeps it all together. No more juggling five apps.
             </p>
             <Cta />
             <p className="text-xs text-text-muted">7-day free trial · Works on any phone or computer</p>
@@ -274,7 +274,7 @@ export default function WelcomePage() {
             <Feature
               className="lg:col-span-2"
               icon={<MicIcon className="h-5 w-5" />}
-              title="Just say it. Strynd files it."
+              title="Just say it. Surfdesk files it."
               body="Type or speak one sentence. It becomes a task, a note, a reminder or a sale, linked to the right person. No forms."
             >
               <CommandDemo />
@@ -576,14 +576,14 @@ export default function WelcomePage() {
             <div className="card space-y-1 p-5">
               <h2 className="font-display text-lg font-normal">iPhone</h2>
               <p className="text-sm text-text-muted">
-                Open strynd.com in Safari, tap <strong className="text-text">Share</strong>, then{" "}
+                Open thesurfdesk.app in Safari, tap <strong className="text-text">Share</strong>, then{" "}
                 <strong className="text-text">Add to Home Screen</strong>.
               </p>
             </div>
             <div className="card space-y-1 p-5">
               <h2 className="font-display text-lg font-normal">Android</h2>
               <p className="text-sm text-text-muted">
-                Open strynd.com in Chrome, tap the <strong className="text-text">⋮</strong> menu, then{" "}
+                Open thesurfdesk.app in Chrome, tap the <strong className="text-text">⋮</strong> menu, then{" "}
                 <strong className="text-text">Add to Home screen</strong> (or <strong className="text-text">Install app</strong>).
               </p>
             </div>

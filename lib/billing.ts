@@ -37,6 +37,7 @@ export const TRIAL_IMPORT_LIMIT = 25;
 export const GRACE_DAYS = 14;
 export const PRICES = {
   individual: "threads_individual_monthly",
+  // Stripe lookup key from before the rename to Surfdesk: keep it, live subscriptions use this price.
   org: "strynd_org_monthly",
   // Legacy organization prices, kept for subscriptions already on them.
   seat: "threads_org_seat_monthly",
@@ -69,7 +70,7 @@ export async function priceId(plan: PaidPlan): Promise<string> {
   const id = price?.id;
   if (!id) throw new Error(`Stripe price ${key} not found.`);
   // Server-side guard: never charge organizations with a price that doesn't match lib/pricing.ts.
-  if (plan === "org" && !orgPriceTiersMatch(price.tiers)) throw new Error(`Stripe price ${key} doesn't match Strynd's pricing.`);
+  if (plan === "org" && !orgPriceTiersMatch(price.tiers)) throw new Error(`Stripe price ${key} doesn't match Surfdesk's pricing.`);
   priceIds.set(key, id);
   return id;
 }
@@ -201,10 +202,10 @@ export async function assertCanWrite(): Promise<void> {
     a.scope === "org" && !a.canManage
       ? notStarted
         ? `${a.orgName}'s free trial hasn't started yet. Ask your organization admin to start it in Settings → Subscription.`
-        : `${a.orgName}'s subscription has ended, so Strynd is view-only. Ask your organization admin to renew it.`
+        : `${a.orgName}'s subscription has ended, so Surfdesk is view-only. Ask your organization admin to renew it.`
       : notStarted
         ? "Start your free trial in Settings → Subscription to begin adding and editing."
-        : "Your free trial has ended, so Strynd is view-only. Subscribe in Settings → Billing to keep adding and editing.",
+        : "Your free trial has ended, so Surfdesk is view-only. Subscribe in Settings → Billing to keep adding and editing.",
   );
 }
 
@@ -342,6 +343,7 @@ export async function saveOfferCoupon(): Promise<string> {
  * for a first subscription (instead of the free trial). The coupon lives in
  * Stripe and is created the first time anyone uses it.
  */
+// Coupon id from before the rename to Surfdesk: keep it (it already exists in Stripe).
 export const SKIP_TRIAL_OFFER = { couponId: "strynd_skip_trial_30_once", percentOff: 30 } as const;
 
 export async function skipTrialCoupon(): Promise<string> {

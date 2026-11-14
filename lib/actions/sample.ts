@@ -11,7 +11,7 @@ import { toActionResult, type ActionResult } from "@/lib/validation";
 /**
  * "Try it with sample clients": fills an empty account with 12 made-up
  * people and a month of visits, so Home, People and the Impact/Insights
- * report show what Strynd does on day one. Every sample row is marked
+ * report show what Surfdesk does on day one. Every sample row is marked
  * (people.is_sample) and "Remove sample data" takes it all out again (the
  * people and their check-ins are deleted, so they leave every report).
  * Sample people don't count toward the trial's import limit.

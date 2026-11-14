@@ -61,7 +61,7 @@ function money(cents: number): string {
   return `$${(cents / 100).toLocaleString("en-US", { minimumFractionDigits: cents % 100 ? 2 : 0, maximumFractionDigits: 2 })}`;
 }
 
-/** Live money numbers from Stripe, limited to Strynd subscriptions (the account also sells other things). */
+/** Live money numbers from Stripe, limited to Surfdesk subscriptions (the account also sells other things). */
 async function stripeNumbers() {
   const s = stripe();
   if (!s) return null;
@@ -176,7 +176,7 @@ export default async function OwnerPage({ searchParams }: { searchParams: Promis
       <div className="space-y-1">
         <p className="eyebrow text-text-faint">Owner only</p>
         <h1 className="page-title">Command center</h1>
-        <p className="text-sm text-text-muted">Sign-ups, money and problems across all of Strynd.</p>
+        <p className="text-sm text-text-muted">Sign-ups, money and problems across all of Surfdesk.</p>
       </div>
 
       <section className="grid grid-cols-2 gap-3 sm:grid-cols-5">
@@ -252,7 +252,7 @@ export default async function OwnerPage({ searchParams }: { searchParams: Promis
               <>
                 <Row label="Stripe balance, available" value={money(money$.available)} />
                 <Row label="Stripe balance, on the way" value={money(money$.pending)} />
-                <p className="text-xs text-text-faint">Balance covers your whole Stripe account, not only Strynd.</p>
+                <p className="text-xs text-text-faint">Balance covers your whole Stripe account, not only Surfdesk.</p>
               </>
             )}
           </div>

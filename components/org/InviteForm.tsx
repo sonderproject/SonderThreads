@@ -44,8 +44,8 @@ export function InviteForm({ orgName }: { orgName: string }) {
   }
 
   const mailto = link
-    ? `mailto:${encodeURIComponent(sentTo)}?subject=${encodeURIComponent(`Join ${orgName} on Strynd`)}&body=${encodeURIComponent(
-        `You're invited to join ${orgName} on Strynd. Open this link to accept (it works once and expires in 14 days):\n\n${link}\n\nSign up or sign in with this email address.`,
+    ? `mailto:${encodeURIComponent(sentTo)}?subject=${encodeURIComponent(`Join ${orgName} on Surfdesk`)}&body=${encodeURIComponent(
+        `You're invited to join ${orgName} on Surfdesk. Open this link to accept (it works once and expires in 14 days):\n\n${link}\n\nSign up or sign in with this email address.`,
       )}`
     : "";
 

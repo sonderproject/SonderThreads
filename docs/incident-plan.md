@@ -4,7 +4,7 @@ One page for when something goes wrong. Owner: sonderproject.co@gmail.com.
 
 ## What counts as an incident
 - **Data:** anyone sees data that isn't theirs, a key or password leaks, an account is taken over, or data is lost.
-- **Outage:** www.strynd.com is down or sign-in fails for more than 15 minutes.
+- **Outage:** thesurfdesk.app is down or sign-in fails for more than 15 minutes.
 - **Money:** customers are charged wrongly (double charges, wrong amounts).
 
 ## First hour
@@ -21,12 +21,12 @@ One page for when something goes wrong. Owner: sonderproject.co@gmail.com.
 ## Customer email templates
 
 **Data incident**
-> Subject: Important: a security issue affecting your Strynd account
+> Subject: Important: a security issue affecting your Surfdesk account
 >
 > On [date], we found [what happened, in one sentence]. It affected [what data] for [who]. We [what we did to stop it] on [date]. You don't need to do anything / we recommend you [action]. We're sorry. Reply to this email with any questions, and we'll answer within one business day.
 
 **Outage**
-> Subject: Strynd was down on [date]: what happened
+> Subject: Surfdesk was down on [date]: what happened
 >
 > From [time] to [time], [what didn't work]. Your data was safe and nothing was lost. The cause was [one sentence], and we've [fix] so it doesn't happen again. Sorry for the disruption.
 

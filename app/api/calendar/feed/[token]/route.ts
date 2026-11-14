@@ -3,7 +3,7 @@ import { buildIcs, type IcsOutEvent } from "@/lib/ical";
 import { appUrl } from "@/lib/email";
 
 /**
- * Your Strynd calendar as an .ics feed, for subscribing from Google, Apple or
+ * Your Surfdesk calendar as an .ics feed, for subscribing from Google, Apple or
  * Outlook. Calendar apps fetch it without signing in, so the secret token in
  * the link is what identifies the account (Settings → Calendar can reset it).
  * Like the Stripe webhook, this is one of the few places the user id comes
@@ -41,6 +41,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ token: 
 
   const base = appUrl();
   const events: IcsOutEvent[] = tasks.map((t) => ({
+    // Keep "@strynd" (the old name): calendar apps match events by this id, so changing it would duplicate every task.
     uid: `task-${t.id}@strynd`,
     title: t.title,
     start: new Date(t.due_at),
@@ -48,10 +49,10 @@ export async function GET(_req: Request, { params }: { params: Promise<{ token: 
     url: `${base}/tasks#${t.id}`,
   }));
 
-  return new Response(buildIcs("Strynd", events), {
+  return new Response(buildIcs("Surfdesk", events), {
     headers: {
       "content-type": "text/calendar; charset=utf-8",
-      "content-disposition": 'inline; filename="strynd.ics"',
+      "content-disposition": 'inline; filename="surfdesk.ics"',
       "cache-control": "private, max-age=300",
       "x-robots-tag": "noindex",
     },

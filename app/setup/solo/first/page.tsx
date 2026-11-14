@@ -3,7 +3,7 @@ import { finishSoloSetup } from "@/lib/actions/setup";
 import { SubmitButton } from "@/components/setup/SubmitButton";
 import { SetupFrame } from "@/components/setup/SetupFrame";
 
-export const metadata = { title: "Your first person · Strynd" };
+export const metadata = { title: "Your first person · Surfdesk" };
 export const dynamic = "force-dynamic";
 
 /** Individual set-up, step 4 of 4 (last): add the first person, or skip. */

@@ -128,8 +128,8 @@ export function ImportClientsCard() {
         <h3 className="text-sm font-semibold text-text">Import your client list</h3>
         <p className="text-xs text-text-muted">
           Already have clients in a spreadsheet or another system? Export them as CSV or Excel and upload here. Names, dates of birth, phone numbers and emails go straight into client profiles. You&apos;ll match the columns and check a preview before anything
-          is saved. Clients already in Strynd are skipped.{" "}
-          <a href={templateHref} download="strynd-client-template.csv" className="text-accent hover:underline">
+          is saved. Clients already in Surfdesk are skipped.{" "}
+          <a href={templateHref} download="surfdesk-client-template.csv" className="text-accent hover:underline">
             Download a template
           </a>
         </p>
@@ -154,7 +154,7 @@ export function ImportClientsCard() {
             {done.imported ? `Imported ${done.imported.toLocaleString()} clients.` : "No new clients to import."}
           </p>
           <ul className="space-y-0.5 text-xs text-text-muted">
-            {done.duplicates > 0 && <li>{done.duplicates} already in Strynd, skipped.</li>}
+            {done.duplicates > 0 && <li>{done.duplicates} already in Surfdesk, skipped.</li>}
             {done.skipped > 0 && <li>{done.skipped} rows without a name, skipped.</li>}
             {done.blanked > 0 && <li>{done.blanked} imported with a value left blank because it couldn&apos;t be read.</li>}
           </ul>

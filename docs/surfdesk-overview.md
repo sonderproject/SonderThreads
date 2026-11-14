@@ -1,8 +1,8 @@
-# Strynd: what it does and why it helps
+# Surfdesk: what it does and why it helps
 
-*Updated November 12, 2026 · www.strynd.com*
+*Updated November 12, 2026 · thesurfdesk.app*
 
-**Strynd keeps track of the people you work with and everything you owe them.** You type or say what happened ("Marcus got hired at Amazon", "remind me to call Ana Friday at 3") and Strynd files it in the right place: on the person, on your task list, on your calendar. You open it and see what needs you today.
+**Surfdesk keeps track of the people you work with and everything you owe them.** You type or say what happened ("Marcus got hired at Amazon", "remind me to call Ana Friday at 3") and Surfdesk files it in the right place: on the person, on your task list, on your calendar. You open it and see what needs you today.
 
 It's built for two kinds of users:
 
@@ -13,7 +13,7 @@ It's built for two kinds of users:
 
 ## 1. Fast capture: get it out of your head in seconds
 
-| What you do | What Strynd does |
+| What you do | What Surfdesk does |
 |---|---|
 | Type `Remind me to call Marcus Friday at 3` | Creates a task due Friday at 3 PM, linked to Marcus |
 | Type `Marcus got hired at Amazon` | Adds a note to Marcus's profile |
@@ -44,7 +44,7 @@ It's built for two kinds of users:
 - Today, Upcoming, No date and Completed views.
 - Due dates with optional times. Tasks can repeat daily, weekly or monthly.
 - On a phone, swipe to complete or snooze.
-- **Suggested tasks:** Strynd reads your notes for to-dos ("I'll call the landlord tomorrow") and offers to add them with one tap.
+- **Suggested tasks:** Surfdesk reads your notes for to-dos ("I'll call the landlord tomorrow") and offers to add them with one tap.
 - A notification bell for overdue and due-today items, upcoming birthdays and people who need attention.
 - *Coming soon:* push notifications and text-message reminders (both built, being switched on).
 
@@ -61,8 +61,8 @@ It's built for two kinds of users:
 
 - Month, Week and Agenda views, with Today and jump-to-month buttons.
 - Shows your **tasks** (overdue in red) and **birthdays**. You can check off tasks right on the calendar.
-- **Show your other calendars in Strynd:** link Google, Apple or Outlook calendars, which also covers Calendly and Cal.com bookings. Their events appear read-only, each in its own color.
-- **See Strynd in your other calendars:** subscribe from Google, Apple or Outlook to a private link, and your open tasks show up on your phone's calendar.
+- **Show your other calendars in Surfdesk:** link Google, Apple or Outlook calendars, which also covers Calendly and Cal.com bookings. Their events appear read-only, each in its own color.
+- **See Surfdesk in your other calendars:** subscribe from Google, Apple or Outlook to a private link, and your open tasks show up on your phone's calendar.
 
 **Benefit:** one view of your whole day, without retyping anything.
 
@@ -104,7 +104,7 @@ It's built for two kinds of users:
 ## 8. Works where you work
 
 - Install it on any phone or computer from the browser ("Add to Home Screen"). It gets its own icon and runs full-screen.
-- On Android, share text from other apps straight into Strynd.
+- On Android, share text from other apps straight into Surfdesk.
 - Keyboard shortcuts: `/` for commands, `Ctrl/⌘+K` to search everything.
 - Light and dark mode.
 

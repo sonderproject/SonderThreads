@@ -15,7 +15,7 @@ import type { Service } from "@/lib/services";
 const NEW_PERSON = "__new__";
 const NEW_SERVICE = "__new_service__";
 const OTHER = "__other__";
-const LAST_SERVICE_KEY = "strynd:last-service";
+const LAST_SERVICE_KEY = "surfdesk:last-service";
 
 /**
  * Logs a check-in. With `personId` set (on a profile) the person picker is

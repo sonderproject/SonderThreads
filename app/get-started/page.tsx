@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { BrandLockup } from "@/components/BrandLockup";
 
-export const metadata = { title: "Get started · Strynd" };
+export const metadata = { title: "Get started · Surfdesk" };
 
 type Params = { offer?: string; utm_source?: string; utm_medium?: string; utm_campaign?: string; utm_content?: string };
 
@@ -27,7 +27,7 @@ export default async function GetStartedPage({ searchParams }: { searchParams: P
       <div className="w-full max-w-lg space-y-6">
         <BrandLockup />
         <div className="space-y-1">
-          <h1 className="page-title">Who is Strynd for?</h1>
+          <h1 className="page-title">Who is Surfdesk for?</h1>
           <p className="text-sm text-text-muted">A couple of quick questions sets the app up the way you work.</p>
         </div>
         <div className="grid gap-3">

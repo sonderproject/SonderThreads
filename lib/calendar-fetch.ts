@@ -72,7 +72,7 @@ function getOnce(url: string): Promise<{ status: number; location?: string; body
       {
         lookup: safeLookup,
         timeout: TIMEOUT_MS,
-        headers: { "user-agent": "StryndCalendar/1.0", accept: "text/calendar, */*;q=0.5", "accept-encoding": "identity" },
+        headers: { "user-agent": "SurfdeskCalendar/1.0", accept: "text/calendar, */*;q=0.5", "accept-encoding": "identity" },
       },
       (res) => {
         const status = res.statusCode ?? 0;

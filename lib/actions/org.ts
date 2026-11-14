@@ -330,16 +330,16 @@ async function sendInviteEmail(to: string, url: string, role: OrgRole, inviterId
   );
   if (!row) return false;
   const roleName = `${role === "admin" ? "an" : "a"} ${ROLE_LABELS[role].toLowerCase()}`;
-  const subject = `${row.inviter} invited you to join ${row.org} on Strynd`;
+  const subject = `${row.inviter} invited you to join ${row.org} on Surfdesk`;
   const text = [
-    `${row.inviter} invited you to join ${row.org} on Strynd as ${roleName}.`,
+    `${row.inviter} invited you to join ${row.org} on Surfdesk as ${roleName}.`,
     "",
     `Accept the invite: ${url}`,
     "",
     `Sign up or sign in with this email address (${to}). The link works once and expires in 14 days.`,
   ].join("\n");
   const html = `<div style="font-family:Inter,Arial,sans-serif;line-height:1.5;color:#141412;max-width:480px">
-  <p>${escapeHtml(row.inviter)} invited you to join <strong>${escapeHtml(row.org)}</strong> on Strynd as ${escapeHtml(roleName)}.</p>
+  <p>${escapeHtml(row.inviter)} invited you to join <strong>${escapeHtml(row.org)}</strong> on Surfdesk as ${escapeHtml(roleName)}.</p>
   <p><a href="${escapeHtml(url)}" style="display:inline-block;background:#1c77b5;color:#ffffff;text-decoration:none;padding:10px 20px;border-radius:999px;font-weight:600">Accept the invite</a></p>
   <p style="color:#6e5f4d;font-size:13px">Sign up or sign in with this email address (${escapeHtml(to)}). The link works once and expires in 14 days.</p>
 </div>`;

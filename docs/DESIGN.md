@@ -1,6 +1,6 @@
-# Strynd — Design System (Sonder Studio style)
+# Surfdesk — Design System (Sonder Studio style)
 
-Use this file as the visual source of truth for Strynd. Match it exactly unless told otherwise. When building any UI, apply these tokens and components before inventing new ones.
+Use this file as the visual source of truth for Surfdesk. Match it exactly unless told otherwise. When building any UI, apply these tokens and components before inventing new ones.
 
 ## Feel
 

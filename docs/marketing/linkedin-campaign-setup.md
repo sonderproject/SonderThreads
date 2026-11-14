@@ -3,7 +3,7 @@
 *Nov 14, 2026. Goal: learn which message and audience bring organization trials, for about $420 over 14 days, without wasting a dollar on the wrong people.*
 
 ## The plan in one line
-Two image-ad campaigns that drive clicks to strynd.com (images get cheaper clicks than video on LinkedIn), plus the videos posted for free on your profile and Company Page. Every ad link is tagged, so the command center shows sign-ups and paid customers per ad.
+Two image-ad campaigns that drive clicks to thesurfdesk.app (images get cheaper clicks than video on LinkedIn), plus the videos posted for free on your profile and Company Page. Every ad link is tagged, so the command center shows sign-ups and paid customers per ad.
 
 | Campaign | Audience | Budget | Ads |
 |---|---|---|---|
@@ -13,9 +13,9 @@ Two image-ad campaigns that drive clicks to strynd.com (images get cheaper click
 Why images, not video, for paid clicks: industry data (vendor benchmarks, directional) puts LinkedIn video at about a 0.24% click-through rate and around $15 a click, versus about 0.42% for single-image ads. Video is for organic posts and, later, cheap video-view campaigns.
 
 ## Before you start (once)
-1. **Company Page** for Strynd (ads run from a page): https://www.linkedin.com/company/setup/new/ . Logo: `docs/brand/strynd-mark-blue.png`. Tagline: "Know every person you serve." Website: https://www.strynd.com
+1. **Company Page** for Surfdesk (ads run from a page): https://www.linkedin.com/company/setup/new/ . Logo: `docs/brand/strynd-mark-blue.png`. Tagline: "Know every person you serve." Website: https://thesurfdesk.app
 2. **Campaign Manager account** with a payment card: https://www.linkedin.com/campaignmanager/
-3. **Don't add the LinkedIn Insight Tag.** Strynd's privacy policy promises no third-party tracking. The tagged links below do the job.
+3. **Don't add the LinkedIn Insight Tag.** Surfdesk's privacy policy promises no third-party tracking. The tagged links below do the job.
 
 ## Campaign 1: NP – Visits – Image
 Create a campaign group "Round 1", then a campaign:
@@ -38,12 +38,12 @@ Create a campaign group "Round 1", then a campaign:
 
 **Ad NP-1**: image `docs/marketing/ads/np-1-funder-report-due-1x1.png`
 - Intro text, headline, description: Variant A in `linkedin-ads.md` (funder reporting)
-- Destination URL: `https://www.strynd.com/welcome?utm_source=linkedin&utm_medium=paid&utm_campaign=np-funder&utm_content=np1`
+- Destination URL: `https://thesurfdesk.app/welcome?utm_source=linkedin&utm_medium=paid&utm_campaign=np-funder&utm_content=np1`
 - Button: Learn more
 
 **Ad NP-2**: image `docs/marketing/ads/np-2-reports-one-click-1x1.png`
 - Copy: Variant B in `linkedin-ads.md` (front desk, one-tap check-ins)
-- Destination URL: `https://www.strynd.com/welcome?utm_source=linkedin&utm_medium=paid&utm_campaign=np-checkins&utm_content=np2`
+- Destination URL: `https://thesurfdesk.app/welcome?utm_source=linkedin&utm_medium=paid&utm_campaign=np-checkins&utm_content=np2`
 - Button: Learn more
 
 ## Campaign 2: BIZ – Visits – Image
@@ -55,8 +55,8 @@ Same settings as Campaign 1, except:
 - **Budget:** daily $10
 - If the audience is under 30,000, add neighboring states.
 
-**Ad BIZ-1**: `docs/marketing/ads/biz-1-regulars-remember-1x1.png`, copy from section 2 of `linkedin-ads.md`, URL `https://www.strynd.com/welcome?utm_source=linkedin&utm_medium=paid&utm_campaign=biz-regulars&utm_content=biz1`, button Sign up
-**Ad BIZ-2**: `docs/marketing/ads/biz-2-log-visit-one-tap-1x1.png`, same copy, URL `https://www.strynd.com/welcome?utm_source=linkedin&utm_medium=paid&utm_campaign=biz-visits&utm_content=biz2`, button Sign up
+**Ad BIZ-1**: `docs/marketing/ads/biz-1-regulars-remember-1x1.png`, copy from section 2 of `linkedin-ads.md`, URL `https://thesurfdesk.app/welcome?utm_source=linkedin&utm_medium=paid&utm_campaign=biz-regulars&utm_content=biz1`, button Sign up
+**Ad BIZ-2**: `docs/marketing/ads/biz-2-log-visit-one-tap-1x1.png`, same copy, URL `https://thesurfdesk.app/welcome?utm_source=linkedin&utm_medium=paid&utm_campaign=biz-visits&utm_content=biz2`, button Sign up
 
 ## Free distribution (do the same day)
 - Post `docs/marketing/video/strynd-full-tour-4x5.mp4` on **your personal profile** with a short founder story (why you built it). Founder posts usually reach more people than company posts.
@@ -64,7 +64,7 @@ Same settings as Campaign 1, except:
 
 ## Where to watch results
 - **LinkedIn Campaign Manager:** impressions, clicks, click-through rate (CTR), cost per click, per ad.
-- **Strynd command center** → "Sign-ups by source (30 days)": sign-ups and "card or paid" per campaign (np-funder, np-checkins, biz-regulars, biz-visits). https://www.strynd.com/owner
+- **Surfdesk command center** → "Sign-ups by source (30 days)": sign-ups and "card or paid" per campaign (np-funder, np-checkins, biz-regulars, biz-visits). https://thesurfdesk.app/owner
 
 ## Rules (decide by these, not by feel)
 - **48 hours:** spending less than half the budget? Raise the bid 15%.

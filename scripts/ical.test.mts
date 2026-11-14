@@ -123,7 +123,7 @@ END:VEVENT`);
 
 test("written feeds escape text, fold long lines and parse back", () => {
   const title = "Call Marcus; bring forms, ID\\notes " + "x".repeat(120);
-  const ics = buildIcs("Strynd", [{ uid: "t1@strynd", title, start: new Date("2026-11-12T15:00:00Z"), minutes: 30 }]);
+  const ics = buildIcs("Surfdesk", [{ uid: "t1@strynd", title, start: new Date("2026-11-12T15:00:00Z"), minutes: 30 }]);
   assert.ok(ics.split("\r\n").every((l) => Buffer.byteLength(l) <= 75));
   const [e] = parseIcs(ics, from, to, "UTC");
   assert.equal(e.title, title);

@@ -13,7 +13,7 @@ import { SUPPORT_EMAIL } from "@/lib/settings-options";
  * (table lifecycle_emails):
  *
  *   welcome        ~15 minutes after the email is confirmed
- *   tips           day 3: one tip that fits how they use Strynd
+ *   tips           day 3: one tip that fits how they use Surfdesk
  *   trial_ending   2 days before a trial ends (no-card trials: add a card;
  *                  card trials: when and how much they'll be charged)
  *   trial_ended    the no-card trial ended: their data is still there
@@ -67,7 +67,7 @@ function compose(opts: {
 }): { to: string; subject: string; text: string; html: string } {
   const cta = opts.cta ? { label: opts.cta.label, url: `${appUrl()}${opts.cta.path}` } : null;
   const greet = `Hi ${firstName(opts.to)},`;
-  const sign = "Dante, founder of Strynd";
+  const sign = "Dante, founder of Surfdesk";
   const unsub = opts.unsubscribe ? unsubscribeUrl(opts.to.id) : null;
   const text = [
     greet,
@@ -122,27 +122,27 @@ function welcomeFor(r: Who) {
     const nonprofit = r.org_kind !== "business";
     return compose({
       to: r,
-      subject: `Welcome to Strynd${r.org_name ? `, ${r.org_name}` : ""}`,
+      subject: `Welcome to Surfdesk${r.org_name ? `, ${r.org_name}` : ""}`,
       lines: [
-        `Thanks for setting up ${r.org_name ?? "your organization"} on Strynd. Three things that make the first week count:`,
+        `Thanks for setting up ${r.org_name ?? "your organization"} on Surfdesk. Three things that make the first week count:`,
         "1. Invite your staff from the Organization page, so everyone's work lands in one place.",
         `2. Upload your client list from Excel on the People page (Import). It takes about a minute.`,
         `3. Log a few ${nonprofit ? "check-ins" : "visits"}, then open ${nonprofit ? "Impact" : "Insights"} to see your report build itself.`,
       ],
-      cta: { label: "Open Strynd", path: "/team" },
+      cta: { label: "Open Surfdesk", path: "/team" },
       unsubscribe: true,
     });
   }
   return compose({
     to: r,
-    subject: "Welcome to Strynd",
+    subject: "Welcome to Surfdesk",
     lines: [
-      "Thanks for trying Strynd. Three things to try first:",
+      "Thanks for trying Surfdesk. Three things to try first:",
       `1. Type a sentence in the command bar, like "Remind me to call Sarah Friday at 3". It becomes a task linked to Sarah.`,
       "2. Add the people you keep up with, or import a list from Excel or your phone's contacts.",
-      "3. Install it on your phone: open strynd.com in your browser and choose Add to Home Screen.",
+      "3. Install it on your phone: open thesurfdesk.app in your browser and choose Add to Home Screen.",
     ],
-    cta: { label: "Open Strynd", path: "/" },
+    cta: { label: "Open Surfdesk", path: "/" },
     unsubscribe: true,
   });
 }
@@ -164,20 +164,20 @@ function tipFor(r: Who) {
       to: r,
       subject: "Your next funder report, done in a click",
       lines: [
-        "Quick tip: everything your staff log in Strynd already adds up in Impact: people served (each counted once), new vs returning, demographics and busiest times.",
+        "Quick tip: everything your staff log in Surfdesk already adds up in Impact: people served (each counted once), new vs returning, demographics and busiest times.",
         "Pick the month, download the PDF or Excel file, and send it to your board or funder. No spreadsheets to pull together.",
-        "If your front desk still signs people in on paper, turn on the kiosk in Settings; check-ins then land in Strynd by themselves.",
+        "If your front desk still signs people in on paper, turn on the kiosk in Settings; check-ins then land in Surfdesk by themselves.",
       ],
       cta: { label: "Open your Impact report", path: "/impact" },
       unsubscribe: true,
     });
   return compose({
     to: r,
-    subject: "The fastest way to use Strynd",
+    subject: "The fastest way to use Surfdesk",
     lines: [
       "Quick tip: you rarely need to open a form. Press / (or tap the mic) and say what happened:",
       `"Ana got the job at Target" adds a note to Ana. "Call Jo every Monday" makes a repeating task. "Ana – haircut $45" logs a service.`,
-      "Strynd files it in the right place and reminds you when it's time.",
+      "Surfdesk files it in the right place and reminds you when it's time.",
     ],
     cta: { label: "Try it now", path: "/" },
     unsubscribe: true,
@@ -234,13 +234,13 @@ export async function runLifecycleEmails(since: Date = LIFECYCLE_FROM): Promise<
     if (skip(r)) continue;
     const mail = compose({
       to: r,
-      subject: "Your Strynd trial ends in 2 days",
+      subject: "Your Surfdesk trial ends in 2 days",
       lines: [
-        `Your free trial ends on ${fmtDay(new Date(r.ends))}. Add a card to keep using Strynd without a break: it's $9 a month, and you can cancel any time in Billing.`,
+        `Your free trial ends on ${fmtDay(new Date(r.ends))}. Add a card to keep using Surfdesk without a break: it's $9 a month, and you can cancel any time in Billing.`,
         `Or start today with ${SKIP_TRIAL_OFFER.percentOff}% off your first month.`,
         "If you don't add one, nothing is deleted: your account becomes view-only, and you can still export everything.",
       ],
-      cta: { label: "Keep Strynd", path: "/billing?offer=skip" },
+      cta: { label: "Keep Surfdesk", path: "/billing?offer=skip" },
     });
     if (await send(r, "trial_ending", "", mail)) sent++;
   }
@@ -256,7 +256,7 @@ export async function runLifecycleEmails(since: Date = LIFECYCLE_FROM): Promise<
     if (skip(r)) continue;
     const mail = compose({
       to: r,
-      subject: "Your Strynd trial ended (your data is still here)",
+      subject: "Your Surfdesk trial ended (your data is still here)",
       lines: [
         "Your free trial has ended, so your account is view-only for now. Everything you added is still there, and you can export it any time.",
         "Add a card to pick up right where you left off: $9 a month, cancel any time.",
@@ -300,7 +300,7 @@ export async function runLifecycleEmails(since: Date = LIFECYCLE_FROM): Promise<
       if (skip(r)) continue;
       const mail = compose({
         to: r,
-        subject: "Your Strynd free trial ends in 2 days",
+        subject: "Your Surfdesk free trial ends in 2 days",
         lines: [
           `Your free trial${r.org_name ? ` for ${r.org_name}` : ""} ends on ${fmtDay(endsAt)}. On that day your card on file will be charged${price} for the first month, then monthly until you cancel.`,
           "Nothing to do if you'd like to keep going. To change seats or cancel before then, go to Billing.",
@@ -329,7 +329,7 @@ export async function sendPaymentFailedEmail(invoiceId: string, customerId: stri
     if (skip(r)) continue;
     const mail = compose({
       to: r,
-      subject: "Your Strynd payment didn't go through",
+      subject: "Your Surfdesk payment didn't go through",
       lines: [
         `We couldn't charge ${amount} to the card on file${r.org_name ? ` for ${r.org_name}` : ""}. Stripe will try again over the next few days.`,
         "Nothing changes right away: you keep full access for 14 days. Update your card in Billing to avoid any interruption.",

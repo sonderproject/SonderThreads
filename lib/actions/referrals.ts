@@ -194,13 +194,13 @@ async function sendReferralConfirmation(
   await sendEmail({
     to,
     subject: when ? `Referral received: ${client}, ${when}` : `Referral received: ${client}`,
-    text: `Thank you for your referral.\n\n${line}${location ? `\nLocation: ${location}` : ""}\n\nSent with Strynd (${appUrl()}).`,
+    text: `Thank you for your referral.\n\n${line}${location ? `\nLocation: ${location}` : ""}\n\nSent with Surfdesk (${appUrl()}).`,
     html: `<div style="font-family:Inter,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:#141412">
       <p style="margin:0 0 12px">Thank you for your referral.</p>
       <p style="margin:0 0 12px"><strong>${escapeHtml(line)}</strong></p>${
         location ? `<p style="margin:0 0 12px">Location: ${escapeHtml(location)}</p>` : ""
       }
-      <p style="margin:16px 0 0;color:#6e5f4d;font-size:13px">Sent with Strynd.</p></div>`,
+      <p style="margin:16px 0 0;color:#6e5f4d;font-size:13px">Sent with Surfdesk.</p></div>`,
   });
 }
 

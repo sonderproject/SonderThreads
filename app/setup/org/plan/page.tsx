@@ -8,7 +8,7 @@ import { startCheckout } from "@/lib/actions/billing";
 import { SubmitButton } from "@/components/setup/SubmitButton";
 import { SetupFrame } from "@/components/setup/SetupFrame";
 
-export const metadata = { title: "Start · Strynd" };
+export const metadata = { title: "Start · Surfdesk" };
 export const dynamic = "force-dynamic";
 
 const ERRORS: Record<string, string> = {

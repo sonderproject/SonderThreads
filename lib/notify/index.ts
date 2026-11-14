@@ -70,7 +70,7 @@ export async function deliver(userId: string, n: Omit<NotifyParams, "type" | "pa
     );
     // Texts cost money: past the per-person cap they're skipped (the notice still shows in the app).
     if (user?.phone && user.sms_opt_in && (await takeQuota(userId, "sms"))) {
-      const text = [`Strynd: ${n.title}`, n.body, `${appUrl()}${url}`].filter(Boolean).join("\n");
+      const text = [`Surfdesk: ${n.title}`, n.body, `${appUrl()}${url}`].filter(Boolean).join("\n");
       await sendSms(user.phone, text).catch((err) => console.error("[notify] sms failed", err));
     }
   }

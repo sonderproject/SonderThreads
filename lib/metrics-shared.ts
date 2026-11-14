@@ -128,7 +128,7 @@ export function buildStory(m: Metrics, opts: { followUps?: boolean; audience?: "
     const firsts = m.reach.reduce((s, r) => s + r.first, 0);
     if (firsts > 0) out.push(`${firsts.toLocaleString()} of them ${firsts === 1 ? `was ${w.newOne}` : `were ${w.newMany}`} on their first visit.`);
     if (m.trackingSince && m.trackingSince > m.from)
-      out.push(`Strynd started recording on ${shortDay(m.trackingSince)}, so visits before then aren't counted.`);
+      out.push(`Surfdesk started recording on ${shortDay(m.trackingSince)}, so visits before then aren't counted.`);
     const visits = k.checkIns / k.peopleServed;
     if (visits >= 1.5) out.push(`On average, each ${w.one} visited ${visits.toFixed(1)} times.`);
   }

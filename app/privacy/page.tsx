@@ -4,8 +4,8 @@ import { SUPPORT_EMAIL } from "@/lib/settings-options";
 import { LEGAL_UPDATED } from "@/lib/legal";
 
 export const metadata: Metadata = {
-  title: "Privacy policy · Strynd",
-  description: "What Strynd collects, how it's used and protected, and your choices.",
+  title: "Privacy policy · Surfdesk",
+  description: "What Surfdesk collects, how it's used and protected, and your choices.",
   alternates: { canonical: "/privacy" },
 };
 
@@ -15,8 +15,8 @@ export default function PrivacyPage() {
   return (
     <LegalPage title="Privacy policy" updated={LEGAL_UPDATED}>
       <p>
-        Strynd (&quot;the app&quot;) is run by Sonder Project, a sole proprietorship based in California
-        (&quot;we&quot;, &quot;us&quot;). This policy explains what we collect when you use the app at strynd.com
+        Surfdesk (&quot;the app&quot;, formerly called Strynd) is run by Sonder Project, a sole proprietorship based in California
+        (&quot;we&quot;, &quot;us&quot;). This policy explains what we collect when you use the app at thesurfdesk.app
         and in its mobile apps, how we use it, and the choices you have. We don&apos;t sell your data, and we don&apos;t
         use it for advertising.
       </p>
@@ -46,7 +46,7 @@ export default function PrivacyPage() {
             device type so we can help.
           </li>
           <li>
-            <strong>Calendar links:</strong> the private links to any outside calendars you choose to show in Strynd
+            <strong>Calendar links:</strong> the private links to any outside calendars you choose to show in Surfdesk
             (see Calendar sync below).
           </li>
           <li>
@@ -75,7 +75,7 @@ export default function PrivacyPage() {
 
       <LegalSection title="Organizations">
         <p>
-          When you use Strynd as part of an organization (such as an agency), the organization decides what client
+          When you use Surfdesk as part of an organization (such as an agency), the organization decides what client
           information is kept and why, and we process it on the organization&apos;s behalf as its service provider. The
           organization&apos;s admins can see and manage its client records, staff list and activity log. If you&apos;re a
           client of an organization and want to see, correct or delete your information, contact that organization; we
@@ -97,13 +97,13 @@ export default function PrivacyPage() {
       <LegalSection title="Calendar sync">
         <ul>
           <li>
-            <strong>Showing other calendars in Strynd:</strong> if you paste a private calendar link, we store the link
-            and use it only to fetch that calendar&apos;s events while you look at your Strynd calendar. Events are kept in
+            <strong>Showing other calendars in Surfdesk:</strong> if you paste a private calendar link, we store the link
+            and use it only to fetch that calendar&apos;s events while you look at your Surfdesk calendar. Events are kept in
             memory for a few minutes and aren&apos;t saved to our database. Remove the link any time in Settings →
             Calendar.
           </li>
           <li>
-            <strong>Seeing Strynd in other calendars:</strong> your private Strynd calendar link shares the titles and due
+            <strong>Seeing Surfdesk in other calendars:</strong> your private Surfdesk calendar link shares the titles and due
             times of your open tasks, never notes or client details. If you subscribe to it in Google, Apple or Outlook,
             that company stores a copy under its own privacy policy. Anyone with the link can see those tasks; you can
             replace it in Settings → Calendar.
@@ -174,7 +174,7 @@ export default function PrivacyPage() {
 
       <LegalSection title="Health information">
         <p>
-          Strynd isn&apos;t designed to hold medical records. Don&apos;t enter protected health information
+          Surfdesk isn&apos;t designed to hold medical records. Don&apos;t enter protected health information
           (such as diagnoses or treatment details) unless your organization has a written agreement with us that covers
           it.
         </p>

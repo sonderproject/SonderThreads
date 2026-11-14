@@ -38,7 +38,7 @@ Existing accounts aren't affected. They're created in Supabase as already confir
 ## C. Site URL and Redirect URLs
 
 Supabase → **Authentication → URL Configuration**:
-- **Site URL:** your production URL, for example `https://www.strynd.com`.
+- **Site URL:** your production URL, for example `https://thesurfdesk.app`.
 - **Redirect URLs:** add all three:
   - `https://<your-production-domain>/**` and the `www.` version too (`https://www.<your-production-domain>/**`)
   - `https://<project>-*-<team>.vercel.app/**` for preview deployments. Use your project and team slugs from a preview URL. Supabase supports `*` and `**` wildcards.
@@ -54,13 +54,13 @@ Supabase → **Authentication → Emails → Templates**. The app verifies email
 
 Subject:
 ```
-Your Strynd code: {{ .Token }}
+Your Surfdesk code: {{ .Token }}
 ```
 Body:
 ```html
 <div style="background:#f6f4ef;padding:32px 16px;font-family:Inter,Helvetica,Arial,sans-serif;color:#141412">
   <div style="max-width:480px;margin:0 auto;background:#ffffff;border:1px solid #e2dbd0;border-radius:16px;padding:32px">
-    <p style="margin:0 0 24px;font-size:13px;letter-spacing:4px;font-weight:600">STRYND</p>
+    <p style="margin:0 0 24px;font-size:13px;letter-spacing:4px;font-weight:600">SURFDESK</p>
     <h1 style="margin:0 0 12px;font-size:24px;font-weight:500">Confirm your email</h1>
     <p style="margin:0 0 24px;font-size:15px;line-height:1.5;color:#6e5f4d">
       Tap the button to finish setting up your account.
@@ -71,10 +71,10 @@ Body:
         Confirm
       </a>
     </p>
-    <p style="margin:0 0 8px;font-size:15px;color:#6e5f4d">Or type this code in Strynd:</p>
+    <p style="margin:0 0 8px;font-size:15px;color:#6e5f4d">Or type this code in Surfdesk:</p>
     <p style="margin:0 0 28px;font-size:32px;font-weight:700;letter-spacing:8px;color:#141412">{{ .Token }}</p>
     <p style="margin:0;font-size:13px;line-height:1.5;color:#6e5f4d">
-      The code and button work once. If you didn't sign up for Strynd, you can ignore this email.
+      The code and button work once. If you didn't sign up for Surfdesk, you can ignore this email.
     </p>
   </div>
 </div>
@@ -105,7 +105,7 @@ Supabase's built-in email sender is for testing only. It's heavily rate-limited 
    - Username: `resend`
    - Password: your Resend API key
    - Sender email: an address on your verified domain, for example `no-reply@yourdomain`
-   - Sender name: `Strynd`
+   - Sender name: `Surfdesk`
 3. **Supabase → Authentication → Rate Limits:** raise the email limit once SMTP is set.
 
 The old `RESEND_API_KEY` / `EMAIL_FROM` variables are no longer used for password reset. Supabase sends that email now.
@@ -113,7 +113,7 @@ The old `RESEND_API_KEY` / `EMAIL_FROM` variables are no longer used for passwor
 ## F. CAPTCHA: Cloudflare Turnstile (do this last)
 
 1. **Cloudflare dashboard → Turnstile → Add widget.**
-   - Hostnames: `strynd.com` and `sonderthreads.com` only. Don't add `vercel.app`: anyone's Vercel preview could then mint valid tokens for our Supabase.
+   - Hostnames: `thesurfdesk.app` and `sonderthreads.com` only. Don't add `vercel.app`: anyone's Vercel preview could then mint valid tokens for our Supabase.
    - Widget mode: **Managed**.
 2. Copy the **Site key** into Vercel as `NEXT_PUBLIC_TURNSTILE_SITE_KEY` (section A), then **redeploy**.
 3. Supabase → **Authentication → Attack Protection** (also called "Bot and Abuse Protection") → **Enable CAPTCHA protection**:

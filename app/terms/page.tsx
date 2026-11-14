@@ -4,8 +4,8 @@ import { SUPPORT_EMAIL } from "@/lib/settings-options";
 import { LEGAL_UPDATED, LEGAL_VERSION } from "@/lib/legal";
 
 export const metadata: Metadata = {
-  title: "Terms of service · Strynd",
-  description: "The terms for using Strynd.",
+  title: "Terms of service · Surfdesk",
+  description: "The terms for using Surfdesk.",
   alternates: { canonical: "/terms" },
 };
 
@@ -16,8 +16,8 @@ export default function TermsPage() {
     <LegalPage title="Terms of service" updated={LEGAL_UPDATED}>
       <p>
         These terms are an agreement between you and Sonder Project, a sole proprietorship based in California
-        (&quot;we&quot;, &quot;us&quot;), for your use of Strynd at strynd.com and in its mobile apps
-        (&quot;the app&quot;). You agree to these terms and to our <a href="/privacy">privacy policy</a> when you
+        (&quot;we&quot;, &quot;us&quot;), for your use of Surfdesk at thesurfdesk.app and in its mobile apps
+        (&quot;the app&quot;; formerly called Strynd, at strynd.com). You agree to these terms and to our <a href="/privacy">privacy policy</a> when you
         tick the box to create an account, set up or join an organization, or keep using the app after we ask you to
         agree to an updated version. We keep a record of which version you agreed to and when (version {LEGAL_VERSION}).
       </p>
@@ -94,7 +94,7 @@ export default function TermsPage() {
 
       <LegalSection title="Other systems you use">
         <p>
-          Strynd is a work and organizing tool. It doesn&apos;t replace any official system of record (such as
+          Surfdesk is a work and organizing tool. It doesn&apos;t replace any official system of record (such as
           HMIS or an agency case file) that you&apos;re required to use, and you remain responsible for keeping those
           systems accurate.
         </p>
@@ -102,9 +102,9 @@ export default function TermsPage() {
 
       <LegalSection title="Calendar sync">
         <p>
-          You can show events from another calendar (such as Google, Apple or Outlook) in Strynd by pasting its private
-          link, and subscribe to your Strynd tasks from another calendar using your own private link. Only link
-          calendars you&apos;re allowed to share. Anyone who has your Strynd calendar link can see the task titles and due
+          You can show events from another calendar (such as Google, Apple or Outlook) in Surfdesk by pasting its private
+          link, and subscribe to your Surfdesk tasks from another calendar using your own private link. Only link
+          calendars you&apos;re allowed to share. Anyone who has your Surfdesk calendar link can see the task titles and due
           times in it, so keep it private; you can replace it in Settings → Calendar at any time. Once another calendar
           service copies your tasks, its own terms apply to that copy.
         </p>
@@ -126,7 +126,7 @@ export default function TermsPage() {
         <ul>
           <li>
             <strong>Individual:</strong> $9 a month after a 7-day free trial. The trial doesn&apos;t need a card; to keep
-            using Strynd after it, add one. If you add a card during the trial, you&apos;re charged $9 when the trial
+            using Surfdesk after it, add one. If you add a card during the trial, you&apos;re charged $9 when the trial
             ends, and every month after that, unless you cancel before the trial ends. Until a card is on file, imports
             are limited (up to 25 people, and no backup restores). Free trials are limited to one per person and card.
           </li>

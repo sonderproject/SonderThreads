@@ -20,7 +20,7 @@ export async function sendPush(userId: string, payload: PushPayload): Promise<nu
   if (!pushConfigured()) return 0;
   if (!configured) {
     webpush.setVapidDetails(
-      process.env.VAPID_SUBJECT || "mailto:no-reply@strynd.com",
+      process.env.VAPID_SUBJECT || "mailto:no-reply@thesurfdesk.app",
       process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
       process.env.VAPID_PRIVATE_KEY!,
     );

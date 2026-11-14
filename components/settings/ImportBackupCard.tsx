@@ -77,9 +77,9 @@ export function ImportBackupCard() {
   return (
     <div className="card space-y-3 p-4">
       <div>
-        <h3 className="text-sm font-semibold text-text">Restore a Strynd backup</h3>
+        <h3 className="text-sm font-semibold text-text">Restore a Surfdesk backup</h3>
         <p className="text-xs text-text-muted">
-          Only for the backup file (.json) downloaded from Strynd above. For a client list, use “Import your client list” instead. Restores people, notes, tasks, check-ins, lists and history,
+          Only for the backup file (.json) downloaded from Surfdesk above. For a client list, use “Import your client list” instead. Restores people, notes, tasks, check-ins, lists and history,
           all still linked together. Nothing already here is changed or duplicated.
         </p>
       </div>

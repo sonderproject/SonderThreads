@@ -5,18 +5,18 @@ import { SoloUsePicker } from "@/components/setup/SoloUsePicker";
 import { saveSoloBasics } from "@/lib/actions/setup";
 import { SOLO_USES, SUGGESTED_SERVICES, readDraft } from "@/lib/setup";
 
-export const metadata = { title: "Get started · Strynd" };
+export const metadata = { title: "Get started · Surfdesk" };
 export const dynamic = "force-dynamic";
 
 type Params = { error?: string; offer?: string; utm_source?: string; utm_medium?: string; utm_campaign?: string; utm_content?: string };
 
-/** Individual set-up, step 1 of 4: what they'll use Strynd for (and services if it's a business). */
+/** Individual set-up, step 1 of 4: what they'll use Surfdesk for (and services if it's a business). */
 export default async function SoloBasicsPage({ searchParams }: { searchParams: Promise<Params> }) {
   const { error, offer, ...utm } = await searchParams;
   const d = await readDraft();
   const draft = d?.flow === "solo" ? d : null;
   return (
-    <SetupFrame flow="solo" step={1} title="What will you use Strynd for?" intro="So we can set it up for you. 7 days free, no card needed.">
+    <SetupFrame flow="solo" step={1} title="What will you use Surfdesk for?" intro="So we can set it up for you. 7 days free, no card needed.">
       <form action={saveSoloBasics} className="space-y-5">
         {error === "use" && <p role="alert" className="flag text-sm">Choose one to continue.</p>}
         {offer === "skip" && <input type="hidden" name="offer" value="skip" />}
