@@ -3,6 +3,8 @@ import { BrandLockup } from "@/components/BrandLockup";
 import { Turnstile } from "@/components/auth/Turnstile";
 import { legacyDataUnclaimed, signup } from "@/app/login/actions";
 import { TimeZoneInput } from "@/components/notifications/TimeZoneInput";
+import { SetupProgress } from "@/components/setup/SetupFrame";
+import { setupFlowFor } from "@/lib/setup";
 
 export const dynamic = "force-dynamic";
 
@@ -30,11 +32,25 @@ export default async function SignupPage({
   const utm = { utm_source, utm_medium, utm_campaign, utm_content };
   const showLegacy = await legacyDataUnclaimed();
   const loginHref = next ? `/login?next=${encodeURIComponent(next)}` : "/login";
+  // Part of the guided set-up (lib/setup.ts): show where they are in it.
+  const flow = setupFlowFor(next);
 
   return (
-    <div className="flex min-h-screen items-start justify-center bg-bg px-4 pt-32">
-      <form action={signup} className="w-full max-w-xs space-y-3">
-        <BrandLockup className="mb-2" />
+    <div className={`flex min-h-screen items-start justify-center bg-bg px-4 ${flow ? "pb-16 pt-16 sm:pt-24" : "pt-32"}`}>
+      <form action={signup} className={`w-full space-y-3 ${flow ? "max-w-sm" : "max-w-xs"}`}>
+        {flow ? (
+          <div className="mb-4 space-y-4">
+            <SetupProgress flow={flow} step={flow === "org" ? 3 : 2} />
+            <div className="space-y-1">
+              <h1 className="page-title">Create your account</h1>
+              <p className="text-sm text-text-muted">
+                {flow === "org" ? "You'll be your organization's admin. " : ""}We&apos;ll email you a 6-digit code to confirm it&apos;s you.
+              </p>
+            </div>
+          </div>
+        ) : (
+          <BrandLockup className="mb-2" />
+        )}
         {deleted && <p className="text-xs text-text-muted">Your account and data were deleted.</p>}
         {error && <p className="text-xs text-danger">{ERRORS[error] ?? "Something went wrong."}</p>}
         <input type="hidden" name="next" value={next ?? ""} />

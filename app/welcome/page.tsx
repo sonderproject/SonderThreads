@@ -50,10 +50,13 @@ const COMPARE: [string, boolean][] = [
   ["Onboarding help and data import", false],
 ];
 
-const TEAM_SIGNUP = "/signup?next=%2Forganization%2Fnew";
-/** "Get started now": sign up, then land on Billing with "Skip the trial: 30% off your first month" up front. */
-const OFFER_SIGNUP = "/signup?next=%2Fbilling%3Foffer%3Dskip";
-const TEAM_OFFER_SIGNUP = "/signup?next=%2Forganization%2Fnew%3Foffer%3Dskip";
+/** Every sign-up goes through a guided set-up (lib/setup.ts): organizations and individuals each have their own. */
+const START = "/get-started";
+const SOLO_SIGNUP = "/get-started/solo";
+const TEAM_SIGNUP = "/get-started/org";
+/** "Get started now": the same set-up, with "Skip the trial: 30% off your first month" up front at the end. */
+const OFFER_SIGNUP = "/get-started/solo?offer=skip";
+const TEAM_OFFER_SIGNUP = "/get-started/org?offer=skip";
 const SALES = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent("Strynd Enterprise")}`;
 
 const PLANS: {
@@ -77,7 +80,7 @@ const PLANS: {
     fine: "7-day free trial, no card needed. Cancel any time.",
     features: ["Your own private workspace", "Tasks, to-dos, notes and lists", "Clients and check-ins with full history", "Voice notes, smart command box, reminders"],
     cta: "Start your free trial",
-    href: "/signup",
+    href: SOLO_SIGNUP,
     offerHref: OFFER_SIGNUP,
   },
   {
@@ -159,7 +162,7 @@ function Cta({ className = "" }: { className?: string }) {
   return (
     <div className={`flex flex-wrap gap-3 ${className}`}>
       <Link
-        href="/signup"
+        href={START}
         className="rounded-full bg-accent px-6 py-3 text-sm font-semibold text-bg shadow-sm ring-1 ring-inset ring-white/15 transition-colors hover:bg-accent-dim"
       >
         Start your free trial
@@ -172,7 +175,7 @@ function Cta({ className = "" }: { className?: string }) {
       </Link>
       <p className="w-full text-sm text-text-muted">
         Ready now?{" "}
-        <Link href={OFFER_SIGNUP} className="font-medium text-accent hover:underline">
+        <Link href={`${START}?offer=skip`} className="font-medium text-accent hover:underline">
           Get started today with 30% off your first month →
         </Link>
       </p>
@@ -200,7 +203,7 @@ export default function WelcomePage() {
               Sign in
             </Link>
             <Link
-              href="/signup"
+              href={START}
               className="rounded-full bg-accent px-4 py-2 text-sm font-semibold text-bg transition-colors hover:bg-accent-dim"
             >
               Get started

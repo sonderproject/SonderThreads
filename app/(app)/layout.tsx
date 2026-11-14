@@ -18,19 +18,23 @@ import { countNewReferrals } from "@/lib/referrals";
 import { billingEnabled, getAccess } from "@/lib/billing";
 import { BillingBanner } from "@/components/billing/BillingBanner";
 import { pendingAgreements } from "@/lib/actions/legal";
+import { SETUP_PATHS } from "@/lib/setup";
 
-/** Offer optional 2FA to people who don't have it on (from day 3), at most once every 30 days. */
-async function shouldOfferTwoFactor(): Promise<boolean> {
+/**
+ * Two per-user flags, in one read: whether to offer optional 2FA (from day 3,
+ * at most once every 30 days), and an unfinished guided set-up to send them back to.
+ */
+async function userFlags(): Promise<{ offerTwoFactor: boolean; setupStep: string | null }> {
   const userId = await requireUserId();
-  const row = await queryOne<{ offer: boolean }>(
-    `select (not mfa_enabled
+  const row = await queryOne<{ offer: boolean; setup_step: string | null }>(
+    `select setup_step, (not mfa_enabled
              -- Not on day one: let new people try the app before asking about security settings.
              and created_at < now() - interval '3 days'
              and (mfa_prompt_dismissed_at is null or mfa_prompt_dismissed_at < now() - interval '30 days')) as offer
      from users where id = $1`,
     [userId],
   );
-  return Boolean(row?.offer);
+  return { offerTwoFactor: Boolean(row?.offer), setupStep: row?.setup_step ?? null };
 }
 
 // This whole route group is a live, per-user dashboard — never prerender it.
@@ -43,7 +47,7 @@ export default async function AppGroupLayout({ children }: { children: React.Rea
   try {
     // Everything the shell needs, fetched together (the Terms and billing checks used to wait for the rest).
     data = await Promise.all([
-      listPeople(), listLists(), getNotificationCount(), getTimeZone(), shouldOfferTwoFactor(), getUserSettings(), getMembership(),
+      listPeople(), listLists(), getNotificationCount(), getTimeZone(), userFlags(), getUserSettings(), getMembership(),
       pendingAgreements(), getAccess().catch(() => null),
     ]);
   } catch (err) {
@@ -57,12 +61,19 @@ export default async function AppGroupLayout({ children }: { children: React.Rea
     );
   }
 
-  const [people, lists, notificationCount, timeZone, offerTwoFactor, settings, membership, agreements, access] = data;
+  const [people, lists, notificationCount, timeZone, flags, settings, membership, agreements, access] = data;
   // Everyone agrees to the current Terms/Privacy policy (and admins for their organization) before using the app.
   if (agreements.user || agreements.org) {
     const path = (await headers()).get("x-pathname") ?? "/";
     if (!path.startsWith("/settings/data")) redirect(`/accept-terms?next=${encodeURIComponent(path)}`);
   }
+  // An unfinished guided set-up (lib/setup.ts) comes first: back to the step where they stopped.
+  const setupPath = flags.setupStep ? SETUP_PATHS[flags.setupStep] : undefined;
+  if (setupPath) {
+    const path = (await headers()).get("x-pathname") ?? "";
+    if (!path.startsWith("/owner")) redirect(setupPath);
+  }
+  const offerTwoFactor = flags.offerTwoFactor;
   // New organizations start their free trial (card on Stripe) before using the app; individuals try it first without a card.
   if (access?.state === "setup") {
     const path = (await headers()).get("x-pathname") ?? "";

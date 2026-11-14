@@ -19,7 +19,8 @@ export default async function LoginPage({
   searchParams: Promise<{ error?: string; next?: string; email?: string; reason?: string; reset?: string }>;
 }) {
   const { error, next, email, reason, reset } = await searchParams;
-  const signupHref = next ? `/signup?next=${encodeURIComponent(next)}` : "/signup";
+  // Plain sign-in → "Create one" starts the guided set-up; from an invite or another link, keep where they were going.
+  const signupHref = next ? `/signup?next=${encodeURIComponent(next)}` : "/get-started";
   const missing = missingSupabaseConfig();
 
   return (

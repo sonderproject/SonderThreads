@@ -2,6 +2,9 @@ import Link from "next/link";
 import { BrandLockup } from "@/components/BrandLockup";
 import { Turnstile } from "@/components/auth/Turnstile";
 import { resendConfirmation, verifySignupCode } from "@/app/login/actions";
+import { SetupProgress } from "@/components/setup/SetupFrame";
+import { CodeInput } from "@/components/setup/CodeInput";
+import { setupFlowFor } from "@/lib/setup";
 
 export const dynamic = "force-dynamic";
 
@@ -15,11 +18,12 @@ export default async function CheckEmailPage({
   searchParams: Promise<{ email?: string; resent?: string; error?: string; next?: string }>;
 }) {
   const { email, resent, error, next } = await searchParams;
+  const flow = setupFlowFor(next);
   return (
-    <div className="flex min-h-screen items-start justify-center bg-bg px-4 pt-32">
-      <div className="w-full max-w-xs space-y-3">
-        <BrandLockup className="mb-2" />
-        <h1 className="section-title">Check your email</h1>
+    <div className={`flex min-h-screen items-start justify-center bg-bg px-4 ${flow ? "pb-16 pt-16 sm:pt-24" : "pt-32"}`}>
+      <div className={`w-full space-y-3 ${flow ? "max-w-sm" : "max-w-xs"}`}>
+        {flow ? <div className="mb-4"><SetupProgress flow={flow} step={flow === "org" ? 4 : 3} /></div> : <BrandLockup className="mb-2" />}
+        <h1 className={flow ? "page-title" : "section-title"}>Check your email</h1>
         <p className="text-sm text-text-muted">
           We sent an email to {email ? <strong className="text-text">{email}</strong> : "your email"}. Tap{" "}
           <strong className="text-text">Confirm</strong> in it, or type the 6-digit code from it here.
@@ -30,17 +34,7 @@ export default async function CheckEmailPage({
             <input type="email" name="email" required autoComplete="email" placeholder="Email" className="input tabular-nums" />
           )}
           {email && <input type="hidden" name="email" value={email} />}
-          <input
-            name="code"
-            required
-            inputMode="numeric"
-            autoComplete="one-time-code"
-            pattern="[0-9 ]{6,12}"
-            maxLength={12}
-            placeholder="6-digit code"
-            aria-label="6-digit code from the email"
-            className="input text-center text-lg tracking-[0.3em] tabular-nums"
-          />
+          <CodeInput />
           {error === "code" && <p className="text-xs text-danger">That code didn&apos;t work. Check it and try again, or use the newest email.</p>}
           {error === "code-expired" && <p className="text-xs text-danger">That code has expired. Send a new email below.</p>}
           <button type="submit" className="w-full rounded-full bg-accent px-3 py-1.5 text-sm font-semibold text-bg hover:bg-accent-dim">
@@ -54,6 +48,7 @@ export default async function CheckEmailPage({
         {error === "captcha" && <p className="text-xs text-danger">Please complete the security check and try again.</p>}
 
         <form action={resendConfirmation} className="space-y-2 card p-3">
+          <input type="hidden" name="next" value={next ?? "/"} />
           <p className="text-xs text-text-muted">Didn&apos;t get it?</p>
           <input
             type="email"

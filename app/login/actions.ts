@@ -286,13 +286,15 @@ async function createUserRow(id: string, email: string, phone: string | null, sm
  */
 export async function resendConfirmation(formData: FormData): Promise<void> {
   const email = formData.get("email")?.toString().trim().toLowerCase() ?? "";
-  const params = new URLSearchParams({ email });
+  // Keep where they were headed (e.g. the guided set-up), so the new email's link and code continue there.
+  const next = safeNextPath(formData.get("next")?.toString());
+  const params = new URLSearchParams({ email, next });
   if (!EMAIL_RE.test(email)) redirect(`/signup/check-email?${params}`);
   const supabase = await createSupabaseServer();
   const { error } = await supabase.auth.resend({
     type: "signup",
     email,
-    options: { emailRedirectTo: `${await origin()}/auth/confirm?next=%2F`, captchaToken: captcha(formData) },
+    options: { emailRedirectTo: `${await origin()}/auth/confirm?${new URLSearchParams({ next })}`, captchaToken: captcha(formData) },
   });
   if (error?.code === "captcha_failed") params.set("error", "captcha");
   else if (error?.code === "over_email_send_rate_limit" || error?.code === "over_request_rate_limit" || error?.status === 429) {

@@ -38,6 +38,8 @@ export async function startCheckout(formData: FormData): Promise<void> {
   if (!s) redirect("/billing?error=not-set-up");
   const access = await getAccess();
   if (!access.canManage) redirect("/billing?error=admin");
+  // From the guided organization set-up (app/setup/org/plan): come back into it, not to Billing.
+  const fromSetup = formData.get("from") === "setup";
   // Organizations always get the seat-based plan; the price comes from lib/pricing.ts via the verified Stripe price.
   const plan: PaidPlan = access.scope === "individual" ? "individual" : "org";
 
@@ -49,7 +51,7 @@ export async function startCheckout(formData: FormData): Promise<void> {
   if (kind === "org") {
     const u = await seatUsage(ownerId);
     const seats = validSeats(formData.get("seats"), u.active + u.pending);
-    if (seats === null) redirect("/billing?error=seats");
+    if (seats === null) redirect(fromSetup ? "/setup/org/plan?error=seats" : "/billing?error=seats");
     quantity = seats!;
   }
 
@@ -88,8 +90,8 @@ export async function startCheckout(formData: FormData): Promise<void> {
     metadata,
     // Stripe takes either a set discount or customer-entered promo codes, not both.
     ...(coupon ? { discounts: [{ coupon }] } : { allow_promotion_codes: true }),
-    success_url: `${appUrl()}/billing?checkout={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${appUrl()}/billing`,
+    success_url: fromSetup ? `${appUrl()}/setup/org/team?checkout={CHECKOUT_SESSION_ID}` : `${appUrl()}/billing?checkout={CHECKOUT_SESSION_ID}`,
+    cancel_url: fromSetup ? `${appUrl()}/setup/org/plan` : `${appUrl()}/billing`,
   });
   redirect(session.url!);
 }

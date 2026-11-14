@@ -1037,4 +1037,10 @@ create index if not exists services_user_id_idx on services(user_id);
 create index if not exists tasks_list_id_idx on tasks(list_id);
 create index if not exists tasks_recurs_from_idx on tasks(recurs_from);
 create index if not exists tasks_source_note_id_idx on tasks(source_note_id);
+
+-- Guided set-up (lib/setup.ts): where an unfinished set-up resumes, what an individual uses Strynd for,
+-- and the seats a new organization said it needs (prefills the Start step).
+alter table users add column if not exists setup_step text;
+alter table users add column if not exists use_case text;
+alter table organizations add column if not exists planned_seats int;
 `;

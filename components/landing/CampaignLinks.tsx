@@ -15,7 +15,7 @@ export function CampaignLinks() {
     const here = new URLSearchParams(window.location.search);
     const tags = KEYS.filter((k) => here.get(k));
     if (!tags.length) return;
-    document.querySelectorAll<HTMLAnchorElement>('a[href^="/signup"]').forEach((a) => {
+    document.querySelectorAll<HTMLAnchorElement>('a[href^="/signup"], a[href^="/get-started"]').forEach((a) => {
       const url = new URL(a.getAttribute("href")!, window.location.origin);
       for (const k of tags) url.searchParams.set(k, here.get(k)!.slice(0, 80));
       a.setAttribute("href", url.pathname + url.search);
