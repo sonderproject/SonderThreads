@@ -24,17 +24,17 @@ import { SETUP_PATHS } from "@/lib/setup";
  * Two per-user flags, in one read: whether to offer optional 2FA (from day 3,
  * at most once every 30 days), and an unfinished guided set-up to send them back to.
  */
-async function userFlags(): Promise<{ offerTwoFactor: boolean; setupStep: string | null }> {
+async function userFlags(): Promise<{ offerTwoFactor: boolean; setupStep: string | null; draftFlow: string | null }> {
   const userId = await requireUserId();
-  const row = await queryOne<{ offer: boolean; setup_step: string | null }>(
-    `select setup_step, (not mfa_enabled
+  const row = await queryOne<{ offer: boolean; setup_step: string | null; draft_flow: string | null }>(
+    `select setup_step, setup_draft->>'flow' as draft_flow, (not mfa_enabled
              -- Not on day one: let new people try the app before asking about security settings.
              and created_at < now() - interval '3 days'
              and (mfa_prompt_dismissed_at is null or mfa_prompt_dismissed_at < now() - interval '30 days')) as offer
      from users where id = $1`,
     [userId],
   );
-  return { offerTwoFactor: Boolean(row?.offer), setupStep: row?.setup_step ?? null };
+  return { offerTwoFactor: Boolean(row?.offer), setupStep: row?.setup_step ?? null, draftFlow: row?.draft_flow ?? null };
 }
 
 // This whole route group is a live, per-user dashboard — never prerender it.
@@ -68,7 +68,10 @@ export default async function AppGroupLayout({ children }: { children: React.Rea
     if (!path.startsWith("/settings/data")) redirect(`/accept-terms?next=${encodeURIComponent(path)}`);
   }
   // An unfinished guided set-up (lib/setup.ts) comes first: back to the step where they stopped.
-  const setupPath = flags.setupStep ? SETUP_PATHS[flags.setupStep] : undefined;
+  // Set-up answers saved at sign-up but not applied yet (e.g. they tapped Confirm in the
+  // email, which lands on Home): finish the set-up first, which creates their organization.
+  const finishPath = flags.draftFlow === "org" || flags.draftFlow === "solo" ? `/setup/${flags.draftFlow}/finish` : undefined;
+  const setupPath = flags.setupStep ? SETUP_PATHS[flags.setupStep] : finishPath;
   if (setupPath) {
     const path = (await headers()).get("x-pathname") ?? "";
     // Settings and Billing stay reachable, so nobody is ever stuck (e.g. if checkout fails).

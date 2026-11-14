@@ -24,7 +24,11 @@ export async function GET() {
   }
   const d = await draftForAccount(userId);
   // No answers anywhere (expired, or signed up without the set-up): the short form still works.
-  if (d?.flow !== "org" || !d.name || !d.kind || !d.agreed) redirect("/organization/new");
+  if (d?.flow !== "org" || !d.name || !d.kind || !d.agreed) {
+    // Clear incomplete answers so the app doesn't keep sending them back here.
+    await clearDraftEverywhere(userId);
+    redirect("/organization/new");
+  }
 
   const orgId = await transaction(async (q) => {
     const res = (await q(
