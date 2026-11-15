@@ -126,6 +126,13 @@ export default function PrivacyPage() {
             To send occasional tips on using the app. Every tip email has a one-click unsubscribe link; emails about your
             account and billing still arrive.
           </li>
+          <li>
+            Only if you opt in (at sign-up or in Settings → Notifications; it&apos;s off unless you choose it): emails
+            with tips and offers from Sonder Project, the maker of Surfdesk, which can include our other products and
+            services. We keep a record of when you opted in or out and the wording you saw. Unsubscribe any time with the
+            link in any of these emails or in Settings. Your email address is never sold or given to other companies for
+            their marketing.
+          </li>
           <li>To answer your support requests and fix problems.</li>
           <li>To bill your subscription, and to keep records of payments and of your agreement to these terms.</li>
         </ul>

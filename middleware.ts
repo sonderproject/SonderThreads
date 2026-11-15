@@ -42,7 +42,7 @@ export async function middleware(request: NextRequest) {
   const kiosk = request.cookies.get(KIOSK_COOKIE)?.value === "1";
   if (kiosk) {
     const p = request.nextUrl.pathname;
-    if (!p.startsWith("/kiosk") && p !== "/api/auth/heartbeat") {
+    if (!p.startsWith("/kiosk") && p !== "/api/auth/heartbeat" && p !== "/maintenance" && p !== "/suspended") {
       const out = NextResponse.redirect(new URL("/kiosk", request.url));
       for (const c of response.cookies.getAll()) out.cookies.set(c);
       return out;

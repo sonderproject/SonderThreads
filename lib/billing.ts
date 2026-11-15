@@ -113,8 +113,8 @@ export type Access = {
 const DAY = 86_400_000;
 
 async function computeAccess(userId: string): Promise<Access> {
-  const m = await queryOne<{ org_id: string; role: string; name: string; org_created: string }>(
-    `select m.org_id, m.role, o.name, o.created_at as org_created
+  const m = await queryOne<{ org_id: string; role: string; name: string; org_created: string; extra_days: number }>(
+    `select m.org_id, m.role, o.name, o.created_at as org_created, o.trial_extra_days as extra_days
        from memberships m join organizations o on o.id = m.org_id
       where m.user_id = $1 and m.active limit 1`,
     [userId],
@@ -133,7 +133,8 @@ async function computeAccess(userId: string): Promise<Access> {
       }
       return { ...orgBase, ...decided };
     }
-    const trialEnd = new Date(new Date(m.org_created).getTime() + LEGACY_ORG_TRIAL_DAYS * DAY);
+    // Extra days: granted by the owner in the command center.
+    const trialEnd = new Date(new Date(m.org_created).getTime() + (LEGACY_ORG_TRIAL_DAYS + (m.extra_days ?? 0)) * DAY);
     return { ...decide(row, trialEnd), ...orgBase };
   }
   const [row, invited] = await Promise.all([
@@ -155,9 +156,9 @@ async function computeAccess(userId: string): Promise<Access> {
     return { ...base, state: "ok", plan: row?.plan ?? null, status: row?.status ?? null, endsAt: null };
   }
   // Individuals: a 7-day trial without a card, from sign-up (or from INDIVIDUAL_NO_CARD_FROM for older accounts).
-  const user = await queryOne<{ created_at: string }>(`select created_at from users where id = $1`, [userId]);
+  const user = await queryOne<{ created_at: string; extra_days: number }>(`select created_at, trial_extra_days as extra_days from users where id = $1`, [userId]);
   const start = Math.max(new Date(user?.created_at ?? Date.now()).getTime(), INDIVIDUAL_NO_CARD_FROM.getTime());
-  return { ...base, ...decide(row, new Date(start + INDIVIDUAL_TRIAL_DAYS * DAY)) };
+  return { ...base, ...decide(row, new Date(start + (INDIVIDUAL_TRIAL_DAYS + (user?.extra_days ?? 0)) * DAY)) };
 }
 
 function decide(row: BillingRow | null, trialEnd: Date): Pick<Access, "state" | "plan" | "status" | "endsAt"> {

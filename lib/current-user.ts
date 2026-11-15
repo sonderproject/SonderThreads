@@ -16,6 +16,8 @@ import { inKioskAction } from "@/lib/kiosk-guard";
 export async function requireUserId(): Promise<string> {
   const state = await getAuthState();
   if (state.status === "needs-2fa") redirect("/login/2fa");
+  if (state.status === "suspended") redirect("/suspended");
+  if (state.status === "maintenance") redirect("/maintenance");
   if (state.status !== "signed-in") redirect("/login");
   // On a kiosk tablet, only the kiosk's own server actions may run (lib/kiosk-guard.ts).
   if (!inKioskAction()) {

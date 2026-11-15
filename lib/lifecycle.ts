@@ -228,7 +228,7 @@ export async function runLifecycleEmails(since: Date = LIFECYCLE_FROM): Promise<
   for (const r of tips) if (!skip(r) && (await send(r, "tips", "", tipFor(r)))) sent++;
 
   // No-card individual trials: ending within 2 days, and ended within the last 3 days.
-  const trialEnd = `(greatest(u.created_at, $1::timestamptz) + make_interval(days => ${INDIVIDUAL_TRIAL_DAYS}))`;
+  const trialEnd = `(greatest(u.created_at, $1::timestamptz) + make_interval(days => ${INDIVIDUAL_TRIAL_DAYS} + u.trial_extra_days))`;
   const noCard = `m.user_id is null
         and not exists (select 1 from billing_accounts b where b.user_id = u.id
                           and (b.stripe_subscription_id is not null or b.plan = 'comp' or b.status = 'comp'))

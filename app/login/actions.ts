@@ -1,5 +1,7 @@
 "use server";
 
+import { recordMarketingChoice } from "@/lib/marketing";
+
 import { isEmail } from "@/lib/email-check";
 import { readDraft, saveDraftToAccount, setupFlowFor } from "@/lib/setup";
 import { recordAcceptance } from "@/lib/legal-server";
@@ -135,6 +137,7 @@ export async function resetPassword(formData: FormData): Promise<void> {
   const state = await getAuthState();
   if (state.status === "signed-out") redirect("/reset-password?error=invalid");
   if (state.status === "needs-2fa") redirect("/login/2fa?next=/reset-password");
+  if (state.status !== "signed-in") redirect(state.status === "suspended" ? "/suspended" : "/maintenance");
 
   const supabase = await createSupabaseServer();
   const { error } = await supabase.auth.updateUser({ password });
@@ -187,6 +190,8 @@ export async function signup(formData: FormData): Promise<void> {
   const smsOptIn = formData.get("sms_opt_in") === "on" && Boolean(rawPhone);
   const timeZone = formData.get("timezone")?.toString() || null;
   const agreed = formData.get("agree") === "on";
+  // Optional and unchecked by default (lib/marketing.ts); recorded with the exact wording shown.
+  const marketing = formData.get("marketing_opt_in") === "on";
 
   if (!agreed) back("/signup", "agree", email, next, rawPhone);
   if (!isEmail(email) || email.length > 254) back("/signup", "email", email, next, rawPhone);
@@ -215,7 +220,7 @@ export async function signup(formData: FormData): Promise<void> {
         console.error("[auth] invite sign-up failed", error?.message);
         back("/signup", "failed", email, next, rawPhone);
       }
-      await createUserRow(data.user!.id, email, phone, smsOptIn, timeZone);
+      await createUserRow(data.user!.id, email, phone, smsOptIn, timeZone, marketing);
       const supabase = await createSupabaseServer();
       await supabase.auth.signInWithPassword({ email, password, options: { captchaToken: captcha(formData) } });
       redirect(next);
@@ -255,12 +260,12 @@ export async function signup(formData: FormData): Promise<void> {
     userId = data.user.id;
     if (data.session) {
       // Email confirmation is off in Supabase: they're signed in already.
-      await createUserRow(userId, email, phone, smsOptIn, timeZone);
+      await createUserRow(userId, email, phone, smsOptIn, timeZone, marketing);
       redirect(next);
     }
   }
 
-  await createUserRow(userId, email, phone, smsOptIn, timeZone);
+  await createUserRow(userId, email, phone, smsOptIn, timeZone, marketing);
   // Guided set-up: keep the answers on the account too, for a confirmation link opened on another device.
   if (setupFlowFor(next)) await saveDraftToAccount(userId).catch((err) => console.error("[setup] saving answers failed", err));
   const source = Object.fromEntries(
@@ -274,19 +279,20 @@ export async function signup(formData: FormData): Promise<void> {
   await logEvent("auth.signup", isLikelyBot(email) ? "New sign-up (likely bot)" : "New sign-up", {
     email,
     path: "/signup",
-    meta: { ...source, ...(flow ? { flow, fid: fid ?? null } : {}) },
+    meta: { ...source, ...(flow ? { flow, fid: fid ?? null } : {}), device: await deviceKind() },
   });
   redirect(`/signup/check-email?${new URLSearchParams({ email, next })}`);
 }
 
 /** Sign-up always requires ticking "I agree", so every new row records that agreement. */
-async function createUserRow(id: string, email: string, phone: string | null, smsOptIn: boolean, timeZone: string | null) {
+async function createUserRow(id: string, email: string, phone: string | null, smsOptIn: boolean, timeZone: string | null, marketing: boolean) {
   await query(
     `insert into users (id, email, phone, sms_opt_in, timezone) values ($1, $2, $3, $4, $5)
      on conflict (id) do update set phone = excluded.phone, sms_opt_in = excluded.sms_opt_in, timezone = excluded.timezone`,
     [id, email, phone, smsOptIn, validTimeZone(timeZone)],
   );
   await recordAcceptance(id, "user");
+  if (marketing) await recordMarketingChoice(id, true, "signup").catch((err) => console.error("[auth] marketing opt-in not saved", err));
 }
 
 /**
@@ -443,4 +449,12 @@ export async function verifySignupCode(formData: FormData): Promise<void> {
     back(error.code === "otp_expired" ? "code-expired" : "code");
   }
   redirect(next);
+}
+
+/** Phone, tablet or computer, from the browser's user agent (owner audience numbers; nothing else is kept). */
+async function deviceKind(): Promise<"phone" | "tablet" | "computer"> {
+  const ua = (await headers()).get("user-agent") ?? "";
+  if (/iPad|Tablet|(Android(?!.*Mobile))/i.test(ua)) return "tablet";
+  if (/Mobi|iPhone|Android/i.test(ua)) return "phone";
+  return "computer";
 }

@@ -1,3 +1,4 @@
+import { heartbeat } from "@/lib/heartbeat";
 import { NextResponse, type NextRequest } from "next/server";
 import { safeEqual } from "@/lib/auth";
 import { query, queryOne } from "@/lib/db/client";
@@ -70,6 +71,7 @@ export async function GET(request: NextRequest) {
     console.error("[cron/reminders] trial emails failed", err);
     return 0;
   });
+  await heartbeat("cron_reminders_at");
   return NextResponse.json({ reminded: due.length, summaries, stuck, emails });
 }
 

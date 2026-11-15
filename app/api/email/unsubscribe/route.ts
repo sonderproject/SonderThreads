@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { safeEqual } from "@/lib/auth";
 import { query } from "@/lib/db/client";
 import { unsubscribeToken } from "@/lib/lifecycle";
+import { recordMarketingChoice } from "@/lib/marketing";
 
 export const dynamic = "force-dynamic";
 
@@ -15,9 +16,13 @@ export async function GET(request: NextRequest) {
   const t = request.nextUrl.searchParams.get("t") ?? "";
   const expected = /^[0-9a-f-]{36}$/i.test(u) ? unsubscribeToken(u) : null;
   const ok = Boolean(expected && t) && safeEqual(t, expected!);
-  if (ok) await query(`update users set email_tips_opt_out = true where id = $1`, [u]);
+  if (ok) {
+    // Also turns off marketing emails from Sonder Project (recorded as evidence, lib/marketing.ts).
+    const row = await query<{ marketing_opt_in: boolean }>(`update users set email_tips_opt_out = true where id = $1 returning marketing_opt_in`, [u]);
+    if (row[0]?.marketing_opt_in) await recordMarketingChoice(u, false, "unsubscribe");
+  }
   const msg = ok
-    ? "You're unsubscribed from Surfdesk tips. You'll still get emails about your account and billing."
+    ? "You're unsubscribed from Surfdesk tips and offers. You'll still get emails about your account and billing."
     : "That link didn't work. Reply to any Surfdesk email and we'll take you off the list.";
   return new NextResponse(
     `<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Surfdesk</title>

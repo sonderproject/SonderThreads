@@ -6,6 +6,7 @@ import { submitReferral } from "@/lib/actions/referrals";
 import { loadReferralSettings, openSlots } from "@/lib/referral-settings";
 import { formatSlot } from "@/lib/referral-slots";
 import { dayKey } from "@/lib/tz";
+import { getAppSettings, inMaintenance } from "@/lib/app-settings";
 
 export const metadata: Metadata = { title: "Refer a client", robots: { index: false, follow: false } };
 export const dynamic = "force-dynamic";
@@ -32,10 +33,12 @@ export default async function ReferPage({
   const { code } = await params;
   const { sent, error, at, wait } = await searchParams;
   const org = await queryOne<{ id: string; name: string; has_logo: boolean }>(
-    `select id, name, logo is not null as has_logo from organizations where referral_code = $1 and referral_enabled`,
+    `select id, name, logo is not null as has_logo from organizations where referral_code = $1 and referral_enabled and suspended_at is null`,
     [code],
   );
-  const settings = org ? await loadReferralSettings(org.id) : null;
+  // Maintenance mode (command center): the form is paused, never an error page.
+  const paused = error === "paused" || inMaintenance(await getAppSettings());
+  const settings = org && !paused ? await loadReferralSettings(org.id) : null;
   const plan = org && settings?.appointments && !sent ? await openSlots(org.id, settings) : null;
   // Times grouped by day, in the organization's zone.
   const days = new Map<string, Date[]>();
@@ -52,7 +55,15 @@ export default async function ReferPage({
   return (
     <div className="min-h-screen bg-bg px-4 py-10 text-text">
       <main className="mx-auto max-w-md space-y-6">
-        {!org || error === "closed" ? (
+        {org && paused ? (
+          <div className="card space-y-2 p-6 text-center">
+            <p className="eyebrow text-text-faint">{org.name}</p>
+            <h1 className="page-title">Back in a few minutes</h1>
+            <p className="text-sm text-text-muted">
+              Referrals are paused for a quick update. Please try this link again shortly; nothing you send is lost.
+            </p>
+          </div>
+        ) : !org || error === "closed" ? (
           <div className="card space-y-2 p-6 text-center">
             <h1 className="page-title">Link not active</h1>
             <p className="text-sm text-text-muted">

@@ -1,5 +1,7 @@
 "use server";
 
+import { getAppSettings, inMaintenance } from "@/lib/app-settings";
+
 import { after } from "next/server";
 import { isEmail } from "@/lib/email-check";
 import { assertCanWrite } from "@/lib/billing";
@@ -47,10 +49,12 @@ export async function submitReferral(formData: FormData): Promise<void> {
   const back = (q: string) => redirect(`/refer/${encodeURIComponent(code)}?${q}`);
 
   const org = await queryOne<{ id: string; name: string }>(
-    `select id, name from organizations where referral_code = $1 and referral_enabled`,
+    `select id, name from organizations where referral_code = $1 and referral_enabled and suspended_at is null`,
     [code],
   );
   if (!org) back("error=closed");
+  // Maintenance mode (command center): nothing is saved; the form says to try again shortly.
+  if (inMaintenance(await getAppSettings())) back("error=paused");
 
   // Spam trap: a hidden field people never see or fill.
   if (clean(formData.get("website"), 200)) back("sent=1");

@@ -23,6 +23,7 @@ import { requireUserId } from "@/lib/current-user";
 import { queryOne } from "@/lib/db/client";
 import { logout, requestEmailChange, signOutEverywhere } from "@/app/login/actions";
 import { saveProfile } from "@/lib/actions/profile";
+import { setMarketingEmails } from "@/lib/actions/announce";
 import { clearMyData } from "@/lib/actions/clear-data";
 import { getMembership, getPendingInvites, ROLE_LABELS } from "@/lib/org";
 import { getNotificationSettings, sendTestNotification } from "@/lib/actions/notifications";
@@ -160,7 +161,12 @@ async function AccountSection({ q }: { q: SettingsQuery }) {
 }
 
 async function NotificationsSection({ q }: { q: SettingsQuery }) {
-  const [notify, prefs] = await Promise.all([getNotificationSettings(), getUserSettings()]);
+  const userId = await requireUserId();
+  const [notify, prefs, mkt] = await Promise.all([
+    getNotificationSettings(),
+    getUserSettings(),
+    queryOne<{ marketing_opt_in: boolean }>(`select marketing_opt_in from users where id = $1`, [userId]),
+  ]);
   return (
     <div className="card space-y-4 p-4">
       <div className="space-y-1">
@@ -228,6 +234,17 @@ async function NotificationsSection({ q }: { q: SettingsQuery }) {
         {q.saved === "notifications" && <p className="text-xs text-accent">Saved.</p>}
         <button type="submit" className={buttonClass}>
           Save
+        </button>
+      </form>
+
+      <form action={setMarketingEmails} className="space-y-2 border-t border-border pt-4">
+        <p className="text-xs text-text-muted">Emails from us</p>
+        <p className="text-sm text-text">
+          {mkt?.marketing_opt_in ? "You get tips and offers from Sonder Project, the maker of Surfdesk." : "You don't get tips or offers. Account and billing emails always come."}
+        </p>
+        <input type="hidden" name="on" value={mkt?.marketing_opt_in ? "0" : "1"} />
+        <button type="submit" className="text-xs text-accent hover:underline">
+          {mkt?.marketing_opt_in ? "Stop tips and offers" : "Send me tips and offers"}
         </button>
       </form>
 

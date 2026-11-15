@@ -1,6 +1,6 @@
 import { query, queryOne } from "@/lib/db/client";
 import { appUrl, escapeHtml, sendEmail } from "@/lib/email";
-import { ownerEmails } from "@/lib/owner";
+import { ownerEmails } from "@/lib/owner-ids";
 
 export type EventLevel = "info" | "warn" | "error";
 

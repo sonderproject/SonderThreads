@@ -5,7 +5,7 @@ import { queryOne } from "@/lib/db/client";
 export async function GET(_req: Request, { params }: { params: Promise<{ code: string }> }) {
   const { code } = await params;
   const row = await queryOne<{ logo: Buffer | null; logo_type: string | null }>(
-    `select logo, logo_type from organizations where referral_code = $1 and referral_enabled`,
+    `select logo, logo_type from organizations where referral_code = $1 and referral_enabled and suspended_at is null`,
     [code],
   );
   if (!row?.logo || !row.logo_type) return new NextResponse(null, { status: 404 });

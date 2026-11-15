@@ -1,3 +1,4 @@
+import { heartbeat } from "@/lib/heartbeat";
 import { NextResponse } from "next/server";
 import { sendPaymentFailedEmail } from "@/lib/lifecycle";
 import type Stripe from "stripe";
@@ -58,6 +59,7 @@ export async function POST(request: Request) {
     await logEvent("stripe.webhook_failed", `${event.type}: ${err instanceof Error ? err.message : String(err)}`, { level: "error", path: "/api/stripe/webhook", meta: { event: event.id } });
     return NextResponse.json({ error: "Failed" }, { status: 500 }); // Stripe retries
   }
+  await heartbeat("stripe_webhook_at");
   return NextResponse.json({ received: true });
 }
 

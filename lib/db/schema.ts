@@ -1124,4 +1124,59 @@ begin
 exception when undefined_function or invalid_schema_name or undefined_object then
   null;
 end $$;
+
+-- Owner command center controls (docs/command-center-plan.md). Suspension: a suspended
+-- account (or every member of a suspended organization) can't use the app; the owner's
+-- own account is never suspended (lib/owner-ids.ts). Server-only columns.
+alter table users add column if not exists suspended_at timestamptz;
+alter table users add column if not exists suspended_reason text check (length(suspended_reason) <= 500);
+alter table organizations add column if not exists suspended_at timestamptz;
+alter table organizations add column if not exists suspended_reason text check (length(suspended_reason) <= 500);
+-- Extra free-trial days the owner granted (no-card trials; card trials move trial_end on Stripe).
+alter table users add column if not exists trial_extra_days int not null default 0 check (trial_extra_days between 0 and 365);
+alter table organizations add column if not exists trial_extra_days int not null default 0 check (trial_extra_days between 0 and 365);
+-- One-row app settings: maintenance mode and the announcement banner. Server-only (RLS on, no policies).
+create table if not exists app_settings (
+  id boolean primary key default true check (id),
+  maintenance_on boolean not null default false,
+  maintenance_message text check (length(maintenance_message) <= 300),
+  maintenance_until timestamptz,
+  announcement_id uuid,
+  announcement_text text check (length(announcement_text) <= 300),
+  announcement_link text check (length(announcement_link) <= 300),
+  announcement_at timestamptz,
+  updated_at timestamptz not null default now()
+);
+insert into app_settings (id) values (true) on conflict (id) do nothing;
+alter table app_settings enable row level security;
+alter table users add column if not exists announcement_dismissed_id uuid;
+-- Feedback inbox: support messages (app_events kind 'support.message') the owner marked done.
+alter table app_events add column if not exists resolved_at timestamptz;
+create index if not exists app_events_support_idx on app_events (created_at desc) where kind = 'support.message';
+
+-- Marketing emails from Sonder Project (opt-in only, unchecked by default). users holds the
+-- current choice; marketing_consents keeps every change with the exact wording as evidence.
+alter table users add column if not exists marketing_opt_in boolean not null default false;
+alter table users add column if not exists marketing_prompted_at timestamptz;
+create table if not exists marketing_consents (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references users(id) on delete cascade,
+  opted_in boolean not null,
+  wording text not null,
+  source text not null check (source in ('signup', 'prompt', 'settings', 'unsubscribe')),
+  ip text,
+  user_agent text,
+  created_at timestamptz not null default now()
+);
+create index if not exists marketing_consents_user_idx on marketing_consents (user_id, created_at desc);
+alter table marketing_consents enable row level security;
+
+-- Bulk invites: when each invite email went out (background sending shows progress), and the
+-- organization's team join link (one secret link, limited to its email domains, joins as Member).
+alter table invitations add column if not exists emailed_at timestamptz;
+alter table invitations add column if not exists batch_id uuid;
+create index if not exists invitations_batch_idx on invitations (batch_id) where batch_id is not null;
+alter table organizations add column if not exists join_token_hash text;
+create unique index if not exists organizations_join_token_idx on organizations (join_token_hash) where join_token_hash is not null;
+alter table organizations add column if not exists join_domains text[];
 `;

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { MARKETING_WORDING } from "@/lib/marketing-wording";
 import { BrandLockup } from "@/components/BrandLockup";
 import { Turnstile } from "@/components/auth/Turnstile";
 import { legacyDataUnclaimed, signup } from "@/app/login/actions";
@@ -122,6 +123,10 @@ export default async function SignupPage({
             </Link>
             , and I&apos;m at least 18.
           </span>
+        </label>
+        <label className="flex items-start gap-2 text-xs text-text-muted">
+          <input type="checkbox" name="marketing_opt_in" className="mt-0.5" />
+          <span>{MARKETING_WORDING} (Optional.)</span>
         </label>
         <Turnstile />
         <button

@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import type Stripe from "stripe";
 import { requireOwner } from "@/lib/owner";
 import { query, queryOne } from "@/lib/db/client";
 import { isLikelyBot } from "@/lib/events";
-import { stripe } from "@/lib/billing";
+import { stripeNumbers } from "@/lib/owner-stats";
 import { ownerResendConfirmation } from "@/lib/actions/owner";
 import { setupFunnel, type FunnelStep } from "@/lib/funnel-stats";
+import { OwnerNav } from "@/components/owner/OwnerNav";
 
 export const metadata: Metadata = { title: "Command center", robots: { index: false, follow: false } };
 export const dynamic = "force-dynamic";
@@ -44,6 +44,18 @@ const KIND_LABELS: Record<string, string> = {
   "referral.received": "Referral",
   "referral.email_capped": "Referral email capped",
   "billing.seats_changed": "Seats changed",
+  "support.message": "Feedback",
+  "owner.suspended_user": "Suspended account",
+  "owner.suspended_org": "Suspended organization",
+  "owner.unsuspended_user": "Lifted suspension",
+  "owner.unsuspended_org": "Lifted suspension",
+  "owner.extended_trial": "Extended trial",
+  "owner.made_free": "Made free",
+  "owner.removed_free": "Removed free",
+  "owner.maintenance_on": "Maintenance on",
+  "owner.maintenance_off": "Maintenance off",
+  "owner.announcement_posted": "Announcement",
+  "owner.announcement_cleared": "Announcement removed",
   "email.failed": "Email failed",
 };
 
@@ -59,40 +71,6 @@ function when(d: string | null): string {
 }
 function money(cents: number): string {
   return `$${(cents / 100).toLocaleString("en-US", { minimumFractionDigits: cents % 100 ? 2 : 0, maximumFractionDigits: 2 })}`;
-}
-
-/** Live money numbers from Stripe, limited to Surfdesk subscriptions (the account also sells other things). */
-async function stripeNumbers() {
-  const s = stripe();
-  if (!s) return null;
-  try {
-    const [subs, invoices, balance] = await Promise.all([
-      s.subscriptions.list({ status: "active", limit: 100, expand: ["data.discounts"] }),
-      s.invoices.list({ status: "paid", limit: 30 }),
-      s.balance.retrieve(),
-    ]);
-    const ours = (meta: Stripe.Metadata | null | undefined) => meta?.kind === "user" || meta?.kind === "org";
-    let mrr = 0;
-    for (const sub of subs.data.filter((x) => ours(x.metadata))) {
-      let amount = sub.items.data.reduce((sum, it) => sum + (it.price.unit_amount ?? 0) * (it.quantity ?? 1), 0);
-      for (const d of sub.discounts ?? []) {
-        if (typeof d === "string") continue;
-        if (d.coupon.amount_off) amount -= d.coupon.amount_off;
-        else if (d.coupon.percent_off) amount -= Math.round((amount * d.coupon.percent_off) / 100);
-      }
-      mrr += Math.max(0, amount);
-    }
-    const charges = invoices.data
-      .filter((i) => ours(i.subscription_details?.metadata) && i.amount_paid > 0)
-      .slice(0, 8)
-      .map((i) => ({ id: i.id, email: i.customer_email, amount: i.amount_paid, at: i.status_transitions.paid_at ?? i.created }));
-    const available = balance.available.find((b) => b.currency === "usd")?.amount ?? 0;
-    const pending = balance.pending.find((b) => b.currency === "usd")?.amount ?? 0;
-    return { mrr, charges, available, pending };
-  } catch (err) {
-    console.error("[owner] stripe numbers failed", err);
-    return null;
-  }
 }
 
 export default async function OwnerPage({ searchParams }: { searchParams: Promise<{ resend?: string; email?: string }> }) {
@@ -173,11 +151,7 @@ export default async function OwnerPage({ searchParams }: { searchParams: Promis
 
   return (
     <div className="max-w-3xl space-y-8">
-      <div className="space-y-1">
-        <p className="eyebrow text-text-faint">Owner only</p>
-        <h1 className="page-title">Command center</h1>
-        <p className="text-sm text-text-muted">Sign-ups, money and problems across all of Surfdesk.</p>
-      </div>
+      <OwnerNav active="/owner" title="Command center" intro="Sign-ups, money and problems across all of Surfdesk." />
 
       <section className="grid grid-cols-2 gap-3 sm:grid-cols-5">
         {tiles.map((t) => (

@@ -3,34 +3,17 @@ import { queryOne } from "@/lib/db/client";
 import { requireUserId } from "@/lib/current-user";
 import { logEvent } from "@/lib/events";
 
+import { isOwnerAccount, ownerEmails } from "@/lib/owner-ids";
+import { sendEmail, escapeHtml, appUrl } from "@/lib/email";
+
+export { isOwnerAccount, ownerEmails, ownerUserIds } from "@/lib/owner-ids";
+
 /**
  * The owner of Surfdesk (Sonder Project): the one master account that can open
- * the command center (/owner) and use its controls. Two checks must BOTH pass:
- *   - the account's email is in OWNER_EMAILS (Vercel), and
- *   - the account's permanent id is in OWNER_USER_IDS (Vercel), so an email
- *     change or mix-up can never hand owner access to another account.
- * The command center also requires two-step sign-in (2FA) on that account.
+ * the command center (/owner) and use its controls. Identity is checked in
+ * lib/owner-ids.ts (pinned id AND email); the command center also requires
+ * two-step sign-in (2FA) on that account.
  */
-export function ownerEmails(): string[] {
-  return (process.env.OWNER_EMAILS || "sonderproject.co@gmail.com")
-    .split(",")
-    .map((e) => e.trim().toLowerCase())
-    .filter(Boolean);
-}
-
-/** The master account's permanent Supabase user id (sonderproject.co@gmail.com). Not secret. */
-const DEFAULT_OWNER_ID = "01f639c4-fcd1-4c7e-aeb5-07f257576438";
-export function ownerUserIds(): string[] {
-  return (process.env.OWNER_USER_IDS || DEFAULT_OWNER_ID)
-    .split(",")
-    .map((e) => e.trim().toLowerCase())
-    .filter(Boolean);
-}
-
-/** Is this account the owner? (Both the id and the email must match.) */
-export function isOwnerAccount(id: string, email: string): boolean {
-  return ownerUserIds().includes(id.toLowerCase()) && ownerEmails().includes(email.toLowerCase());
-}
 
 export async function isOwner(): Promise<boolean> {
   const userId = await requireUserId();
@@ -52,7 +35,18 @@ export async function requireOwner(): Promise<{ userId: string; email: string }>
   return { userId, email: me.email };
 }
 
-/** Records an owner action in the event log (shown in the command center's Recent activity). */
+/**
+ * Records an owner action in the event log (shown in the command center's Recent activity)
+ * and emails the owner a copy, so any change made from the command center is noticed.
+ */
 export async function logOwnerAction(action: string, detail: string, meta: Record<string, unknown> = {}): Promise<void> {
   await logEvent(`owner.${action}`, detail, { level: "warn", meta }).catch(() => undefined);
+  const lines = [detail, ...Object.entries(meta).map(([k, v]) => `${k}: ${typeof v === "string" ? v : JSON.stringify(v)}`)];
+  const text = `${lines.join("\n")}\n\nIf this wasn't you, change your password and turn two-step sign-in off and on again.\n${appUrl()}/owner`;
+  const html = `<div style="font-family:Inter,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6">${lines
+    .map((l) => `<p style="margin:0 0 8px">${escapeHtml(l)}</p>`)
+    .join("")}<p style="margin:16px 0 0;color:#6e5f4d;font-size:13px">If this wasn&#39;t you, change your password right away.</p></div>`;
+  await Promise.all(
+    ownerEmails().map((to) => sendEmail({ to, subject: `Surfdesk command center: ${detail}`.slice(0, 150), text, html }).catch(() => undefined)),
+  );
 }

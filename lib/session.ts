@@ -4,6 +4,8 @@ import { createHash, randomBytes, scrypt, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { queryOne } from "@/lib/db/client";
 import { createSupabaseServer } from "@/lib/supabase/server";
+import { isOwnerAccount } from "@/lib/owner-ids";
+import { getAppSettings, inMaintenance } from "@/lib/app-settings";
 
 /**
  * Who is signed in. Identity comes from Supabase Auth (its session cookies,
@@ -21,7 +23,11 @@ export type AuthState =
   | { status: "signed-out" }
   /** Password accepted, but the account has 2FA on and this session hasn't passed it yet. */
   | { status: "needs-2fa"; id: string; email: string }
-  | { status: "signed-in"; user: SessionUser };
+  | { status: "signed-in"; user: SessionUser }
+  /** Signed in, but the owner suspended this account or its organization (lib/actions/owner.ts). */
+  | { status: "suspended"; id: string; email: string; reason: string | null }
+  /** Signed in, but the app is down for maintenance (everyone except the owner). */
+  | { status: "maintenance"; id: string; email: string };
 
 const scryptAsync = promisify(scrypt) as (pw: string, salt: Buffer, len: number) => Promise<Buffer>;
 
@@ -69,13 +75,25 @@ export const getAuthState = cache(async (): Promise<AuthState> => {
   }
   if (!claims?.sub) return { status: "signed-out" };
 
-  type Row = { id: string; email: string; name: string | null; mfa_enabled: boolean };
-  let row = await queryOne<Row>(`select id, email, name, mfa_enabled from users where id = $1`, [claims.sub]);
+  type Row = { id: string; email: string; name: string | null; mfa_enabled: boolean; suspended: string | null };
+  // suspended: the reason (or '') when the account, or the organization it's in, is suspended.
+  const [found, settings] = await Promise.all([
+    queryOne<Row>(
+      `select u.id, u.email, u.name, u.mfa_enabled,
+              case when u.suspended_at is not null then coalesce(u.suspended_reason, '')
+                   else (select coalesce(o.suspended_reason, '') from memberships m join organizations o on o.id = m.org_id
+                          where m.user_id = u.id and m.active and o.suspended_at is not null limit 1) end as suspended
+         from users u where u.id = $1`,
+      [claims.sub],
+    ),
+    getAppSettings(),
+  ]);
+  let row = found;
   // First request after confirming a new sign-up: create the app's row (same id as Supabase's).
   row ??= await queryOne<Row>(
     `insert into users (id, email) values ($1, $2)
      on conflict (id) do update set email = users.email
-     returning id, email, name, mfa_enabled`,
+     returning id, email, name, mfa_enabled, null::text as suspended`,
     [claims.sub, (claims.email ?? "").toLowerCase()],
   );
   if (!row) return { status: "signed-out" };
@@ -87,6 +105,11 @@ export const getAuthState = cache(async (): Promise<AuthState> => {
       .catch((err) => console.error("[auth] couldn't sync changed email", err instanceof Error ? err.message : err));
   }
   if (row.mfa_enabled && claims.aal !== "aal2") return { status: "needs-2fa", id: row.id, email: row.email };
+  // Owner controls never apply to the owner's own account (lib/owner-ids.ts).
+  if (!isOwnerAccount(row.id, row.email)) {
+    if (row.suspended !== null) return { status: "suspended", id: row.id, email: row.email, reason: row.suspended || null };
+    if (inMaintenance(settings)) return { status: "maintenance", id: row.id, email: row.email };
+  }
   return { status: "signed-in", user: { id: row.id, email: row.email, name: row.name } };
 });
 

@@ -37,6 +37,7 @@ export async function sendEmail(params: { to: string; subject: string; text: str
   if (!res.ok) {
     throw new Error(`Resend error ${res.status}: ${await res.text().catch(() => "")}`);
   }
+  await import("@/lib/heartbeat").then((h) => h.heartbeat("email_sent_at")).catch(() => undefined);
 }
 
 /**

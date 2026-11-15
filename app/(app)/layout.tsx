@@ -20,22 +20,46 @@ import { BillingBanner } from "@/components/billing/BillingBanner";
 import { pendingAgreements } from "@/lib/actions/legal";
 import { SETUP_PATHS } from "@/lib/setup";
 import { isOwner } from "@/lib/owner";
+import { getAppSettings } from "@/lib/app-settings";
+import { Announcement } from "@/components/announce/Announcement";
+import { MarketingPrompt } from "@/components/announce/MarketingPrompt";
 
 /**
  * Two per-user flags, in one read: whether to offer optional 2FA (from day 3,
  * at most once every 30 days), and an unfinished guided set-up to send them back to.
  */
-async function userFlags(): Promise<{ offerTwoFactor: boolean; setupStep: string | null; draftFlow: string | null }> {
+async function userFlags(): Promise<{
+  offerTwoFactor: boolean;
+  setupStep: string | null;
+  draftFlow: string | null;
+  dismissedAnnouncement: string | null;
+  askMarketing: boolean;
+}> {
   const userId = await requireUserId();
-  const row = await queryOne<{ offer: boolean; setup_step: string | null; draft_flow: string | null }>(
-    `select setup_step, setup_draft->>'flow' as draft_flow, (not mfa_enabled
+  const row = await queryOne<{
+    offer: boolean;
+    setup_step: string | null;
+    draft_flow: string | null;
+    announcement_dismissed_id: string | null;
+    ask_marketing: boolean;
+  }>(
+    `select setup_step, setup_draft->>'flow' as draft_flow, announcement_dismissed_id,
+            -- Marketing emails (lib/marketing.ts): asked once, from the day after sign-up.
+            (marketing_prompted_at is null and not marketing_opt_in and created_at < now() - interval '1 day') as ask_marketing,
+            (not mfa_enabled
              -- Not on day one: let new people try the app before asking about security settings.
              and created_at < now() - interval '3 days'
              and (mfa_prompt_dismissed_at is null or mfa_prompt_dismissed_at < now() - interval '30 days')) as offer
      from users where id = $1`,
     [userId],
   );
-  return { offerTwoFactor: Boolean(row?.offer), setupStep: row?.setup_step ?? null, draftFlow: row?.draft_flow ?? null };
+  return {
+    offerTwoFactor: Boolean(row?.offer),
+    setupStep: row?.setup_step ?? null,
+    draftFlow: row?.draft_flow ?? null,
+    dismissedAnnouncement: row?.announcement_dismissed_id ?? null,
+    askMarketing: Boolean(row?.ask_marketing),
+  };
 }
 
 // This whole route group is a live, per-user dashboard — never prerender it.
@@ -49,7 +73,7 @@ export default async function AppGroupLayout({ children }: { children: React.Rea
     // Everything the shell needs, fetched together (the Terms and billing checks used to wait for the rest).
     data = await Promise.all([
       listPeople(), listLists(), getNotificationCount(), getTimeZone(), userFlags(), getUserSettings(), getMembership(),
-      pendingAgreements(), getAccess().catch(() => null), isOwner().catch(() => false),
+      pendingAgreements(), getAccess().catch(() => null), isOwner().catch(() => false), getAppSettings(),
     ]);
   } catch (err) {
     unstable_rethrow(err); // let Next's redirect-to-sign-in through
@@ -62,7 +86,11 @@ export default async function AppGroupLayout({ children }: { children: React.Rea
     );
   }
 
-  const [people, lists, notificationCount, timeZone, flags, settings, membership, agreements, access, showOwner] = data;
+  const [people, lists, notificationCount, timeZone, flags, settings, membership, agreements, access, showOwner, app] = data;
+  const announcement =
+    app.announcementId && app.announcementText && flags.dismissedAnnouncement !== app.announcementId
+      ? { id: app.announcementId, text: app.announcementText, link: app.announcementLink }
+      : null;
   // Everyone agrees to the current Terms/Privacy policy (and admins for their organization) before using the app.
   if (agreements.user || agreements.org) {
     const path = (await headers()).get("x-pathname") ?? "/";
@@ -101,6 +129,10 @@ export default async function AppGroupLayout({ children }: { children: React.Rea
       showOwner={showOwner}
     >
       {access && billingEnabled() && <BillingBanner access={access} />}
+      {showOwner && app.maintenanceOn && (
+        <p className="flag mb-4 text-sm">Maintenance mode is on: everyone else sees the &ldquo;back soon&rdquo; page. Turn it off in the command center.</p>
+      )}
+      {announcement ? <Announcement {...announcement} /> : flags.askMarketing && !showOwner && <MarketingPrompt />}
       {children}
       {offerTwoFactor && <TwoFactorPrompt />}
     </AppShell>
