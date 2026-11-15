@@ -48,6 +48,42 @@ async function origin(): Promise<string> {
   return host ? `${proto}://${host}` : (process.env.APP_URL ?? "http://localhost:3000").replace(/\/+$/, "");
 }
 
+/**
+ * Sign-in when the CAPTCHA can't run (e.g. Cloudflare doesn't allow this web address yet):
+ * Supabase Auth skips the CAPTCHA for requests made with the server's service key, and still
+ * checks the password. Limited to 5 tries per email per 15 minutes and 20 per network per hour,
+ * so it can't be used to guess passwords; the owner is emailed when it's used.
+ * Returns the session, null (wrong password or unconfirmed email) or "limited".
+ */
+async function signInWithoutCheck(email: string, password: string) {
+  const h = await headers();
+  const ip = (h.get("x-forwarded-for") ?? "").split(",")[0].trim() || "unknown";
+  const tries = await queryOne<{ by_email: number; by_ip: number }>(
+    `select count(*) filter (where email = $1 and created_at > now() - interval '15 minutes')::int as by_email,
+            count(*) filter (where meta->>'ip' = $2)::int as by_ip
+       from app_events where kind = 'auth.login_without_check' and created_at > now() - interval '1 hour'`,
+    [email, ip],
+  );
+  if ((tries?.by_email ?? 0) >= 5 || (tries?.by_ip ?? 0) >= 20) return "limited" as const;
+  const { data, error } = await createSupabaseAdmin().auth.signInWithPassword({ email, password });
+  await logEvent("auth.login_without_check", error ? `Sign-in without the security check failed (${error.code ?? "error"})` : "Signed in without the security check", {
+    level: "warn",
+    email,
+    path: "/login",
+    meta: { ip, ok: !error },
+  });
+  if (error || !data.session) return null;
+  await alertOwner(
+    "Sign-ins are skipping the security check",
+    [
+      "The Cloudflare Turnstile check isn't working on the sign-in page, so people are signed in through the server instead (attempt limits still apply).",
+      "Fix: in Cloudflare → Turnstile → your widget → Hostname Management, add thesurfdesk.app, and make sure that widget's secret key is the one in Supabase → Authentication → Attack Protection.",
+    ],
+    { everyMinutes: 360 },
+  );
+  return data.session;
+}
+
 /** Supabase refused the security-check token: record it, and email the owner if it keeps happening. */
 async function captchaFailed(path: string, email: string): Promise<void> {
   await logEvent("auth.captcha_failed", "Security check token was refused", { level: "warn", email, path });
@@ -175,24 +211,36 @@ export async function login(formData: FormData): Promise<void> {
   await migrateLegacyAccount(email, password).catch((err) => console.error("[auth] migration check failed", err));
 
   const supabase = await createSupabaseServer();
-  const { data, error } = await supabase.auth.signInWithPassword({
+  let { data, error } = await supabase.auth.signInWithPassword({
     email,
     password,
     options: { captchaToken: captcha(formData) },
   });
+  // The security check couldn't run in their browser (or its token was refused). Approved by the
+  // owner (Nov 15, 2026): never lock people out over that; sign in through the server instead,
+  // under strict attempt limits (signInWithoutCheck).
+  if (error?.code === "captcha_failed") {
+    await captchaFailed("/login", email);
+    const fallback = await signInWithoutCheck(email, password);
+    if (fallback === "limited") back("/login", "rate", email, next);
+    if (fallback) {
+      const set = await supabase.auth.setSession({ access_token: fallback.access_token, refresh_token: fallback.refresh_token });
+      data = { user: fallback.user, session: set.data.session } as typeof data;
+      error = set.error;
+    } else {
+      back("/login", "invalid", email, next);
+    }
+  }
   if (error) {
     if (error.code === "email_not_confirmed") redirect(`/signup/check-email?${new URLSearchParams({ email, next })}`);
-    if (error.code === "captcha_failed") {
-      await captchaFailed("/login", email);
-      back("/login", "captcha", email, next);
-    }
     if (error.code === "over_request_rate_limit") back("/login", "rate", email, next);
     back("/login", "invalid", email, next);
   }
 
+  if (!data.user) back("/login", "invalid", email, next);
   // Keep the server's "is 2FA on" flag in line with what Supabase says (trusted: straight from the auth server).
-  const hasFactor = (data.user?.factors ?? []).some((f) => f.status === "verified");
-  await query(`update users set mfa_enabled = $1 where id = $2`, [hasFactor, data.user.id]);
+  const hasFactor = (data.user!.factors ?? []).some((f) => f.status === "verified");
+  await query(`update users set mfa_enabled = $1 where id = $2`, [hasFactor, data.user!.id]);
   redirect(hasFactor ? `/login/2fa?${new URLSearchParams({ next })}` : next);
 }
 
