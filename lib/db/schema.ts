@@ -1179,4 +1179,86 @@ create index if not exists invitations_batch_idx on invitations (batch_id) where
 alter table organizations add column if not exists join_token_hash text;
 create unique index if not exists organizations_join_token_idx on organizations (join_token_hash) where join_token_hash is not null;
 alter table organizations add column if not exists join_domains text[];
+
+-- Custom fields (Settings → Custom fields, lib/custom-fields.ts): extra details a business tracks on
+-- each person ("Pet's name", "Membership level"). One list per organization (admins manage it) or per
+-- person for solo accounts, like services. Values live on the person, keyed by field id. Not for
+-- sensitive data (the settings page says so).
+create table if not exists custom_fields (
+  id uuid primary key default gen_random_uuid(),
+  org_id uuid references organizations(id) on delete cascade,
+  user_id uuid references users(id) on delete cascade,
+  label text not null check (length(label) between 1 and 60),
+  kind text not null default 'text' check (kind in ('text', 'number', 'date', 'yesno', 'choice')),
+  options text[],
+  position int not null default 0,
+  archived_at timestamptz,
+  created_at timestamptz not null default now(),
+  check (org_id is not null or user_id is not null)
+);
+create index if not exists custom_fields_scope_idx on custom_fields (org_id, user_id, position);
+create index if not exists custom_fields_user_id_idx on custom_fields (user_id);
+alter table custom_fields enable row level security;
+alter table people add column if not exists custom_fields jsonb not null default '{}'::jsonb;
+
+-- Automations (Settings → Automations, lib/automations.ts): simple rules that make follow-up tasks
+-- for the rule's owner, run by the 5-minute cron. One row per person per rule kind.
+-- automation_runs remembers what each rule already did, so nothing is created twice. Server-only.
+create table if not exists automation_rules (
+  user_id uuid not null references users(id) on delete cascade,
+  kind text not null check (kind in ('quiet', 'new_person', 'birthday')),
+  enabled boolean not null default true,
+  days int not null default 30 check (days between 0 and 365),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  primary key (user_id, kind)
+);
+alter table automation_rules enable row level security;
+create table if not exists automation_runs (
+  user_id uuid not null references users(id) on delete cascade,
+  kind text not null,
+  person_id uuid not null references people(id) on delete cascade,
+  ref text not null,
+  task_id uuid references tasks(id) on delete set null,
+  created_at timestamptz not null default now(),
+  primary key (user_id, kind, person_id, ref)
+);
+create index if not exists automation_runs_person_idx on automation_runs (person_id);
+alter table automation_runs enable row level security;
+
+-- Booking link (Settings → Booking link, lib/booking.ts): a public page where anyone can pick a time
+-- with this person. Each booking makes (or matches) a person and an appointment task. Server-only.
+create table if not exists booking_pages (
+  user_id uuid primary key references users(id) on delete cascade,
+  code text not null unique check (length(code) between 6 and 40),
+  enabled boolean not null default false,
+  title text check (length(title) <= 80),
+  hours jsonb,
+  slot_minutes int not null default 30,
+  timezone text,
+  location text check (length(location) <= 300),
+  max_per_day int check (max_per_day between 1 and 100),
+  updated_at timestamptz not null default now()
+);
+alter table booking_pages enable row level security;
+create table if not exists bookings (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references users(id) on delete cascade,
+  person_id uuid references people(id) on delete set null,
+  task_id uuid references tasks(id) on delete set null,
+  name text not null check (length(name) between 1 and 120),
+  email text check (length(email) <= 254),
+  phone text check (length(phone) <= 40),
+  note text check (length(note) <= 1000),
+  starts_at timestamptz not null,
+  canceled_at timestamptz,
+  ip_hash text,
+  created_at timestamptz not null default now()
+);
+create index if not exists bookings_user_idx on bookings (user_id, starts_at);
+create index if not exists bookings_person_idx on bookings (person_id);
+create index if not exists bookings_task_idx on bookings (task_id);
+create index if not exists bookings_ip_idx on bookings (ip_hash, created_at);
+create unique index if not exists bookings_slot_idx on bookings (user_id, starts_at) where canceled_at is null;
+alter table bookings enable row level security;
 `;

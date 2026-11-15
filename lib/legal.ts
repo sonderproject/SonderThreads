@@ -4,5 +4,5 @@
  * asked to agree again before using the app (app/accept-terms), and organization
  * admins agree again on the organization's behalf.
  */
-export const LEGAL_VERSION = "2026-11-15.1";
+export const LEGAL_VERSION = "2026-11-15.2";
 export const LEGAL_UPDATED = "November 15, 2026";

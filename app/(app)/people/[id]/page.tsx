@@ -37,6 +37,8 @@ import { getMembership } from "@/lib/org";
 import { listOutcomes, listPersonOutcomes } from "@/lib/outcomes";
 import { PersonOutcomes } from "@/components/people/PersonOutcomes";
 import { ContactActions } from "@/components/people/ContactActions";
+import { PersonCustomFields } from "@/components/people/PersonCustomFields";
+import { listCustomFields } from "@/lib/custom-fields";
 import { dayKey } from "@/lib/tz";
 
 /** Supervisor comments on one of my clients (read through the database's access rules). */
@@ -97,6 +99,7 @@ export default async function PersonProfilePage({
     listOutcomes(),
     listPersonOutcomes(id),
   ]);
+  const customFields = await listCustomFields();
   if (!person) notFound();
 
   const openTasks = tasks.filter((t) => !t.completed);
@@ -199,6 +202,9 @@ export default async function PersonProfilePage({
               label="Income level"
             />
           </Detail>
+          {customFields.length > 0 && (
+            <PersonCustomFields personId={person.id} fields={customFields} values={(person.custom_fields as Record<string, string> | null) ?? {}} />
+          )}
         </div>
 </Section>
 

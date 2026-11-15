@@ -94,6 +94,12 @@ export default function PrivacyPage() {
             link enter the client&apos;s details (such as name, phone, date of birth and needed services) and their own
             name and contact details, which go only to that organization.
           </li>
+          <li>
+            <strong>Booking links:</strong> people who book a time through a Surfdesk user&apos;s public booking page enter
+            their name, email and/or phone and an optional note. These go only to that user (and their organization, if
+            they&apos;re in one), who becomes responsible for them, and we email the person a confirmation of the time
+            they booked.
+          </li>
         </ul>
       </LegalSection>
 

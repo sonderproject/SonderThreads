@@ -15,6 +15,8 @@ export type Person = {
   birthday: string | null;
   status: PersonStatus | null;
   current_status: string | null;
+  /** Custom field values (Settings → Custom fields), keyed by field id. */
+  custom_fields?: Record<string, string> | null;
   next_action: string | null;
   summary: string | null;
   needs_followup: boolean;

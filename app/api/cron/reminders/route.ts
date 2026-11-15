@@ -6,6 +6,7 @@ import { deliver } from "@/lib/notify";
 import { inQuietHoursSql } from "@/lib/notify/quiet-hours";
 import { alertOwner, isLikelyBot, logEvent } from "@/lib/events";
 import { runLifecycleEmails } from "@/lib/lifecycle";
+import { runAutomations } from "@/lib/automations";
 
 export const dynamic = "force-dynamic";
 
@@ -71,8 +72,10 @@ export async function GET(request: NextRequest) {
     console.error("[cron/reminders] trial emails failed", err);
     return 0;
   });
+  // Follow-up tasks from Settings → Automations (lib/automations.ts).
+  const automated = await runAutomations();
   await heartbeat("cron_reminders_at");
-  return NextResponse.json({ reminded: due.length, summaries, stuck, emails });
+  return NextResponse.json({ reminded: due.length, summaries, stuck, emails, automated });
 }
 
 /**

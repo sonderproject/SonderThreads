@@ -16,6 +16,10 @@ import { ContactSupportCard } from "@/components/settings/ContactSupportCard";
 import { ServicesSettings } from "@/components/settings/ServicesSettings";
 import { OutcomesSettings } from "@/components/settings/OutcomesSettings";
 import { listOutcomes } from "@/lib/outcomes";
+import { listCustomFields } from "@/lib/custom-fields";
+import { CustomFieldsSettings } from "@/components/settings/CustomFieldsSettings";
+import { AutomationsSection } from "@/components/settings/AutomationsSection";
+import { BookingSection } from "@/components/settings/BookingSection";
 import { getTerms } from "@/lib/terms-server";
 import { listServices, serviceScope } from "@/lib/services";
 import { getMyCalendarLink, listLinkedCalendars } from "@/lib/actions/calendar";
@@ -80,6 +84,12 @@ export async function SettingsSection({ slug, q }: { slug: SettingsSlug; q: Sett
       return <ServicesSection />;
     case "outcomes":
       return <OutcomesSection />;
+    case "fields":
+      return <FieldsSection />;
+    case "automations":
+      return <AutomationsSection q={q} />;
+    case "booking":
+      return <BookingSection q={q} />;
     case "calendar":
       return <CalendarSection />;
     case "security":
@@ -101,6 +111,11 @@ async function ServicesSection() {
 async function OutcomesSection() {
   const [outcomes, scope, membership] = await Promise.all([listOutcomes({ includeArchived: true }), serviceScope(), getMembership()]);
   return <OutcomesSettings outcomes={outcomes} canManage={scope.canManage} orgName={membership?.active ? membership.orgName : null} />;
+}
+
+async function FieldsSection() {
+  const [fields, scope, membership] = await Promise.all([listCustomFields({ includeArchived: true }), serviceScope(), getMembership()]);
+  return <CustomFieldsSettings fields={fields} canManage={scope.canManage} orgName={membership?.active ? membership.orgName : null} />;
 }
 
 async function CalendarSection() {

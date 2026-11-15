@@ -1,5 +1,5 @@
 /** Settings is a menu of sections, each on its own page (/settings/<slug>). */
-export type SettingsSlug = "account" | "subscription" | "notifications" | "services" | "outcomes" | "calendar" | "security" | "organization" | "data" | "about";
+export type SettingsSlug = "account" | "subscription" | "notifications" | "services" | "outcomes" | "fields" | "automations" | "booking" | "calendar" | "security" | "organization" | "data" | "about";
 
 export const SETTINGS_SECTIONS: { slug: SettingsSlug; title: string; hint: string }[] = [
   { slug: "account", title: "Account", hint: "Your name, mobile number and email" },
@@ -7,6 +7,9 @@ export const SETTINGS_SECTIONS: { slug: SettingsSlug; title: string; hint: strin
   { slug: "notifications", title: "Notifications", hint: "When and how Surfdesk reminds you" },
   { slug: "services", title: "Services", hint: "What you offer, for quick logging and reports" },
   { slug: "outcomes", title: "Outcomes", hint: "Results your clients reach, counted in your reports" },
+  { slug: "fields", title: "Custom fields", hint: "Extra details you track on each person" },
+  { slug: "automations", title: "Automations", hint: "Follow-up tasks Surfdesk makes for you" },
+  { slug: "booking", title: "Booking link", hint: "Let people book a time with you" },
   { slug: "calendar", title: "Calendar", hint: "Link Google, Apple or Outlook, and see Surfdesk there" },
   { slug: "security", title: "Privacy & security", hint: "Password, two-step sign-in, auto-lock and devices" },
   { slug: "organization", title: "Organization", hint: "Your team, or set one up" },
@@ -33,6 +36,9 @@ export const HASH_TO_SECTION: Record<string, SettingsSlug> = {
   calendar: "calendar",
   services: "services",
   outcomes: "outcomes",
+  fields: "fields",
+  automations: "automations",
+  booking: "booking",
   about: "about",
   contact: "about",
   support: "about",
