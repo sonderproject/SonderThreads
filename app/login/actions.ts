@@ -84,6 +84,35 @@ async function signInWithoutCheck(email: string, password: string) {
   return data.session;
 }
 
+/**
+ * Sign-up, resend-confirmation and password-reset backup for when the CAPTCHA can't run (same
+ * approach as signInWithoutCheck, approved by the owner Nov 15, 2026): the request goes through
+ * the server's service key, which Supabase exempts from CAPTCHA. Tight limits per network
+ * (sign-up: 3 an hour) and per email (2 an hour), every use logged, owner emailed.
+ */
+async function allowWithoutCheck(kind: "signup" | "resend" | "reset", email: string): Promise<boolean> {
+  const h = await headers();
+  const ip = (h.get("x-forwarded-for") ?? "").split(",")[0].trim() || "unknown";
+  const perIp = kind === "signup" ? 3 : 5;
+  const tries = await queryOne<{ by_ip: number; by_email: number }>(
+    `select count(*) filter (where meta->>'ip' = $1 and meta->>'kind' = $3)::int as by_ip,
+            count(*) filter (where email = $2 and meta->>'kind' = $3)::int as by_email
+       from app_events where kind = 'auth.without_check' and created_at > now() - interval '1 hour'`,
+    [ip, email, kind],
+  );
+  if ((tries?.by_ip ?? 0) >= perIp || (tries?.by_email ?? 0) >= 2) return false;
+  await logEvent("auth.without_check", `${kind} without the security check`, { level: "warn", email, path: `/${kind}`, meta: { ip, kind } });
+  await alertOwner(
+    "Sign-ups are skipping the security check",
+    [
+      "The Cloudflare Turnstile check isn't working, so sign-ups and password resets go through the server instead (limited to a few per network an hour).",
+      "Fix: in Cloudflare → Turnstile → your widget → Hostname Management, add thesurfdesk.app.",
+    ],
+    { everyMinutes: 360 },
+  );
+  return true;
+}
+
 /** Supabase refused the security-check token: record it, and email the owner if it keeps happening. */
 async function captchaFailed(path: string, email: string): Promise<void> {
   await logEvent("auth.captcha_failed", "Security check token was refused", { level: "warn", email, path });
@@ -168,11 +197,12 @@ export async function requestPasswordReset(formData: FormData): Promise<void> {
   if (!isEmail(email)) redirect("/forgot-password?error=email");
   await ensureSupabaseUser(email).catch((err) => console.error("[auth] reset prep failed", err));
   const supabase = await createSupabaseServer();
-  const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${await origin()}/auth/confirm?next=%2Freset-password`,
-    captchaToken: captcha(formData),
-  });
-  if (error?.code === "captcha_failed") redirect("/forgot-password?error=captcha");
+  const redirectTo = `${await origin()}/auth/confirm?next=%2Freset-password`;
+  let { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo, captchaToken: captcha(formData) });
+  if (error?.code === "captcha_failed") {
+    if (!(await allowWithoutCheck("reset", email))) redirect("/forgot-password?error=captcha");
+    ({ error } = await createSupabaseAdmin().auth.resetPasswordForEmail(email, { redirectTo }));
+  }
   if (error && error.status !== 429) console.error("[auth] reset email failed", error.code ?? error.message);
   redirect("/forgot-password?sent=1");
 }
@@ -287,7 +317,11 @@ export async function signup(formData: FormData): Promise<void> {
       }
       await createUserRow(data.user!.id, email, phone, smsOptIn, timeZone, marketing);
       const supabase = await createSupabaseServer();
-      await supabase.auth.signInWithPassword({ email, password, options: { captchaToken: captcha(formData) } });
+      const signedIn = await supabase.auth.signInWithPassword({ email, password, options: { captchaToken: captcha(formData) } });
+      if (signedIn.error?.code === "captcha_failed") {
+        const s = await signInWithoutCheck(email, password);
+        if (s && s !== "limited") await supabase.auth.setSession({ access_token: s.access_token, refresh_token: s.refresh_token });
+      }
       redirect(next);
     }
   }
@@ -307,16 +341,19 @@ export async function signup(formData: FormData): Promise<void> {
     await supabase.auth.resend({ type: "signup", email, options: { emailRedirectTo, captchaToken: captcha(formData) } });
   } else {
     const supabase = await createSupabaseServer();
-    const { data, error } = await supabase.auth.signUp({
+    let { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: { emailRedirectTo, captchaToken: captcha(formData) },
     });
+    // Security check couldn't run: sign up through the server instead (limited; see allowWithoutCheck).
+    if (error?.code === "captcha_failed") {
+      await captchaFailed("/signup", email);
+      if (!(await allowWithoutCheck("signup", email))) back("/signup", "captcha", email, next, rawPhone);
+      ({ data, error } = await createSupabaseAdmin().auth.signUp({ email, password, options: { emailRedirectTo } }));
+    }
     if (error) {
-      if (error.code === "captcha_failed") {
-        await captchaFailed("/signup", email);
-        back("/signup", "captcha", email, next, rawPhone);
-      }
+      if (error.code === "captcha_failed") back("/signup", "captcha", email, next, rawPhone);
       if (error.code === "weak_password") back("/signup", "weak", email, next, rawPhone);
       if (error.code === "over_email_send_rate_limit" || error.code === "over_request_rate_limit") back("/signup", "rate", email, next, rawPhone);
       console.error("[auth] sign-up failed", error.message);
@@ -375,11 +412,11 @@ export async function resendConfirmation(formData: FormData): Promise<void> {
   const params = new URLSearchParams({ email, next });
   if (!isEmail(email)) redirect(`/signup/check-email?${params}`);
   const supabase = await createSupabaseServer();
-  const { error } = await supabase.auth.resend({
-    type: "signup",
-    email,
-    options: { emailRedirectTo: `${await origin()}/auth/confirm?${new URLSearchParams({ next })}`, captchaToken: captcha(formData) },
-  });
+  const emailRedirectTo = `${await origin()}/auth/confirm?${new URLSearchParams({ next })}`;
+  let { error } = await supabase.auth.resend({ type: "signup", email, options: { emailRedirectTo, captchaToken: captcha(formData) } });
+  if (error?.code === "captcha_failed" && (await allowWithoutCheck("resend", email))) {
+    ({ error } = await createSupabaseAdmin().auth.resend({ type: "signup", email, options: { emailRedirectTo } }));
+  }
   if (error?.code === "captcha_failed") params.set("error", "captcha");
   else if (error?.code === "over_email_send_rate_limit" || error?.code === "over_request_rate_limit" || error?.status === 429) {
     params.set("error", "rate");
