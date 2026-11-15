@@ -1,6 +1,7 @@
 "use server";
 
 import { recordMarketingChoice } from "@/lib/marketing";
+import { isEmailSendError, sendAuthEmail } from "@/lib/auth-emails";
 
 import { isEmail } from "@/lib/email-check";
 import { readDraft, saveDraftToAccount, setupFlowFor } from "@/lib/setup";
@@ -199,9 +200,12 @@ export async function requestPasswordReset(formData: FormData): Promise<void> {
   const supabase = await createSupabaseServer();
   const redirectTo = `${await origin()}/auth/confirm?next=%2Freset-password`;
   let { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo, captchaToken: captcha(formData) });
-  if (error?.code === "captcha_failed") {
-    if (!(await allowWithoutCheck("reset", email))) redirect("/forgot-password?error=captcha");
-    ({ error } = await createSupabaseAdmin().auth.resetPasswordForEmail(email, { redirectTo }));
+  // Security check couldn't run (limited backup) or Supabase couldn't send the email: the app sends it.
+  if (error?.code === "captcha_failed" || isEmailSendError(error)) {
+    if (error?.code === "captcha_failed" && !(await allowWithoutCheck("reset", email))) redirect("/forgot-password?error=captcha");
+    const sent = await sendAuthEmail("recovery", email, { next: "/reset-password" });
+    error = null;
+    if (sent.status === "failed") console.error("[auth] reset email (app) failed");
   }
   if (error && error.status !== 429) console.error("[auth] reset email failed", error.code ?? error.message);
   redirect("/forgot-password?sent=1");
@@ -346,11 +350,26 @@ export async function signup(formData: FormData): Promise<void> {
       password,
       options: { emailRedirectTo, captchaToken: captcha(formData) },
     });
-    // Security check couldn't run: sign up through the server instead (limited; see allowWithoutCheck).
+    // Security check couldn't run (limited backup, see allowWithoutCheck), or Supabase couldn't send its
+    // confirmation email: create the account through the server and send the email from the app.
+    let viaApp = false;
     if (error?.code === "captcha_failed") {
       await captchaFailed("/signup", email);
       if (!(await allowWithoutCheck("signup", email))) back("/signup", "captcha", email, next, rawPhone);
-      ({ data, error } = await createSupabaseAdmin().auth.signUp({ email, password, options: { emailRedirectTo } }));
+      viaApp = true;
+    } else if (isEmailSendError(error)) {
+      viaApp = true;
+    }
+    if (viaApp) {
+      const sent = await sendAuthEmail("signup", email, { password, next });
+      // Already registered: same answer as Supabase gives (never reveal who has an account).
+      if (sent.status === "exists") redirect(`/signup/check-email?${new URLSearchParams({ email, next })}`);
+      if (sent.status === "sent" && sent.user) {
+        data = { user: sent.user, session: null } as typeof data;
+        error = null;
+      } else {
+        back("/signup", "failed", email, next, rawPhone);
+      }
     }
     if (error) {
       if (error.code === "captcha_failed") back("/signup", "captcha", email, next, rawPhone);
@@ -414,8 +433,9 @@ export async function resendConfirmation(formData: FormData): Promise<void> {
   const supabase = await createSupabaseServer();
   const emailRedirectTo = `${await origin()}/auth/confirm?${new URLSearchParams({ next })}`;
   let { error } = await supabase.auth.resend({ type: "signup", email, options: { emailRedirectTo, captchaToken: captcha(formData) } });
-  if (error?.code === "captcha_failed" && (await allowWithoutCheck("resend", email))) {
-    ({ error } = await createSupabaseAdmin().auth.resend({ type: "signup", email, options: { emailRedirectTo } }));
+  if ((error?.code === "captcha_failed" && (await allowWithoutCheck("resend", email))) || isEmailSendError(error)) {
+    const sent = await sendAuthEmail("resend", email, { next });
+    error = sent.status === "failed" ? error : null;
   }
   if (error?.code === "captcha_failed") params.set("error", "captcha");
   else if (error?.code === "over_email_send_rate_limit" || error?.code === "over_request_rate_limit" || error?.status === 429) {
