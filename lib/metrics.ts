@@ -254,6 +254,7 @@ async function compute(
               count(distinct po.person_id) filter (where po.achieved_on between $5::date and $6::date)::int as prev
          from person_outcomes po join outcomes o on o.id = po.outcome_id
         where po.${col} = $1 and po.deleted_at is null and po.achieved_on between $5::date and $4::date
+          and $2::text is not null -- the time zone isn't needed here, but every query gets the same parameters
         group by o.id, o.name
         order by people desc, prev desc, o.name`,
       [...range, prevFrom, prevTo],
@@ -262,7 +263,8 @@ async function compute(
       `select count(distinct person_id) filter (where achieved_on between $3::date and $4::date)::int as now,
               count(distinct person_id) filter (where achieved_on between $5::date and $6::date)::int as prev
          from person_outcomes
-        where ${col} = $1 and deleted_at is null and achieved_on between $5::date and $4::date`,
+        where ${col} = $1 and deleted_at is null and achieved_on between $5::date and $4::date
+          and $2::text is not null`,
       [...range, prevFrom, prevTo],
     ),
   ]);
