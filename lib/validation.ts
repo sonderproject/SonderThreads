@@ -142,6 +142,24 @@ export async function toActionResult<T>(fn: () => Promise<T>): Promise<ActionRes
   try {
     return { ok: true, data: await fn() };
   } catch (err) {
+    // Database and code errors (not messages written for people) are logged for the owner's
+    // command center, and the person gets a plain message instead of the technical one.
+    if (isSystemError(err)) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error("[action] unexpected error", err);
+      await import("@/lib/events")
+        .then(({ logEvent }) => logEvent("app.error", `Action failed: ${message}`, { level: "error", meta: { code: (err as { code?: string })?.code ?? null } }))
+        .catch(() => undefined);
+      return { ok: false, error: "Something went wrong on our side. We've been notified; please try again in a moment." };
+    }
     return { ok: false, error: err instanceof Error ? err.message : "Something went wrong." };
   }
+}
+
+/** Postgres errors (5-character SQLSTATE codes) and programming errors, as opposed to messages meant for people. */
+function isSystemError(err: unknown): boolean {
+  if (!(err instanceof Error)) return true;
+  const code = (err as { code?: unknown }).code;
+  if (typeof code === "string" && /^[0-9A-Z]{5}$/.test(code)) return true;
+  return err instanceof TypeError || err instanceof ReferenceError || err instanceof RangeError || err instanceof SyntaxError;
 }
