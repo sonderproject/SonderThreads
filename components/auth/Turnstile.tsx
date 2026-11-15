@@ -118,10 +118,11 @@ export function Turnstile() {
     const form = ref.current?.closest("form");
     if (!form) return;
     const onSubmit = (e: SubmitEvent) => {
-      if (token.current) return;
+      // With a token, or if the check can't run at all, send the form: the server decides
+      // (if CAPTCHA is off in Supabase it signs them in; never block sign-in on our side).
+      if (token.current || state === "error") return;
       e.preventDefault();
       e.stopImmediatePropagation();
-      if (state === "error") return;
       waiting.current = true;
       setSubmitWait(true);
     };
@@ -141,7 +142,8 @@ export function Turnstile() {
       {state === "error" && (
         <div role="alert" className="flag space-y-1 text-xs">
           <p>
-            The security check couldn&apos;t load. Turn off any ad or tracker blocker for this site, or try another browser, then press Try again.
+            The security check couldn&apos;t load. You can still try signing in. If it doesn&apos;t work, turn off any ad or tracker blocker for
+            this site or try another browser, then press Try again.
           </p>
           <button type="button" onClick={() => setAttempt((n) => n + 1)} className="font-semibold text-accent hover:underline">
             Try again
