@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 
 const ERRORS: Record<string, string> = {
   invalid: "Wrong email or password.",
-  captcha: "Please complete the security check and try again.",
+  captcha: "The security check didn't go through. Wait a moment for it to finish (a checkbox may appear above the button), then sign in again.",
   rate: "Too many attempts. Wait a minute and try again.",
   link: "That link has expired or was already used. Sign in, or request a new email.",
 };

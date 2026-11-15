@@ -6,7 +6,7 @@ import { isEmail } from "@/lib/email-check";
 import { readDraft, saveDraftToAccount, setupFlowFor } from "@/lib/setup";
 import { recordAcceptance } from "@/lib/legal-server";
 import { headers } from "next/headers";
-import { isLikelyBot, logEvent } from "@/lib/events";
+import { alertOwner, isLikelyBot, logEvent } from "@/lib/events";
 import { redirect } from "next/navigation";
 import { query, queryOne, transaction } from "@/lib/db/client";
 import { LEGACY_OWNER_ID } from "@/lib/db/constants";
@@ -46,6 +46,20 @@ async function origin(): Promise<string> {
   const host = h.get("x-forwarded-host") ?? h.get("host");
   const proto = h.get("x-forwarded-proto") ?? (host?.startsWith("localhost") ? "http" : "https");
   return host ? `${proto}://${host}` : (process.env.APP_URL ?? "http://localhost:3000").replace(/\/+$/, "");
+}
+
+/** Supabase refused the security-check token: record it, and email the owner if it keeps happening. */
+async function captchaFailed(path: string, email: string): Promise<void> {
+  await logEvent("auth.captcha_failed", "Security check token was refused", { level: "warn", email, path });
+  const recent = await queryOne<{ n: number }>(
+    `select count(*)::int as n from app_events where kind = 'auth.captcha_failed' and created_at > now() - interval '30 minutes'`,
+  ).catch(() => null);
+  if ((recent?.n ?? 0) >= 3) {
+    await alertOwner("People are failing the sign-in security check", [
+      `${recent!.n} sign-in or sign-up attempts in the last 30 minutes failed the security check.`,
+      "Check the Turnstile widget's hostnames in Cloudflare (thesurfdesk.app must be listed) and that its secret matches Supabase's CAPTCHA setting.",
+    ], { everyMinutes: 60 });
+  }
 }
 
 function captcha(formData: FormData): string | undefined {
@@ -168,7 +182,10 @@ export async function login(formData: FormData): Promise<void> {
   });
   if (error) {
     if (error.code === "email_not_confirmed") redirect(`/signup/check-email?${new URLSearchParams({ email, next })}`);
-    if (error.code === "captcha_failed") back("/login", "captcha", email, next);
+    if (error.code === "captcha_failed") {
+      await captchaFailed("/login", email);
+      back("/login", "captcha", email, next);
+    }
     if (error.code === "over_request_rate_limit") back("/login", "rate", email, next);
     back("/login", "invalid", email, next);
   }
@@ -248,7 +265,10 @@ export async function signup(formData: FormData): Promise<void> {
       options: { emailRedirectTo, captchaToken: captcha(formData) },
     });
     if (error) {
-      if (error.code === "captcha_failed") back("/signup", "captcha", email, next, rawPhone);
+      if (error.code === "captcha_failed") {
+        await captchaFailed("/signup", email);
+        back("/signup", "captcha", email, next, rawPhone);
+      }
       if (error.code === "weak_password") back("/signup", "weak", email, next, rawPhone);
       if (error.code === "over_email_send_rate_limit" || error.code === "over_request_rate_limit") back("/signup", "rate", email, next, rawPhone);
       console.error("[auth] sign-up failed", error.message);

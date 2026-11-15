@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { reportCaptchaProblem } from "@/lib/actions/captcha";
 
 declare global {
   interface Window {
     turnstile?: {
       render: (el: HTMLElement, options: Record<string, unknown>) => string;
       remove: (id: string) => void;
+      reset: (id: string) => void;
     };
   }
 }
@@ -31,38 +33,121 @@ function loadScript(): Promise<void> {
   return scriptLoading;
 }
 
+type State = "loading" | "ready" | "error";
+
 /**
  * Cloudflare Turnstile bot check, for Supabase Auth's built-in CAPTCHA.
  * Place inside a <form>: it adds a hidden `captcha_token` field that the
- * server action passes to Supabase as `captchaToken`. Usually invisible
- * (it only shows a checkbox when it's unsure). Renders nothing until
+ * server action passes to Supabase as `captchaToken`. Usually invisible (it
+ * only shows a checkbox when it's unsure).
+ *
+ * It never fails silently: pressing the button before the check is done waits
+ * for it and then sends the form; if the check can't run (blocked script, this
+ * web address not allowed in Cloudflare, ad blocker), the person sees why and a
+ * Try again button, and the owner is alerted. Renders nothing until
  * NEXT_PUBLIC_TURNSTILE_SITE_KEY is set.
  */
 export function Turnstile() {
   const ref = useRef<HTMLDivElement>(null);
+  const widget = useRef<string | null>(null);
+  const token = useRef<string>("");
+  const waiting = useRef(false);
+  const [state, setState] = useState<State>("loading");
+  const [submitWait, setSubmitWait] = useState(false);
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     if (!SITE_KEY || !ref.current) return;
-    let widgetId: string | null = null;
     let cancelled = false;
+    setState("loading");
+    const fail = (code: string) => {
+      if (cancelled) return;
+      setState("error");
+      setSubmitWait(false);
+      waiting.current = false;
+      reportCaptchaProblem(code, window.location.hostname).catch(() => undefined);
+    };
     loadScript()
       .then(() => {
         if (cancelled || !ref.current || !window.turnstile) return;
-        widgetId = window.turnstile.render(ref.current, {
+        widget.current = window.turnstile.render(ref.current, {
           sitekey: SITE_KEY,
           "response-field-name": "captcha_token",
           appearance: "interaction-only",
           theme: "auto",
           size: "flexible",
+          callback: (t: string) => {
+            token.current = t;
+            setState("ready");
+            // They pressed the button while the check was running: send the form now.
+            if (waiting.current) {
+              waiting.current = false;
+              setSubmitWait(false);
+              ref.current?.closest("form")?.requestSubmit();
+            }
+          },
+          "expired-callback": () => {
+            token.current = "";
+            setState("loading");
+            if (widget.current) window.turnstile?.reset(widget.current);
+          },
+          "error-callback": (code: string) => {
+            fail(String(code ?? "error"));
+            return true; // handled: don't throw in the console
+          },
+          "unsupported-callback": () => fail("unsupported"),
         });
       })
-      .catch((err) => console.error("[captcha]", err));
+      .catch(() => fail("script-blocked"));
+    // If nothing has happened after 15 seconds, say so instead of leaving them guessing.
+    const slow = setTimeout(() => {
+      if (!token.current && !cancelled) fail("timeout");
+    }, 15_000);
     return () => {
       cancelled = true;
-      if (widgetId && window.turnstile) window.turnstile.remove(widgetId);
+      clearTimeout(slow);
+      if (widget.current && window.turnstile) window.turnstile.remove(widget.current);
+      widget.current = null;
+      token.current = "";
     };
-  }, []);
+  }, [attempt]);
+
+  // Hold the form until the check has a token (instead of sending it without one).
+  useEffect(() => {
+    if (!SITE_KEY) return;
+    const form = ref.current?.closest("form");
+    if (!form) return;
+    const onSubmit = (e: SubmitEvent) => {
+      if (token.current) return;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      if (state === "error") return;
+      waiting.current = true;
+      setSubmitWait(true);
+    };
+    form.addEventListener("submit", onSubmit, true);
+    return () => form.removeEventListener("submit", onSubmit, true);
+  }, [state]);
 
   if (!SITE_KEY) return null;
-  return <div ref={ref} className="min-h-0" />;
+  return (
+    <div className="space-y-1">
+      <div ref={ref} className="min-h-0" />
+      {submitWait && state !== "error" && (
+        <p role="status" className="text-xs text-text-muted">
+          Finishing a quick security check… this sends by itself in a moment.
+        </p>
+      )}
+      {state === "error" && (
+        <div role="alert" className="flag space-y-1 text-xs">
+          <p>
+            The security check couldn&apos;t load. Turn off any ad or tracker blocker for this site, or try another browser, then press Try again.
+          </p>
+          <button type="button" onClick={() => setAttempt((n) => n + 1)} className="font-semibold text-accent hover:underline">
+            Try again
+          </button>
+        </div>
+      )}
+    </div>
+  );
 }

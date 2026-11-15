@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 
 const ERRORS: Record<string, string> = {
   email: "Enter a valid email address.",
-  captcha: "Please complete the security check and try again.",
+  captcha: "The security check didn't go through. Wait a moment for it to finish (a checkbox may appear above the button), then try again.",
 };
 
 export default async function ForgotPasswordPage({

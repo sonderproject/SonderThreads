@@ -16,7 +16,7 @@ const ERRORS: Record<string, string> = {
   short: "Password must be at least 8 characters.",
   exists: "An account with that email already exists.",
   legacy: "That isn't the current shared password.",
-  captcha: "Please complete the security check and try again.",
+  captcha: "The security check didn't go through. Wait a moment for it to finish (a checkbox may appear above the button), then try again.",
   agree: "Please agree to the Terms of service and Privacy policy to create an account.",
   weak: "Choose a stronger password.",
   rate: "Too many sign-ups right now. Wait a minute and try again.",
