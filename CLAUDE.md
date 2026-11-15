@@ -26,6 +26,9 @@
 ## Legal
 - `/terms` and `/privacy` show `LEGAL_UPDATED` from `lib/legal.ts`. When you change either page materially, bump `LEGAL_VERSION` and `LEGAL_UPDATED` there: everyone (and each organization's admin) is then asked to agree again (`app/accept-terms`), and each agreement is logged in `legal_acceptances`.
 
+## Sign-in security check
+- Sign-up, sign-in and password reset use Cloudflare Turnstile through Supabase Auth's CAPTCHA (`components/auth/Turnstile.tsx`). The site key is `NEXT_PUBLIC_TURNSTILE_SITE_KEY` in Vercel (built into the app: redeploy after changing it); the matching secret key is in Supabase Auth → Attack Protection. Every domain the app runs on must be in the widget's Hostname Management in Cloudflare, or nobody can sign in (error 110200, logged as `auth.captcha_error`, and the owner is emailed). Add any new domain there before pointing it at the app.
+
 ## Owner command center
 - Tabs: Overview, Accounts (suspend, extend trial, free for life), Controls (maintenance mode, announcement), Growth, Audience, Inbox (support messages), Health (`app/(app)/owner/*`). Show counts only, never client records.
 - Marketing emails are opt-in only (`lib/marketing.ts`, every choice logged in `marketing_consents` with the exact wording). Don't send any marketing email until `POSTAL_ADDRESS` is set.
