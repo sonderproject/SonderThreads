@@ -20,6 +20,10 @@ import {
 import { InviteForm } from "@/components/org/InviteForm";
 import { CopyInviteLink } from "@/components/org/CopyInviteLink";
 import { CopyText } from "@/components/org/CopyText";
+import { BulkInviteCard } from "@/components/org/BulkInviteCard";
+import { BulkRoleChange } from "@/components/org/BulkRoleChange";
+import { saveTeamLink } from "@/lib/actions/team-invites";
+import { emailDomain, PUBLIC_EMAIL_DOMAINS } from "@/lib/bulk-invite";
 import { newReferralLink, setReferralLink } from "@/lib/actions/referrals";
 import { appUrl } from "@/lib/email";
 import { seatUsage } from "@/lib/billing";
@@ -42,6 +46,9 @@ const ERRORS: Record<string, string> = {
   "logo-missing": "Choose an image file first.",
   "logo-size": "That logo is over 1 MB. Try a smaller PNG or JPG.",
   "logo-type": "The logo must be a PNG or JPG image.",
+  "team-link-public": "Free email domains like gmail.com can't be used: anyone could join. Use your organization's own domain.",
+  "team-link-domains": "Enter your organization's email domain, like agency.org.",
+  "bulk-none": "Select at least one person (you can't change your own role here).",
 };
 const SAVED: Record<string, string> = {
   role: "Role updated.",
@@ -57,6 +64,9 @@ const SAVED: Record<string, string> = {
   "referral-on": "Referral link is on.",
   "referral-off": "Referral link is off. It won't accept referrals until you turn it back on.",
   "referral-new": "New referral link made. The old one no longer works.",
+  "team-link": "Team link ready. Copy it now: for security it's only shown once (you can always make a new one).",
+  "team-link-off": "Team link is off. It no longer lets anyone join.",
+  "bulk-role": "Roles updated.",
 };
 
 type Member = { user_id: string; role: OrgRole; active: boolean; name: string | null; email: string; clients: number };
@@ -71,18 +81,20 @@ type OrgInfo = {
   referral_code: string | null;
   referral_enabled: boolean;
   kind: "nonprofit" | "business";
+  team_link_on: boolean;
+  join_domains: string[] | null;
 };
 type Invite = { id: string; email: string; role: OrgRole; expires_at: string; expired: boolean };
 
 const btn = "rounded-full border border-border px-3 py-1.5 text-sm font-medium text-text hover:bg-bg-hover";
 
 /** Organization admin: staff, roles, invites and deactivation. Read through the database's access rules. */
-export default async function OrganizationPage({ searchParams }: { searchParams: Promise<{ error?: string; saved?: string }> }) {
+export default async function OrganizationPage({ searchParams }: { searchParams: Promise<{ error?: string; saved?: string; link?: string; n?: string }> }) {
   const userId = await requireUserId();
   const m = await getMembership();
   if (!m) redirect("/organization/new");
   if (!m.active || m.role !== "admin") redirect("/settings#organization");
-  const { error, saved } = await searchParams;
+  const { error, saved, link: newTeamLink } = await searchParams;
   const [seats, referralSettings] = await Promise.all([seatUsage(m.orgId), loadReferralSettings(m.orgId)]);
 
   const [members, invites, info] = await asUser(userId, async (q) => [
@@ -99,9 +111,11 @@ export default async function OrganizationPage({ searchParams }: { searchParams:
         where org_id = $1 and accepted_at is null order by created_at desc`,
       [m.orgId],
     ),
-    (await q<OrgInfo>(`select name, phone, email, website, address, about, extract(epoch from logo_updated_at)::bigint::text as logo_version, referral_code, referral_enabled, kind from organizations where id = $1`, [m.orgId]))[0],
+    (await q<OrgInfo>(`select name, phone, email, website, address, about, extract(epoch from logo_updated_at)::bigint::text as logo_version, referral_code, referral_enabled, kind, join_token_hash is not null as team_link_on, join_domains from organizations where id = $1`, [m.orgId]))[0],
   ]);
   const active = members.filter((x) => x.active);
+  const myDomain = emailDomain(members.find((x) => x.user_id === userId)?.email ?? "");
+  const suggestedDomains = info?.join_domains?.join(", ") || (PUBLIC_EMAIL_DOMAINS.has(myDomain) ? "" : myDomain);
 
   return (
     <div className="max-w-xl space-y-8">
@@ -186,8 +200,15 @@ export default async function OrganizationPage({ searchParams }: { searchParams:
         </form>
       </section>
 
-      <section className="space-y-3">
+      <section id="staff" className="scroll-mt-20 space-y-3">
         <h2 className="section-label">Staff</h2>
+        {active.length > 2 && (
+          <BulkRoleChange
+            people={active
+              .filter((x) => x.user_id !== userId)
+              .map((x) => ({ id: x.user_id, label: x.name ? `${x.name} (${x.email})` : x.email, role: x.role }))}
+          />
+        )}
         <ul className="card divide-y divide-border-subtle">
           {members.map((x) => (
             <li key={x.user_id} className="space-y-3 p-4">
@@ -339,9 +360,15 @@ export default async function OrganizationPage({ searchParams }: { searchParams:
           </p>
         )}
         <InviteForm orgName={m.orgName} />
+        <BulkInviteCard />
         {invites.length > 0 && (
           <ul className="card divide-y divide-border-subtle">
-            {invites.map((i) => (
+            {invites.length > 50 && (
+              <li className="p-4 text-xs text-text-muted">
+                {invites.length} invites waiting. Showing the newest 50.
+              </li>
+            )}
+            {invites.slice(0, 50).map((i) => (
               <li key={i.id} className="flex items-center justify-between gap-3 p-4">
                 <div className="min-w-0">
                   <p className="truncate text-sm text-text">{i.email}</p>
@@ -362,6 +389,46 @@ export default async function OrganizationPage({ searchParams }: { searchParams:
             ))}
           </ul>
         )}
+      </section>
+
+      <section id="team-link" className="scroll-mt-20 space-y-3">
+        <h2 className="section-label">Team join link</h2>
+        <div className="card space-y-3 p-4">
+          <p className="text-sm text-text-muted">
+            For big teams: one link you post in an all-staff email or chat. Anyone with an email at your domain can join as a Member, until
+            your seats are full. Promote managers afterward under Staff.
+          </p>
+          {info?.team_link_on && newTeamLink && saved === "team-link" ? (
+            <CopyText value={`${appUrl()}/join/team/${newTeamLink}`} />
+          ) : info?.team_link_on ? (
+            <p className="text-sm text-text">
+              <span className="tag tag-v mr-2">On</span>
+              For {(info.join_domains ?? []).map((d) => `@${d}`).join(", ")}. The link is only shown when it&apos;s made; make a new one to copy
+              it again (the old one stops working).
+            </p>
+          ) : (
+            <p className="text-sm text-text">
+              <span className="tag tag-u mr-2">Off</span>
+              Nobody can join without an invite.
+            </p>
+          )}
+          <form action={saveTeamLink} className="space-y-2">
+            <label className="block space-y-1">
+              <span className="text-xs text-text-muted">Email domains allowed (work domains only, separated by commas)</span>
+              <input name="domains" defaultValue={suggestedDomains} placeholder="agency.org" className="input" spellCheck={false} />
+            </label>
+            <div className="flex flex-wrap gap-2">
+              <button type="submit" name="action" value={info?.team_link_on ? "new" : "on"} className={btn}>
+                {info?.team_link_on ? "Make a new link" : "Turn on the team link"}
+              </button>
+              {info?.team_link_on && (
+                <button type="submit" name="action" value="off" formNoValidate className="text-sm text-text-muted hover:text-danger">
+                  Turn off
+                </button>
+              )}
+            </div>
+          </form>
+        </div>
       </section>
 
       <section id="type" className="scroll-mt-20 space-y-3">

@@ -1,5 +1,7 @@
 "use server";
 
+import { inviteEmail } from "@/lib/invite-email";
+
 import { isEmail } from "@/lib/email-check";
 import { randomBytes } from "crypto";
 import { isOrgKind } from "@/lib/terms";
@@ -67,7 +69,7 @@ export async function createInvite(email: string, role: string): Promise<ActionR
     if (member) throw new Error("That person is already in your organization.");
     // Cap invite emails so a compromised admin account can't spam through our sender.
     const recent = await queryOne<{ n: number }>(
-      `select count(*)::int n from invitations where org_id = $1 and created_at > now() - interval '1 hour'`,
+      `select count(*)::int n from invitations where org_id = $1 and created_at > now() - interval '1 hour' and batch_id is null`,
       [orgId],
     );
     if ((recent?.n ?? 0) >= 30) throw new Error("That's a lot of invites in one hour. Please try again a little later.");
@@ -329,22 +331,9 @@ async function sendInviteEmail(to: string, url: string, role: OrgRole, inviterId
     [orgId, inviterId],
   );
   if (!row) return false;
-  const roleName = `${role === "admin" ? "an" : "a"} ${ROLE_LABELS[role].toLowerCase()}`;
-  const subject = `${row.inviter} invited you to join ${row.org} on Surfdesk`;
-  const text = [
-    `${row.inviter} invited you to join ${row.org} on Surfdesk as ${roleName}.`,
-    "",
-    `Accept the invite: ${url}`,
-    "",
-    `Sign up or sign in with this email address (${to}). The link works once and expires in 14 days.`,
-  ].join("\n");
-  const html = `<div style="font-family:Inter,Arial,sans-serif;line-height:1.5;color:#141412;max-width:480px">
-  <p>${escapeHtml(row.inviter)} invited you to join <strong>${escapeHtml(row.org)}</strong> on Surfdesk as ${escapeHtml(roleName)}.</p>
-  <p><a href="${escapeHtml(url)}" style="display:inline-block;background:#1c77b5;color:#ffffff;text-decoration:none;padding:10px 20px;border-radius:999px;font-weight:600">Accept the invite</a></p>
-  <p style="color:#6e5f4d;font-size:13px">Sign up or sign in with this email address (${escapeHtml(to)}). The link works once and expires in 14 days.</p>
-</div>`;
+  const mail = inviteEmail({ to, url, role, org: row.org, inviter: row.inviter, inviterEmail: row.inviter_email });
   try {
-    await sendEmail({ to, subject, text, html, replyTo: row.inviter_email });
+    await sendEmail(mail);
     return true;
   } catch (err) {
     console.error("[org] invite email failed", err instanceof Error ? err.message : err);

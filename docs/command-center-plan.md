@@ -1,7 +1,8 @@
-# Command center: plan (agreed Nov 14, 2026, build next session)
+# Command center: plan (agreed Nov 14, 2026; built Nov 15, 2026)
 
 Owner-only (`/owner`, behind `requireOwner()`; master account `sonderproject.co@gmail.com`).
-Build in this order. Show the owner a short plan per part before building; push each part to `main`.
+**Status (Nov 15, 2026): parts 1–8 are built.** Tabs: Overview, Accounts, Controls, Growth, Audience, Inbox, Health
+(`app/(app)/owner/*`, numbers in `lib/owner-stats.ts`, actions in `lib/actions/owner.ts`). Bulk invites: `lib/actions/team-invites.ts`.
 
 **Owner-only, airtight (done Nov 14):** `requireOwner()` needs the pinned account id AND the owner
 email AND two-step sign-in; everyone else gets a 404. Every new page and action must call it (a test
