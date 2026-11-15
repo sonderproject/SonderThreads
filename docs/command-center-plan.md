@@ -66,3 +66,12 @@ are "skip the trial" (30% off month 1) and the cancel-flow save.
   opt-in and unsubscribe anytime; bump `LEGAL_VERSION`.
 - Command center: opted-in count and opt-in rate, plus a CSV export of opted-in emails only.
 - Sending stays off until `POSTAL_ADDRESS` is set (CAN-SPAM).
+
+## 8. Bulk invites (agreed Nov 15)
+- Organization page: paste emails or upload a CSV, with an optional role column (Admin/Manager/Member;
+  default = the role picked for the whole list). Preview first (new, already members, invalid, seats
+  left), then send in the background with progress. Bulk is capped by seats, not the 30/hour limit.
+- Team join link: one shareable link, limited to the admin's email domain(s), everyone joins as
+  Member, stops when seats are full, admin can turn it off or make a new link.
+- Team page: select several members → change role in one step.
+- Members never add a card; the organization's subscription covers them.
