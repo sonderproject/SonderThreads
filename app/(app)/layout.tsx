@@ -21,6 +21,7 @@ import { pendingAgreements } from "@/lib/actions/legal";
 import { SETUP_PATHS } from "@/lib/setup";
 import { isOwner } from "@/lib/owner";
 import { getAppSettings } from "@/lib/app-settings";
+import { TypingAssist } from "@/components/TypingAssist";
 import { Announcement } from "@/components/announce/Announcement";
 import { MarketingPrompt } from "@/components/announce/MarketingPrompt";
 
@@ -134,6 +135,7 @@ export default async function AppGroupLayout({ children }: { children: React.Rea
       )}
       {announcement ? <Announcement {...announcement} /> : flags.askMarketing && !showOwner && <MarketingPrompt />}
       {children}
+      <TypingAssist spellcheck={settings.spellcheck} autocorrect={settings.autocorrect} />
       {offerTwoFactor && <TwoFactorPrompt />}
     </AppShell>
     </TermsProvider>

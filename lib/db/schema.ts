@@ -1261,4 +1261,9 @@ create index if not exists bookings_task_idx on bookings (task_id);
 create index if not exists bookings_ip_idx on bookings (ip_hash, created_at);
 create unique index if not exists bookings_slot_idx on bookings (user_id, starts_at) where canceled_at is null;
 alter table bookings enable row level security;
+
+-- Typing (Settings → Account): the browser's spell check (on by default) and Surfdesk's own
+-- optional autocorrect of common typos (off by default; components/TypingAssist.tsx).
+alter table user_settings add column if not exists spellcheck boolean not null default true;
+alter table user_settings add column if not exists autocorrect boolean not null default false;
 `;

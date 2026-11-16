@@ -78,3 +78,17 @@ export async function saveSecurityPrefs(formData: FormData): Promise<void> {
   revalidatePath("/", "layout");
   redirect("/settings?saved=security#security");
 }
+
+/** Settings → Account → Typing: spell check and autocorrect. */
+export async function saveTypingPrefs(formData: FormData): Promise<void> {
+  const userId = await requireUserId();
+  const spellcheck = formData.get("spellcheck") === "on";
+  const autocorrect = formData.get("autocorrect") === "on";
+  await query(
+    `insert into user_settings (user_id, spellcheck, autocorrect) values ($1, $2, $3)
+     on conflict (user_id) do update set spellcheck = excluded.spellcheck, autocorrect = excluded.autocorrect, updated_at = now()`,
+    [userId, spellcheck, autocorrect],
+  );
+  revalidatePath("/", "layout");
+  redirect("/settings/account?saved=typing#typing");
+}

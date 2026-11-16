@@ -24,6 +24,10 @@ export type UserSettings = {
   idleTimeoutMinutes: (typeof IDLE_TIMEOUT_OPTIONS)[number];
   /** No auto-lock at all: stay signed in until signing out. */
   staySignedIn: boolean;
+  /** Underline misspelled words (the browser's spell check). */
+  spellcheck: boolean;
+  /** Fix common typos while typing (components/TypingAssist.tsx). */
+  autocorrect: boolean;
 };
 
 export const DEFAULT_SETTINGS: UserSettings = {
@@ -35,6 +39,8 @@ export const DEFAULT_SETTINGS: UserSettings = {
   quietEndHour: 7,
   idleTimeoutMinutes: 30,
   staySignedIn: false,
+  spellcheck: true,
+  autocorrect: false,
 };
 
 /** "8 AM", "12 PM", "9 PM" for an hour 0–23. */

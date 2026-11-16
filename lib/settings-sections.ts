@@ -2,7 +2,7 @@
 export type SettingsSlug = "account" | "subscription" | "notifications" | "services" | "outcomes" | "fields" | "automations" | "booking" | "calendar" | "security" | "organization" | "data" | "about";
 
 export const SETTINGS_SECTIONS: { slug: SettingsSlug; title: string; hint: string }[] = [
-  { slug: "account", title: "Account", hint: "Your name, mobile number and email" },
+  { slug: "account", title: "Account", hint: "Your name, mobile number, email, spell check and autocorrect" },
   { slug: "subscription", title: "Subscription", hint: "Your plan, card, invoices and canceling" },
   { slug: "notifications", title: "Notifications", hint: "When and how Surfdesk reminds you" },
   { slug: "services", title: "Services", hint: "What you offer, for quick logging and reports" },
@@ -27,6 +27,7 @@ export const HASH_TO_SECTION: Record<string, SettingsSlug> = {
   subscription: "subscription",
   account: "account",
   email: "account",
+  typing: "account",
   notifications: "notifications",
   security: "security",
   "two-factor": "security",

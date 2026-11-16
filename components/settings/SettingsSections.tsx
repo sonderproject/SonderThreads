@@ -31,7 +31,7 @@ import { setMarketingEmails } from "@/lib/actions/announce";
 import { clearMyData } from "@/lib/actions/clear-data";
 import { getMembership, getPendingInvites, ROLE_LABELS } from "@/lib/org";
 import { getNotificationSettings, sendTestNotification } from "@/lib/actions/notifications";
-import { saveNotificationPrefs, saveSecurityPrefs } from "@/lib/actions/settings";
+import { saveNotificationPrefs, saveSecurityPrefs, saveTypingPrefs } from "@/lib/actions/settings";
 import { getUserSettings } from "@/lib/settings";
 import { IDLE_TIMEOUT_OPTIONS, REMINDER_LEAD_OPTIONS, SUPPORT_EMAIL, durationLabel, hourLabel } from "@/lib/settings-options";
 import { formatPhone } from "@/lib/notify/phone";
@@ -118,6 +118,37 @@ async function FieldsSection() {
   return <CustomFieldsSettings fields={fields} canManage={scope.canManage} orgName={membership?.active ? membership.orgName : null} />;
 }
 
+/** Settings → Account → Typing: spell check (on by default) and autocorrect (off by default). */
+async function TypingCard({ saved }: { saved: boolean }) {
+  const prefs = await getUserSettings();
+  return (
+    <form id="typing" action={saveTypingPrefs} className="card scroll-mt-20 space-y-3 p-4">
+      <h3 className="text-sm font-semibold text-text">Typing</h3>
+      <label className="flex items-start gap-2 text-sm text-text">
+        <input type="checkbox" name="spellcheck" defaultChecked={prefs.spellcheck} className="mt-1" />
+        <span>
+          Spell check
+          <span className="block text-xs text-text-muted">Underlines misspelled words in notes, tasks and everywhere else you write.</span>
+        </span>
+      </label>
+      <label className="flex items-start gap-2 text-sm text-text">
+        <input type="checkbox" name="autocorrect" defaultChecked={prefs.autocorrect} className="mt-1" />
+        <span>
+          Autocorrect
+          <span className="block text-xs text-text-muted">
+            Fixes common typos as you type (teh → the, dont → don&apos;t). Press Backspace right after a fix to undo it. Names, emails and
+            links are never changed.
+          </span>
+        </span>
+      </label>
+      {saved && <p className="text-xs text-accent">Saved.</p>}
+      <button type="submit" className={buttonClass}>
+        Save
+      </button>
+    </form>
+  );
+}
+
 async function CalendarSection() {
   const [linked, myLink] = await Promise.all([listLinkedCalendars(), getMyCalendarLink()]);
   return <CalendarSyncSettings linked={linked} myLink={myLink} />;
@@ -152,6 +183,8 @@ async function AccountSection({ q }: { q: SettingsQuery }) {
           Save
         </button>
       </form>
+
+      <TypingCard saved={saved === "typing"} />
 
       <form id="email" action={requestEmailChange} className="card scroll-mt-20 space-y-3 p-4">
         <div>
