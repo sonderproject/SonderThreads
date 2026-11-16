@@ -9,6 +9,19 @@ const nextConfig = {
     // Settings → Data → Import backup sends the whole backup file to a server action.
     serverActions: { bodySizeLimit: "4mb" },
   },
+  // thesurfdesk.app is the only address the app runs on (Nov 16, 2026). The old domains (kept,
+  // so nobody else can take them), www and the vercel.app name send every request to the same
+  // path on thesurfdesk.app (308 keeps the method, so old form posts and webhooks still land).
+  async redirects() {
+    return [
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "(?<old>(?:www\\.)?strynd\\.com|(?:www\\.)?sonderthreads\\.com|www\\.thesurfdesk\\.app|sonder-threads\\.vercel\\.app)" }],
+        destination: "https://thesurfdesk.app/:path*",
+        permanent: true,
+      },
+    ];
+  },
   // Browser security headers on every response.
   async headers() {
     return [
