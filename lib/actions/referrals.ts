@@ -1,5 +1,7 @@
 "use server";
 
+import { SUPPORT_EMAIL } from "@/lib/settings-options";
+
 import { getAppSettings, inMaintenance } from "@/lib/app-settings";
 
 import { after } from "next/server";
@@ -178,7 +180,7 @@ export async function submitReferral(formData: FormData): Promise<void> {
       );
       const mayEmail = (sentToday?.n ?? 0) <= 5;
       if (!mayEmail) await logEvent("referral.email_capped", `Confirmation not sent: ${referrerEmail} got 5 today`, { level: "warn", email: referrerEmail });
-      if (mayEmail) await sendReferralConfirmation(referrerEmail, orgName, `${first} ${last.charAt(0)}.`, when, waitlisted, settings.location).catch(async (err) => {
+      if (mayEmail) await sendReferralConfirmation(referrerEmail, org!.id, orgName, `${first} ${last.charAt(0)}.`, when, waitlisted, settings.location).catch(async (err) => {
         console.error("[referrals] confirmation email failed", err);
         await logEvent("email.failed", `Referral confirmation to ${referrerEmail} failed: ${err instanceof Error ? err.message : err}`, {
           level: "warn",
@@ -200,6 +202,7 @@ export async function submitReferral(formData: FormData): Promise<void> {
 /** Lets the person who referred know it arrived, and when the appointment is. */
 async function sendReferralConfirmation(
   to: string,
+  orgId: string,
   orgName: string,
   client: string,
   when: string | null,
@@ -213,8 +216,13 @@ async function sendReferralConfirmation(
       : `${orgName} will reach out to ${client}.`;
   // A small, low-key "try it yourself" note: the person referring often works at another agency.
   const tryUrl = `${appUrl()}/get-started?${new URLSearchParams({ utm_source: "referral", utm_medium: "email", utm_campaign: "referral-confirmation" })}`;
+  // Sent "from" the organization (via Surfdesk) and replies go to a real inbox: work email filters
+  // trust that far more than an unknown no-reply sender.
+  const org = await queryOne<{ email: string | null }>(`select email from organizations where id = $1`, [orgId]).catch(() => null);
   await sendEmail({
     to,
+    fromName: `${orgName} via Surfdesk`,
+    replyTo: org?.email && isEmail(org.email) ? org.email : SUPPORT_EMAIL,
     subject: when ? `Referral received: ${client}, ${when}` : `Referral received: ${client}`,
     text: `Thank you for your referral.\n\n${line}${location ? `\nLocation: ${location}` : ""}\n\n${orgName} uses Surfdesk to track clients, follow-ups and referrals. Want the same for your team? Try it free: ${tryUrl}`,
     html: `<div style="font-family:Inter,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:#141412">

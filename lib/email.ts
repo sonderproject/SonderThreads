@@ -14,7 +14,11 @@ export function escapeHtml(s: string): string {
   return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 }
 
-export async function sendEmail(params: { to: string; subject: string; text: string; html?: string; replyTo?: string }): Promise<void> {
+/**
+ * `fromName` shows a different sender name on the same verified address, e.g.
+ * "DSDP Workforce via Surfdesk" (recipients recognize who it's from; fewer spam marks).
+ */
+export async function sendEmail(params: { to: string; subject: string; text: string; html?: string; replyTo?: string; fromName?: string }): Promise<void> {
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.EMAIL_FROM;
   if (!apiKey || !from) {
@@ -22,11 +26,14 @@ export async function sendEmail(params: { to: string; subject: string; text: str
     return;
   }
 
+  // Keep the verified address; only the display name changes (quotes and angle brackets removed).
+  const address = from.match(/<([^>]+)>/)?.[1] ?? from;
+  const sender = params.fromName ? `${params.fromName.replace(/["<>\r\n]/g, "").slice(0, 70)} <${address}>` : from;
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      from,
+      from: sender,
       to: params.to,
       subject: params.subject,
       text: params.text,
