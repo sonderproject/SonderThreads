@@ -476,3 +476,64 @@ select option {
   .nav-glow,
   .nav-glow-line { animation: none; }
 }
+
+/* Loading feedback (components/LoadingIndicator.tsx): a thin bar at the top while a page opens or a
+   form sends, and a spinner on the button that sent it. */
+.loading-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 9999;
+  height: 3px;
+  width: 0;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent);
+  opacity: 0;
+  pointer-events: none;
+  transition: width 0.2s ease, opacity 0.3s ease 0.1s;
+}
+.loading-bar-on {
+  opacity: 1;
+  width: 85%;
+  transition: width 8s cubic-bezier(0.1, 0.6, 0.2, 1), opacity 0.1s ease;
+}
+button[data-loading] {
+  position: relative;
+  pointer-events: none;
+  opacity: 0.75;
+}
+button[data-loading]::after {
+  content: "";
+  display: inline-block;
+  width: 0.9em;
+  height: 0.9em;
+  margin-left: 0.5em;
+  vertical-align: -0.12em;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 9999px;
+  animation: spin 0.7s linear infinite;
+}
+.page-spinner {
+  width: 1.75rem;
+  height: 1.75rem;
+  border: 3px solid var(--accent);
+  border-right-color: transparent;
+  border-radius: 9999px;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .loading-bar-on {
+    transition: none;
+    width: 100%;
+  }
+  button[data-loading]::after,
+  .page-spinner {
+    animation-duration: 2s;
+  }
+}

@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Outfit } from "next/font/google";
 import "./globals.css";
+import { Suspense } from "react";
+import { LoadingIndicator } from "@/components/LoadingIndicator";
 import { SITE_DESCRIPTION, SITE_URL } from "@/lib/site";
 
 // Sonder Studio type: Outfit for headings, Inter for everything else.
@@ -69,7 +71,13 @@ export default function RootLayout({
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
       </head>
-      <body className="font-sans antialiased">{children}</body>
+      <body className="font-sans antialiased">
+        {/* useSearchParams needs a Suspense boundary so static pages still render. */}
+        <Suspense fallback={null}>
+          <LoadingIndicator />
+        </Suspense>
+        {children}
+      </body>
     </html>
   );
 }
