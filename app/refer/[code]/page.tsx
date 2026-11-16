@@ -244,6 +244,11 @@ export default async function ReferPage({
           </>
         )}
         <p className="text-center text-xs text-text-faint">
+          {/* New tab, so a half-filled form is never lost. */}
+          <a href="/welcome?utm_source=referral&utm_medium=page&utm_campaign=referral-footer" target="_blank" rel="noopener" className="hover:text-text">
+            Referrals by Surfdesk
+          </a>
+          {" · "}
           <a href="/privacy" className="hover:underline">
             Privacy
           </a>
