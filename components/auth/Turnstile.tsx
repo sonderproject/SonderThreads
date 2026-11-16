@@ -65,7 +65,7 @@ export function Turnstile() {
       setState("error");
       setSubmitWait(false);
       waiting.current = false;
-      reportCaptchaProblem(code, window.location.hostname).catch(() => undefined);
+      reportCaptchaProblem(code, window.location.hostname, (SITE_KEY ?? "").slice(-6)).catch(() => undefined);
     };
     loadScript()
       .then(() => {

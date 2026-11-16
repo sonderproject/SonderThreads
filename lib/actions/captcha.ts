@@ -8,10 +8,11 @@ import { alertOwner, logEvent } from "@/lib/events";
  * broken check means nobody can sign in or sign up. The usual cause: the site's web address
  * isn't in the Turnstile widget's hostname list in Cloudflare.
  */
-export async function reportCaptchaProblem(code: string, hostname: string): Promise<void> {
+export async function reportCaptchaProblem(code: string, hostname: string, keyEnd = ""): Promise<void> {
   const c = String(code).replace(/[^\w.-]/g, "").slice(0, 40) || "unknown";
   const host = String(hostname).replace(/[^\w.-]/g, "").slice(0, 100);
-  await logEvent("auth.captcha_error", `Security check failed to run (${c}) on ${host}`, { level: "warn", path: host, meta: { code: c } });
+  const key = String(keyEnd).replace(/[^\w-]/g, "").slice(0, 8);
+  await logEvent("auth.captcha_error", `Security check failed to run (${c}) on ${host}, site key …${key}`, { level: "warn", path: host, meta: { code: c, key } });
   // 110200 = this hostname isn't allowed for the widget; 4xx/6xx codes are mostly browser-side.
   if (c.startsWith("1102") || c === "timeout" || c === "script-blocked") {
     await alertOwner(
