@@ -73,6 +73,8 @@ const PLANS: {
   price: string;
   unit?: string;
   fine: string;
+  /** Short savings callout shown under the fine print. */
+  save?: string;
   features: string[];
   cta: string;
   href: string;
@@ -108,6 +110,7 @@ const PLANS: {
     price: "$349",
     unit: "/ month",
     fine: "20 seats included. Additional seats $15 / user / month.",
+    save: "Save vs. Small Team at 19+ seats",
     features: ["Everything in Small Team", "20 seats included", "Extra seats just $15 each", "Team dashboard, activity log, Impact reports", "Admin permissions and centralized billing"],
     cta: "Start a free team trial",
     href: TEAM_SIGNUP,
@@ -504,6 +507,7 @@ export default function WelcomePage() {
                   {p.unit && <span className="ml-1 font-sans text-sm text-text-muted">{p.unit}</span>}
                 </p>
                 <p className="-mt-2 text-xs text-text-muted">{p.fine}</p>
+                {p.save && <p className="-mt-2 text-xs font-semibold text-accent">{p.save}</p>}
                 <ul className="flex-1 space-y-2 text-sm">
                   {p.features.map((f) => (
                     <li key={f} className="flex gap-2">
