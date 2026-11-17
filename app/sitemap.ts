@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { SITE_URL } from "@/lib/site";
+import { ALL_SEO_PAGES } from "@/lib/seo-pages";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   return [
@@ -15,6 +16,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "monthly",
       priority: 0.5,
     },
+    ...ALL_SEO_PAGES.map((p) => ({
+      url: `${SITE_URL}${p.path}`,
+      lastModified: new Date(),
+      changeFrequency: "monthly" as const,
+      priority: 0.7,
+    })),
     ...["privacy", "terms", "account-deletion"].map((path) => ({
       url: `${SITE_URL}/${path}`,
       lastModified: new Date(),

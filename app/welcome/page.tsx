@@ -8,6 +8,7 @@ import { SITE_DESCRIPTION, SITE_URL } from "@/lib/site";
 import { LegalLinks } from "@/components/legal/LegalPage";
 import { SUPPORT_EMAIL } from "@/lib/settings-options";
 import { SeatCalculator } from "@/components/billing/SeatCalculator";
+import { ALL_SEO_PAGES } from "@/lib/seo-pages";
 
 // Signed-out visitors to "/" are shown this page (middleware rewrites to it),
 // so "/" is the canonical address search engines should index.
@@ -641,6 +642,13 @@ export default function WelcomePage() {
           </p>
           <LegalLinks />
         </div>
+        <nav aria-label="Surfdesk for" className="mx-auto flex max-w-6xl flex-wrap gap-x-5 gap-y-2 px-4 pb-8 text-xs text-text-muted sm:px-8">
+          {ALL_SEO_PAGES.map((p) => (
+            <Link key={p.path} href={p.path} className="hover:text-text">
+              {p.eyebrow}
+            </Link>
+          ))}
+        </nav>
       </footer>
     </div>
   );
