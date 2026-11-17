@@ -4,7 +4,7 @@ import { CommandDemo } from "@/components/landing/CommandDemo";
 import { AgencyPreviews } from "@/components/landing/AgencyPreviews";
 import { CalendarIcon, MicIcon, PeopleIcon, TasksIcon } from "@/components/ui/icons";
 import Link from "next/link";
-import { SITE_DESCRIPTION } from "@/lib/site";
+import { SITE_DESCRIPTION, SITE_URL } from "@/lib/site";
 import { LegalLinks } from "@/components/legal/LegalPage";
 import { SUPPORT_EMAIL } from "@/lib/settings-options";
 import { SeatCalculator } from "@/components/billing/SeatCalculator";
@@ -12,7 +12,7 @@ import { SeatCalculator } from "@/components/billing/SeatCalculator";
 // Signed-out visitors to "/" are shown this page (middleware rewrites to it),
 // so "/" is the canonical address search engines should index.
 export const metadata: Metadata = {
-  title: "Surfdesk: tasks, to-dos, notes and clients in one place",
+  title: "Surfdesk: client tracker, tasks and notes in one app",
   description: SITE_DESCRIPTION,
   alternates: { canonical: "/" },
   openGraph: {
@@ -194,9 +194,44 @@ function Cta({ className = "" }: { className?: string }) {
   );
 }
 
+/** Structured data for search engines: the app, its plans, and who makes it. */
+const JSON_LD = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "SoftwareApplication",
+      "@id": `${SITE_URL}/#app`,
+      name: "Surfdesk",
+      url: SITE_URL,
+      description: SITE_DESCRIPTION,
+      applicationCategory: "BusinessApplication",
+      applicationSubCategory: "Client tracker / CRM / Case management",
+      operatingSystem: "Web, iOS, Android",
+      image: `${SITE_URL}/opengraph-image.png`,
+      publisher: { "@id": "https://www.sonderproject.co/#organization" },
+      offers: PLANS.filter((p) => p.price.startsWith("$")).map((p) => ({
+        "@type": "Offer",
+        name: p.name,
+        price: p.price.replace("$", ""),
+        priceCurrency: "USD",
+        description: `${p.price} ${p.unit ?? ""}. ${p.fine}`.trim(),
+        url: SITE_URL,
+      })),
+    },
+    {
+      "@type": "Organization",
+      "@id": "https://www.sonderproject.co/#organization",
+      name: "Sonder Project",
+      url: "https://www.sonderproject.co/",
+      sameAs: ["https://www.instagram.com/sonderproject.co/"],
+    },
+  ],
+};
+
 export default function WelcomePage() {
   return (
     <div className="min-h-screen bg-bg text-text">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }} />
       <CampaignLinks />
       <header className="glass pt-safe sticky top-0 z-20 border-b">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-8">
@@ -598,7 +633,12 @@ export default function WelcomePage() {
 
       <footer className="border-t border-border">
         <div className="pb-safe-5 mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-4 py-8 sm:px-8">
-          <p className="text-xs text-text-muted">© {new Date().getFullYear()} Sonder Project</p>
+          <p className="text-xs text-text-muted">
+            © {new Date().getFullYear()}{" "}
+            <a href="https://www.sonderproject.co" className="hover:text-text hover:underline">
+              Sonder Project
+            </a>
+          </p>
           <LegalLinks />
         </div>
       </footer>
