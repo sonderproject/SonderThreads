@@ -45,6 +45,8 @@ export async function startTotpEnroll(): Promise<ActionResult<TotpEnrollment>> {
     }
     const { data, error } = await supabase.auth.mfa.enroll({
       factorType: "totp",
+      // The name shown in the authenticator app (otherwise Supabase uses its Site URL's domain).
+      issuer: "Surfdesk",
       friendlyName: `Authenticator app (${new Date().toISOString().slice(0, 10)})`,
     });
     if (error) throw new Error(error.code === "mfa_totp_enroll_not_enabled" ? "2FA isn't enabled for this app yet." : error.message);
