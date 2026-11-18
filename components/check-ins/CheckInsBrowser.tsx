@@ -255,39 +255,58 @@ export function CheckInsBrowser({
             )}
             {days.map((day) => {
               const open = isOpen(day.key);
-              return (
-                <div key={day.key} className="space-y-1.5">
-                  <h3 className="eyebrow flex items-center gap-2 text-text-faint">
-                    <button
-                      type="button"
-                      onClick={() => toggle(day.key)}
-                      aria-expanded={open}
-                      disabled={alwaysOpen(day.key)}
-                      className="inline-flex items-center gap-2 uppercase hover:text-text disabled:cursor-default disabled:hover:text-text-faint"
-                    >
-                      {!alwaysOpen(day.key) && (
-                        <span aria-hidden className={`inline-block transition-transform ${open ? "rotate-90" : ""}`}>
-                          ›
-                        </span>
+              const label = day.key === todayKey ? "Today" : day.key === yesterdayKey ? "Yesterday" : day.label;
+              // Today and yesterday: a heading and their rows, as before.
+              if (alwaysOpen(day.key)) {
+                return (
+                  <div key={day.key} className="space-y-1.5">
+                    <h3 className="eyebrow flex items-center gap-2 text-text-faint">
+                      {label} <span className="tabular-nums">· {day.items.length}</span>
+                      {!singleDay && (
+                        <button type="button" onClick={() => go({ from: day.key, to: day.key })} className="ml-auto normal-case tracking-normal text-accent hover:underline">
+                          View day
+                        </button>
                       )}
-                      {day.key === todayKey ? "Today" : day.key === yesterdayKey ? "Yesterday" : day.label}{" "}
-                      <span className="tabular-nums">· {day.items.length}</span>
-                    </button>
-                    {!singleDay && (
-                      <button
-                        type="button"
-                        onClick={() => go({ from: day.key, to: day.key })}
-                        className="ml-auto normal-case tracking-normal text-accent hover:underline"
-                      >
-                        View day
-                      </button>
-                    )}
-                  </h3>
-                  {open && (
+                    </h3>
                     <div className="divide-y divide-border-subtle card">
                       {day.items.map((c) => (
                         <CheckInRow key={c.id} checkIn={c} />
                       ))}
+                    </div>
+                  </div>
+                );
+              }
+              // Earlier days: one box each; tap to open it in place.
+              return (
+                <div key={day.key} className="card overflow-hidden">
+                  <button
+                    type="button"
+                    onClick={() => toggle(day.key)}
+                    aria-expanded={open}
+                    className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-bg-hover"
+                  >
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-sm font-semibold text-text">{label}</span>
+                      <span className="block text-xs text-text-muted">
+                        {day.items.length} {day.items.length === 1 ? terms.checkInLower : terms.checkInsLower}
+                      </span>
+                    </span>
+                    <span aria-hidden className={`text-lg leading-none text-text-muted transition-transform ${open ? "rotate-90" : ""}`}>
+                      ›
+                    </span>
+                  </button>
+                  {open && (
+                    <div className="border-t border-border-subtle">
+                      <div className="divide-y divide-border-subtle">
+                        {day.items.map((c) => (
+                          <CheckInRow key={c.id} checkIn={c} />
+                        ))}
+                      </div>
+                      <div className="border-t border-border-subtle px-4 py-2 text-right">
+                        <button type="button" onClick={() => go({ from: day.key, to: day.key })} className="text-xs text-accent hover:underline">
+                          View day
+                        </button>
+                      </div>
                     </div>
                   )}
                 </div>
