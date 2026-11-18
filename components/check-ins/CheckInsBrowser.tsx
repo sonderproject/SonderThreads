@@ -92,6 +92,22 @@ export function CheckInsBrowser({
     return groups;
   }, [filtered]);
 
+  // Today and yesterday are always open; earlier days start collapsed (tap a day to open it).
+  // Searching or viewing a single day shows everything.
+  const yesterdayKey = addDays(todayKey, -1);
+  const [openDays, setOpenDays] = useState<Set<string>>(new Set());
+  const [openAll, setOpenAll] = useState(false);
+  const alwaysOpen = (key: string) => singleDay || Boolean(search.trim()) || key === todayKey || key === yesterdayKey;
+  const isOpen = (key: string) => alwaysOpen(key) || openAll || openDays.has(key);
+  const toggle = (key: string) =>
+    setOpenDays((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  const collapsedCount = days.filter((d) => !alwaysOpen(d.key)).length;
+
   const todayCount = checkIns.filter((c) => localDayKey(c.checked_in_at) === todayKey).length;
   const showsToday = range === null || (from <= todayKey && todayKey <= to);
   const rangeLabel =
@@ -229,28 +245,55 @@ export function CheckInsBrowser({
         {days.length === 0 ? (
           <EmptyState message={search.trim() ? "No matches." : `No ${terms.checkInsLower} in this range.`} />
         ) : (
-          days.map((day) => (
-            <div key={day.key} className="space-y-1.5">
-              <h3 className="eyebrow flex items-center gap-2 text-text-faint">
-                {day.key === todayKey ? "Today" : day.label}{" "}
-                <span className="tabular-nums">· {day.items.length}</span>
-                {!singleDay && (
-                  <button
-                    type="button"
-                    onClick={() => go({ from: day.key, to: day.key })}
-                    className="ml-auto normal-case tracking-normal text-accent hover:underline"
-                  >
-                    View day
-                  </button>
-                )}
-              </h3>
-              <div className="divide-y divide-border-subtle card">
-                {day.items.map((c) => (
-                  <CheckInRow key={c.id} checkIn={c} />
-                ))}
+          <>
+            {collapsedCount > 0 && (
+              <div className="flex justify-end">
+                <button type="button" onClick={() => setOpenAll((v) => !v)} className="text-xs text-accent hover:underline">
+                  {openAll ? "Collapse earlier days" : `Show all ${days.length} days`}
+                </button>
               </div>
-            </div>
-          ))
+            )}
+            {days.map((day) => {
+              const open = isOpen(day.key);
+              return (
+                <div key={day.key} className="space-y-1.5">
+                  <h3 className="eyebrow flex items-center gap-2 text-text-faint">
+                    <button
+                      type="button"
+                      onClick={() => toggle(day.key)}
+                      aria-expanded={open}
+                      disabled={alwaysOpen(day.key)}
+                      className="inline-flex items-center gap-2 uppercase hover:text-text disabled:cursor-default disabled:hover:text-text-faint"
+                    >
+                      {!alwaysOpen(day.key) && (
+                        <span aria-hidden className={`inline-block transition-transform ${open ? "rotate-90" : ""}`}>
+                          ›
+                        </span>
+                      )}
+                      {day.key === todayKey ? "Today" : day.key === yesterdayKey ? "Yesterday" : day.label}{" "}
+                      <span className="tabular-nums">· {day.items.length}</span>
+                    </button>
+                    {!singleDay && (
+                      <button
+                        type="button"
+                        onClick={() => go({ from: day.key, to: day.key })}
+                        className="ml-auto normal-case tracking-normal text-accent hover:underline"
+                      >
+                        View day
+                      </button>
+                    )}
+                  </h3>
+                  {open && (
+                    <div className="divide-y divide-border-subtle card">
+                      {day.items.map((c) => (
+                        <CheckInRow key={c.id} checkIn={c} />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </>
         )}
       </section>
     </div>
