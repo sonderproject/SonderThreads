@@ -1,0 +1,328 @@
+<title>Sonder Project Brand Kit</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@300;400&display=swap">
+<style>
+/* Layout: dark-first studio book. A wide statement hero over a faint cropped mark, then hairline-ruled chapters in one column with wrapping grids. */
+:root{
+  --bg:#0a0a09;--surface:#141412;--fg:#f3f0eb;--muted:#aea08d;--line:#2a2926;--line-subtle:#1e1d1b;
+  --accent:#62b4e6;--accent-soft:#0b2236;--no:#ff8f6b;--no-soft:#3a1f17;--wm:rgba(98,180,230,.07);
+  --display:"Outfit",system-ui,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;
+  --body:"Inter",system-ui,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  /* Fixed brand swatches (the subject; same in both themes). */
+  --obsidian:#0a0a09;--charcoal:#141412;--bone:#f3f0eb;--stone:#aea08d;--sand:#f6f4ef;--ink:#141412;--umber:#6e5f4d;
+  --surf:#3e9bd4;--deep-surf:#1c77b5;--light-surf:#62b4e6;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){
+  --bg:#f6f4ef;--surface:#ffffff;--fg:#141412;--muted:#6e5f4d;--line:#e2dbd0;--line-subtle:#ece7dd;
+  --accent:#1c77b5;--accent-soft:#eef6fc;--no:#b93815;--no-soft:#fdebe4;--wm:rgba(28,119,181,.07);color-scheme:light}}
+:root[data-theme="light"]{
+  --bg:#f6f4ef;--surface:#ffffff;--fg:#141412;--muted:#6e5f4d;--line:#e2dbd0;--line-subtle:#ece7dd;
+  --accent:#1c77b5;--accent-soft:#eef6fc;--no:#b93815;--no-soft:#fdebe4;--wm:rgba(28,119,181,.07);color-scheme:light}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font:400 16px/1.6 var(--body);-webkit-font-smoothing:antialiased;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+main{max-width:1040px;margin:0 auto;padding-block:48px 96px;display:flex;flex-direction:column;gap:80px}
+h1,h2,h3{font-family:var(--display);font-weight:300;letter-spacing:-.02em;margin:0;text-wrap:balance}
+h1{font-size:clamp(2.6rem,7.5vw,5rem);line-height:1.02}
+h2{font-size:clamp(1.8rem,4vw,2.6rem);line-height:1.08}
+h3{font-size:1.2rem;font-weight:400}
+p{margin:0;max-width:65ch}
+.eyebrow{font:500 .72rem/1 var(--body);letter-spacing:.22em;text-transform:uppercase;color:var(--muted)}
+.lead{font-size:1.1rem;color:var(--muted)}
+.blue{color:var(--accent)}
+.mark{display:block;fill:currentColor}
+code{font:500 .85em var(--mono);background:var(--line-subtle);padding:1px 5px;border-radius:5px;overflow-wrap:anywhere}
+/* Hero */
+.hero{position:relative;overflow:hidden;border:1px solid var(--line);border-radius:20px;background:var(--surface);padding:clamp(28px,5vw,56px);display:flex;flex-direction:column;gap:28px}
+.hero .wm{position:absolute;right:-6%;top:-18%;width:min(70%,620px);color:var(--wm);pointer-events:none}
+.hero > *:not(.wm){position:relative}
+.lockup{display:flex;align-items:center;gap:18px}
+.lockup .mark{width:56px;color:var(--accent)}
+.lockup .caps{font:300 clamp(1.05rem,2.6vw,1.4rem)/1 var(--display);letter-spacing:.25em;text-transform:uppercase}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.pill{display:inline-flex;align-items:center;border-radius:999px;padding:10px 20px;font:600 .95rem var(--body);background:var(--accent);color:var(--bg);border:0;cursor:pointer;text-decoration:none}
+.pill.ghost{background:transparent;color:var(--fg);border:1px solid var(--line)}
+a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+section{display:flex;flex-direction:column;gap:24px;border-top:1px solid var(--line);padding-top:40px}
+.head{display:flex;flex-direction:column;gap:12px}
+.grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fill,minmax(min(100%,230px),1fr))}
+.grid.two{grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr))}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:22px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.card p{font-size:.95rem}
+dl{margin:0;display:grid;grid-template-columns:minmax(120px,auto) 1fr;gap:0}
+dt,dd{margin:0;padding:12px 0;border-top:1px solid var(--line-subtle);font-size:.95rem}
+dt{color:var(--muted);padding-right:20px}
+dl > :nth-child(-n+2){border-top:0}
+.num{font:300 2.4rem/1 var(--display);color:var(--accent)}
+/* Products */
+.product{display:flex;gap:18px;align-items:flex-start}
+.status{font:600 .66rem/1 var(--body);letter-spacing:.06em;text-transform:uppercase;padding:5px 8px;border-radius:999px;background:var(--accent-soft);color:var(--accent);width:max-content}
+.status.plan{background:var(--line-subtle);color:var(--muted)}
+/* Logo tiles */
+.tile{border-radius:16px;border:1px solid var(--line);min-height:170px;display:flex;align-items:center;justify-content:center;padding:28px 20px;overflow:hidden}
+.tile.obsidian{background:var(--obsidian);color:var(--bone);border-color:#2a2926}
+.tile.sand{background:var(--sand);color:var(--ink);border-color:#e2dbd0}
+.tile.surf{background:var(--deep-surf);color:#fff;border-color:var(--deep-surf)}
+.tile .lockup .mark{width:48px}
+.tile .lockup .caps{font-size:1.05rem}
+.files ul{margin:0;padding-left:1.1em;display:flex;flex-direction:column;gap:6px;font-size:.95rem}
+.dd{display:grid;gap:16px;grid-template-columns:repeat(auto-fill,minmax(min(100%,200px),1fr))}
+.dd figure{margin:0;display:flex;flex-direction:column;gap:8px}
+.dd .tile{min-height:130px}
+.dd figcaption{font-size:.85rem;display:flex;gap:8px;align-items:baseline}
+.tag{font:600 .66rem/1 var(--body);letter-spacing:.04em;text-transform:uppercase;padding:4px 7px;border-radius:999px;flex:none}
+.tag.yes{background:var(--accent-soft);color:var(--accent)}.tag.no{background:var(--no-soft);color:var(--no)}
+/* Swatches */
+.sw{border-radius:16px;overflow:hidden;border:1px solid var(--line);background:var(--surface);display:flex;flex-direction:column}
+.sw .chip{height:104px;border-bottom:1px solid var(--line)}
+.sw .meta{padding:14px 16px;display:flex;flex-direction:column;gap:4px}
+.sw .name{font-weight:600}
+.sw button{all:unset;cursor:pointer;font:500 .85rem var(--mono);color:var(--muted);width:max-content}
+.sw button:hover{color:var(--accent)}
+.sw .use{font-size:.85rem;color:var(--muted)}
+.ratio{display:flex;height:18px;border-radius:999px;overflow:hidden;border:1px solid var(--line)}
+/* Type */
+.spec{display:flex;flex-direction:column;gap:8px;padding:18px 0;border-top:1px solid var(--line-subtle)}
+.spec:first-child{border-top:0;padding-top:0}
+.t-hero{font:300 clamp(2rem,5vw,3.2rem)/1.05 var(--display);letter-spacing:-.02em}
+.t-caps{font:300 1.4rem/1 var(--display);letter-spacing:.25em;text-transform:uppercase}
+.t-body{font:400 1rem/1.55 var(--body)}
+/* Voice */
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:16px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:.95rem}
+th,td{text-align:left;padding:12px 16px;border-top:1px solid var(--line-subtle);vertical-align:top}
+thead th{border-top:0;font:500 .7rem/1 var(--body);letter-spacing:.22em;text-transform:uppercase;color:var(--muted)}
+.copyblock{display:flex;flex-direction:column;gap:12px}
+.copyblock .top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.copyblock button{all:unset;cursor:pointer;font:600 .8rem var(--body);color:var(--accent)}
+.copyblock .txt{font-size:.98rem;white-space:pre-line}
+pre{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;font:400 .82rem/1.55 var(--mono);background:var(--line-subtle);border-radius:12px;padding:18px;max-height:420px;overflow:auto}
+.copied{font-size:.85rem;color:var(--accent)}
+.proposed{font:600 .62rem/1 var(--body);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);border:1px dashed var(--line);padding:4px 7px;border-radius:999px;width:max-content}
+footer{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:24px;color:var(--muted);font-size:.85rem}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="m" viewBox="0 0 1663 1262"><path fill-rule="evenodd" d="M452.5,1261.0C394.3,1259.5 328.5,1256.1 305.9,1253.5C299.0,1252.7 289.7,1252.0 285.4,1252.0C281.0,1252.0 272.1,1251.4 265.5,1250.6C246.0,1248.2 223.6,1246.1 206.5,1244.9C187.0,1243.7 183.8,1243.2 184.2,1241.8C184.7,1240.5 195.5,1237.0 199.2,1237.0C200.7,1237.0 205.9,1236.1 210.7,1234.9C215.5,1233.7 222.2,1232.2 225.5,1231.5C232.0,1230.0 237.7,1228.6 245.5,1226.5C248.2,1225.7 255.9,1223.9 262.5,1222.5C269.1,1221.0 276.3,1219.2 278.5,1218.4C283.6,1216.6 291.7,1214.4 299.5,1212.5C302.8,1211.8 309.8,1209.7 315.0,1207.9C320.2,1206.2 326.1,1204.4 328.0,1203.9C329.9,1203.5 336.0,1201.5 341.5,1199.6C347.0,1197.6 352.1,1196.0 352.8,1196.0C353.6,1196.0 355.6,1195.4 357.3,1194.6C359.1,1193.8 365.0,1191.6 370.5,1189.6C387.9,1183.6 389.5,1183.0 391.2,1182.0C392.2,1181.4 394.7,1180.4 396.7,1179.6C409.9,1174.9 419.9,1171.0 422.5,1169.7C424.1,1168.9 427.1,1167.6 429.0,1166.7C430.9,1165.9 435.2,1164.0 438.5,1162.5C441.8,1161.1 445.3,1159.5 446.2,1159.0C447.1,1158.5 453.0,1155.4 459.2,1152.2C475.2,1143.9 482.0,1140.1 495.1,1132.5C501.3,1128.8 507.4,1125.2 508.5,1124.6C516.6,1120.0 537.0,1105.6 549.5,1095.6C592.1,1061.7 618.9,1024.3 624.1,992.0C627.1,973.1 627.3,967.5 625.6,957.4C624.6,951.9 623.4,946.1 622.8,944.5C622.3,942.9 621.2,939.1 620.4,936.1C618.2,928.1 608.0,907.8 600.1,896.0C581.0,867.6 550.6,835.7 516.0,808.0C510.2,803.4 503.5,798.0 501.0,796.0C481.5,780.2 431.0,746.4 408.5,734.0C405.0,732.1 401.5,729.9 400.8,729.2C400.2,728.6 399.2,728.0 398.8,728.0C398.4,728.0 393.4,725.4 387.7,722.2C382.1,719.0 374.4,714.9 370.5,713.1C330.1,693.8 315.1,687.4 296.2,681.0C292.7,679.9 289.1,678.5 288.2,678.0C287.3,677.5 281.6,675.7 275.5,674.0C269.4,672.3 262.7,670.3 260.5,669.5C258.3,668.7 254.8,667.8 252.6,667.5C250.5,667.1 248.0,666.5 247.1,666.0C245.4,665.1 231.4,661.8 221.0,660.0C217.4,659.3 211.6,658.2 208.0,657.4C204.4,656.7 198.8,655.8 195.5,655.5C192.2,655.2 188.2,654.5 186.5,654.0C179.9,651.9 137.1,650.2 114.5,651.2C79.0,652.6 71.9,653.4 33.5,660.6C26.3,661.9 17.6,663.5 14.0,664.1C10.4,664.7 6.5,665.8 5.2,666.7C2.6,668.3 0.0,667.8 -0.0,665.7C-0.0,664.9 6.9,657.8 15.2,649.9C23.6,642.0 32.3,633.7 34.5,631.5C36.8,629.3 45.8,620.8 54.5,612.5C63.3,604.3 76.6,591.7 84.0,584.5C91.4,577.3 102.9,566.2 109.5,559.9C123.8,546.2 148.2,522.6 172.0,499.4C181.6,490.0 192.4,479.7 196.0,476.4C201.6,471.3 217.9,455.7 228.9,445.0C230.9,443.1 241.7,432.7 253.0,422.0C264.3,411.4 283.2,393.3 295.0,382.0C306.8,370.7 321.0,357.2 326.5,352.0C332.0,346.8 340.8,338.5 346.0,333.5C377.7,303.1 397.2,285.0 410.0,274.0C422.9,262.8 421.9,263.5 423.2,264.8C424.1,265.7 423.8,267.4 421.8,271.7C418.5,279.2 417.0,283.5 415.8,289.0C415.3,291.5 414.1,296.0 413.2,299.0C411.8,303.5 411.5,308.7 411.6,327.5C411.7,350.2 411.8,350.7 414.9,361.5C416.7,367.6 418.5,374.1 419.0,376.0C421.3,385.2 429.0,402.0 435.8,412.7C455.8,444.0 485.2,473.5 522.2,499.3C526.0,501.9 529.2,504.0 529.4,504.0C529.6,504.0 533.1,506.2 537.2,508.9C548.0,516.1 553.0,519.2 558.0,521.8C560.5,523.2 563.2,524.8 564.0,525.5C565.5,526.7 583.4,537.0 594.0,542.8C597.0,544.4 601.3,546.8 603.5,548.0C605.7,549.2 609.8,551.5 612.5,553.0C615.2,554.5 620.2,557.2 623.5,559.0C626.8,560.9 631.1,563.2 633.0,564.2C634.9,565.2 639.6,567.8 643.5,570.0C647.4,572.1 653.1,575.2 656.2,576.9C661.0,579.4 708.2,606.1 713.0,609.0C713.8,609.5 718.1,612.0 722.5,614.7C726.9,617.3 731.6,620.0 733.0,620.7C734.4,621.4 736.2,622.4 737.0,623.0C740.7,625.5 763.7,639.3 775.0,645.9C781.9,649.9 792.2,656.0 798.0,659.5C803.8,663.0 810.2,667.0 812.4,668.2C814.5,669.5 817.0,671.0 817.9,671.5C818.8,672.1 821.3,673.6 823.5,674.8C825.7,676.0 829.1,678.0 831.1,679.2C837.9,683.4 855.5,694.2 857.0,695.0C857.8,695.5 863.0,698.5 868.5,701.7C874.0,704.9 879.6,708.0 881.0,708.7C882.4,709.4 884.7,710.8 886.2,711.7C887.6,712.7 891.5,715.0 894.7,716.8C897.9,718.6 901.2,720.5 902.0,721.1C902.8,721.6 904.6,722.6 906.0,723.3C908.0,724.3 923.9,733.4 930.0,737.0C934.6,739.7 944.4,745.3 948.6,747.5C951.3,748.9 958.5,752.8 964.5,756.0C986.0,767.5 1028.1,788.0 1030.3,788.0C1031.0,788.0 1032.8,788.9 1034.5,790.0C1036.2,791.1 1038.2,792.0 1039.0,792.0C1039.8,792.0 1042.3,792.9 1044.5,794.0C1046.7,795.1 1049.1,795.9 1049.7,796.0C1050.4,796.0 1052.9,796.9 1055.2,797.9C1059.5,799.9 1067.1,802.6 1085.0,808.9C1091.4,811.1 1105.4,815.2 1111.0,816.5C1114.0,817.2 1117.8,818.3 1119.3,818.9C1120.9,819.5 1123.4,820.0 1125.0,820.0C1126.6,820.0 1129.7,820.6 1131.7,821.4C1135.8,822.9 1157.8,827.0 1175.9,829.5C1200.4,833.0 1248.0,833.7 1272.0,830.9C1290.1,828.8 1319.2,824.0 1330.8,821.1C1339.0,819.0 1343.6,817.9 1349.0,816.6C1358.4,814.3 1370.4,810.9 1372.5,810.0C1375.1,808.8 1382.6,806.2 1387.0,804.9C1391.2,803.7 1402.3,799.5 1406.5,797.5C1410.2,795.7 1422.6,791.0 1423.4,791.0C1424.8,791.0 1441.8,782.5 1446.8,779.3C1452.3,775.8 1455.0,775.2 1455.0,777.2C1455.0,778.4 1352.5,881.2 1333.0,899.5C1327.8,904.5 1316.3,915.3 1307.5,923.6C1298.7,931.9 1289.0,940.9 1285.9,943.6C1282.8,946.3 1275.2,953.2 1268.9,958.9C1249.0,977.1 1246.6,979.3 1236.5,988.0C1231.1,992.7 1222.5,1000.1 1217.4,1004.5C1198.8,1020.8 1152.7,1057.3 1132.0,1072.2C1119.5,1081.2 1079.5,1108.0 1078.5,1108.0C1078.2,1108.0 1075.8,1109.5 1073.2,1111.4C1070.5,1113.2 1067.0,1115.5 1065.4,1116.4C1063.8,1117.3 1060.7,1119.2 1058.5,1120.5C1056.3,1121.9 1053.8,1123.3 1053.0,1123.7C1052.2,1124.0 1050.8,1124.9 1050.0,1125.5C1049.2,1126.2 1045.6,1128.3 1042.0,1130.2C1038.4,1132.2 1033.7,1134.8 1031.5,1136.0C1020.5,1142.2 1012.6,1146.4 1004.0,1150.6C998.8,1153.1 988.2,1158.3 980.5,1162.0C963.5,1170.4 942.0,1180.0 940.6,1180.0C940.0,1180.0 938.2,1180.7 936.5,1181.6C934.9,1182.4 930.6,1184.2 927.0,1185.6C923.4,1187.0 917.6,1189.3 914.0,1190.7C901.0,1195.9 882.3,1202.6 876.5,1204.1C874.4,1204.6 872.1,1205.5 871.5,1205.9C871.0,1206.4 865.5,1208.2 859.5,1210.0C853.5,1211.8 845.4,1214.3 841.5,1215.7C837.6,1217.1 832.0,1218.8 829.0,1219.6C821.1,1221.5 808.3,1224.9 802.4,1226.6C799.6,1227.4 796.3,1228.0 795.1,1228.0C793.8,1228.0 791.4,1228.6 789.7,1229.4C787.9,1230.2 784.0,1231.3 781.0,1231.8C770.6,1233.7 753.5,1237.1 748.0,1238.5C742.9,1239.8 734.7,1241.4 727.5,1242.6C725.9,1242.9 720.7,1243.7 716.0,1244.5C711.3,1245.3 702.3,1246.6 696.0,1247.5C689.7,1248.4 680.9,1249.8 676.5,1250.6C672.1,1251.4 666.1,1252.0 663.1,1252.0C660.1,1252.0 654.9,1252.6 651.6,1253.4C641.6,1255.7 579.0,1259.7 540.0,1260.5C526.0,1260.8 508.0,1261.2 500.0,1261.4C492.0,1261.6 470.6,1261.4 452.5,1261.0ZM1520.5,709.3C1505.4,708.9 1480.5,706.9 1470.5,705.4C1449.3,702.1 1422.5,696.2 1416.2,693.4C1414.4,692.6 1411.7,692.0 1410.2,692.0C1408.7,692.0 1406.2,691.3 1404.6,690.5C1403.0,689.6 1400.0,688.5 1398.1,688.0C1390.2,686.0 1380.1,682.5 1369.5,678.0C1367.3,677.0 1362.3,675.0 1358.5,673.5C1344.4,668.1 1310.7,650.5 1287.2,636.5C1266.4,624.1 1231.2,598.8 1205.0,577.6C1197.0,571.2 1165.5,543.2 1153.0,531.5C1139.0,518.5 1071.5,450.6 1050.0,428.0C1023.3,400.0 971.0,347.5 953.0,330.8C934.6,313.7 923.0,304.0 897.8,284.9C882.9,273.6 857.0,255.8 849.5,251.6C847.9,250.7 845.8,249.6 845.0,249.0C833.4,241.8 807.0,228.5 788.5,220.5C782.5,217.9 775.6,215.0 773.2,213.9C770.9,212.9 768.5,212.0 767.9,212.0C767.3,212.0 765.4,211.4 763.7,210.6C760.1,208.9 748.9,205.2 738.2,202.1C714.4,195.2 707.8,193.6 696.5,192.0C692.1,191.4 684.9,190.3 680.5,189.5C664.6,186.8 637.8,185.7 616.9,186.9C606.2,187.6 596.8,188.3 596.0,188.5C595.2,188.8 588.4,189.9 581.0,191.0C565.3,193.3 554.7,195.5 547.0,198.0C544.0,199.0 537.5,201.0 532.5,202.5C520.9,205.9 519.9,206.3 497.7,216.1C487.3,220.6 477.8,225.1 476.5,226.1C474.0,228.1 469.0,230.3 468.3,229.7C467.2,228.5 470.7,224.7 485.3,211.2C500.7,197.0 511.1,187.9 534.9,168.1C540.6,163.4 547.2,157.9 549.5,155.9C567.7,140.5 617.9,106.0 642.8,91.8C648.2,88.8 652.8,86.1 656.8,83.8C662.4,80.6 695.4,64.0 696.3,64.0C696.7,64.0 701.0,62.2 705.8,59.9C718.9,53.8 719.9,53.3 727.5,50.4C731.4,49.0 735.9,47.2 737.5,46.4C740.2,45.3 743.9,43.9 760.0,37.9C763.0,36.7 767.5,35.0 770.0,34.0C772.5,33.1 779.0,31.1 784.5,29.6C790.0,28.1 796.1,26.3 798.0,25.6C802.2,24.0 805.8,23.1 826.0,18.5C834.5,16.5 843.8,14.3 846.6,13.5C849.4,12.7 853.3,12.0 855.3,12.0C857.3,12.0 860.1,11.5 861.7,10.9C863.2,10.2 869.5,9.1 875.5,8.4C881.5,7.6 890.1,6.5 894.5,6.0C898.9,5.4 908.9,4.5 916.8,4.0C924.6,3.5 933.7,2.4 936.9,1.5C945.3,-0.6 1047.9,-0.7 1058.5,1.4C1062.3,2.2 1071.8,3.1 1079.5,3.4C1106.1,4.6 1152.3,8.6 1161.1,10.6C1164.8,11.3 1170.7,12.0 1174.2,12.0C1177.7,12.0 1183.2,12.7 1186.3,13.5C1189.5,14.3 1194.0,15.0 1196.4,15.0C1198.7,15.0 1203.1,15.4 1206.1,16.0C1209.1,16.5 1215.1,17.4 1219.5,17.9C1241.4,20.5 1251.8,22.0 1255.0,23.0C1256.9,23.5 1260.1,24.0 1262.0,24.0C1263.9,24.0 1268.7,24.6 1272.5,25.5C1276.3,26.3 1286.2,27.9 1294.5,29.1C1302.8,30.2 1313.8,31.8 1319.0,32.6C1324.2,33.4 1331.7,34.5 1335.5,35.0C1339.3,35.6 1346.5,36.7 1351.5,37.5C1362.4,39.3 1388.4,42.8 1400.0,44.1C1404.7,44.6 1409.7,45.4 1411.2,45.9C1412.7,46.5 1417.2,47.1 1421.2,47.5C1425.2,47.8 1433.5,48.7 1439.5,49.5C1445.5,50.4 1461.3,51.9 1474.5,53.0C1539.8,58.3 1580.8,58.2 1641.6,52.4C1650.0,51.6 1658.2,51.0 1659.9,51.0C1665.0,51.0 1663.7,53.9 1655.7,60.2C1651.8,63.4 1645.8,68.5 1642.5,71.6C1627.1,86.2 1622.0,90.9 1616.0,96.0C1612.4,99.0 1609.3,101.7 1609.0,102.1C1608.3,102.9 1598.9,111.1 1584.0,124.0C1576.6,130.3 1567.9,138.0 1564.6,141.1C1552.0,152.7 1505.5,189.6 1492.5,198.2C1480.9,205.9 1468.2,213.3 1459.0,217.7C1444.2,224.8 1437.3,227.8 1434.0,228.8C1429.2,230.3 1421.9,232.9 1419.5,234.0C1416.2,235.6 1408.9,238.0 1403.0,239.6C1397.8,241.0 1394.9,241.8 1380.0,246.0C1376.4,247.1 1368.1,249.1 1361.5,250.5C1354.9,252.0 1347.5,253.8 1345.0,254.5C1342.5,255.2 1337.8,256.6 1334.5,257.6C1327.0,259.8 1315.7,264.2 1309.3,267.3C1301.1,271.3 1290.6,277.2 1288.9,278.6C1288.1,279.4 1287.0,280.0 1286.6,280.0C1284.6,280.0 1261.9,298.1 1256.5,304.1C1252.4,308.6 1243.1,320.2 1239.4,325.5C1234.3,332.9 1226.1,351.7 1222.7,364.0C1221.8,367.0 1220.6,375.3 1219.9,382.3C1215.9,424.7 1233.3,475.3 1268.4,523.5C1271.2,527.4 1273.7,530.7 1274.1,531.0C1274.5,531.3 1278.8,536.5 1283.7,542.5C1305.7,569.6 1341.1,603.0 1366.0,620.0C1368.8,621.9 1372.5,624.5 1374.3,625.8C1377.1,627.8 1381.4,630.6 1398.5,641.5C1400.2,642.6 1402.4,644.0 1403.5,644.6C1427.2,657.8 1450.2,669.0 1463.5,673.9C1466.8,675.1 1471.8,677.0 1474.5,678.0C1487.7,682.9 1510.3,690.0 1523.5,693.4C1536.5,696.8 1570.8,702.5 1584.0,703.5C1600.3,704.8 1601.9,706.1 1589.3,707.8C1581.9,708.9 1537.8,709.8 1520.5,709.3Z"/></symbol></svg>
+
+<main>
+  <header class="hero">
+    <svg class="mark wm" viewBox="0 0 1663 1262" aria-hidden="true"><use href="#m"/></svg>
+    <div class="lockup"><svg class="mark" viewBox="0 0 1663 1262" aria-hidden="true"><use href="#m"/></svg><span class="caps">Sonder Project</span></div>
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <p class="eyebrow">Brand kit · Makers of Surfdesk</p>
+      <h1>We build calm software <span class="blue">for busy people.</span></h1>
+      <p class="lead">The Sonder Project studio brand: who we are, how we look and how we sound. The written source of truth is <code>docs/brand/sonder-project/BRAND-KIT.md</code>; logo files are in <code>docs/brand/sonder-project/logos/</code>. Surfdesk has its own kit.</p>
+    </div>
+    <div class="row"><a class="pill" href="#brief">Copy the LLM brief</a><a class="pill ghost" href="#logos">See the logos</a></div>
+  </header>
+
+  <section>
+    <div class="head"><p class="eyebrow">Who we are</p><h2>A software studio that builds and owns its products.</h2>
+      <p class="lead">Sonder Project finds everyday problems busy people have, builds a calm, useful product for each one, and runs it for the long term.</p></div>
+    <div class="grid two">
+      <div class="card"><dl>
+        <dt>Type</dt><dd>Software studio and holding company</dd>
+        <dt>Founder</dt><dd>DeAnte Spruill</dd>
+        <dt>Contact</dt><dd>dante@sonderproject.co</dd>
+        <dt>Based in</dt><dd>California, USA</dd>
+        <dt>Industry</dt><dd>Software Development</dd>
+        <dt>Legal</dt><dd>Sole proprietorship; LLC planned January 2027</dd>
+      </dl></div>
+      <div class="card">
+        <p class="eyebrow">The name</p>
+        <p style="font:300 1.45rem/1.3 var(--display);letter-spacing:-.01em"><em>Sonder</em>: the realization that every passerby lives a life as vivid and complex as your own.</p>
+        <p class="lead" style="font-size:1rem">We build for real people with full, busy lives, and respect their time and their data. Written <strong>Sonder Project</strong>, two words, both capitalized. Said "SON-der PROJ-ect".</p>
+      </div>
+    </div>
+    <div class="card">
+      <span class="proposed">Proposed</span>
+      <p class="eyebrow">Mission</p>
+      <p style="font:300 1.6rem/1.25 var(--display);letter-spacing:-.01em;max-width:none">Build calm, useful software that helps busy people run their work and their lives.</p>
+    </div>
+    <div class="grid">
+      <div class="card"><span class="num">01</span><h3>Respect people's time</h3><p>Every feature should save more time than it costs.</p></div>
+      <div class="card"><span class="num">02</span><h3>Calm over clutter</h3><p>Fewer, better things. Quiet design. No dark patterns.</p></div>
+      <div class="card"><span class="num">03</span><h3>Privacy by default</h3><p>Data is never sold or used for ads, and always exportable and deletable.</p></div>
+      <div class="card"><span class="num">04</span><h3>Built to last</h3><p>Careful engineering, honest pricing, products we own and run ourselves.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="head"><p class="eyebrow">Brand architecture</p><h2>Products lead. Sonder Project signs.</h2>
+      <p class="lead">Each product has its own name, look and audience; the studio quietly vouches for it. On product material Sonder Project appears small. On company material (LinkedIn page, partners, hiring, legal) it leads.</p></div>
+    <div class="grid two">
+      <div class="card product">
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <span class="status">Live</span>
+          <h3>Surfdesk</h3>
+          <p>An everyday organizer for professionals, entrepreneurs and busy people: tasks, notes, calendar, clients, team, referrals and reports in one app. thesurfdesk.app</p>
+          <p class="eyebrow" style="letter-spacing:.18em">Credited as "Surfdesk by Sonder Project"</p>
+        </div>
+      </div>
+      <div class="card product">
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <span class="status plan">Planned</span>
+          <h3>Sonder Protocol</h3>
+          <p>The next venture under the studio, with its own name and brand when it launches.</p>
+        </div>
+      </div>
+    </div>
+    <div class="tbl"><table>
+      <thead><tr><th>Where</th><th>Leads</th><th>Sonder Project appears as</th></tr></thead>
+      <tbody>
+        <tr><td>Product site, app, ads, social</td><td>The product</td><td>"by Sonder Project", "A Sonder Project company"</td></tr>
+        <tr><td>LinkedIn company page, partners, hiring, investors</td><td>Sonder Project</td><td>Full logo; products listed as "our products"</td></tr>
+        <tr><td>Terms, privacy, contracts, Stripe, app stores</td><td>Sonder Project</td><td>The legal entity name</td></tr>
+      </tbody></table></div>
+  </section>
+
+  <section id="logos">
+    <div class="head"><p class="eyebrow">Logo</p><h2>The S-wave mark, spaced wordmark.</h2>
+      <p class="lead">Two interlocking waves forming an S, next to SONDER PROJECT in Outfit Light, uppercase, letter-spacing 0.25em. Always one solid color. Clear space equals half the mark's height.</p></div>
+    <div class="grid two">
+      <div class="tile obsidian"><div class="lockup"><svg class="mark" viewBox="0 0 1663 1262" style="color:var(--light-surf)"><use href="#m"/></svg><span class="caps">Sonder Project</span></div></div>
+      <div class="tile sand"><div class="lockup"><svg class="mark" viewBox="0 0 1663 1262" style="color:var(--deep-surf)"><use href="#m"/></svg><span class="caps">Sonder Project</span></div></div>
+      <div class="tile obsidian"><div class="lockup"><svg class="mark" viewBox="0 0 1663 1262" style="color:var(--bone)"><use href="#m"/></svg><span class="caps">Sonder Project</span></div></div>
+      <div class="tile surf"><div class="lockup"><svg class="mark" viewBox="0 0 1663 1262" style="color:#fff"><use href="#m"/></svg><span class="caps">Sonder Project</span></div></div>
+    </div>
+    <div class="card files">
+      <h3>Files in <code>docs/brand/sonder-project/logos/</code> (SVG + transparent PNG)</h3>
+      <ul>
+        <li><code>sonder-project-lockup-on-dark</code>: primary · <code>-blue</code>: for light backgrounds · <code>-white</code> / <code>-black</code>: one color</li>
+        <li><code>sonder-project-avatar</code> 400²: LinkedIn company logo and other profile pictures</li>
+        <li><code>sonder-project-linkedin-cover</code> 1512×256: LinkedIn company cover</li>
+        <li><code>mark-*</code>: the mark alone in six colors</li>
+        <li>Minimum size: horizontal logo 140px wide (1.25 in print); below that, the mark alone (16px / 0.25 in)</li>
+      </ul>
+    </div>
+    <div class="dd">
+      <figure><div class="tile obsidian"><svg class="mark" viewBox="0 0 1663 1262" style="width:84px;color:var(--bone)"><use href="#m"/></svg></div><figcaption><span class="tag yes">Do</span>Bone or light surf on obsidian</figcaption></figure>
+      <figure><div class="tile sand"><svg class="mark" viewBox="0 0 1663 1262" style="width:84px;color:var(--ink)"><use href="#m"/></svg></div><figcaption><span class="tag yes">Do</span>Ink or deep surf on sand</figcaption></figure>
+      <figure><div class="tile obsidian"><svg class="mark" viewBox="0 0 1663 1262" style="width:84px;color:var(--deep-surf)"><use href="#m"/></svg></div><figcaption><span class="tag no">Don't</span>Deep surf on obsidian</figcaption></figure>
+      <figure><div class="tile obsidian"><svg class="mark" viewBox="0 0 1663 1262" style="width:84px;color:var(--light-surf);transform:rotate(16deg) scaleY(1.3)"><use href="#m"/></svg></div><figcaption><span class="tag no">Don't</span>Rotate, skew or stretch</figcaption></figure>
+      <figure><div class="tile obsidian"><svg class="mark" viewBox="0 0 1663 1262" style="width:84px;color:var(--light-surf);filter:drop-shadow(0 0 14px #62b4e6)"><use href="#m"/></svg></div><figcaption><span class="tag no">Don't</span>Glows, shadows or outlines</figcaption></figure>
+    </div>
+  </section>
+
+  <section>
+    <div class="head"><p class="eyebrow">Color</p><h2>Dark-first, one blue.</h2>
+      <p class="lead">Obsidian ground, bone type, a single light-surf accent. The sand version is for printed and dense documents. Click a value to copy it.</p></div>
+    <div class="grid" id="swatches"></div>
+    <div class="card">
+      <p class="eyebrow">Proportion</p>
+      <div class="ratio" aria-label="About 80 percent obsidian, 17 percent bone and stone text, 3 percent blue"><span style="flex:80;background:var(--obsidian)"></span><span style="flex:17;background:var(--bone)"></span><span style="flex:3;background:var(--light-surf)"></span></div>
+      <p class="lead" style="font-size:.85rem">About 80% obsidian · 17% bone and stone text · 3% blue. Blue marks one thing per layout.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="head"><p class="eyebrow">Typography</p><h2>Outfit Light and Inter.</h2>
+      <p class="lead">Free on Google Fonts. Uppercase with wide spacing for the wordmark and labels; sentence case for statements and body.</p></div>
+    <div class="card">
+      <div class="spec"><span class="eyebrow">Wordmark · Outfit 300 · uppercase · +0.25em</span><div class="t-caps">Sonder Project</div></div>
+      <div class="spec"><span class="eyebrow">Statement · Outfit 300 · -0.02em · 1.05</span><div class="t-hero">Software that respects <span class="blue">your time.</span></div></div>
+      <div class="spec"><span class="eyebrow">Body · Inter 400 · 16px · 1.55</span><div class="t-body">We own and run our products end to end, with a focus on simplicity, privacy and craft.</div></div>
+      <div class="spec"><span class="eyebrow">Label · Inter 500 · 0.72rem · uppercase · +0.22em</span><div class="eyebrow">Makers of Surfdesk</div></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="head"><p class="eyebrow">Voice</p><h2>Founder-led, calm, precise.</h2>
+      <p class="lead">A thoughtful builder explaining what they make and why. Show the work instead of big claims. "We" for the company, "I" in founder posts.</p></div>
+    <div class="tbl"><table>
+      <thead><tr><th>Say</th><th>Not</th></tr></thead>
+      <tbody>
+        <tr><td>We build calm, useful software</td><td>We disrupt the productivity space</td></tr>
+        <tr><td>Our first product, Surfdesk, is live</td><td>Industry-leading global platform</td></tr>
+        <tr><td>Never sold, yours to export or delete</td><td>Military-grade, 100% secure</td></tr>
+        <tr><td>An everyday organizer for professionals</td><td>Case-management or nonprofit software</td></tr>
+        <tr><td>Clear and specific, no exclamation marks</td><td>Revolutionary! Game-changing! 10x!</td></tr>
+      </tbody></table></div>
+    <div class="grid two">
+      <div class="card copyblock"><div class="top"><p class="eyebrow">Short about · LinkedIn</p><button type="button" data-copy="about-short">Copy</button></div><p class="txt" id="about-short">Sonder Project designs and builds software that helps professionals, entrepreneurs and teams stay organized. We own and run our products end to end, with a focus on simplicity, privacy and craft. Our first product, Surfdesk, keeps your whole workday in one place: tasks, notes, calendar, clients, team and reports. Try it at thesurfdesk.app.</p></div>
+      <div class="card copyblock"><div class="top"><p class="eyebrow">Long about</p><button type="button" data-copy="about-long">Copy</button></div><p class="txt" id="about-long">Sonder Project is a software studio founded by DeAnte Spruill. We build products for people with full, busy lives: the owner running a shop, the consultant juggling clients, the team keeping track of a hundred moving parts. Each product does one job well, respects people's time, and treats their data with care: never sold, always theirs to export or delete.
+Our first product is Surfdesk, an everyday organizer for professionals and entrepreneurs. It brings tasks, notes, reminders, calendar, clients, bookings, referrals, team management and one-click reports into one calm app. More products are on the way.</p></div>
+      <div class="card copyblock"><div class="top"><p class="eyebrow">LinkedIn tagline</p><button type="button" data-copy="tagline">Copy</button></div><p class="txt" id="tagline">We build calm software for busy people. Makers of Surfdesk.</p></div>
+      <div class="card copyblock"><div class="top"><p class="eyebrow">Email signature</p><button type="button" data-copy="sig">Copy</button></div><p class="txt" id="sig">DeAnte Spruill
+Founder, Sonder Project
+Makers of Surfdesk · thesurfdesk.app
+dante@sonderproject.co</p></div>
+    </div>
+  </section>
+
+  <section id="brief">
+    <div class="head"><p class="eyebrow">For another chat or LLM</p><h2>The paste-this brief.</h2>
+      <p class="lead">Paste this at the start of any new session about Sonder Project. For full detail, attach <code>docs/brand/sonder-project/BRAND-KIT.md</code>. For product copy, use the Surfdesk kit instead.</p></div>
+    <div class="card">
+      <div class="row"><button class="pill" id="copy" type="button">Copy brief</button><span class="copied" id="copied" hidden>Copied</span></div>
+      <pre id="brieftext">You&#x27;re working on brand, company or founder copy for Sonder Project. Follow these rules exactly.
+
+WHO WE ARE
+Sonder Project is a software studio and holding company. It designs, builds and owns its own products, end to end. Its first product is Surfdesk (thesurfdesk.app), an everyday organizer for professionals, entrepreneurs and busy people. Future ventures (for example the planned Sonder Protocol) will sit under Sonder Project, each with its own name and brand.
+
+MISSION (proposed)
+Build calm, useful software that helps busy people run their work and their lives.
+
+THE NAME
+&quot;Sonder&quot; is the realization that every passerby lives a life as vivid and complex as your own. We build for real people with full, busy lives, and we respect their time and their data.
+
+VALUES
+Respect people&#x27;s time. Calm over clutter. Privacy by default. Built to last.
+
+HOW WE RELATE TO OUR PRODUCTS
+Products lead; Sonder Project signs. On product material we appear small (&quot;Surfdesk by Sonder Project&quot;, &quot;A Sonder Project company&quot;). On Sonder Project material (LinkedIn company page, partners, hiring, investors, legal), the products appear as &quot;our products&quot; / &quot;our first product, Surfdesk&quot;.
+
+LOOK
+Dark-first, calm, minimal. Obsidian #0A0A09 background, bone #F3F0EB text, stone #AEA08D secondary text, light surf blue #62B4E6 as the single accent (surf blue #3E9BD4 for reference, deep surf #1C77B5 on light backgrounds). Light version: sand #F6F4EF with ink #141412 text. Headings in Outfit Light (300); body in Inter. The wordmark and small labels are uppercase with wide letter-spacing (wordmark +0.25em, labels +0.22em). Lots of space, hairline rules, no gradients, no heavy shadows, no emoji.
+
+LOGO
+The S-wave mark (two interlocking waves forming an S) next to &quot;SONDER PROJECT&quot; in Outfit Light, uppercase, letter-spacing 0.25em. Always one solid color: bone or light surf on obsidian; ink or deep surf on sand. Never gradients, outlines, shadows, rotation or stretching.
+
+VOICE
+Founder-led, calm, precise, confident and understated. Short sentences. Show the work (products, results) instead of big claims. No hype words (&quot;disrupt&quot;, &quot;revolutionary&quot;, &quot;game-changing&quot;), no slang, no exclamation marks.
+
+KEY LINES
+- &quot;We build calm software for busy people.&quot; (proposed)
+- &quot;Makers of Surfdesk.&quot;
+
+FACTS
+Founder: DeAnte Spruill. Contact: dante@sonderproject.co. Based in California. Currently a sole proprietorship; an LLC is planned for January 2027.</pre>
+    </div>
+  </section>
+
+  <footer><span>Sonder Project · California</span><span>Sonder Project brand kit v1 · Nov 18, 2026</span></footer>
+</main>
+
+<script>
+const SW=[
+  ["Obsidian","#0A0A09","Primary background"],["Charcoal","#141412","Cards and panels on obsidian"],
+  ["Bone","#F3F0EB","Main text and mark on dark"],["Stone","#AEA08D","Secondary text and labels on dark"],
+  ["Light surf","#62B4E6","The accent on dark"],["Surf blue","#3E9BD4","Brand reference blue"],
+  ["Sand","#F6F4EF","Light-version background"],["Ink","#141412","Text on sand"],
+  ["Umber","#6E5F4D","Secondary text on sand"],["Deep surf","#1C77B5","Accent on sand"]
+];
+const g=document.getElementById("swatches");
+for(const [n,h,u] of SW){
+  const d=document.createElement("div");d.className="sw";
+  d.innerHTML=`<div class="chip" style="background:${h}"></div><div class="meta"><span class="name">${n}</span><button type="button" aria-label="Copy ${h}">${h}</button><span class="use">${u}</span></div>`;
+  const b=d.querySelector("button");
+  b.addEventListener("click",()=>copy(h,null,()=>{b.textContent="Copied";setTimeout(()=>b.textContent=h,1200)}));
+  g.appendChild(d);
+}
+function copy(text,el,done){
+  const sel=()=>{if(!el)return;const r=document.createRange();r.selectNodeContents(el);const s=getSelection();s.removeAllRanges();s.addRange(r);};
+  try{navigator.clipboard.writeText(text).then(done,sel);}catch(e){sel();}
+}
+document.querySelectorAll("[data-copy]").forEach(b=>b.addEventListener("click",()=>{
+  const el=document.getElementById(b.dataset.copy);
+  copy(el.textContent,el,()=>{b.textContent="Copied";setTimeout(()=>b.textContent="Copy",1200)});
+}));
+document.getElementById("copy").addEventListener("click",()=>{
+  const el=document.getElementById("brieftext");
+  copy(el.textContent,el,()=>{const c=document.getElementById("copied");c.hidden=false;setTimeout(()=>c.hidden=true,1800)});
+});
+</script>

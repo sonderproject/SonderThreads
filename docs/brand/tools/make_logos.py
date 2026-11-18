@@ -1,4 +1,4 @@
-"""Builds every logo SVG in docs/brand/logos from the traced mark and the brand fonts (text is outlined, no font needed).
+"""Builds every logo SVG into docs/brand/surfdesk/logos and docs/brand/sonder-project/logos from the traced mark and the brand fonts (text is outlined, no font needed).
 Run: python3 docs/brand/tools/make_logos.py   (needs: pip install fonttools brotli)"""
 import os
 from fontTools.ttLib import TTFont
@@ -8,9 +8,8 @@ from fontTools.pens.transformPen import TransformPen
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, "..", "..", ".."))
-OUT = os.path.join(ROOT, "docs", "brand", "logos")
+BRAND = os.path.join(ROOT, "docs", "brand")
 FONTS = os.path.join(ROOT, "docs", "marketing", "video", "surfdesk-15", "fonts")
-os.makedirs(OUT, exist_ok=True)
 
 with open(os.path.join(HERE, "mark-path.txt")) as f:
     MW, MH = map(int, f.readline().split()); MARK = f.read().strip()
@@ -39,7 +38,10 @@ def mark(x, y, h, fill):
 
 def svg(name, w, h, body, bg=None):
     rect = f'<rect width="{w}" height="{h}" fill="{bg}"/>' if bg else ""
-    with open(os.path.join(OUT, name), "w") as f:
+    brands = ["surfdesk", "sonder-project"] if name.startswith("mark-") else ["sonder-project"] if name.startswith("sonder-project") else ["surfdesk"]
+    for b in brands:
+      os.makedirs(os.path.join(BRAND, b, "logos"), exist_ok=True)
+      with open(os.path.join(BRAND, b, "logos", name), "w") as f:
         f.write(f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {w:.0f} {h:.0f}" width="{w:.0f}" height="{h:.0f}">{rect}{body}</svg>\n')
 
 COLORS = {  # name: (mark, text, muted)
@@ -103,4 +105,4 @@ def cover(name, line1, line2, bg, fg, accent, muted):
     svg(name, W, H, big + f'<path fill="{fg}" d="{d1}"/><path fill="{accent}" d="{d2}"/><path fill="{muted}" d="{ds}"/>', bg)
 cover("surfdesk-linkedin-cover.svg", "Every task. Every client.", "Every follow-up. Organized.", "#F6F4EF", "#141412", "#1C77B5", "#6E5F4D")
 cover("sonder-project-linkedin-cover.svg", "We build calm software", "for busy people.", "#0A0A09", "#F3F0EB", "#62B4E6", "#AEA08D")
-print("ok", len(os.listdir(OUT)))
+print("ok")
