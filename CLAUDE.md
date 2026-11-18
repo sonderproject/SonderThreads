@@ -3,7 +3,7 @@
 ## Positioning (read first)
 - Surfdesk is an everyday organizer for professionals, entrepreneurs and busy people. It keeps your whole day in one place: tasks and to-dos, notes, lists, reminders, calendar, voice capture and the smart command box, plus clients/customers, visits, follow-ups, bookings and reports. Client management is a big part, never the whole story.
 - It's for everyone with a lot to keep track of: individuals and busy people, freelancers and entrepreneurs, every kind of business with customers (salons, gyms, coaches, trainers, contractors and trades, consultants, agencies, clinics), and nonprofits. Two organization versions: business ("Visits", "Insights", revenue) and nonprofit ("Check-ins", "Impact", demographics).
-- In any copy: lead with everyday organization for professionals and entrepreneurs. The owner describes things casually for context; never quote his wording in copy, write polished marketing copy that means the same thing. Never describe Surfdesk as a case-management, nonprofit-only or client-tracker-only tool; nonprofits are one audience, never the headline.
+- In any copy: lead with everyday organization for professionals and entrepreneurs. The owner describes things casually for context; never quote their wording in copy, write polished marketing copy that means the same thing. Never describe Surfdesk as a case-management, nonprofit-only or client-tracker-only tool; nonprofits are one audience, never the headline.
 
 ## Dashboard steps for the owner
 - When the owner has to do something in a dashboard, give a direct link to the exact page (deep link), not menu paths to click through.
