@@ -289,8 +289,8 @@ async function compute(
       range,
     ),
     // Per service: uses this period and last, people, value, and its most common weekday and 2-hour block.
-    run<{ name: string; n: number; prev: number; people: number; value: number; dow: number | null; block: number | null }>(
-      `select s.name,
+    run<{ id: string; name: string; n: number; prev: number; people: number; value: number; dow: number | null; block: number | null }>(
+      `select s.id, s.name,
               count(*) filter (where d between $3::date and $4::date)::int as n,
               count(*) filter (where d between $5::date and $6::date)::int as prev,
               count(distinct c.person_id) filter (where d between $3::date and $4::date)::int as people,
@@ -384,6 +384,7 @@ async function compute(
     followThrough: followRows[0] ?? { due: 0, onTime: 0, late: 0, open: 0 },
     trackingSince: sinceRows[0]?.d ?? null,
     services: serviceRows.map((r) => ({
+      id: r.id,
       name: r.name,
       count: r.n,
       prevCount: r.prev,

@@ -299,7 +299,7 @@ export function ImpactDashboard({ orgName }: { orgName: string | null }) {
           </Chapter>
 
           <Chapter n="04" title="Needs" lead="Why people came in.">
-            {data.services.length > 0 && <ServicesTable services={data.services} />}
+            {data.services.length > 0 && <ServicesTable services={data.services} range={range} />}
             <ChartCard title="Reasons for visits" subtitle={`${terms.checkIns} by reason`} table={data.byReason} unit={terms.checkInsLower} wide>
               {data.byReason.length ? <BarList data={data.byReason} unit={terms.checkInsLower} /> : <Empty />}
             </ChartCard>
@@ -492,7 +492,7 @@ function OutcomesTable({ outcomes }: { outcomes: OutcomeStat[] }) {
 }
 
 /** Services: how often each was provided, to how many people, what it brought in, its trend and its busiest time. */
-export function ServicesTable({ services }: { services: ServiceStat[] }) {
+export function ServicesTable({ services, range }: { services: ServiceStat[]; range?: { from: string; to: string } | null }) {
   const showValue = services.some((s) => s.valueCents > 0);
   const trend = (s: ServiceStat) => {
     if (s.prevCount === 0) return { text: "new", tone: "text-accent" };
@@ -523,7 +523,12 @@ export function ServicesTable({ services }: { services: ServiceStat[] }) {
               const t = trend(s);
               return (
                 <tr key={s.name}>
-                  <td className="py-2 pr-3 text-text">{s.name}</td>
+                  <td className="py-2 pr-3 text-text">
+                    {/* Who got it, with dates (and save them as a list or group). */}
+                    <a href={`/services/${s.id}${range ? `?${new URLSearchParams({ from: range.from, to: range.to })}` : ""}`} className="text-accent hover:underline">
+                      {s.name}
+                    </a>
+                  </td>
                   <td className="py-2 pr-3 text-right tabular-nums">{s.count.toLocaleString("en-US")}</td>
                   <td className="py-2 pr-3 text-right tabular-nums">{s.people.toLocaleString("en-US")}</td>
                   {showValue && <td className="py-2 pr-3 text-right tabular-nums">{s.valueCents ? formatMoney(s.valueCents) : "–"}</td>}

@@ -108,7 +108,12 @@ export function ServicesSettings({ services, canManage, orgName }: { services: S
           <ul className="mt-2 divide-y divide-border-subtle">
             {archived.map((s) => (
               <li key={s.id} className="flex items-center justify-between gap-3 py-2">
-                <span className="text-text-muted">{s.name}</span>
+                <span className="text-text-muted">
+                  {s.name}{" "}
+                  <a href={`/services/${s.id}`} className="text-xs text-accent hover:underline">
+                    See who got it
+                  </a>
+                </span>
                 {canManage && (
                   <button
                     type="button"
@@ -175,7 +180,12 @@ function ServiceRow({
     <li className="flex items-center gap-2 p-3">
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm text-text">{service.name}</p>
-        {service.priceCents !== null && <p className="text-xs tabular-nums text-text-muted">{formatMoney(service.priceCents)}</p>}
+        <p className="text-xs tabular-nums text-text-muted">
+          {service.priceCents !== null && <>{formatMoney(service.priceCents)} · </>}
+          <a href={`/services/${service.id}`} className="text-accent hover:underline">
+            See who got it
+          </a>
+        </p>
       </div>
       {canManage && (
         <div className="flex shrink-0 items-center gap-0.5">

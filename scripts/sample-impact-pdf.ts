@@ -42,10 +42,10 @@ const m: Metrics = {
   followThrough: { due: 460, onTime: 371, late: 60, open: 29 },
   trackingSince: "2025-09-08",
   services: [
-    { name: "Job readiness workshop", count: 412, prevCount: 301, people: 288, valueCents: 0, busiestDay: "Tuesday", busiestTime: "10a" },
-    { name: "Resume help", count: 356, prevCount: 290, people: 241, valueCents: 0, busiestDay: "Monday", busiestTime: "10a" },
-    { name: "OSHA 10 class", count: 288, prevCount: 204, people: 196, valueCents: 0, busiestDay: "Wednesday", busiestTime: "12p" },
-    { name: "Food Handlers card", count: 241, prevCount: 199, people: 233, valueCents: 0, busiestDay: "Thursday", busiestTime: "2p" },
+    { id: "s475", name: "Job readiness workshop", count: 412, prevCount: 301, people: 288, valueCents: 0, busiestDay: "Tuesday", busiestTime: "10a" },
+    { id: "s614", name: "Resume help", count: 356, prevCount: 290, people: 241, valueCents: 0, busiestDay: "Monday", busiestTime: "10a" },
+    { id: "s741", name: "OSHA 10 class", count: 288, prevCount: 204, people: 196, valueCents: 0, busiestDay: "Wednesday", busiestTime: "12p" },
+    { id: "s873", name: "Food Handlers card", count: 241, prevCount: 199, people: 233, valueCents: 0, busiestDay: "Thursday", busiestTime: "2p" },
   ],
   outcomes: [
     { name: "Got a job", people: 18, prevPeople: 12 },
@@ -67,5 +67,5 @@ const m: Metrics = {
 
 impactPdf(m, {
   preparedFor: "Harbor Community Services",
-  org: { name: "Harbor Community Services", phone: "(562) 555-0100", email: "hello@harborcs.org", website: "harborcs.org", address: "412 Harbor Ave, Suite 3, Long Beach, CA" } as never,
+  org: { id: "s61", name: "Harbor Community Services", phone: "(562) 555-0100", email: "hello@harborcs.org", website: "harborcs.org", address: "412 Harbor Ave, Suite 3, Long Beach, CA" } as never,
 }).then((buf) => writeFileSync(process.argv[2] ?? "sample-impact.pdf", buf));

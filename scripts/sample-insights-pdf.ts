@@ -42,11 +42,11 @@ const m: Metrics = {
   followThrough: { due: 0, onTime: 0, late: 0, open: 0 },
   trackingSince: "2025-11-02",
   services: [
-    { name: "Full groom", count: 512, prevCount: 431, people: 238, valueCents: 3328000, busiestDay: "Saturday", busiestTime: "10a" },
-    { name: "Bath & brush", count: 341, prevCount: 298, people: 177, valueCents: 1534500, busiestDay: "Friday", busiestTime: "10a" },
-    { name: "Nail trim", count: 236, prevCount: 221, people: 151, valueCents: 472000, busiestDay: "Saturday", busiestTime: "12p" },
-    { name: "Puppy cut", count: 121, prevCount: 92, people: 64, valueCents: 665500, busiestDay: "Wednesday", busiestTime: "10a" },
-    { name: "De-shedding", count: 86, prevCount: 62, people: 49, valueCents: 516000, busiestDay: "Saturday", busiestTime: "10a" },
+    { id: "s94", name: "Full groom", count: 512, prevCount: 431, people: 238, valueCents: 3328000, busiestDay: "Saturday", busiestTime: "10a" },
+    { id: "s228", name: "Bath & brush", count: 341, prevCount: 298, people: 177, valueCents: 1534500, busiestDay: "Friday", busiestTime: "10a" },
+    { id: "s362", name: "Nail trim", count: 236, prevCount: 221, people: 151, valueCents: 472000, busiestDay: "Saturday", busiestTime: "12p" },
+    { id: "s494", name: "Puppy cut", count: 121, prevCount: 92, people: 64, valueCents: 665500, busiestDay: "Wednesday", busiestTime: "10a" },
+    { id: "s625", name: "De-shedding", count: 86, prevCount: 62, people: 49, valueCents: 516000, busiestDay: "Saturday", busiestTime: "10a" },
   ],
   outcomes: [
     { name: "Became a regular", people: 22, prevPeople: 15 },
@@ -68,5 +68,5 @@ const m: Metrics = {
 impactPdf(m, {
   preparedFor: "Pawsome Grooming Co.",
   audience: "business",
-  org: { name: "Pawsome Grooming Co.", about: null, phone: "(562) 555-0177", email: "hello@pawsomegrooming.com", website: "pawsomegrooming.com", address: "88 Elm St, Long Beach, CA" } as never,
+  org: { id: "s772", name: "Pawsome Grooming Co.", about: null, phone: "(562) 555-0177", email: "hello@pawsomegrooming.com", website: "pawsomegrooming.com", address: "88 Elm St, Long Beach, CA" } as never,
 }).then((buf) => writeFileSync(process.argv[2] ?? "sample-insights.pdf", buf));

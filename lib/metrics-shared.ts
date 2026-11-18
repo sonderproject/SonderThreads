@@ -47,6 +47,8 @@ export type MetricsScope = "me" | "org";
 export type OutcomeStat = { name: string; people: number; prevPeople: number };
 
 export type ServiceStat = {
+  /** Service id (links to /services/<id>). */
+  id: string;
   name: string;
   /** Times provided in the period, and in the previous period of the same length. */
   count: number;
