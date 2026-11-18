@@ -1,0 +1,305 @@
+<title>Surfdesk Brand Kit</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@300;400;500&display=swap">
+<style>
+/* Layout: one calm centered column (the app's own system), sections as hairline-bordered bands, tiles in wrapping grids. */
+:root{
+  --bg:#f6f4ef;--surface:#ffffff;--fg:#141412;--muted:#6e5f4d;--line:#e2dbd0;--line-subtle:#ece7dd;
+  --accent:#1c77b5;--accent-soft:#eef6fc;--warn:#9a5b00;--warn-soft:#fbf0de;--urgent:#b93815;--urgent-soft:#fdebe4;
+  --shadow:0 1px 2px rgba(20,20,18,.04),0 10px 30px -18px rgba(20,20,18,.18);
+  --display:"Outfit",system-ui,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;
+  --body:"Inter",system-ui,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;
+  /* Fixed brand swatches (identical in both themes; they are the subject, not UI). */
+  --sand:#f6f4ef;--obsidian:#0a0a09;--ink:#141412;--bone:#f3f0eb;--umber:#6e5f4d;--stone:#aea08d;
+  --surf:#3e9bd4;--deep-surf:#1c77b5;--light-surf:#62b4e6;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0a0a09;--surface:#141412;--fg:#f3f0eb;--muted:#aea08d;--line:#2a2926;--line-subtle:#1e1d1b;
+  --accent:#62b4e6;--accent-soft:#0b2236;--warn:#e8b25c;--warn-soft:#33281a;--urgent:#ff8f6b;--urgent-soft:#3a1f17;
+  --shadow:inset 0 1px 0 rgba(255,255,255,.03),0 10px 30px -18px rgba(0,0,0,.6);color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0a0a09;--surface:#141412;--fg:#f3f0eb;--muted:#aea08d;--line:#2a2926;--line-subtle:#1e1d1b;
+  --accent:#62b4e6;--accent-soft:#0b2236;--warn:#e8b25c;--warn-soft:#33281a;--urgent:#ff8f6b;--urgent-soft:#3a1f17;
+  --shadow:inset 0 1px 0 rgba(255,255,255,.03),0 10px 30px -18px rgba(0,0,0,.6);color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font:400 16px/1.55 var(--body);-webkit-font-smoothing:antialiased;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+main{max-width:1040px;margin:0 auto;padding-block:40px 96px;display:flex;flex-direction:column;gap:72px}
+h1,h2,h3{font-family:var(--display);font-weight:300;letter-spacing:-.02em;margin:0;text-wrap:balance}
+h1{font-size:clamp(2.6rem,7vw,4.6rem);line-height:1.02}
+h2{font-size:clamp(1.8rem,4vw,2.5rem);line-height:1.08}
+h3{font-size:1.25rem;font-weight:400}
+p{margin:0;max-width:65ch}
+.eyebrow{font:500 .72rem/1 var(--body);letter-spacing:.22em;text-transform:uppercase;color:var(--muted)}
+.lead{font-size:1.1rem;color:var(--muted)}
+.blue{color:var(--accent)}
+section{display:flex;flex-direction:column;gap:24px;border-top:1px solid var(--line);padding-top:40px}
+.head{display:flex;flex-direction:column;gap:12px}
+.grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fill,minmax(min(100%,240px),1fr))}
+.grid.two{grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr))}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:20px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.card p,.card li{font-size:.95rem}
+ul{margin:0;padding-left:1.1em;display:flex;flex-direction:column;gap:6px}
+.mark{display:block;fill:currentColor}
+/* Hero */
+.hero{display:grid;gap:40px;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));align-items:center}
+.hero-lockup{display:flex;align-items:center;gap:22px;color:var(--fg)}
+.hero-lockup .mark{width:92px;color:var(--accent)}
+.hero-lockup span{font:300 clamp(3rem,8vw,4.4rem)/1 var(--display);letter-spacing:-.02em}
+.by{margin-top:14px}
+.pill{display:inline-flex;align-items:center;justify-content:center;border-radius:999px;padding:10px 20px;font:600 .95rem var(--body);background:var(--accent);color:var(--bg);border:0;cursor:pointer}
+.pill.ghost{background:transparent;color:var(--fg);border:1px solid var(--line)}
+.pill:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+/* Architecture */
+.arch{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.arch .card.dark{background:var(--obsidian);color:var(--bone);border-color:#2a2926}
+.arch .card.dark .eyebrow{color:var(--stone)}
+.arch .card.light{background:var(--sand);color:var(--ink);border-color:#e2dbd0}
+.arch .card.light .eyebrow{color:var(--umber)}
+.small-lockup{display:flex;align-items:center;gap:14px}
+.small-lockup .mark{width:46px}
+.small-lockup .w{font:300 1.9rem/1 var(--display);letter-spacing:-.02em}
+.small-lockup .caps{font:300 1.05rem/1 var(--display);letter-spacing:.25em;text-transform:uppercase}
+/* Logo tiles */
+.tile{border-radius:16px;border:1px solid var(--line);min-height:170px;display:flex;align-items:center;justify-content:center;padding:28px 20px;overflow:hidden}
+.tile.sand{background:var(--sand);color:var(--ink)}.tile.white{background:#fff;color:var(--ink)}
+.tile.obsidian{background:var(--obsidian);color:var(--bone);border-color:#2a2926}.tile.surf{background:var(--deep-surf);color:#fff;border-color:var(--deep-surf)}
+.tile .small-lockup .mark{width:52px}
+.on-light .mark{color:var(--deep-surf)}.on-dark .mark{color:var(--light-surf)}.on-blue .mark{color:#fff}
+.stacked{display:flex;flex-direction:column;align-items:center;gap:10px}
+.stacked .mark{width:70px}.stacked .w{font:300 2.1rem/1 var(--display);letter-spacing:-.02em}
+.stacked .by{margin:0;font:500 .6rem/1 var(--body);letter-spacing:.22em;text-transform:uppercase;opacity:.75}
+.cap{font-size:.82rem;color:var(--muted)}
+.files code,code{font:500 .85em ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--line-subtle);padding:1px 5px;border-radius:5px;overflow-wrap:anywhere}
+/* Do / don't */
+.dd{display:grid;gap:16px;grid-template-columns:repeat(auto-fill,minmax(min(100%,200px),1fr))}
+.dd figure{margin:0;display:flex;flex-direction:column;gap:8px}
+.dd .tile{min-height:130px}
+.dd figcaption{font-size:.85rem;display:flex;gap:8px;align-items:baseline}
+.tag{font:600 .66rem/1 var(--body);letter-spacing:.04em;text-transform:uppercase;padding:4px 7px;border-radius:999px;flex:none}
+.tag.yes{background:var(--accent-soft);color:var(--accent)}.tag.no{background:var(--urgent-soft);color:var(--urgent)}
+/* Swatches */
+.sw{border-radius:16px;overflow:hidden;border:1px solid var(--line);background:var(--surface);display:flex;flex-direction:column}
+.sw .chip{height:110px}
+.sw .meta{padding:14px 16px;display:flex;flex-direction:column;gap:4px}
+.sw .name{font-weight:600}
+.sw button{all:unset;cursor:pointer;font:500 .85rem ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--muted);width:max-content}
+.sw button:hover{color:var(--accent)}
+.sw .use{font-size:.85rem;color:var(--muted)}
+.ratio{display:flex;height:18px;border-radius:999px;overflow:hidden;border:1px solid var(--line)}
+/* Type */
+.spec{display:flex;flex-direction:column;gap:6px;padding:18px 0;border-top:1px solid var(--line-subtle)}
+.spec:first-child{border-top:0;padding-top:0}
+.spec .lbl{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.t-hero{font:300 clamp(2.2rem,5vw,3.4rem)/1.05 var(--display);letter-spacing:-.02em}
+.t-title{font:400 2rem/1.1 var(--display);letter-spacing:-.02em}
+.t-section{font:500 1.3rem/1.2 var(--display)}
+.t-body{font:400 1rem/1.5 var(--body)}
+.t-eyebrow{font:500 .72rem/1 var(--body);letter-spacing:.22em;text-transform:uppercase;color:var(--muted)}
+/* Voice */
+table{border-collapse:collapse;width:100%;font-size:.95rem}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:16px;background:var(--surface)}
+th,td{text-align:left;padding:12px 16px;border-top:1px solid var(--line-subtle);vertical-align:top}
+thead th{border-top:0;font:500 .7rem/1 var(--body);letter-spacing:.22em;text-transform:uppercase;color:var(--muted)}
+.lines{display:flex;flex-direction:column;gap:0}
+.line{display:flex;justify-content:space-between;gap:16px;align-items:center;padding:14px 0;border-top:1px solid var(--line-subtle)}
+.line:first-child{border-top:0}
+.line q{quotes:none;font:300 1.35rem/1.25 var(--display);letter-spacing:-.01em}
+.line .k{font-size:.8rem;color:var(--muted);flex:none;text-align:right}
+/* Brief */
+pre{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;font:400 .82rem/1.55 ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--line-subtle);border-radius:12px;padding:18px;max-height:420px;overflow:auto}
+.copied{font-size:.85rem;color:var(--accent)}
+footer{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:24px;color:var(--muted);font-size:.85rem}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="m" viewBox="0 0 __MW__ __MH__"><path fill-rule="evenodd" d="__MARK__"/></symbol></svg>
+
+<main>
+  <header class="hero">
+    <div style="display:flex;flex-direction:column;gap:20px">
+      <p class="eyebrow">Brand kit · Nov 2026</p>
+      <h1>Surfdesk <span class="blue">&amp; Sonder Project.</span></h1>
+      <p class="lead">How both brands look, sound and fit together. The written source of truth, with every rule and fact, is <code>docs/brand/BRAND-KIT.md</code> in the repo; logo files are in <code>docs/brand/logos/</code>.</p>
+      <div class="row"><a class="pill" href="#brief">Copy the LLM brief</a><a class="pill ghost" href="#logos">See the logos</a></div>
+    </div>
+    <div class="card" style="padding:40px 32px;align-items:flex-start">
+      <div class="hero-lockup"><svg class="mark" viewBox="0 0 __MW__ __MH__"><use href="#m"/></svg><span>Surfdesk</span></div>
+      <p class="eyebrow by">by Sonder Project</p>
+      <p style="font:300 1.5rem/1.25 var(--display);letter-spacing:-.01em;margin-top:18px">Every task. Every client. Every follow-up. <span class="blue">Organized.</span></p>
+    </div>
+  </header>
+
+  <section>
+    <div class="head"><p class="eyebrow">Brand architecture</p><h2>Surfdesk leads. Sonder Project signs.</h2>
+      <p class="lead">An endorsed brand: the parent quietly vouches for each product. Surfdesk is what customers buy and use; Sonder Project is the studio and legal company behind it.</p></div>
+    <div class="arch">
+      <div class="card dark">
+        <p class="eyebrow">Parent company · studio</p>
+        <div class="small-lockup on-dark" style="color:var(--bone)"><svg class="mark" viewBox="0 0 __MW__ __MH__" style="color:var(--bone)"><use href="#m"/></svg><span class="caps">Sonder Project</span></div>
+        <p>A software studio and holding company that designs, builds and owns calm, useful products for busy people. Surfdesk is the first; future ventures (such as Sonder Protocol) get their own names.</p>
+        <ul><li>Leans dark: obsidian with bone or surf-blue mark</li><li>Wordmark: Outfit Light, uppercase, +0.25em</li><li>Used for: LinkedIn, legal, partners, hiring, credits</li></ul>
+      </div>
+      <div class="card light">
+        <p class="eyebrow">Product · live at thesurfdesk.app</p>
+        <div class="small-lockup on-light"><svg class="mark" viewBox="0 0 __MW__ __MH__"><use href="#m"/></svg><span class="w">Surfdesk</span></div>
+        <p>An everyday organizer for professionals, entrepreneurs and busy people: tasks, notes, lists, reminders, calendar and a command box you type or speak into, plus clients, visits, booking, referrals, team management and one-click reports.</p>
+        <ul><li>Leans light: sand with deep-surf mark</li><li>Wordmark: Outfit Light, title case, -0.02em</li><li>Endorsement: "Surfdesk by Sonder Project"</li></ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="head"><p class="eyebrow">Positioning</p><h2>One calm app instead of five.</h2>
+      <p class="lead">Lead with everyday organization; then show the depth. Client management is a big part, never the whole story.</p></div>
+    <div class="grid">
+      <div class="card"><h3>Everything in one place</h3><p>Tasks, notes, lists, calendar, clients and your team, instead of a stack of separate apps.</p></div>
+      <div class="card"><h3>Nothing slips</h3><p>Reminders, follow-ups and tasks suggested from your notes keep every commitment in view.</p></div>
+      <div class="card"><h3>See and prove results</h3><p>Impact reports for nonprofits, Insights with revenue for businesses. PDF or Excel in one click.</p></div>
+    </div>
+    <div class="tbl"><table>
+      <thead><tr><th>Account</th><th>Visits are</th><th>Reports are</th><th>Report shows</th></tr></thead>
+      <tbody>
+        <tr><td>Business organization</td><td>Visits</td><td>Insights</td><td>Customers, new vs repeat, busiest times, revenue</td></tr>
+        <tr><td>Nonprofit or agency</td><td>Check-ins</td><td>Impact</td><td>People served, new vs returning, demographics for funders</td></tr>
+        <tr><td>Individual</td><td>Meetings</td><td>Insights</td><td>Same as business</td></tr>
+      </tbody></table></div>
+    <div class="grid two">
+      <div class="card"><p class="eyebrow">For</p><p>Individuals and busy people · freelancers and entrepreneurs · salons, gyms, trainers, studios · coaches, tutors, consultants, agencies · contractors and trades · clinics, groomers, realtors · teams of any size · nonprofits (one audience, never the headline)</p></div>
+      <div class="card"><p class="eyebrow">Never</p><p>Case-management software · a nonprofit-only tool · "just a client tracker" · a CRM · "AI-powered" · slang or casual filler in copy</p></div>
+    </div>
+  </section>
+
+  <section id="logos">
+    <div class="head"><p class="eyebrow">Logo</p><h2>The S-wave mark.</h2>
+      <p class="lead">Two interlocking waves forming an S: motion and flow, two parts working as one. Always one solid color. Clear space equals half the mark's height on every side.</p></div>
+    <div class="grid two">
+      <div class="tile sand on-light"><div class="small-lockup"><svg class="mark" viewBox="0 0 __MW__ __MH__"><use href="#m"/></svg><span class="w">Surfdesk</span></div></div>
+      <div class="tile obsidian on-dark"><div class="small-lockup"><svg class="mark" viewBox="0 0 __MW__ __MH__"><use href="#m"/></svg><span class="w">Surfdesk</span></div></div>
+      <div class="tile white on-light"><div class="stacked"><svg class="mark" viewBox="0 0 __MW__ __MH__"><use href="#m"/></svg><span class="w">Surfdesk</span><span class="by">By Sonder Project</span></div></div>
+      <div class="tile obsidian"><div class="small-lockup"><svg class="mark" viewBox="0 0 __MW__ __MH__" style="color:var(--bone)"><use href="#m"/></svg><span class="caps">Sonder Project</span></div></div>
+      <div class="tile surf on-blue"><div class="small-lockup"><svg class="mark" viewBox="0 0 __MW__ __MH__"><use href="#m"/></svg><span class="caps">Surfdesk</span></div></div>
+      <div class="tile sand"><div class="small-lockup"><svg class="mark" viewBox="0 0 __MW__ __MH__" style="color:var(--ink)"><use href="#m"/></svg><span class="caps">Sonder Project</span></div></div>
+    </div>
+    <div class="card files">
+      <h3>Files in <code>docs/brand/logos/</code> (SVG + transparent PNG)</h3>
+      <ul>
+        <li><code>surfdesk-lockup-*</code>: primary horizontal logo · <code>surfdesk-stacked-*</code>: with "By Sonder Project" · <code>surfdesk-header-lockup-*</code>: small caps</li>
+        <li><code>sonder-project-lockup-*</code>: parent logo · <code>mark-*</code>: the mark alone (surf-blue, blue, light-blue, black, white, sand)</li>
+        <li>Suffix <code>blue</code> for light backgrounds, <code>on-dark</code> for dark, <code>black</code> / <code>white</code> for one-color</li>
+        <li><code>surfdesk-app-icon</code> 1024² · <code>surfdesk-avatar-sand</code> / <code>-dark</code> and <code>sonder-project-avatar</code> 400² · LinkedIn covers 1512×256 · <code>favicon</code></li>
+        <li>Minimum size: mark 16px tall (0.25 in print); horizontal lockup 100px wide (1 in print)</li>
+      </ul>
+    </div>
+    <div class="dd">
+      <figure><div class="tile sand on-light"><svg class="mark" viewBox="0 0 __MW__ __MH__" style="width:84px"><use href="#m"/></svg></div><figcaption><span class="tag yes">Do</span>One solid color from the palette</figcaption></figure>
+      <figure><div class="tile obsidian on-dark"><svg class="mark" viewBox="0 0 __MW__ __MH__" style="width:84px"><use href="#m"/></svg></div><figcaption><span class="tag yes">Do</span>Light-surf mark on obsidian</figcaption></figure>
+      <figure><div class="tile sand"><svg class="mark" viewBox="0 0 __MW__ __MH__" style="width:84px;color:var(--deep-surf);transform:rotate(-18deg) scaleX(1.25)"><use href="#m"/></svg></div><figcaption><span class="tag no">Don't</span>Rotate, skew or stretch</figcaption></figure>
+      <figure><div class="tile sand"><svg class="mark" viewBox="0 0 __MW__ __MH__" style="width:84px;color:var(--deep-surf);filter:drop-shadow(6px 8px 4px rgba(0,0,0,.45))"><use href="#m"/></svg></div><figcaption><span class="tag no">Don't</span>Add shadows, glows or outlines</figcaption></figure>
+      <figure><div class="tile sand"><svg class="mark" viewBox="0 0 __MW__ __MH__" style="width:84px;color:#b93815"><use href="#m"/></svg></div><figcaption><span class="tag no">Don't</span>Use off-palette colors or gradients</figcaption></figure>
+      <figure><div class="tile obsidian"><svg class="mark" viewBox="0 0 __MW__ __MH__" style="width:84px;color:var(--deep-surf)"><use href="#m"/></svg></div><figcaption><span class="tag no">Don't</span>Use deep surf on dark (too low contrast)</figcaption></figure>
+    </div>
+  </section>
+
+  <section>
+    <div class="head"><p class="eyebrow">Color</p><h2>Warm neutrals, one blue.</h2>
+      <p class="lead">Sand by day, obsidian by night, and a single surf-blue accent for the one thing that should be noticed. Status colors mark state only, never decoration. Click a value to copy it.</p></div>
+    <div class="grid" id="swatches"></div>
+    <div class="card">
+      <p class="eyebrow">Proportion</p>
+      <div class="ratio" aria-label="About 70 percent background, 25 percent text, 5 percent blue"><span style="flex:70;background:var(--sand)"></span><span style="flex:25;background:var(--ink)"></span><span style="flex:5;background:var(--deep-surf)"></span></div>
+      <p class="cap">About 70% background · 25% text · 5% blue. Full light and dark UI tokens (warn, urgent, new, danger, charts, calendar) are in BRAND-KIT.md section 5.2.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="head"><p class="eyebrow">Typography</p><h2>Outfit for presence, Inter for work.</h2>
+      <p class="lead">Both free on Google Fonts. Outfit Light carries the brand and headlines with tight spacing; Inter handles everything people read and tap. Sentence case everywhere except small labels.</p></div>
+    <div class="card">
+      <div class="spec"><div class="lbl"><span class="eyebrow">Hero · Outfit 300 · -0.02em · 1.05</span></div><div class="t-hero">Your whole workday. <span class="blue">One app.</span></div></div>
+      <div class="spec"><div class="lbl"><span class="eyebrow">Page title · Outfit 400 · 2rem</span></div><div class="t-title">Remember every client</div></div>
+      <div class="spec"><div class="lbl"><span class="eyebrow">Section · Outfit 500 · 1.3rem</span></div><div class="t-section">Today's follow-ups</div></div>
+      <div class="spec"><div class="lbl"><span class="eyebrow">Body · Inter 400 · 16px · 1.5</span></div><div class="t-body">Type or say it once. Surfdesk files it, reminds you and keeps it together, linked to the right person.</div></div>
+      <div class="spec"><div class="lbl"><span class="eyebrow">Eyebrow · Inter 500 · 0.72rem · uppercase · +0.22em</span></div><div class="t-eyebrow">Clients &amp; customers</div></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="head"><p class="eyebrow">Voice</p><h2>Calm, capable, warm, clear.</h2>
+      <p class="lead">A sharp, organized friend who has everything handled. Short sentences, concrete examples, buttons that say exactly what they do.</p></div>
+    <div class="tbl"><table>
+      <thead><tr><th>Say</th><th>Not</th></tr></thead>
+      <tbody>
+        <tr><td>Organized, in one place, nothing slips</td><td>To the max, game-changer, revolutionary</td></tr>
+        <tr><td>Type or say it once</td><td>AI-powered, AI magic</td></tr>
+        <tr><td>Clients or customers (match the audience)</td><td>Users, leads, cases</td></tr>
+        <tr><td>Visits · Check-ins · Meetings (by account)</td><td>The wrong word for the audience</td></tr>
+        <tr><td>Team roles: Admin, Manager, Member</td><td>Case manager, supervisor, CRM</td></tr>
+        <tr><td>Never sold, encrypted, yours to delete</td><td>Military-grade, 100% secure</td></tr>
+        <tr><td>"Call Maria Tuesday at 3pm"</td><td>"Leverage productivity synergies"</td></tr>
+      </tbody></table></div>
+    <div class="card">
+      <p class="eyebrow">Approved lines</p>
+      <div class="lines">
+        <div class="line"><q>Every task. Every client. Every follow-up. Organized.</q><span class="k">Primary tagline</span></div>
+        <div class="line"><q>Your whole workday. One app.</q><span class="k">Hook</span></div>
+        <div class="line"><q>Say it once. Surfdesk handles the rest.</q><span class="k">Command box</span></div>
+        <div class="line"><q>One calm app instead of five.</q><span class="k">Comparison</span></div>
+        <div class="line"><q>New business comes to you.</q><span class="k">Booking, referrals</span></div>
+        <div class="line"><q>Prove your results. One click.</q><span class="k">Reports</span></div>
+        <div class="line"><q>We build calm software for busy people.</q><span class="k">Sonder Project</span></div>
+      </div>
+      <div class="row" style="margin-top:6px"><span class="pill" style="cursor:default">Try it free</span><span class="pill ghost" style="cursor:default">Start a free team trial</span></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="head"><p class="eyebrow">Facts</p><h2>Plans and essentials.</h2></div>
+    <div class="grid">
+      <div class="card"><p class="eyebrow">Individual</p><p style="font:300 2rem/1 var(--display)">$9<span class="cap"> / month</span></p><p class="cap">7-day free trial, no card</p></div>
+      <div class="card"><p class="eyebrow">Small Team</p><p style="font:300 2rem/1 var(--display)">$19<span class="cap"> / user / month</span></p><p class="cap">2–18 people · 14-day trial</p></div>
+      <div class="card"><p class="eyebrow">Organization</p><p style="font:300 2rem/1 var(--display)">$349<span class="cap"> / month</span></p><p class="cap">20 seats included · extra seats $15</p></div>
+      <div class="card"><p class="eyebrow">Enterprise</p><p style="font:300 2rem/1 var(--display)">Custom</p><p class="cap">Skip any trial: 30% off month one</p></div>
+    </div>
+    <div class="card"><p>Website <strong>thesurfdesk.app</strong> (the product is always <strong>Surfdesk</strong>) · Support dante@sonderproject.co · Former names: Sonder Threads → Strynd → Surfdesk (Nov 14, 2026)</p></div>
+  </section>
+
+  <section id="brief">
+    <div class="head"><p class="eyebrow">For another chat or LLM</p><h2>The paste-this brief.</h2>
+      <p class="lead">Paste this at the start of any new session. For the full detail (every feature, token and template), attach <code>docs/brand/BRAND-KIT.md</code>.</p></div>
+    <div class="card">
+      <div class="row"><button class="pill" id="copy" type="button">Copy brief</button><span class="copied" id="copied" hidden>Copied</span></div>
+      <pre id="brieftext">__BRIEF__</pre>
+    </div>
+  </section>
+
+  <footer><span>Surfdesk is a Sonder Project product.</span><span>Brand kit v1 · Nov 18, 2026</span></footer>
+</main>
+
+<script>
+const SW=[
+  ["Sand","#F6F4EF","Light background (Surfdesk default)"],["Obsidian","#0A0A09","Dark background (Sonder Project default)"],
+  ["Ink","#141412","Main text on light"],["Bone","#F3F0EB","Main text on dark"],
+  ["Umber","#6E5F4D","Secondary text on light"],["Stone","#AEA08D","Secondary text on dark"],
+  ["Surf blue","#3E9BD4","Brand reference: ads, photos, illustration"],["Deep surf","#1C77B5","Accent on light: links, buttons, logo"],
+  ["Light surf","#62B4E6","Accent on dark"],["Line","#E2DBD0","Hairline borders on light (dark: #2A2926)"]
+];
+const g=document.getElementById("swatches");
+for(const [n,h,u] of SW){
+  const d=document.createElement("div");d.className="sw";
+  d.innerHTML=`<div class="chip" style="background:${h}"></div><div class="meta"><span class="name">${n}</span><button type="button" aria-label="Copy ${h}">${h}</button><span class="use">${u}</span></div>`;
+  const b=d.querySelector("button");
+  b.addEventListener("click",()=>copy(h,()=>{b.textContent="Copied";setTimeout(()=>b.textContent=h,1200)}));
+  g.appendChild(d);
+}
+function copy(text,done){
+  try{navigator.clipboard.writeText(text).then(done,()=>select(text));}catch(e){select(text);}
+}
+function select(){const r=document.createRange();r.selectNodeContents(document.getElementById("brieftext"));const s=getSelection();s.removeAllRanges();s.addRange(r);}
+document.getElementById("copy").addEventListener("click",()=>{
+  const t=document.getElementById("brieftext").textContent;
+  copy(t,()=>{const c=document.getElementById("copied");c.hidden=false;setTimeout(()=>c.hidden=true,1800)});
+});
+</script>
