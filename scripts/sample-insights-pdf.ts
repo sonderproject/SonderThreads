@@ -55,6 +55,14 @@ const m: Metrics = {
   ],
   outcomePeople: 31,
   prevOutcomePeople: 24,
+  extra: { servicesProvided: 214, valueCents: 1284000, referrals: 37, bookings: 12 },
+  prevExtra: { servicesProvided: 190, valueCents: 1102000, referrals: 29, bookings: 8 },
+  allTime: { since: "2026-03-02", people: 412, checkIns: 2380, outcomes: 96, valueCents: 4312000 },
+  monthly: [
+    { key: "2026-09-01", label: "Sep 2026", peopleServed: 88, checkIns: 190, newPeople: 21, outcomes: 9, valueCents: 402000 },
+    { key: "2026-10-01", label: "Oct 2026", peopleServed: 97, checkIns: 214, newPeople: 25, outcomes: 13, valueCents: 451000 },
+    { key: "2026-11-01", label: "Nov 2026", peopleServed: 91, checkIns: 201, newPeople: 19, outcomes: 11, valueCents: 431000 },
+  ],
 };
 
 impactPdf(m, {

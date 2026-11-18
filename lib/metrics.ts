@@ -23,6 +23,7 @@ import {
   toUtc,
   type Bucket,
   type Kpis,
+  type ExtraTotals,
   type Metrics,
   type Point,
   type FollowThrough,
@@ -104,6 +105,33 @@ async function kpisFor(run: Run, counts: Run, col: Col, scopeId: string, tz: str
   return { ...row, tasksDone: tasks?.n ?? 0 } as Kpis;
 }
 
+/** Services, value, referrals and bookings for a period (counts only). */
+async function extraFor(run: Run, counts: Run, col: Col, scopeId: string, tz: string, from: string, to: string): Promise<ExtraTotals> {
+  const [svc] = await run<{ n: number; value: number }>(
+    `select count(*) filter (where service_id is not null)::int as n, coalesce(sum(amount_cents), 0)::int as value
+       from check_ins where ${col} = $1 and deleted_at is null
+        and (checked_in_at at time zone $2)::date between $3::date and $4::date`,
+    [scopeId, tz, from, to],
+  );
+  // Referrals and bookings are server-only tables: counted here, never read row by row.
+  const [refs] =
+    col === "org_id"
+      ? await counts<{ n: number }>(
+          `select count(*)::int as n from referrals where org_id = $1 and (created_at at time zone $2)::date between $3::date and $4::date`,
+          [scopeId, tz, from, to],
+        )
+      : [null];
+  const [book] = await counts<{ n: number }>(
+    col === "org_id"
+      ? `select count(*)::int as n from bookings b join memberships m on m.user_id = b.user_id and m.org_id = $1
+          where b.canceled_at is null and (b.starts_at at time zone $2)::date between $3::date and $4::date`
+      : `select count(*)::int as n from bookings b where b.user_id = $1 and b.canceled_at is null
+          and (b.starts_at at time zone $2)::date between $3::date and $4::date`,
+    [scopeId, tz, from, to],
+  );
+  return { servicesProvided: svc?.n ?? 0, valueCents: svc?.value ?? 0, referrals: refs ? refs.n : null, bookings: book?.n ?? 0 };
+}
+
 export async function computeMetrics(
   userId: string,
   tz: string,
@@ -135,6 +163,36 @@ async function compute(
   const range = [scopeId, tz, from, to];
   // Clients deleted later still count in the periods they were served, so past reports never change.
   const inRange = `${col} = $1`;
+
+  const [extra, prevExtra, allTimeRows, monthRows] = await Promise.all([
+    extraFor(run, counts, col, scopeId, tz, from, to),
+    extraFor(run, counts, col, scopeId, tz, prevFrom, prevTo),
+    run<{ people: number; checkins: number; outcomes: number; value: number }>(
+      `select (select count(distinct c.person_id) from check_ins c where c.${col} = $1 and c.deleted_at is null)::int as people,
+              (select count(*) from check_ins c where c.${col} = $1 and c.deleted_at is null)::int as checkins,
+              (select count(*) from person_outcomes po where po.${col} = $1 and po.deleted_at is null)::int as outcomes,
+              (select coalesce(sum(c.amount_cents), 0) from check_ins c where c.${col} = $1 and c.deleted_at is null)::int as value
+        where $2::text is not null`,
+      [scopeId, tz],
+    ),
+    // Month by month (calendar months the period touches, clipped to the period).
+    run<{ k: string; served: number; checkins: number; value: number; added: number; outcomes: number }>(
+      `with months as (
+         select to_char(m, 'YYYY-MM-DD') as k, greatest(m::date, $3::date) as f, least((m + interval '1 month - 1 day')::date, $4::date) as t
+           from generate_series(date_trunc('month', $3::date), date_trunc('month', $4::date), interval '1 month') m)
+       select k,
+              (select count(distinct c.person_id) from check_ins c where c.${col} = $1 and c.deleted_at is null
+                 and (c.checked_in_at at time zone $2)::date between f and t)::int as served,
+              (select count(*) from check_ins c where c.${col} = $1 and c.deleted_at is null
+                 and (c.checked_in_at at time zone $2)::date between f and t)::int as checkins,
+              (select coalesce(sum(c.amount_cents), 0) from check_ins c where c.${col} = $1 and c.deleted_at is null
+                 and (c.checked_in_at at time zone $2)::date between f and t)::int as value,
+              (select count(*) from people where ${col} = $1 and ${INTAKE_DATE} between f and t)::int as added,
+              (select count(*) from person_outcomes po where po.${col} = $1 and po.deleted_at is null and po.achieved_on between f and t)::int as outcomes
+         from months order by k limit 60`,
+      range,
+    ),
+  ]);
 
   const [sinceRows, kpis, prev, checkInRows, newPeopleRows, reasonRows, weekdayRows, visitorRows, demoRows, reachRows, heatRows, followRows, serviceRows, outcomeRows, outcomeTotals] = await Promise.all([
     run<{ d: string | null }>(
@@ -337,6 +395,24 @@ async function compute(
     outcomes: outcomeRows.filter((r) => r.people > 0 || r.prev > 0).map((r) => ({ name: r.name, people: r.people, prevPeople: r.prev })),
     outcomePeople: outcomeTotals[0]?.now ?? 0,
     prevOutcomePeople: outcomeTotals[0]?.prev ?? 0,
+    extra,
+    prevExtra,
+    allTime: {
+      since: sinceRows[0]?.d ?? null,
+      people: allTimeRows[0]?.people ?? 0,
+      checkIns: allTimeRows[0]?.checkins ?? 0,
+      outcomes: allTimeRows[0]?.outcomes ?? 0,
+      valueCents: allTimeRows[0]?.value ?? 0,
+    },
+    monthly: monthRows.map((r) => ({
+      key: r.k,
+      label: bucketLabel(r.k, "month"),
+      peopleServed: r.served,
+      checkIns: r.checkins,
+      newPeople: r.added,
+      outcomes: r.outcomes,
+      valueCents: r.value,
+    })),
   };
 }
 

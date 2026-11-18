@@ -15,6 +15,24 @@ export type Kpis = {
 
 export type Point = { key: string; label: string; value: number };
 
+/** More totals for the period (and the period before), beyond the headline KPIs. */
+export type ExtraTotals = {
+  /** Check-ins with a service recorded. */
+  servicesProvided: number;
+  /** Total value of services provided, in cents. */
+  valueCents: number;
+  /** Referrals received through the organization's referral link (organization reports only). */
+  referrals: number | null;
+  /** Times booked through booking links. */
+  bookings: number;
+};
+
+/** Everything since recording started (not limited to the chosen period). */
+export type AllTime = { since: string | null; people: number; checkIns: number; outcomes: number; valueCents: number };
+
+/** One calendar month inside the chosen period. */
+export type MonthRow = { key: string; label: string; peopleServed: number; checkIns: number; newPeople: number; outcomes: number; valueCents: number };
+
 /** People served in one bucket, split by whether it was their first visit ever. */
 export type ReachPoint = { key: string; label: string; first: number; returning: number };
 
@@ -75,6 +93,11 @@ export type Metrics = {
   /** Different people who reached at least one outcome in the period, and in the previous period. */
   outcomePeople: number;
   prevOutcomePeople: number;
+  extra: ExtraTotals;
+  prevExtra: ExtraTotals;
+  allTime: AllTime;
+  /** Month by month for the period (one row per calendar month it touches). */
+  monthly: MonthRow[];
 };
 
 export const HEATMAP_BLOCKS = ["12a", "2a", "4a", "6a", "8a", "10a", "12p", "2p", "4p", "6p", "8p", "10p"];

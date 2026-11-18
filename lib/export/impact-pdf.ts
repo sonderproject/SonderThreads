@@ -454,7 +454,30 @@ export function impactPdf(
       y,
       { width: CONTENT_W },
     );
-    y = doc.y + 30;
+    y = doc.y + 14;
+    // More totals for the period, then everything since recording started.
+    {
+      const more = [
+        `${m.outcomePeople.toLocaleString("en-US")} reached an outcome`,
+        `${m.extra.servicesProvided.toLocaleString("en-US")} services provided`,
+        ...(m.extra.valueCents ? [`${pdfMoney(m.extra.valueCents)} ${audience === "business" ? "revenue" : "in services"}`] : []),
+        ...(m.extra.referrals !== null ? [`${m.extra.referrals.toLocaleString("en-US")} referrals received`] : []),
+        ...(m.extra.bookings ? [`${m.extra.bookings.toLocaleString("en-US")} online bookings`] : []),
+      ];
+      doc.font("body-bold").fontSize(9).fillColor(C.ink).text("Also this period: ", PAGE.m, y, { continued: true });
+      doc.font("body").fillColor(C.muted).text(more.join(" · "), { width: CONTENT_W });
+      y = doc.y + 6;
+      const a = m.allTime;
+      if (a.checkIns) {
+        doc.font("body-bold").fontSize(9).fillColor(C.ink).text(`All time${a.since ? ` (since ${fmtDay(a.since)})` : ""}: `, PAGE.m, y, { continued: true });
+        doc.font("body").fillColor(C.muted).text(
+          `${a.people.toLocaleString("en-US")} people served · ${a.checkIns.toLocaleString("en-US")} ${W.events.toLowerCase()} · ${a.outcomes.toLocaleString("en-US")} outcomes${a.valueCents ? ` · ${pdfMoney(a.valueCents)} in services` : ""}`,
+          { width: CONTENT_W },
+        );
+        y = doc.y;
+      }
+    }
+    y += 24;
     // About these numbers (on the summary page, where funders read first).
     rainbow(PAGE.m, y, CONTENT_W, 1);
     y += 14;
@@ -602,6 +625,41 @@ export function impactPdf(
     y += 16;
     }
 
+    // ── Month by month (periods longer than a month) ───────────────────
+    if (m.monthly.length > 1) {
+      ensure(110 + m.monthly.length * 18);
+      marker(num(), "Month by month");
+      heading("Totals for each month", "Someone who came in during several months is counted once in each month.");
+      const showValue = m.monthly.some((r) => r.valueCents > 0);
+      const cols: [string, number, "left" | "right"][] = [
+        ["Month", CONTENT_W * 0.24, "left"],
+        ["People served", CONTENT_W * 0.17, "right"],
+        [W.events.charAt(0).toUpperCase() + W.events.slice(1), CONTENT_W * 0.15, "right"],
+        ["New people", CONTENT_W * 0.14, "right"],
+        ["Outcomes", CONTENT_W * 0.13, "right"],
+        ...(showValue ? ([["Value", CONTENT_W * 0.17, "right"]] as [string, number, "left" | "right"][]) : []),
+      ];
+      const row = (cells: string[], bold: boolean) => {
+        ensure(18);
+        let x = PAGE.m;
+        cells.forEach((cell, i) => {
+          const [, w, align] = cols[i];
+          doc.font(bold ? "body-bold" : "body").fontSize(9).fillColor(C.ink).text(cell, i ? x + 10 : x, y, { width: w - 10, align, lineBreak: false, ellipsis: true });
+          x += w;
+        });
+        y += 14;
+        doc.moveTo(PAGE.m, y).lineTo(PAGE.m + CONTENT_W, y).lineWidth(0.5).strokeColor(C.lineSubtle).stroke();
+        y += 4;
+      };
+      row(cols.map(([h]) => h), true);
+      for (const r of m.monthly) {
+        row([r.label, r.peopleServed.toLocaleString("en-US"), r.checkIns.toLocaleString("en-US"), r.newPeople.toLocaleString("en-US"), r.outcomes.toLocaleString("en-US"), ...(showValue ? [pdfMoney(r.valueCents)] : [])], false);
+      }
+      const sum = (f: (r: (typeof m.monthly)[number]) => number) => m.monthly.reduce((n, r) => n + f(r), 0);
+      row(["Total", sum((r) => r.peopleServed).toLocaleString("en-US"), sum((r) => r.checkIns).toLocaleString("en-US"), sum((r) => r.newPeople).toLocaleString("en-US"), sum((r) => r.outcomes).toLocaleString("en-US"), ...(showValue ? [pdfMoney(sum((r) => r.valueCents))] : [])], true);
+      y += 22;
+    }
+
     if (opts.followUps) {
       // ── 05 Follow-through ────────────────────────────────────────────────
       ensure(170);
@@ -661,4 +719,9 @@ export function impactPdf(
     }
     doc.end();
   });
+}
+
+/** "$1,250" / "$9.50" from cents. */
+function pdfMoney(c: number): string {
+  return `$${(c / 100).toLocaleString("en-US", { minimumFractionDigits: c % 100 ? 2 : 0, maximumFractionDigits: 2 })}`;
 }

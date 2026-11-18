@@ -1,7 +1,7 @@
 "use client";
 
 import { formatMoney } from "@/lib/money";
-import type { OutcomeStat, ServiceStat } from "@/lib/metrics-shared";
+import type { MonthRow, OutcomeStat, ServiceStat } from "@/lib/metrics-shared";
 import { useTerms } from "@/components/TermsProvider";
 
 import { useCallback, useEffect, useState } from "react";
@@ -15,13 +15,17 @@ import { ReachChart } from "./ReachChart";
 import { BusiestTimes } from "./BusiestTimes";
 import { FollowThroughBar } from "./FollowThroughBar";
 
-type Preset = "7" | "30" | "90" | "year" | "custom";
+type Preset = "7" | "30" | "90" | "365" | "year" | "lastyear" | "all" | "month" | "custom";
 
 const PRESETS: [Preset, string][] = [
   ["7", "7 days"],
   ["30", "30 days"],
   ["90", "90 days"],
+  ["365", "12 months"],
   ["year", "This year"],
+  ["lastyear", "Last year"],
+  ["all", "All time"],
+  ["month", "Pick a month"],
   ["custom", "Custom"],
 ];
 
@@ -33,9 +37,21 @@ const TILES: { key: keyof Kpis; label: string; hint?: string }[] = [
   { key: "tasksDone", label: "Tasks completed" },
 ];
 
-function rangeFor(preset: Preset, today: string, custom: { from: string; to: string }) {
+function rangeFor(preset: Preset, today: string, custom: { from: string; to: string }, month: string) {
   if (preset === "custom") return custom;
   if (preset === "year") return { from: `${today.slice(0, 4)}-01-01`, to: today };
+  if (preset === "lastyear") {
+    const y = Number(today.slice(0, 4)) - 1;
+    return { from: `${y}-01-01`, to: `${y}-12-31` };
+  }
+  // Everything kept (reports go back up to 5 years at a time).
+  if (preset === "all") return { from: addDays(today, -1829), to: today };
+  if (preset === "month") {
+    const [y, m] = month.split("-").map(Number);
+    const last = new Date(Date.UTC(y, m, 0)).getUTCDate();
+    const end = `${month}-${String(last).padStart(2, "0")}`;
+    return { from: `${month}-01`, to: end > today ? today : end };
+  }
   return { from: addDays(today, -(Number(preset) - 1)), to: today };
 }
 
@@ -73,6 +89,7 @@ export function ImpactDashboard({ orgName }: { orgName: string | null }) {
   const [today, setToday] = useState<string | null>(null);
   const [preset, setPreset] = useState<Preset>("30");
   const [custom, setCustom] = useState({ from: "", to: "" });
+  const [month, setMonth] = useState("");
   const [scope, setScope] = useState<MetricsScope>(orgName ? "org" : "me");
   // Follow-ups are optional (tracking them is extra work): off unless turned on, remembered on this device.
   const [followUps, setFollowUps] = useState(false);
@@ -96,9 +113,10 @@ export function ImpactDashboard({ orgName }: { orgName: string | null }) {
     const t = dayKey(new Date(), timeZone ?? Intl.DateTimeFormat().resolvedOptions().timeZone);
     setToday(t);
     setCustom({ from: addDays(t, -29), to: t });
+    setMonth(t.slice(0, 7));
   }, [timeZone]);
 
-  const range = today ? rangeFor(preset, today, custom) : null;
+  const range = today && month ? rangeFor(preset, today, custom, month) : null;
 
   const load = useCallback(async (from: string, to: string, s: MetricsScope) => {
     setLoading(true);
@@ -114,6 +132,7 @@ export function ImpactDashboard({ orgName }: { orgName: string | null }) {
   }, [range?.from, range?.to, scope, load]);
 
   const periodName = range ? `the previous ${daysBetween(range.from, range.to)} days` : "";
+  const showChange = preset !== "all";
   const exportHref = (format: string) =>
     range
       ? `/api/metrics/export?${new URLSearchParams({ format, from: range.from, to: range.to, scope, ...(followUps ? { followups: "1" } : {}) })}`
@@ -199,6 +218,13 @@ export function ImpactDashboard({ orgName }: { orgName: string | null }) {
           </details>
         </div>
 
+        {preset === "month" && (
+          <label className="flex items-center gap-2 text-xs text-text-muted">
+            Month
+            <input type="month" value={month} max={today?.slice(0, 7)} onChange={(e) => e.target.value && setMonth(e.target.value)} className="input w-auto tabular-nums" />
+          </label>
+        )}
+
         {preset === "custom" && (
           <div className="flex flex-wrap items-center gap-2 text-xs text-text-muted">
             <label className="flex items-center gap-2">
@@ -240,11 +266,7 @@ export function ImpactDashboard({ orgName }: { orgName: string | null }) {
             </div>
           </section>
 
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
-            {TILES.map((t) => (
-              <StatTile key={t.key} label={t.key === "checkIns" ? terms.checkIns : t.label} hint={t.hint} value={data.kpis[t.key]} prev={data.prev[t.key]} periodName={periodName} />
-            ))}
-          </div>
+          <Totals data={data} checkInsWord={terms.checkIns} showChange={showChange} periodName={periodName} business={terms.audience === "business"} followUps={followUps} />
 
           <Chapter n="01" title="Reach" lead="How many people came in, and how many were new.">
             <div className="grid gap-3 lg:grid-cols-2">
@@ -305,7 +327,13 @@ export function ImpactDashboard({ orgName }: { orgName: string | null }) {
             </Chapter>
           )}
 
-          <Chapter n={followUps ? "07" : "06"} title="Regulars" lead="The people who came in most. Not included in exported reports.">
+          {data.monthly.length > 1 && (
+            <Chapter n={followUps ? "07" : "06"} title="Month by month" lead="Totals for each month in this period.">
+              <MonthlyTable rows={data.monthly} checkInsWord={terms.checkIns} showValue={data.monthly.some((r) => r.valueCents > 0)} />
+            </Chapter>
+          )}
+
+          <Chapter n={followUps ? (data.monthly.length > 1 ? "08" : "07") : data.monthly.length > 1 ? "07" : "06"} title="Regulars" lead="The people who came in most. Not included in exported reports.">
             {scope === "me" ? (
                 <ChartCard title="Most frequent visitors" subtitle={`Top 10 by ${terms.checkInsLower}`} table={data.topVisitors} unit={terms.checkInsLower}>
                   {data.topVisitors.length ? <BarList data={data.topVisitors} unit={terms.checkInsLower} hrefFor={(p) => `/people/${p.personId}`} /> : <Empty />}
@@ -521,5 +549,141 @@ export function ServicesTable({ services }: { services: ServiceStat[] }) {
         </table>
       </div>
     </section>
+  );
+}
+
+function Delta({ value, prev, periodName }: { value: number; prev: number; periodName: string }) {
+  const change = prev === 0 ? 0 : Math.round(((value - prev) / prev) * 100);
+  return (
+    <p className="mt-0.5 text-[11px] text-text-muted" title={`vs ${periodName}`}>
+      {prev === 0 && value === 0 ? (
+        <span>none yet</span>
+      ) : prev === 0 ? (
+        <span>new this period</span>
+      ) : change === 0 ? (
+        <span>same as before ({prev.toLocaleString()})</span>
+      ) : (
+        <>
+          <span className={`font-semibold ${change > 0 ? "text-accent" : "text-urgent"}`}>
+            {change > 0 ? "▲" : "▼"} {Math.abs(change)}%
+          </span>{" "}
+          vs {prev.toLocaleString()} before
+        </>
+      )}
+    </p>
+  );
+}
+
+function Total({ label, value, display, prev, hint, showChange, periodName }: { label: string; value: number; display?: string; prev?: number; hint?: string; showChange: boolean; periodName: string }) {
+  return (
+    <div className="card px-3 py-2.5" title={hint}>
+      <p className="text-xs text-text-muted">{label}</p>
+      <p className="mt-0.5 text-2xl font-semibold leading-tight tabular-nums text-text">{display ?? value.toLocaleString()}</p>
+      {showChange && prev !== undefined ? <Delta value={value} prev={prev} periodName={periodName} /> : hint ? <p className="mt-0.5 text-[11px] text-text-muted">{hint}</p> : null}
+    </div>
+  );
+}
+
+/** The headline numbers: activity, then results, then everything since recording started. */
+function Totals({ data, checkInsWord, showChange, periodName, business, followUps }: { data: Metrics; checkInsWord: string; showChange: boolean; periodName: string; business: boolean; followUps: boolean }) {
+  const k = data.kpis;
+  const p = data.prev;
+  const firsts = data.reach.reduce((n, r) => n + r.first, 0);
+  const returning = Math.max(0, k.peopleServed - firsts);
+  const avg = k.peopleServed ? k.checkIns / k.peopleServed : 0;
+  const prevAvg = p.peopleServed ? p.checkIns / p.peopleServed : 0;
+  const f = data.followThrough;
+  const followRate = f.due ? Math.round(((f.onTime + f.late) / f.due) * 100) : null;
+  const t = { showChange, periodName };
+  const a = data.allTime;
+  return (
+    <section className="space-y-3">
+      <p className="section-label">Totals</p>
+      <div className="space-y-2">
+        <p className="eyebrow text-text-faint">Activity</p>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <Total label="People served" value={k.peopleServed} prev={p.peopleServed} hint="Each person counted once" {...t} />
+          <Total label={checkInsWord} value={k.checkIns} prev={p.checkIns} {...t} />
+          <Total label="New people" value={k.newPeople} prev={p.newPeople} {...t} />
+          <Total label="Returning people" value={returning} hint="Served this period, not on their first visit" {...t} showChange={false} />
+          <Total label="Visits per person" value={avg} display={avg ? avg.toFixed(1) : "0"} prev={undefined} hint={prevAvg ? `${prevAvg.toFixed(1)} before` : "Average"} {...t} showChange={false} />
+          <Total label="Notes written" value={k.notes} prev={p.notes} {...t} />
+          <Total label="Tasks completed" value={k.tasksDone} prev={p.tasksDone} {...t} />
+          {followUps && followRate !== null && <Total label="Follow-ups done" value={followRate} display={`${followRate}%`} hint={`${f.onTime + f.late} of ${f.due} due`} {...t} showChange={false} />}
+        </div>
+        <p className="eyebrow pt-2 text-text-faint">Results</p>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <Total label="Reached an outcome" value={data.outcomePeople} prev={data.prevOutcomePeople} hint="People, each counted once" {...t} />
+          <Total label="Services provided" value={data.extra.servicesProvided} prev={data.prevExtra.servicesProvided} {...t} />
+          <Total
+            label={business ? "Revenue" : "Value of services"}
+            value={data.extra.valueCents}
+            display={formatMoney(data.extra.valueCents)}
+            prev={data.prevExtra.valueCents}
+            hint="From the prices in Settings → Services"
+            {...t}
+          />
+          {data.extra.referrals !== null ? (
+            <Total label="Referrals received" value={data.extra.referrals} prev={data.prevExtra.referrals ?? 0} {...t} />
+          ) : (
+            <Total label="Online bookings" value={data.extra.bookings} prev={data.prevExtra.bookings} {...t} />
+          )}
+          {data.extra.referrals !== null && <Total label="Online bookings" value={data.extra.bookings} prev={data.prevExtra.bookings} {...t} />}
+        </div>
+      </div>
+      {a.checkIns > 0 && (
+        <p className="text-sm text-text-muted">
+          <span className="font-semibold text-text">All time</span>
+          {a.since ? ` (since ${formatDay(a.since)})` : ""}: {a.people.toLocaleString()} people served · {a.checkIns.toLocaleString()} {checkInsWord.toLowerCase()} ·{" "}
+          {a.outcomes.toLocaleString()} outcomes{a.valueCents > 0 ? ` · ${formatMoney(a.valueCents)} in services` : ""}
+        </p>
+      )}
+    </section>
+  );
+}
+
+/** One row per month in the period, with a totals row. */
+function MonthlyTable({ rows, checkInsWord, showValue }: { rows: MonthRow[]; checkInsWord: string; showValue: boolean }) {
+  const sum = (k: keyof Omit<MonthRow, "key" | "label">) => rows.reduce((n, r) => n + (r[k] as number), 0);
+  return (
+    <div className="card overflow-x-auto">
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="eyebrow border-b border-border text-left text-text-faint">
+            <th className="px-4 py-2 font-semibold">Month</th>
+            <th className="px-3 py-2 text-right font-semibold">People served</th>
+            <th className="px-3 py-2 text-right font-semibold">{checkInsWord}</th>
+            <th className="px-3 py-2 text-right font-semibold">New people</th>
+            <th className="px-3 py-2 text-right font-semibold">Outcomes</th>
+            {showValue && <th className="px-4 py-2 text-right font-semibold">Value</th>}
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-border-subtle">
+          {rows.map((r) => (
+            <tr key={r.key}>
+              <td className="px-4 py-2 text-text">{r.label}</td>
+              <td className="px-3 py-2 text-right tabular-nums">{r.peopleServed.toLocaleString()}</td>
+              <td className="px-3 py-2 text-right tabular-nums">{r.checkIns.toLocaleString()}</td>
+              <td className="px-3 py-2 text-right tabular-nums">{r.newPeople.toLocaleString()}</td>
+              <td className="px-3 py-2 text-right tabular-nums">{r.outcomes.toLocaleString()}</td>
+              {showValue && <td className="px-4 py-2 text-right tabular-nums">{formatMoney(r.valueCents)}</td>}
+            </tr>
+          ))}
+        </tbody>
+        <tfoot>
+          <tr className="border-t border-border font-semibold text-text">
+            <td className="px-4 py-2">Total</td>
+            <td className="px-3 py-2 text-right tabular-nums" title="People served counts each person once per month, so the total can be higher than the period's People served">
+              {sum("peopleServed").toLocaleString()}*
+            </td>
+            <td className="px-3 py-2 text-right tabular-nums">{sum("checkIns").toLocaleString()}</td>
+            <td className="px-3 py-2 text-right tabular-nums">{sum("newPeople").toLocaleString()}</td>
+            <td className="px-3 py-2 text-right tabular-nums">{sum("outcomes").toLocaleString()}</td>
+            {showValue && <td className="px-4 py-2 text-right tabular-nums">{formatMoney(sum("valueCents"))}</td>}
+          </tr>
+        </tfoot>
+      </table>
+      <p className="px-4 pb-3 text-xs text-text-faint">* Someone who came in during several months is counted once in each month.</p>
+    </div>
   );
 }
