@@ -110,8 +110,8 @@ const PLANS: {
     who: "For organizations of 19 or more.",
     price: "$349",
     unit: "/ month",
-    fine: "20 seats included. Additional seats $15 / user / month.",
-    save: "Save vs. Small Team at 19+ seats",
+    fine: "20 seats included: $17.45 a person. Every seat after 20 is just $15.",
+    save: "Saves $852 a year at 30 people, $1,812 at 50",
     features: ["Everything in Small Team", "20 seats included", "Extra seats just $15 each", "Team dashboard, activity log, Impact reports", "Admin permissions and centralized billing"],
     cta: "Start a free team trial",
     href: TEAM_SIGNUP,
@@ -569,6 +569,47 @@ export default function WelcomePage() {
                 )}
               </div>
             ))}
+          </div>
+
+          {/* Why Organization is the better deal: the same app, a lower price per person as the team grows. */}
+          <div className="card space-y-4 p-6">
+            <div className="space-y-1">
+              <p className="section-label">Why Organization is the better deal</p>
+              <p className="text-sm text-text-muted">
+                Same app, same features for everyone. The price per person drops as you grow: $19 on Small Team, $17.45 at 20 people, and every
+                person after 20 is just $15.
+              </p>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="eyebrow border-b border-border text-left text-text-faint">
+                    <th className="py-2 pr-3 font-semibold">Team size</th>
+                    <th className="px-3 py-2 text-right font-semibold">At $19 a seat</th>
+                    <th className="px-3 py-2 text-right font-semibold text-accent">Organization</th>
+                    <th className="px-3 py-2 text-right font-semibold">Per person</th>
+                    <th className="py-2 pl-3 text-right font-semibold">You save a year</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border-subtle">
+                  {[
+                    [20, 380, 349, "17.45", 372],
+                    [30, 570, 499, "16.63", 852],
+                    [50, 950, 799, "15.98", 1812],
+                    [100, 1900, 1549, "15.49", 4212],
+                  ].map(([size, flat, org, per, saved]) => (
+                    <tr key={size}>
+                      <td className="py-2 pr-3">{size} people</td>
+                      <td className="px-3 py-2 text-right tabular-nums text-text-muted line-through">${flat.toLocaleString()}/mo</td>
+                      <td className="px-3 py-2 text-right font-semibold tabular-nums text-text">${org.toLocaleString()}/mo</td>
+                      <td className="px-3 py-2 text-right tabular-nums">${per}</td>
+                      <td className="py-2 pl-3 text-right font-semibold tabular-nums text-accent">${saved.toLocaleString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="text-xs text-text-faint">You never have to pick: from 19 seats the lower Organization price applies automatically.</p>
           </div>
 
           <div className="card grid gap-6 p-6 lg:grid-cols-[1fr_1.2fr] lg:items-center">
