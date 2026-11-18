@@ -1,5 +1,8 @@
 # Instructions for Claude
 
+## Positioning (read first)
+- Surfdesk is a client and customer management app for EVERY business with customers: salons, gyms, coaches, trainers, contractors and trades, consultants, agencies, clinics, freelancers, and also nonprofits. It has two versions: a business version ("Visits", "Insights", revenue) and a nonprofit version ("Check-ins", "Impact", demographics). Never describe it as a case-management or nonprofit tool. In any copy, lead with businesses; nonprofits are one audience among many, never the headline.
+
 ## Dashboard steps for the owner
 - When the owner has to do something in a dashboard, give a direct link to the exact page (deep link), not menu paths to click through.
 
