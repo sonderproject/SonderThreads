@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { MARKETING_WORDING } from "@/lib/marketing-wording";
 import { BrandLockup } from "@/components/BrandLockup";
@@ -7,9 +8,16 @@ import { TimeZoneInput } from "@/components/notifications/TimeZoneInput";
 import { SetupProgress } from "@/components/setup/SetupFrame";
 import { setupFlowFor } from "@/lib/setup";
 import { cookies } from "next/headers";
-import { FRIEND_COOKIE, isFriendsCode } from "@/lib/friends";
+import { FRIEND_COOKIE, checkFriendsCode } from "@/lib/friends";
 
 export const dynamic = "force-dynamic";
+
+// The friends & family version of this page (?friend=...) is never indexed, and its address
+// (which holds the code) is never sent to other sites as a referrer.
+export async function generateMetadata({ searchParams }: { searchParams: Promise<{ friend?: string }> }): Promise<Metadata> {
+  const { friend } = await searchParams;
+  return friend ? { robots: { index: false, follow: false }, referrer: "no-referrer" } : {};
+}
 
 const ERRORS: Record<string, string> = {
   email: "Enter a valid email address.",
@@ -34,7 +42,7 @@ export default async function SignupPage({
   const { error, next, email, phone, deleted, utm_source, utm_medium, utm_campaign, utm_content, friend: friendParam } = await searchParams;
   // Friends & family link (lib/friends.ts): /signup?friend=<code> makes the new account free for life.
   const friendRaw = friendParam || (await cookies()).get(FRIEND_COOKIE)?.value;
-  const friend = isFriendsCode(friendRaw) ? friendRaw! : null;
+  const friend = friendRaw && (await checkFriendsCode(friendRaw)) ? friendRaw : null;
   // Which ad brought them (see components/landing/CampaignLinks.tsx); recorded with the sign-up.
   const utm = { utm_source, utm_medium, utm_campaign, utm_content };
   const showLegacy = await legacyDataUnclaimed();

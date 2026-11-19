@@ -7,7 +7,7 @@ import { isEmail } from "@/lib/email-check";
 import { readDraft, saveDraftToAccount, setupFlowFor } from "@/lib/setup";
 import { recordAcceptance } from "@/lib/legal-server";
 import { cookies, headers } from "next/headers";
-import { FRIEND_COOKIE, applyFriendsCode, isFriendsCode } from "@/lib/friends";
+import { FRIEND_COOKIE, applyFriendsCode, checkFriendsCode } from "@/lib/friends";
 import { alertOwner, isLikelyBot, logEvent } from "@/lib/events";
 import { redirect } from "next/navigation";
 import { query, queryOne, transaction } from "@/lib/db/client";
@@ -292,21 +292,25 @@ export async function signup(formData: FormData): Promise<void> {
   const agreed = formData.get("agree") === "on";
   // Optional and unchecked by default (lib/marketing.ts); recorded with the exact wording shown.
   const marketing = formData.get("marketing_opt_in") === "on";
-  // Friends & family link (lib/friends.ts): kept in a cookie so a retry after an error still counts.
+  // Friends & family link (lib/friends.ts): checked on the server with guess limits, and kept
+  // in a cookie so a retry after an error still counts.
   const cookieJar = await cookies();
   const friend = formData.get("friend")?.toString().trim() || cookieJar.get(FRIEND_COOKIE)?.value || "";
-  // A typed code that's wrong stops here, so nobody ends up on a paid trial by mistake.
-  const typedFriend = formData.get("friend")?.toString().trim() ?? "";
-  if (typedFriend && !isFriendsCode(typedFriend)) {
-    await new Promise((r) => setTimeout(r, 1000));
-    back("/signup", "friend", email, next, rawPhone);
+  const friendOk = friend ? await checkFriendsCode(friend) : false;
+  if (friend && !friendOk) {
+    cookieJar.delete(FRIEND_COOKIE);
+    // Came from the link but it's wrong, retired or blocked: say so instead of starting a paid trial.
+    if (formData.get("friend")) {
+      await new Promise((r) => setTimeout(r, 1000));
+      back("/signup", "friend", email, next, rawPhone);
+    }
   }
-  if (isFriendsCode(friend)) {
+  if (friendOk) {
     cookieJar.set(FRIEND_COOKIE, friend, { httpOnly: true, secure: true, sameSite: "lax", path: "/", maxAge: 7 * 86_400 });
   }
   const makeFriendFree = async (id: string) => {
-    if (!isFriendsCode(friend)) return;
-    await applyFriendsCode(id, email, friend);
+    if (!friendOk) return;
+    await applyFriendsCode(id, email);
     cookieJar.delete(FRIEND_COOKIE);
   };
 
