@@ -36,7 +36,7 @@
 
 ## Owner command center
 - Tabs: Overview, Accounts (suspend, extend trial, free for life), Controls (maintenance mode, announcement), Growth, Audience, Inbox (support messages), Health (`app/(app)/owner/*`). Show counts only, never client records.
-- Friends & family: sign-ups with the invite code (`FRIENDS_CODE` in Vercel, typed in the optional sign-up box or `/signup?friend=<code>`) are free for life (`lib/friends.ts`), capped at `FRIENDS_MAX` (default 25), each logged as `auth.friend_signup`. Change the code in Vercel and redeploy to retire it; never show it on the landing page.
+- Friends & family: sign-ups through the owner's private link `/signup?friend=<FRIENDS_CODE>` (code in Vercel; no visible code box anywhere, kept separate from future referral discounts) are free for life (`lib/friends.ts`), capped at `FRIENDS_MAX` (default 25), each logged as `auth.friend_signup`. Change the code in Vercel and redeploy to retire it; never show it on the landing page.
 - Marketing emails are opt-in only (`lib/marketing.ts`, every choice logged in `marketing_consents` with the exact wording). Don't send any marketing email until `POSTAL_ADDRESS` is set.
 - Record anything the owner should see with `logEvent()` / `alertOwner()` from `lib/events.ts` (table `app_events`). Server errors are captured automatically in `instrumentation.ts`.
 

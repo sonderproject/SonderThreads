@@ -23,7 +23,7 @@ const ERRORS: Record<string, string> = {
   weak: "Choose a stronger password.",
   rate: "Too many sign-ups right now. Wait a minute and try again.",
   failed: "Couldn't create the account. Please try again.",
-  friend: "That invite code isn't right. Check it, or leave the box empty to start a free trial.",
+  friend: "That invite link isn't valid anymore. Ask the person who sent it for a new one.",
 };
 
 export default async function SignupPage({
@@ -66,20 +66,8 @@ export default async function SignupPage({
         {deleted && <p className="text-xs text-text-muted">Your account and data were deleted.</p>}
         {error && <p className="text-xs text-danger">{ERRORS[error] ?? "Something went wrong."}</p>}
         <input type="hidden" name="next" value={next ?? ""} />
-        {friend ? (
-          <input type="hidden" name="friend" value={friend} />
-        ) : (
-          <input
-            type="text"
-            name="friend"
-            autoComplete="off"
-            autoCapitalize="none"
-            spellCheck={false}
-            maxLength={64}
-            placeholder="Invite code (optional)"
-            className="input"
-          />
-        )}
+        {/* Friends & family: only through the owner's private link, never a visible box (referral discounts will be separate). */}
+        {friend && <input type="hidden" name="friend" value={friend} />}
         {Object.entries(utm).map(([k, v]) => (v ? <input key={k} type="hidden" name={k} value={v.slice(0, 80)} /> : null))}
         <TimeZoneInput />
         <input
