@@ -8,6 +8,9 @@ const nextConfig = {
     staleTimes: { dynamic: 30 },
     // Settings → Data → Import backup sends the whole backup file to a server action.
     serverActions: { bodySizeLimit: "4mb" },
+    // Put the stylesheet inside the page instead of a separate file, so the
+    // first paint doesn't wait on an extra request (Lighthouse "render-blocking").
+    inlineCss: true,
   },
   // thesurfdesk.app is the only address the app runs on (Nov 16, 2026). The old domains (kept,
   // so nobody else can take them), www and the vercel.app name send every request to the same

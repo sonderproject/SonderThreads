@@ -1,0 +1,39 @@
+# Surfdesk
+
+> Surfdesk is an everyday organizer for professionals, entrepreneurs and busy people. Tasks and to-dos, notes, lists, reminders, calendar and voice capture live in one place, alongside clients and customers, visits, follow-ups, bookings and reports. Type it or say it once and Surfdesk files it, reminds you and keeps it together. Made by Sonder Project.
+
+Surfdesk runs in the browser on any phone or computer and can be added to the home screen like an app. It works for individuals and for teams: freelancers, coaches, consultants, contractors, salons, gyms, clinics, agencies and nonprofits.
+
+## Product
+
+- [Home](https://thesurfdesk.app/): What Surfdesk does, plans and pricing
+- [Create an account](https://thesurfdesk.app/signup): Start a free trial
+
+## Pricing
+
+- Individual: $9 a month after a 7-day free trial, no card needed to start.
+- Organization: a 14-day free trial, then $19 a seat a month for 2 to 18 seats, $349 a month for 19 to 20 seats, and $15 for each seat over 20.
+
+## Who it's for
+
+- [Small businesses](https://thesurfdesk.app/for/small-business): Customer history, reminders to reach out and revenue by service
+- [Coaches and consultants](https://thesurfdesk.app/for/coaches): Session notes, next steps and revenue by client
+- [Realtors](https://thesurfdesk.app/for/realtors): Contacts, follow-ups and voice notes between showings
+- [Case managers](https://thesurfdesk.app/for/case-managers): Voice notes, a Today list and full client history
+- [Nonprofits](https://thesurfdesk.app/for/nonprofits): Shared client list, check-ins and one-click impact reports
+
+## Comparisons
+
+- [Surfdesk vs spreadsheets](https://thesurfdesk.app/compare/spreadsheets)
+- [Surfdesk vs HubSpot CRM](https://thesurfdesk.app/compare/hubspot)
+
+## Free templates
+
+- [Client follow-up tracker (CSV)](https://thesurfdesk.app/templates/client-follow-up-tracker)
+- [Funder impact report (CSV)](https://thesurfdesk.app/templates/funder-impact-report)
+
+## Policies
+
+- [Privacy policy](https://thesurfdesk.app/privacy)
+- [Terms of service](https://thesurfdesk.app/terms)
+- [Delete your account](https://thesurfdesk.app/account-deletion)

@@ -1,0 +1,17 @@
+{
+  "entries": [
+    {
+      "identifier": "urn:air:thesurfdesk.app:website:site-guide",
+      "displayName": "Surfdesk site guide",
+      "description": "What Surfdesk is, who it's for, pricing, and links to its public pages, for AI agents.",
+      "type": "text/markdown",
+      "url": "https://thesurfdesk.app/llms.txt",
+      "representativeQueries": [
+        "What is Surfdesk?",
+        "How much does Surfdesk cost?",
+        "Is Surfdesk good for small businesses and freelancers?",
+        "How does Surfdesk compare to a spreadsheet or HubSpot?"
+      ]
+    }
+  ]
+}

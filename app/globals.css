@@ -397,13 +397,14 @@ select option {
 .legal a { color: var(--accent); text-decoration: underline; }
 .legal strong { font-weight: 600; }
 
-/* The Sonder Project mark (public/brand/sonder-project-mark.png) is a shape
-   only; it's drawn in the accent color so it shows in light and dark. */
+/* The Sonder Project mark is a shape only; it's drawn in the accent color so
+   it shows in light and dark. The mask is a small WebP made from
+   public/brand/sonder-project-mark.png at 3x its 37x28 display size. */
 .brand-mark {
   display: inline-block;
   background-color: var(--accent);
-  -webkit-mask: url("/brand/sonder-project-mark.png") center / contain no-repeat;
-  mask: url("/brand/sonder-project-mark.png") center / contain no-repeat;
+  -webkit-mask: url("/brand/sonder-project-mark-mask.webp") center / contain no-repeat;
+  mask: url("/brand/sonder-project-mark-mask.webp") center / contain no-repeat;
 }
 
 /* Frosted glass for floating chrome (header, tab bar, sheets), Sonder Studio style. */
@@ -451,9 +452,24 @@ select option {
   position: absolute;
   left: 0;
   right: 0;
+  overflow: hidden;
+}
+/* The gradient strip is 4x as wide as the bar (two copies of a 2x-wide
+   gradient) and slides left by half its width, so the loop is seamless. It
+   moves with transform, which the GPU handles without repainting. */
+.nav-glow::before,
+.nav-glow-line::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 400%;
   background: linear-gradient(90deg, var(--glow-1), var(--glow-2), var(--glow-3), var(--glow-4), var(--glow-5), var(--glow-1));
-  background-size: 200% 100%;
+  background-size: 50% 100%;
+  background-repeat: repeat-x;
   animation: nav-glow-flow 8s linear infinite;
+  will-change: transform;
 }
 /* Soft glow */
 .nav-glow {
@@ -469,12 +485,12 @@ select option {
   opacity: 0.7;
 }
 @keyframes nav-glow-flow {
-  from { background-position: 0% 0; }
-  to { background-position: 200% 0; }
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .nav-glow,
-  .nav-glow-line { animation: none; }
+  .nav-glow::before,
+  .nav-glow-line::before { animation: none; }
 }
 
 /* Loading feedback (components/LoadingIndicator.tsx): a thin bar at the top while a page opens or a
