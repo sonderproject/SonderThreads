@@ -294,7 +294,13 @@ export async function signup(formData: FormData): Promise<void> {
   const marketing = formData.get("marketing_opt_in") === "on";
   // Friends & family link (lib/friends.ts): kept in a cookie so a retry after an error still counts.
   const cookieJar = await cookies();
-  const friend = formData.get("friend")?.toString() || cookieJar.get(FRIEND_COOKIE)?.value || "";
+  const friend = formData.get("friend")?.toString().trim() || cookieJar.get(FRIEND_COOKIE)?.value || "";
+  // A typed code that's wrong stops here, so nobody ends up on a paid trial by mistake.
+  const typedFriend = formData.get("friend")?.toString().trim() ?? "";
+  if (typedFriend && !isFriendsCode(typedFriend)) {
+    await new Promise((r) => setTimeout(r, 1000));
+    back("/signup", "friend", email, next, rawPhone);
+  }
   if (isFriendsCode(friend)) {
     cookieJar.set(FRIEND_COOKIE, friend, { httpOnly: true, secure: true, sameSite: "lax", path: "/", maxAge: 7 * 86_400 });
   }
