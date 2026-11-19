@@ -4,6 +4,7 @@ import "./globals.css";
 import { Suspense } from "react";
 import { LoadingIndicator } from "@/components/LoadingIndicator";
 import { SITE_DESCRIPTION, SITE_URL } from "@/lib/site";
+import { Analytics } from "@vercel/analytics/next";
 
 // Sonder Studio type: Outfit for headings, Inter for everything else.
 // Self-hosted variable fonts (@fontsource-variable, OFL) instead of
@@ -80,6 +81,7 @@ export default function RootLayout({
           <LoadingIndicator />
         </Suspense>
         {children}
+        <Analytics />
       </body>
     </html>
   );
