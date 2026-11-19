@@ -6,7 +6,8 @@ import { isEmailSendError, sendAuthEmail } from "@/lib/auth-emails";
 import { isEmail } from "@/lib/email-check";
 import { readDraft, saveDraftToAccount, setupFlowFor } from "@/lib/setup";
 import { recordAcceptance } from "@/lib/legal-server";
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
+import { FRIEND_COOKIE, applyFriendsCode, isFriendsCode } from "@/lib/friends";
 import { alertOwner, isLikelyBot, logEvent } from "@/lib/events";
 import { redirect } from "next/navigation";
 import { query, queryOne, transaction } from "@/lib/db/client";
@@ -291,6 +292,17 @@ export async function signup(formData: FormData): Promise<void> {
   const agreed = formData.get("agree") === "on";
   // Optional and unchecked by default (lib/marketing.ts); recorded with the exact wording shown.
   const marketing = formData.get("marketing_opt_in") === "on";
+  // Friends & family link (lib/friends.ts): kept in a cookie so a retry after an error still counts.
+  const cookieJar = await cookies();
+  const friend = formData.get("friend")?.toString() || cookieJar.get(FRIEND_COOKIE)?.value || "";
+  if (isFriendsCode(friend)) {
+    cookieJar.set(FRIEND_COOKIE, friend, { httpOnly: true, secure: true, sameSite: "lax", path: "/", maxAge: 7 * 86_400 });
+  }
+  const makeFriendFree = async (id: string) => {
+    if (!isFriendsCode(friend)) return;
+    await applyFriendsCode(id, email, friend);
+    cookieJar.delete(FRIEND_COOKIE);
+  };
 
   if (!agreed) back("/signup", "agree", email, next, rawPhone);
   if (!isEmail(email) || email.length > 254) back("/signup", "email", email, next, rawPhone);
@@ -320,6 +332,7 @@ export async function signup(formData: FormData): Promise<void> {
         back("/signup", "failed", email, next, rawPhone);
       }
       await createUserRow(data.user!.id, email, phone, smsOptIn, timeZone, marketing);
+      await makeFriendFree(data.user!.id);
       const supabase = await createSupabaseServer();
       const signedIn = await supabase.auth.signInWithPassword({ email, password, options: { captchaToken: captcha(formData) } });
       if (signedIn.error?.code === "captcha_failed") {
@@ -385,11 +398,13 @@ export async function signup(formData: FormData): Promise<void> {
     if (data.session) {
       // Email confirmation is off in Supabase: they're signed in already.
       await createUserRow(userId, email, phone, smsOptIn, timeZone, marketing);
+      await makeFriendFree(userId);
       redirect(next);
     }
   }
 
   await createUserRow(userId, email, phone, smsOptIn, timeZone, marketing);
+  await makeFriendFree(userId);
   // Guided set-up: keep the answers on the account too, for a confirmation link opened on another device.
   if (setupFlowFor(next)) await saveDraftToAccount(userId).catch((err) => console.error("[setup] saving answers failed", err));
   const source = Object.fromEntries(
