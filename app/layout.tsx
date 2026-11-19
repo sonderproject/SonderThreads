@@ -1,21 +1,24 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Outfit } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import { Suspense } from "react";
 import { LoadingIndicator } from "@/components/LoadingIndicator";
 import { SITE_DESCRIPTION, SITE_URL } from "@/lib/site";
 
 // Sonder Studio type: Outfit for headings, Inter for everything else.
-const sans = Inter({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+// Self-hosted variable fonts (@fontsource-variable, OFL) instead of
+// next/font/google, so builds never depend on Google Fonts answering
+// (Vercel builds started failing on it Nov 19, 2026).
+const sans = localFont({
+  src: "../node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2",
+  weight: "100 900",
   variable: "--font-sans",
   display: "swap",
 });
 
-const display = Outfit({
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600"],
+const display = localFont({
+  src: "../node_modules/@fontsource-variable/outfit/files/outfit-latin-wght-normal.woff2",
+  weight: "100 900",
   variable: "--font-display",
   display: "swap",
 });
