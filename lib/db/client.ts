@@ -18,13 +18,22 @@ export function resolveConnectionString(): string | undefined {
     process.env.POSTGRES_URL_NON_POOLING;
   if (known) return known;
 
-  for (const [key, value] of Object.entries(process.env)) {
-    if (value && /url/i.test(key) && /^postgres(ql)?:\/\//i.test(value)) {
-      return value;
-    }
-  }
-
-  return undefined;
+  // Prefixed names (e.g. sonderthreads_POSTGRES_URL). The project also still
+  // has the old Neon variables, and env order isn't guaranteed, so pick by
+  // what the URL points at instead of taking the first match: Supabase's
+  // transaction pooler (port 6543, shares a small set of database connections
+  // across every serverless instance) first, then any Supabase URL, then
+  // anything Postgres-shaped. Every query here is transaction-scoped
+  // (set_config(..., true), xact locks), which transaction pooling requires.
+  const candidates = Object.entries(process.env)
+    .filter(([key, value]) => value && /url/i.test(key) && /^postgres(ql)?:\/\//i.test(value))
+    .map(([, value]) => value as string);
+  const isSupabase = (v: string) => /\.supabase\.(co|com)/i.test(v);
+  return (
+    candidates.find((v) => isSupabase(v) && /:6543\//.test(v)) ??
+    candidates.find(isSupabase) ??
+    candidates[0]
+  );
 }
 
 let pool: Pool | undefined;
