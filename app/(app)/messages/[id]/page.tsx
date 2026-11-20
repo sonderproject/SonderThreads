@@ -58,6 +58,7 @@ export default async function ConversationPage({ params, searchParams }: { param
         initial={messages}
         canPost={canPost(ctx, c)}
         canModerate={c.kind === "channel" && ctx.isManager}
+        archived={Boolean(c.archived_at)}
         placeholder={c.kind === "channel" ? `Message #${c.name}` : "Write a message"}
       />
 

@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { ChatMessage, Segment } from "@/lib/messages";
-import { deleteMessage, editMessage, pollMessages, searchTags, sendMessage, type TagOption } from "@/lib/actions/messages";
+import type { ChatMessage } from "@/lib/messages";
+import { activeTrigger, encodeTags, type Segment, type TagOption } from "@/lib/message-tags";
+import { deleteMessage, editMessage, pollMessages, searchTags, sendMessage } from "@/lib/actions/messages";
 import { PROSE_INPUT } from "@/lib/input-props";
 
 const POLL_MS = 5000;
@@ -49,24 +50,6 @@ function Body({ segments }: { segments: Segment[] }) {
       )}
     </p>
   );
-}
-
-/** Turns the "#Name" / "@Name" picked in the composer into tags the server understands. */
-export function encodeTags(text: string, picked: TagOption[]): string {
-  let out = text;
-  for (const p of [...picked].sort((a, b) => b.name.length - a.name.length)) {
-    const label = `${p.kind === "client" ? "#" : "@"}${p.name}`;
-    out = out.split(label).join(`<${p.kind === "client" ? "#" : "@"}${p.id}>`);
-  }
-  return out;
-}
-
-/** Finds a "#word" or "@word" being typed right before the cursor. */
-function activeTrigger(text: string, caret: number): { kind: "client" | "user"; start: number; q: string } | null {
-  const before = text.slice(0, caret);
-  const m = before.match(/(^|\s)([#@])([^\s#@]{0,40})$/);
-  if (!m) return null;
-  return { kind: m[2] === "#" ? "client" : "user", start: caret - m[3].length - 1, q: m[3] };
 }
 
 export function Composer({
@@ -167,7 +150,7 @@ export function Composer({
           placeholder={placeholder}
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey && !options.length) {
+            if (e.key === "Enter" && !e.shiftKey && !options.length && !e.nativeEvent.isComposing) {
               e.preventDefault();
               submit();
             }
@@ -235,9 +218,11 @@ export function ChatView({
   canPost,
   canModerate,
   placeholder,
+  archived = false,
 }: {
   conversationId: string;
   initial: ChatMessage[];
+  archived?: boolean;
   canPost: boolean;
   canModerate: boolean;
   placeholder: string;
@@ -350,7 +335,7 @@ export function ChatView({
       {canPost ? (
         <Composer conversationId={conversationId} onSend={send} placeholder={placeholder} />
       ) : (
-        <p className="text-sm text-text-muted">Only Admins and Managers can post here.</p>
+        <p className="text-sm text-text-muted">{archived ? "This channel is archived." : "Only Admins and Managers can post here."}</p>
       )}
     </div>
   );

@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { query, queryOne } from "@/lib/db/client";
 import { notify } from "@/lib/notify";
 import {
@@ -97,8 +98,15 @@ async function insertMessage(ctx: MessageCtx, c: Conversation, body: string, sha
   );
   await query(`update conversations set last_message_at = now() where id = $1`, [c.id]);
   await markRead(ctx, c.id);
-  await logClientTags(ctx, row!.id, tags.personIds);
-  await alertReaders(ctx, c, row!.id, tags.mentionIds);
+  // Logging and alerts finish after the reply, so sending stays quick in big groups.
+  after(async () => {
+    try {
+      await logClientTags(ctx, row!.id, tags.personIds);
+      await alertReaders(ctx, c, row!.id, tags.mentionIds);
+    } catch (err) {
+      console.error("[messages] after-send work failed", err);
+    }
+  });
   return row!.id;
 }
 
@@ -131,8 +139,8 @@ export async function pollMessages(conversationId: string, since: string | null)
 export async function editMessage(messageId: string, rawBody: string): Promise<{ ok: boolean; error?: string }> {
   const ctx = await messageCtx();
   if (!ctx) return { ok: false, error: "You're not in an organization." };
-  const m = await queryOne<{ conversation_id: string; author_id: string | null; deleted_at: string | null; share: unknown }>(
-    `select conversation_id, author_id, deleted_at, share from messages where id = $1 and org_id = $2`,
+  const m = await queryOne<{ conversation_id: string; author_id: string | null; deleted_at: string | null; share: unknown; person_ids: string[] }>(
+    `select conversation_id, author_id, deleted_at, share, person_ids from messages where id = $1 and org_id = $2`,
     [messageId, ctx.orgId],
   );
   if (!m || m.author_id !== ctx.userId || m.deleted_at) return { ok: false, error: "You can only edit your own messages." };
@@ -146,7 +154,9 @@ export async function editMessage(messageId: string, rawBody: string): Promise<{
     `update messages set body = $2, person_ids = $3, mention_ids = $4, edited_at = now(), updated_at = now() where id = $1`,
     [messageId, tags.body, tags.personIds, tags.mentionIds],
   );
-  await logClientTags(ctx, messageId, tags.personIds);
+  // Only clients newly tagged by this edit go in the activity log.
+  const before = new Set(m.person_ids ?? []);
+  await logClientTags(ctx, messageId, tags.personIds.filter((id) => !before.has(id)));
   return { ok: true };
 }
 
@@ -337,7 +347,7 @@ export async function shareTask(taskId: string, conversationId: string, comment:
   return { ok: true };
 }
 
-export type TagOption = { kind: "client" | "user"; id: string; name: string };
+import type { TagOption } from "@/lib/message-tags";
 
 /** Autocomplete for # (the organization's clients) and @ (people who can read this chat). */
 export async function searchTags(conversationId: string, kind: "client" | "user", q: string): Promise<TagOption[]> {

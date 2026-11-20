@@ -2,6 +2,7 @@ import { query, queryOne } from "@/lib/db/client";
 import { requireUserId } from "@/lib/current-user";
 import { getMembership } from "@/lib/org";
 import type { OrgRole } from "@/lib/org-roles";
+import { TOKEN_RE, editTextOf, parseBody, previewOf, tagIds, type Segment } from "@/lib/message-tags";
 
 /**
  * Team messages: chats between active members of the same organization.
@@ -34,10 +35,7 @@ export type Conversation = {
   archived_at: string | null;
 };
 
-export type Segment =
-  | { t: "text"; v: string }
-  | { t: "client"; id: string | null; name: string }
-  | { t: "user"; id: string; name: string };
+export type { Segment } from "@/lib/message-tags";
 
 export type Share =
   | { type: "note"; excerpt: string; personId: string | null; personName: string | null; noteId: string; orgNote: boolean }
@@ -58,8 +56,11 @@ export type ChatMessage = {
   deleted: boolean;
 };
 
-export const TOKEN_RE = /<([#@])([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})>/gi;
+export { TOKEN_RE };
 export const MAX_BODY = 4000;
+
+/** A timestamp column as exact ISO text (microseconds, UTC): sorts as text and round-trips for polling. */
+const iso = (col: string) => `to_char(${col} at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"')`;
 
 /** The signed-in member's context, or null when they're not active in an organization. */
 export async function messageCtx(): Promise<MessageCtx | null> {
@@ -130,7 +131,7 @@ export async function listConversations(ctx: MessageCtx): Promise<ConversationSu
           and (c.kind = 'channel'
                or exists (select 1 from conversation_members cm where cm.conversation_id = c.id and cm.user_id = $2 and cm.left_at is null))
      )
-     select c.id, c.kind, c.name, c.is_general, c.post_policy, c.last_message_at,
+     select c.id, c.kind, c.name, c.is_general, c.post_policy, ${iso("c.last_message_at")} as last_message_at,
             last.body as preview, last.deleted_at is not null as preview_deleted, last.share->>'type' as preview_share,
             (select count(*)::int from messages m
               where m.conversation_id = c.id and m.deleted_at is null and m.author_id is distinct from $2
@@ -167,7 +168,7 @@ export async function listConversations(ctx: MessageCtx): Promise<ConversationSu
     preview: r.preview_deleted
       ? "Message deleted"
       : r.preview
-        ? r.preview.replace(TOKEN_RE, (_, k) => (k === "#" ? "#client" : "@teammate")).slice(0, 120)
+        ? previewOf(r.preview)
         : r.preview_share
           ? `Shared a ${r.preview_share}`
           : null,
@@ -211,9 +212,7 @@ export async function readersOf(c: Conversation): Promise<string[]> {
  * conversation. Anything else is turned back into plain text.
  */
 export async function cleanTags(ctx: MessageCtx, c: Conversation, body: string): Promise<{ body: string; personIds: string[]; mentionIds: string[] }> {
-  const clientIds = new Set<string>();
-  const userIds = new Set<string>();
-  for (const m of body.matchAll(TOKEN_RE)) (m[1] === "#" ? clientIds : userIds).add(m[2].toLowerCase());
+  const { clients: clientIds, users: userIds } = tagIds(body);
   const okClients = clientIds.size
     ? new Set(
         (
@@ -250,15 +249,15 @@ type Row = {
 export async function loadMessages(ctx: MessageCtx, conversationId: string, since?: string | null): Promise<ChatMessage[]> {
   const rows = since
     ? await query<Row>(
-        `select m.id, m.author_id, coalesce(u.name, u.email) as author_name, m.body, m.share, m.created_at, m.updated_at, m.edited_at, m.deleted_at
+        `select m.id, m.author_id, coalesce(u.name, u.email) as author_name, m.body, m.share, ${iso("m.created_at")} as created_at, ${iso("m.updated_at")} as updated_at, m.edited_at, m.deleted_at
            from messages m left join users u on u.id = m.author_id
-          where m.conversation_id = $1 and m.updated_at > $2
+          where m.conversation_id = $1 and m.updated_at > $2::timestamptz
           order by m.created_at asc limit 200`,
         [conversationId, since],
       )
     : (
         await query<Row>(
-          `select m.id, m.author_id, coalesce(u.name, u.email) as author_name, m.body, m.share, m.created_at, m.updated_at, m.edited_at, m.deleted_at
+          `select m.id, m.author_id, coalesce(u.name, u.email) as author_name, m.body, m.share, ${iso("m.created_at")} as created_at, ${iso("m.updated_at")} as updated_at, m.edited_at, m.deleted_at
              from messages m left join users u on u.id = m.author_id
             where m.conversation_id = $1
             order by m.created_at desc limit 150`,
@@ -271,7 +270,11 @@ export async function loadMessages(ctx: MessageCtx, conversationId: string, sinc
 async function renderMessages(ctx: MessageCtx, rows: Row[]): Promise<ChatMessage[]> {
   const clientIds = new Set<string>();
   const userIds = new Set<string>();
-  for (const r of rows) for (const m of r.body.matchAll(TOKEN_RE)) (m[1] === "#" ? clientIds : userIds).add(m[2].toLowerCase());
+  for (const r of rows) {
+    const ids = tagIds(r.body);
+    ids.clients.forEach((id) => clientIds.add(id));
+    ids.users.forEach((id) => userIds.add(id));
+  }
   // Names only for clients this reader can see right now (their organization's, or their own).
   const clients = clientIds.size
     ? new Map(
@@ -293,25 +296,8 @@ async function renderMessages(ctx: MessageCtx, rows: Row[]): Promise<ChatMessage
       )
     : new Map<string, string>();
   return rows.map((r) => {
-    const segments: Segment[] = [];
-    let editText = "";
-    if (!r.deleted_at) {
-      let last = 0;
-      for (const m of r.body.matchAll(TOKEN_RE)) {
-        const at = m.index ?? 0;
-        if (at > last) segments.push({ t: "text", v: r.body.slice(last, at) });
-        const id = m[2].toLowerCase();
-        if (m[1] === "#") {
-          const name = clients.get(id);
-          segments.push(name ? { t: "client", id, name } : { t: "client", id: null, name: "a client" });
-        } else {
-          segments.push({ t: "user", id, name: users.get(id) ?? "teammate" });
-        }
-        last = at + m[0].length;
-      }
-      if (last < r.body.length) segments.push({ t: "text", v: r.body.slice(last) });
-      editText = segments.map((s) => (s.t === "text" ? s.v : s.t === "user" ? `@${s.name}` : s.id ? `#${s.name}` : s.name)).join("");
-    }
+    const segments: Segment[] = r.deleted_at ? [] : parseBody(r.body, clients, users);
+    const editText = editTextOf(segments);
     let share = r.deleted_at ? null : r.share;
     // A client note shared into a chat: only show which client to readers who can see that client.
     if (share?.type === "note" && share.personId && !clients.has(share.personId)) {
