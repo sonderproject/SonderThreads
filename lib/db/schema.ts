@@ -1266,4 +1266,55 @@ alter table bookings enable row level security;
 -- optional autocorrect of common typos (off by default; components/TypingAssist.tsx).
 alter table user_settings add column if not exists spellcheck boolean not null default true;
 alter table user_settings add column if not exists autocorrect boolean not null default false;
+
+-- Team messages (lib/messages.ts): chats between members of the same organization.
+-- Channels are open to every active member; direct and group chats only to the
+-- people in conversation_members. Nobody else can read a direct or group chat,
+-- organization admins included (they can delete one, never open it). Clients
+-- are tagged as <#person-id> and teammates as <@user-id> in the body; names are
+-- filled in for each reader, and a reader who can't see a client gets "a client".
+create table if not exists conversations (
+  id uuid primary key default gen_random_uuid(),
+  org_id uuid not null references organizations(id) on delete cascade,
+  kind text not null check (kind in ('direct', 'group', 'channel')),
+  name text check (length(name) between 1 and 60),
+  post_policy text not null default 'everyone' check (post_policy in ('everyone', 'managers')),
+  is_general boolean not null default false,
+  created_by uuid references users(id) on delete set null,
+  created_at timestamptz not null default now(),
+  last_message_at timestamptz not null default now(),
+  archived_at timestamptz
+);
+create index if not exists conversations_org_idx on conversations (org_id, last_message_at desc);
+create index if not exists conversations_created_by_idx on conversations (created_by);
+create unique index if not exists conversations_general_idx on conversations (org_id) where is_general;
+alter table conversations enable row level security;
+create table if not exists conversation_members (
+  conversation_id uuid not null references conversations(id) on delete cascade,
+  user_id uuid not null references users(id) on delete cascade,
+  last_read_at timestamptz not null default now(),
+  left_at timestamptz,
+  primary key (conversation_id, user_id)
+);
+create index if not exists conversation_members_user_idx on conversation_members (user_id);
+alter table conversation_members enable row level security;
+create table if not exists messages (
+  id uuid primary key default gen_random_uuid(),
+  conversation_id uuid not null references conversations(id) on delete cascade,
+  org_id uuid not null references organizations(id) on delete cascade,
+  author_id uuid references users(id) on delete set null,
+  body text not null check (length(body) <= 4000),
+  person_ids uuid[] not null default '{}',
+  mention_ids uuid[] not null default '{}',
+  share jsonb,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  edited_at timestamptz,
+  deleted_at timestamptz
+);
+create index if not exists messages_conversation_idx on messages (conversation_id, created_at desc);
+create index if not exists messages_updated_idx on messages (conversation_id, updated_at);
+create index if not exists messages_org_idx on messages (org_id);
+create index if not exists messages_author_idx on messages (author_id);
+alter table messages enable row level security;
 `;

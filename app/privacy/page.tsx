@@ -103,6 +103,43 @@ export default function PrivacyPage() {
         </ul>
       </LegalSection>
 
+      <LegalSection title="Team messages">
+        <p>
+          Members of an organization can message each other in Surfdesk: in channels, in group chats and one to one. We
+          store the messages, who sent them and when, any client or teammate tagged in them, and any note or task shared
+          into them, on the organization&apos;s behalf.
+        </p>
+        <ul>
+          <li>
+            <strong>Channels</strong> can be read by every active member of the organization. Admins and Managers create
+            them and can delete messages in them.
+          </li>
+          <li>
+            <strong>Direct and group chats are private</strong> to the people in them. The organization&apos;s admins
+            can&apos;t read a chat they&apos;re not in. They can see that a chat exists, who is in it and how many messages
+            it has, and they can delete it.
+          </li>
+          <li>
+            <strong>Tagging a client</strong> in a message adds an entry to the organization&apos;s activity log that says
+            who tagged which client and when, not what the message said. Only the organization&apos;s own clients can be
+            tagged. Anyone in the chat who can&apos;t see that client sees &ldquo;a client&rdquo; instead of a name.
+          </li>
+          <li>
+            <strong>Sharing</strong> a note posts it into the chat for everyone there to read. Sharing a task posts a copy of
+            its title and due date; the task itself stays private to you.
+          </li>
+          <li>
+            <strong>Alerts</strong> about new messages and mentions appear in Surfdesk and, if you turned them on, as phone
+            notifications. Phone notifications say who wrote but never include the message itself.
+          </li>
+        </ul>
+        <p>
+          Messages are part of the organization&apos;s records. If you leave the organization or delete your account, the
+          messages you sent stay with the organization and show as from a former member. You can edit or delete your own
+          messages at any time. When an organization is deleted, all of its messages are deleted.
+        </p>
+      </LegalSection>
+
       <LegalSection title="Calendar sync">
         <ul>
           <li>

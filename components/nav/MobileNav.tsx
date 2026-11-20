@@ -44,8 +44,10 @@ export function MobileNav({
   showTeam = false,
   showImpact = true,
   referralCount = null,
+  messageCount = null,
   showOwner = false,
 }: {
+  messageCount?: number | null;
   showOwner?: boolean;
   referralCount?: number | null;
   people: Pick<Person, "id" | "display_name">[];
@@ -65,7 +67,11 @@ export function MobileNav({
     referralCount !== null
       ? [{ href: "/referrals", label: referralCount ? `Referrals (${referralCount})` : "Referrals" }, ...baseLinks]
       : baseLinks;
-  const teamLinks = showTeam ? [{ href: "/team", label: "Team" }, ...withReferrals] : withReferrals;
+  const withMessages =
+    messageCount !== null
+      ? [{ href: "/messages", label: messageCount ? `Messages (${messageCount > 99 ? "99+" : messageCount})` : "Messages" }, ...withReferrals]
+      : withReferrals;
+  const teamLinks = showTeam ? [{ href: "/team", label: "Team" }, ...withMessages] : withMessages;
   const moreLinks = showOwner ? [{ href: "/owner", label: "Command center" }, ...teamLinks] : teamLinks;
   const moreActive = moreLinks.some((l) => isActive(pathname, l.href));
 
@@ -180,12 +186,14 @@ export function MobileNav({
           })}
           <button
             onClick={() => setSheet("more")}
-            className={`flex h-16 flex-col items-center justify-center gap-0.5 tabular-nums text-xs ${
+            aria-label={messageCount ? `More (${messageCount} unread messages)` : "More"}
+            className={`relative flex h-16 flex-col items-center justify-center gap-0.5 tabular-nums text-xs ${
               moreActive ? "text-accent" : "text-text-muted"
             }`}
           >
             <MoreIcon />
             More
+            {messageCount ? <span className="absolute right-[30%] top-3 h-2 w-2 rounded-full bg-urgent" aria-hidden /> : null}
           </button>
         </div>
       </nav>

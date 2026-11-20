@@ -11,6 +11,7 @@ import type { Note } from "@/lib/types";
 import { isNew } from "@/lib/urgency";
 import { Dictate } from "@/components/voice/Dictate";
 import { PROSE_INPUT } from "@/lib/input-props";
+import { ShareToTeam } from "@/components/messages/ShareToTeam";
 
 export function NoteCard({
   note,
@@ -124,8 +125,11 @@ export function NoteCard({
           {isNew(note.created_at) && <Badge tone="new">new</Badge>}
           {note.category && <Badge>{note.category}</Badge>}
         </div>
-        <span className="tabular-nums text-[11px] text-text-faint">
-          {new Date(note.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+        <span className="flex items-center gap-3">
+          <ShareToTeam kind="note" id={note.id} className="text-[11px] text-text-faint hover:text-accent hover:underline" />
+          <span className="tabular-nums text-[11px] text-text-faint">
+            {new Date(note.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+          </span>
         </span>
       </div>
     </Card>

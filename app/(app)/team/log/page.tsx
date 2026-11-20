@@ -21,6 +21,7 @@ const WHAT: Record<string, string> = {
   tasks: "task",
   check_ins: "check-in",
   client_comments: "comment",
+  messages: "client in a team message",
 };
 const VERB: Record<string, string> = {
   create: "added a",
@@ -29,6 +30,7 @@ const VERB: Record<string, string> = {
   restore: "restored a",
   reassign: "reassigned a",
   view: "viewed the",
+  mention: "tagged the",
 };
 
 /** Admins: who did what to the organization's client records, newest first. */

@@ -15,6 +15,7 @@ import { TwoFactorPrompt } from "@/components/settings/TwoFactorPrompt";
 import { getUserSettings } from "@/lib/settings";
 import { getMembership } from "@/lib/org";
 import { countNewReferrals } from "@/lib/referrals";
+import { unreadMessageCount } from "@/lib/messages";
 import { billingEnabled, getAccess } from "@/lib/billing";
 import { BillingBanner } from "@/components/billing/BillingBanner";
 import { pendingAgreements } from "@/lib/actions/legal";
@@ -114,8 +115,23 @@ export default async function AppGroupLayout({ children }: { children: React.Rea
     const open = ["/billing", "/settings", "/organization/new", "/join", "/invites", "/owner"].some((p) => path.startsWith(p));
     if (!open) redirect("/billing");
   }
-  const referralCount =
-    membership?.active && membership.role === "admin" ? await countNewReferrals(membership.orgId).catch(() => 0) : null;
+  // Admins' referral count and members' unread team messages (lib/messages.ts), together.
+  const [referralCount, messageCount] = await Promise.all([
+    membership?.active && membership.role === "admin" ? countNewReferrals(membership.orgId).catch(() => 0) : Promise.resolve(null),
+    membership?.active
+      ? requireUserId()
+          .then((userId) =>
+            unreadMessageCount({
+              userId,
+              orgId: membership.orgId,
+              orgName: membership.orgName,
+              role: membership.role,
+              isManager: membership.role !== "case_manager",
+            }),
+          )
+          .catch(() => 0)
+      : Promise.resolve(null),
+  ]);
   return (
     <TimeZoneProvider timeZone={timeZone}>
     <TermsProvider audience={membership?.active ? membership.orgKind : "individual"}>
@@ -126,6 +142,7 @@ export default async function AppGroupLayout({ children }: { children: React.Rea
       idleMinutes={settings.staySignedIn ? null : settings.idleTimeoutMinutes}
       showTeam={Boolean(membership?.active && membership.role !== "case_manager")}
       referralCount={referralCount}
+      messageCount={messageCount}
       showImpact={!(membership?.active && membership.role === "case_manager")}
       showOwner={showOwner}
     >

@@ -13,6 +13,7 @@ import { UndoProvider } from "@/components/ui/UndoToast";
 import { SearchPalette, OPEN_SEARCH_EVENT } from "@/components/search/SearchPalette";
 import type { Person } from "@/lib/types";
 import { DirectoryProvider } from "@/components/command/Directory";
+import { TeamProvider } from "@/components/messages/TeamContext";
 import { BellIcon, DownloadIcon, SignOutIcon, UserIcon } from "@/components/ui/icons";
 
 const NAV_ITEMS = [
@@ -35,8 +36,11 @@ export function AppShell({
   showTeam = false,
   showImpact = true,
   referralCount = null,
+  messageCount = null,
   showOwner = false,
 }: {
+  /** Members of an organization get a Messages tab; the unread count (null = no tab). */
+  messageCount?: number | null;
   /** The owner's master account gets a Command center tab (/owner). */
   showOwner?: boolean;
   /** Admins get a Referrals tab; the number waiting (null = no tab). */
@@ -57,6 +61,7 @@ export function AppShell({
 
   return (
     <DirectoryProvider value={{ people, lists }}>
+      <TeamProvider inOrg={messageCount !== null}>
       <UndoProvider>
         <WakeOnReturn />
         <IdleSignOut minutes={idleMinutes} />
@@ -69,7 +74,7 @@ export function AppShell({
               <div className="flex items-center">
                 <div className="hidden items-center gap-2 sm:flex">
                   <nav className="flex gap-1">
-                    {[...NAV_ITEMS.filter((i) => showImpact || i.href !== "/impact").map((i) => ({ ...i, label: i.href === "/check-ins" ? terms.checkIns : i.href === "/impact" ? terms.impact : i.label })), ...(showTeam ? [{ href: "/team", label: "Team" }] : []), ...(referralCount !== null ? [{ href: "/referrals", label: referralCount ? `Referrals (${referralCount})` : "Referrals" }] : []), ...(showOwner ? [{ href: "/owner", label: "Command center" }] : [])].map((item) => {
+                    {[...NAV_ITEMS.filter((i) => showImpact || i.href !== "/impact").map((i) => ({ ...i, label: i.href === "/check-ins" ? terms.checkIns : i.href === "/impact" ? terms.impact : i.label })), ...(messageCount !== null ? [{ href: "/messages", label: messageCount ? `Messages (${messageCount > 99 ? "99+" : messageCount})` : "Messages" }] : []), ...(showTeam ? [{ href: "/team", label: "Team" }] : []), ...(referralCount !== null ? [{ href: "/referrals", label: referralCount ? `Referrals (${referralCount})` : "Referrals" }] : []), ...(showOwner ? [{ href: "/owner", label: "Command center" }] : [])].map((item) => {
                       const isActive =
                         item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
                       return (
@@ -144,10 +149,11 @@ export function AppShell({
             <div className="nav-glow-line" aria-hidden />
           </header>
           <main className="pb-tabbar mx-auto max-w-4xl px-4 pt-5 sm:px-6 sm:py-6">{children}</main>
-          <MobileNav people={people} showTeam={showTeam} showImpact={showImpact} referralCount={referralCount} showOwner={showOwner} />
+          <MobileNav people={people} showTeam={showTeam} showImpact={showImpact} referralCount={referralCount} messageCount={messageCount} showOwner={showOwner} />
           <SearchPalette />
         </div>
       </UndoProvider>
+      </TeamProvider>
     </DirectoryProvider>
   );
 }

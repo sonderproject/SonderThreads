@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
+import { ShareToTeam } from "@/components/messages/ShareToTeam";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { deleteTask, restoreTask, setTaskCompleted, updateTaskSafe } from "@/lib/actions/tasks";
@@ -181,6 +182,7 @@ export function TaskRow({
           <button onClick={cancel} className="h-9 text-sm text-text-muted hover:text-text">
             Cancel
           </button>
+          <ShareToTeam kind="task" id={task.id} className="h-9 text-sm text-text-muted hover:text-accent hover:underline" />
           <button onClick={remove} className="ml-auto h-9 text-sm text-danger hover:underline">
             Delete
           </button>
