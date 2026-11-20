@@ -1,3 +1,4 @@
+import { unstable_rethrow } from "next/navigation";
 import { z, ZodError, type ZodType } from "zod";
 import { ETHNICITIES, GENDERS, INCOME_LEVELS } from "@/lib/demographics";
 
@@ -32,7 +33,7 @@ export const updatePersonSchema = z
   .partial();
 
 export const createNoteSchema = z.object({
-  content: z.string().trim().min(1, "Note can't be empty").max(5000, "Note is too long"),
+  content: z.string().trim().min(1, "Note can't be empty").max(20000, "Note is too long"),
   personId: uuid.nullable().optional(),
   category: optionalText(100),
   aiMetadata: z.record(z.string(), z.unknown()).nullable().optional(),
@@ -81,7 +82,7 @@ export const updateListItemSchema = z.object({
 });
 
 export const updateNoteSchema = z.object({
-  content: z.string().trim().min(1, "Note can't be empty").max(5000, "Note is too long"),
+  content: z.string().trim().min(1, "Note can't be empty").max(20000, "Note is too long"),
 });
 
 export const updateTaskSchema = z
@@ -142,6 +143,8 @@ export async function toActionResult<T>(fn: () => Promise<T>): Promise<ActionRes
   try {
     return { ok: true, data: await fn() };
   } catch (err) {
+    // Next's redirect()/notFound() (e.g. requireUserId() sending a signed-out person to /login) must propagate.
+    unstable_rethrow(err);
     // Database and code errors (not messages written for people) are logged for the owner's
     // command center, and the person gets a plain message instead of the technical one.
     if (isSystemError(err)) {

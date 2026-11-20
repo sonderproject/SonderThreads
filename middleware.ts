@@ -37,7 +37,14 @@ export async function middleware(request: NextRequest) {
   if (!data?.claims?.sub) return signedOut(request, response);
 
   const now = Date.now();
-  const lastSeen = Number(request.cookies.get(LAST_SEEN_COOKIE)?.value);
+  // A "last seen" from before this sign-in belongs to the previous session (e.g. the browser's idle
+  // timer signed out without clearing it), so it must not sign the person straight back out.
+  const signedInAt = Math.max(
+    0,
+    ...((data.claims.amr as { timestamp?: number }[] | undefined) ?? []).map((a) => Number(a?.timestamp) * 1000 || 0),
+  );
+  const seen = Number(request.cookies.get(LAST_SEEN_COOKIE)?.value);
+  const lastSeen = Number.isFinite(seen) && seen >= signedInAt ? seen : now;
   // Front-desk kiosk: the tablet stays on the check-in screen and stays signed in while it waits.
   const kiosk = request.cookies.get(KIOSK_COOKIE)?.value === "1";
   if (kiosk) {

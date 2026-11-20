@@ -36,6 +36,7 @@ export type Note = {
   content: string;
   category: string | null;
   ai_metadata: Record<string, unknown> | null;
+  pinned_at: string | null;
   created_at: string;
   updated_at: string;
   deleted_at: string | null;

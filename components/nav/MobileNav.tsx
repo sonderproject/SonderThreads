@@ -1,7 +1,7 @@
 "use client";
 
+import { runPageAdd } from "@/components/nav/page-add";
 import { useTerms } from "@/components/TermsProvider";
-
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -131,7 +131,7 @@ export function MobileNav({
   function onFabUp() {
     if (holdTimer.current) clearTimeout(holdTimer.current);
     if (holding.current) window.dispatchEvent(new Event(VOICE_STOP_EVENT));
-    else openCommand();
+    else if (!runPageAdd()) openCommand();
     holding.current = false;
   }
 
@@ -152,10 +152,10 @@ export function MobileNav({
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
-            openCommand();
+            if (!runPageAdd()) openCommand();
           }
         }}
-        aria-label="New command, note, task or person (hold to talk)"
+        aria-label="Add new (hold to talk)"
         style={{ WebkitTouchCallout: "none", touchAction: "none" }}
         className="bottom-above-tabbar fixed right-4 z-30 flex h-14 w-14 select-none items-center justify-center rounded-full bg-accent text-bg shadow-lg shadow-black/30 ring-1 ring-white/20 transition-transform active:scale-95 sm:hidden"
       >

@@ -1,5 +1,6 @@
 "use client";
 
+import { usePageAdd } from "@/components/nav/page-add";
 import type { Service } from "@/lib/services";
 import { useTerms } from "@/components/TermsProvider";
 
@@ -55,6 +56,12 @@ export function CheckInsBrowser({
   const router = useRouter();
   const [loading, startLoading] = useTransition();
   const [search, setSearch] = useState("");
+  // The + button jumps to the form and puts the cursor in its first field.
+  usePageAdd(() => {
+    const form = document.getElementById("new-check-in");
+    form?.scrollIntoView({ behavior: "smooth", block: "start" });
+    form?.querySelector<HTMLElement>("input, select, textarea")?.focus({ preventScroll: true });
+  });
   const todayKey = localDayKey(new Date());
   // The server only knows UTC; on a bare visit, anchor the default range to the local day.
   const from = range ? (hasParams ? range.from : addDays(todayKey, -(DEFAULT_RANGE_DAYS - 1))) : "";
@@ -132,7 +139,9 @@ export function CheckInsBrowser({
 
   return (
     <div className="space-y-6">
+      <div id="new-check-in" className="scroll-mt-24">
       <CheckInForm people={people} reasons={reasons} services={services} canAddService={canAddService} />
+      </div>
 
       <section className="space-y-3">
         <div className="flex flex-wrap items-center gap-x-5 gap-y-1 text-sm text-text-muted">

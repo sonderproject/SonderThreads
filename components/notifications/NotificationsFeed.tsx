@@ -158,7 +158,7 @@ export function NotificationsFeed({
                     {n.note_id && (
                       <>
                         {" · "}
-                        <Link href={`/notes#${n.note_id}`} className="hover:text-accent">
+                        <Link href={`/notes/${n.note_id}`} className="hover:text-accent">
                           from note
                         </Link>
                       </>
@@ -220,7 +220,7 @@ export function NotificationsFeed({
                     {n.note_id && (
                       <>
                         {" · "}
-                        <Link href={`/notes#${n.note_id}`} className="hover:text-accent">
+                        <Link href={`/notes/${n.note_id}`} className="hover:text-accent">
                           view note
                         </Link>
                       </>

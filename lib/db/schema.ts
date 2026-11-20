@@ -110,6 +110,8 @@ create table if not exists notes (
 );
 
 alter table notes add column if not exists deleted_at timestamptz;
+-- Pinned notes stay at the top of the Notes page and a person's notes.
+alter table notes add column if not exists pinned_at timestamptz;
 
 create index if not exists notes_user_id_idx on notes(user_id);
 create index if not exists notes_person_id_idx on notes(person_id);

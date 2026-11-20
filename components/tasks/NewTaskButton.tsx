@@ -9,9 +9,11 @@ import { RecurrenceSelect } from "@/components/tasks/RecurrenceSelect";
 import type { Person, TaskRecurrence } from "@/lib/types";
 import { Dictate } from "@/components/voice/Dictate";
 import { PROSE_INPUT } from "@/lib/input-props";
+import { usePageAdd } from "@/components/nav/page-add";
 
 export function NewTaskButton({ people }: { people: Pick<Person, "id" | "display_name">[] }) {
   const [open, setOpen] = useState(false);
+  usePageAdd(() => setOpen(true));
 
   return (
     <>

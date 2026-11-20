@@ -49,7 +49,7 @@ export function SearchResultsPanel({
             {results.notes.map((n) => (
               <Link
                 key={n.id}
-                href={n.person_id ? `/people/${n.person_id}` : "/notes"}
+                href={`/notes/${n.id}`}
                 className="block rounded px-2 py-1.5 hover:bg-bg-hover"
               >
                 <p className="text-sm text-text">{n.content}</p>

@@ -1,5 +1,6 @@
 "use client";
 
+import { usePageAdd } from "@/components/nav/page-add";
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -7,6 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { Dot, ItemList } from "@/components/calendar/CalendarItems";
 import { MonthGrid } from "@/components/calendar/MonthGrid";
 import { NewCalendarTask } from "@/components/calendar/NewCalendarTask";
+import { Modal } from "@/components/ui/Modal";
 import { setTaskCompleted } from "@/lib/actions/tasks";
 import {
   CALENDAR_VIEWS,
@@ -57,6 +59,10 @@ export function CalendarView({
   useEffect(() => setSelected(initialSelected), [initialSelected]);
 
   const [adding, setAdding] = useState<string | null>(null);
+  // The day whose pop-up is open (tap a day in the month grid).
+  const [dayOpen, setDayOpen] = useState<string | null>(null);
+  // The phone's + button adds to the selected day.
+  usePageAdd(() => setAdding(selected));
 
   // Task check-offs show instantly; the server catches up on refresh.
   const [completed, setCompleted] = useState<Record<string, boolean>>({});
@@ -149,7 +155,10 @@ export function CalendarView({
             selected={selected}
             byDay={byDay}
             completedOverrides={completed}
-            onSelect={setSelected}
+            onSelect={(day) => {
+              setSelected(day);
+              setDayOpen(day);
+            }}
           />
           <section aria-label={longDayLabel(selected)} className="space-y-2">
             <DayHeader day={selected} today={today} onAdd={() => setAdding(selected)} />
@@ -176,6 +185,21 @@ export function CalendarView({
       {view === "agenda" && (
         <Agenda days={daysBetween(range.from, range.to)} byDay={byDay} onAdd={setAdding} {...listProps} />
       )}
+
+      <Modal
+        open={dayOpen !== null && adding === null}
+        onClose={() => setDayOpen(null)}
+        title={dayOpen ? (dayOpen === today ? `Today · ${longDayLabel(dayOpen).split(", ").slice(1).join(", ")}` : longDayLabel(dayOpen)) : ""}
+      >
+        {dayOpen && (
+          <div className="space-y-3">
+            <DayItems items={byDay[dayOpen] ?? []} {...listProps} emptyText="Nothing on this day yet." />
+            <Button onClick={() => setAdding(dayOpen)} className="w-full">
+              + Add to this day
+            </Button>
+          </div>
+        )}
+      </Modal>
 
       <NewCalendarTask
         open={adding !== null}

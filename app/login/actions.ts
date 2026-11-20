@@ -12,7 +12,7 @@ import { alertOwner, isLikelyBot, logEvent } from "@/lib/events";
 import { redirect } from "next/navigation";
 import { query, queryOne, transaction } from "@/lib/db/client";
 import { LEGACY_OWNER_ID } from "@/lib/db/constants";
-import { getAppPassword, safeEqual, safeNextPath } from "@/lib/auth";
+import { LAST_SEEN_COOKIE, getAppPassword, safeEqual, safeNextPath } from "@/lib/auth";
 import { getAuthState, hashToken, verifyPassword } from "@/lib/session";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { createSupabaseAdmin } from "@/lib/supabase/admin";
@@ -472,6 +472,7 @@ export async function resendConfirmation(formData: FormData): Promise<void> {
 export async function logout(): Promise<void> {
   const supabase = await createSupabaseServer();
   await supabase.auth.signOut();
+  (await cookies()).delete(LAST_SEEN_COOKIE);
   redirect("/login");
 }
 
@@ -479,6 +480,7 @@ export async function logout(): Promise<void> {
 export async function signOutEverywhere(): Promise<void> {
   const supabase = await createSupabaseServer();
   await supabase.auth.signOut({ scope: "global" });
+  (await cookies()).delete(LAST_SEEN_COOKIE);
   redirect("/login?reason=everywhere");
 }
 
@@ -512,6 +514,7 @@ export async function requestEmailChange(formData: FormData): Promise<void> {
 export async function idleSignOut(): Promise<void> {
   const supabase = await createSupabaseServer();
   await supabase.auth.signOut();
+  (await cookies()).delete(LAST_SEEN_COOKIE);
   redirect("/login?reason=idle");
 }
 

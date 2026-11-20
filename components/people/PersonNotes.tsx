@@ -9,6 +9,8 @@ import { Dictate } from "@/components/voice/Dictate";
 import { createNoteSafe } from "@/lib/actions/notes";
 import type { Note } from "@/lib/types";
 import { PROSE_INPUT } from "@/lib/input-props";
+import { autoGrow } from "@/lib/auto-grow";
+import { openFullScreenNote } from "@/components/notes/NoteEditor";
 
 export function PersonNotes({
   personId,
@@ -51,7 +53,10 @@ export function PersonNotes({
           <textarea
             {...PROSE_INPUT}
             value={content}
-            onChange={(e) => setContent(e.target.value)}
+            onChange={(e) => {
+              setContent(e.target.value);
+              autoGrow(e.currentTarget);
+            }}
             onKeyDown={(e) => {
               if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleAdd(e);
             }}
@@ -60,7 +65,15 @@ export function PersonNotes({
             disabled={pending}
           />
         </Dictate>
-        <div className="flex justify-end">
+        <div className="flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={() => openFullScreenNote(router, content, personId)}
+            title="Write a longer note on its own page"
+            className="rounded-full px-3 py-1.5 text-sm text-text-muted hover:bg-bg-hover hover:text-text"
+          >
+            ⤢ Full screen
+          </button>
           <Button type="submit" disabled={pending || !content.trim()}>
             {pending ? "Saving..." : "Add note"}
           </Button>
