@@ -1,11 +1,35 @@
 /**
- * Landing page, "For teams": four small, static previews of the organization
- * screens (Team dashboard, Impact report, Referrals, Activity log). Sample
+ * Landing page, "For teams": small, static previews of the organization
+ * screens (Team chat, Team dashboard, Impact report, Referrals, Activity log). Sample
  * data only, drawn with the app's tokens; not screenshots of anyone's account.
  */
 export function AgencyPreviews() {
   return (
     <div className="grid gap-3 sm:grid-cols-2" aria-label="Previews with sample data">
+      <Preview
+        title="Team chat · #front-desk"
+        caption="Channels for the whole team, private group and direct chats. Tag a client, share a note."
+        className="sm:col-span-2"
+      >
+        <ul className="space-y-2 text-xs">
+          <li>
+            <span className="font-semibold text-text">Maria G.</span> <span className="text-[10px] tabular-nums text-text-faint">9:02</span>
+            <p className="text-text-muted">
+              Morning! <span className="font-medium text-accent">@Andre</span> can you call{" "}
+              <span className="font-medium text-accent">#Rosa D.</span> back about Thursday?
+            </p>
+          </li>
+          <li>
+            <span className="font-semibold text-text">Andre P.</span> <span className="text-[10px] tabular-nums text-text-faint">9:05</span>
+            <p className="text-text-muted">On it. Sharing my notes from her last visit.</p>
+            <div className="mt-1 rounded-lg border border-border-subtle px-2 py-1.5 text-[11px] text-text-muted">
+              <span className="eyebrow text-text-faint">Shared note</span>
+              <span className="block">Prefers mornings. Bring the updated quote.</span>
+            </div>
+          </li>
+        </ul>
+      </Preview>
+
       <Preview title="Team dashboard" caption="Every staff member's clients and today's check-ins.">
         <ul className="space-y-1.5 text-xs">
           {[
@@ -91,9 +115,9 @@ export function AgencyPreviews() {
   );
 }
 
-function Preview({ title, caption, children }: { title: string; caption: string; children: React.ReactNode }) {
+function Preview({ title, caption, children, className = "" }: { title: string; caption: string; children: React.ReactNode; className?: string }) {
   return (
-    <figure className="card flex flex-col gap-2 p-4">
+    <figure className={`card flex flex-col gap-2 p-4 ${className}`}>
       <p className="eyebrow text-text-faint">{title}</p>
       <div className="flex-1" aria-hidden>
         {children}

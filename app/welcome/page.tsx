@@ -29,6 +29,7 @@ export const metadata: Metadata = {
 const AUDIENCES = ["Freelancers", "Business owners", "Coaches", "Realtors", "Consultants", "Case managers", "Students", "Parents", "Teams"];
 
 const TEAMS = [
+  "Team chat built in: channels for everyone, plus private group and direct messages. Tag a client or share a note right in the conversation. Private chats stay private, even from admins.",
   "A Team view of each person's clients, today's check-ins and services, and their calendar.",
   "Managers can read client records and leave comments. Never anyone's tasks or personal notes.",
   "Invite your team, reassign clients, and see an activity log of who did what.",
@@ -42,6 +43,7 @@ const COMPARE: [string, boolean][] = [
   ["Personal stats dashboard", true],
   ["Export everything (Excel, full backup)", true],
   ["One shared client list the whole team works from", false],
+  ["Team chat: channels, group chats and direct messages", false],
   ["Roles for admins, managers and members", false],
   ["Team dashboard: each person's clients, check-ins and services today", false],
   ["Activity log of who changed what", false],
@@ -100,7 +102,7 @@ const PLANS: {
     price: "$19",
     unit: "/ user / month",
     fine: "e.g. 5 people: $95 / month. 14-day free trial.",
-    features: ["Everything in Individual, for everyone", "Shared team workspace and client list", "Invite and manage team members", "Roles and access controls", "One bill for the whole team"],
+    features: ["Everything in Individual, for everyone", "Shared team workspace and client list", "Team chat: channels and direct messages", "Invite and manage team members", "Roles and access controls", "One bill for the whole team"],
     cta: "Start a free team trial",
     href: TEAM_SIGNUP,
     offerHref: TEAM_OFFER_SIGNUP,
@@ -475,8 +477,8 @@ export default function WelcomePage() {
             </h2>
             <p className="text-text-muted">
               Offices, agencies, nonprofits and small businesses: give everyone the tool they&apos;ll actually use every
-              day, and give managers a clear view of every client, while each person&apos;s own tasks and notes stay
-              private.
+              day, keep everyone talking in one place, and give managers a clear view of every client, while each
+              person&apos;s own tasks and notes stay private.
             </p>
             <div className="flex flex-wrap gap-3">
               <Link
