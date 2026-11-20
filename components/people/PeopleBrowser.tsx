@@ -1,5 +1,6 @@
 "use client";
 
+import { usePageAdd } from "@/components/nav/page-add";
 import type { Service } from "@/lib/services";
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
@@ -30,6 +31,7 @@ export function PeopleBrowser({
   const [query, setQuery] = useState("");
   const [serviceFilter, setServiceFilter] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
+  usePageAdd(() => setModalOpen(true));
   const [selecting, setSelecting] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [deleting, setDeleting] = useState(false);

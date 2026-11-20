@@ -1,5 +1,6 @@
 "use client";
 
+import { usePageAdd } from "@/components/nav/page-add";
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { ListCard } from "@/components/lists/ListCard";
@@ -22,6 +23,7 @@ export function ListsBrowser({
 }) {
   const [query, setQuery] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
+  usePageAdd(() => setModalOpen(true));
 
   const filtered = useMemo(
     () => fuzzyFilter(lists, query, (l) => [{ text: l.name, weight: 1 }, { text: l.description, weight: 0.8 }]),

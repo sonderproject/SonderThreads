@@ -1,5 +1,6 @@
 "use client";
 
+import { usePageAdd } from "@/components/nav/page-add";
 import { useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { NoteCard } from "@/components/notes/NoteCard";
@@ -42,6 +43,7 @@ export function NotesBrowser({
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const router = useRouter();
+  usePageAdd(() => router.push("/notes/new"));
   const peopleById = useMemo(() => new Map(people.map((c) => [c.id, c])), [people]);
 
   const [filter, setFilter] = useState<Filter>("all");
