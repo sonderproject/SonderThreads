@@ -12,6 +12,7 @@ import { PROSE_INPUT, SEARCH_INPUT } from "@/lib/input-props";
 import { fuzzyFilter } from "@/lib/fuzzy";
 import { SearchPicker } from "@/components/ui/SearchPicker";
 import { autoGrow } from "@/lib/auto-grow";
+import { openFullScreenNote } from "@/components/notes/NoteEditor";
 
 type Filter = "all" | "person" | "standalone" | `cat:${string}`;
 
@@ -146,6 +147,15 @@ export function NotesBrowser({
               />
             )}
           </div>
+          <button
+            type="button"
+            onClick={() => openFullScreenNote(router, content, personId)}
+            title="Write a longer note on its own page"
+            aria-label="Open full screen"
+            className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-full border border-border bg-bg-raised text-text-muted hover:border-accent hover:text-accent"
+          >
+            ⤢
+          </button>
           <Button type="submit" disabled={saving || pending || !content.trim()} className="shrink-0">
             {saving || pending ? "Saving..." : "Add note"}
           </Button>

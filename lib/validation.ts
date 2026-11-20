@@ -32,7 +32,7 @@ export const updatePersonSchema = z
   .partial();
 
 export const createNoteSchema = z.object({
-  content: z.string().trim().min(1, "Note can't be empty").max(5000, "Note is too long"),
+  content: z.string().trim().min(1, "Note can't be empty").max(20000, "Note is too long"),
   personId: uuid.nullable().optional(),
   category: optionalText(100),
   aiMetadata: z.record(z.string(), z.unknown()).nullable().optional(),
@@ -81,7 +81,7 @@ export const updateListItemSchema = z.object({
 });
 
 export const updateNoteSchema = z.object({
-  content: z.string().trim().min(1, "Note can't be empty").max(5000, "Note is too long"),
+  content: z.string().trim().min(1, "Note can't be empty").max(20000, "Note is too long"),
 });
 
 export const updateTaskSchema = z

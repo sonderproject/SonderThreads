@@ -30,10 +30,13 @@ export async function createNote(params: {
   aiMetadata?: Record<string, unknown> | null;
   /** The browser's getTimezoneOffset(), so "Friday" in a note means the user's Friday. */
   tzOffset?: number;
+  /** false while a note is still being written on its own page (autosave); finishNote() looks for to-dos once it's done. */
+  scanTasks?: boolean;
 }): Promise<Note> {
   const userId = await requireUserId();
   await assertCanWrite();
   const tzOffset = params.tzOffset;
+  const scanTasks = params.scanTasks !== false;
   params = validate(createNoteSchema, params);
   const note = await queryOne<Note>(
     `insert into notes (user_id, content, person_id, category, ai_metadata)
@@ -65,7 +68,7 @@ export async function createNote(params: {
     personId ? touchPersonActivity(personId) : null,
     summarize && !deferSummary ? summarize() : null,
     // A to-do never stops the note from saving.
-    tasksFromNote(userId, note, tzOffset).catch((err) => console.error("[notes] finding tasks in note failed", err)),
+    scanTasks ? tasksFromNote(userId, note, tzOffset).catch((err) => console.error("[notes] finding tasks in note failed", err)) : null,
   ]);
 
   revalidatePath("/");
@@ -129,6 +132,54 @@ async function tasksFromNote(userId: string, note: Note, tzOffset = 0): Promise<
 /** Client-form-safe wrapper: returns a result instead of throwing, since Next.js redacts thrown Server Action errors before they reach the client in production. */
 export async function createNoteSafe(params: Parameters<typeof createNote>[0]): Promise<ActionResult<Note>> {
   return toActionResult(() => createNote(params));
+}
+
+/** One note, for its own page. */
+export async function getNote(id: string): Promise<Note | null> {
+  const userId = await requireUserId();
+  return queryOne<Note>(`select * from notes where ${mineOrOrg("$1")} and id = $2 and deleted_at is null`, [userId, id]);
+}
+
+/**
+ * Called when someone leaves a note they started on its own page: now that it's
+ * written, look for to-dos in it and refresh the person's summary (autosave skipped both).
+ */
+export async function finishNote(id: string, tzOffset = 0): Promise<void> {
+  const userId = await requireUserId();
+  const note = await getNote(id);
+  if (!note) return;
+  await tasksFromNote(userId, note, tzOffset).catch((err) => console.error("[notes] finding tasks in note failed", err));
+  if (note.person_id) {
+    after(() => regenerateSummaryFor(userId, note.person_id!).catch((err) => console.error("[notes] summary failed", err)));
+    revalidatePath(`/people/${note.person_id}`);
+  }
+  revalidatePath("/notes");
+}
+
+/** Links a note to a different person, or makes it standalone (null). */
+export async function setNotePerson(id: string, personId: string | null): Promise<ActionResult<Note>> {
+  return toActionResult(async () => {
+    const userId = await requireUserId();
+    await assertCanWrite();
+    if (personId) {
+      const person = await queryOne<{ id: string }>(
+        `select id from people where ${mineOrOrg("$1")} and id = $2 and deleted_at is null`,
+        [userId, personId],
+      );
+      if (!person) throw new Error("Person not found");
+    }
+    const before = await getNote(id);
+    if (!before) throw new Error("Note not found");
+    const note = await actorQueryOne<Note>(userId,
+      `update notes set person_id = $1 where ${mineOrOrg("$2")} and id = $3 and deleted_at is null returning *`,
+      [personId, userId, id],
+    );
+    if (!note) throw new Error("Note not found");
+    if (personId) await touchPersonActivity(personId);
+    revalidatePath("/notes");
+    for (const p of new Set([before.person_id, personId])) if (p) revalidatePath(`/people/${p}`);
+    return note;
+  });
 }
 
 export async function listRecentNotes(limit = 10): Promise<Note[]> {

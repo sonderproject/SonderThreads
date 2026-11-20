@@ -74,7 +74,7 @@ export function coerceParsedCommand(raw: unknown, rawInput: string): ParsedComma
 
 export function buildSummaryPrompt(input: SummaryInput) {
   const notesText =
-    input.recentNotes.map((n) => `- (${n.createdAt}) ${n.content}`).join("\n") || "(no notes yet)";
+    input.recentNotes.map((n) => `- (${n.createdAt}) ${n.content.length > 2000 ? `${n.content.slice(0, 2000)}…` : n.content}`).join("\n") || "(no notes yet)";
   const tasksText =
     input.openTasks.map((t) => `- ${t.title}${t.dueAt ? ` (due ${t.dueAt})` : ""}`).join("\n") ||
     "(no open tasks)";
