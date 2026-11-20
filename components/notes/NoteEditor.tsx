@@ -342,6 +342,7 @@ export function NoteEditor({
         </button>
       </div>
 
+      <div className="card px-4 py-3 sm:px-8 sm:py-6">
       {preview ? (
         <div className="min-h-[60vh] cursor-text py-2" onClick={() => setPreview(false)}>
           {content.trim() ? (
@@ -366,6 +367,7 @@ export function NoteEditor({
           />
         </Dictate>
       )}
+      </div>
     </div>
   );
 }

@@ -23,6 +23,9 @@ import {
 import type { Note } from "@/lib/types";
 import { fuzzyFilter } from "@/lib/fuzzy";
 
+/** Every column a Note uses. Skips search_vector, which can be as big as the note and is never read. */
+const NOTE_COLUMNS = "id, user_id, person_id, content, category, ai_metadata, pinned_at, created_at, updated_at, deleted_at";
+
 export async function createNote(params: {
   content: string;
   personId?: string | null;
@@ -41,7 +44,7 @@ export async function createNote(params: {
   const note = await queryOne<Note>(
     `insert into notes (user_id, content, person_id, category, ai_metadata)
      values ($1, $2, $3, $4, $5)
-     returning *`,
+     returning ${NOTE_COLUMNS}`,
     [
       userId,
       params.content,
@@ -137,7 +140,7 @@ export async function createNoteSafe(params: Parameters<typeof createNote>[0]): 
 /** One note, for its own page. */
 export async function getNote(id: string): Promise<Note | null> {
   const userId = await requireUserId();
-  return queryOne<Note>(`select * from notes where ${mineOrOrg("$1")} and id = $2 and deleted_at is null`, [userId, id]);
+  return queryOne<Note>(`select ${NOTE_COLUMNS} from notes where ${mineOrOrg("$1")} and id = $2 and deleted_at is null`, [userId, id]);
 }
 
 /**
@@ -171,7 +174,7 @@ export async function setNotePerson(id: string, personId: string | null): Promis
     const before = await getNote(id);
     if (!before) throw new Error("Note not found");
     const note = await actorQueryOne<Note>(userId,
-      `update notes set person_id = $1 where ${mineOrOrg("$2")} and id = $3 and deleted_at is null returning *`,
+      `update notes set person_id = $1 where ${mineOrOrg("$2")} and id = $3 and deleted_at is null returning ${NOTE_COLUMNS}`,
       [personId, userId, id],
     );
     if (!note) throw new Error("Note not found");
@@ -185,7 +188,7 @@ export async function setNotePerson(id: string, personId: string | null): Promis
 export async function listRecentNotes(limit = 10): Promise<Note[]> {
   const userId = await requireUserId();
   return query<Note>(
-    `select * from notes where ${mineOrOrg("$1")} and deleted_at is null order by created_at desc limit $2`,
+    `select ${NOTE_COLUMNS} from notes where ${mineOrOrg("$1")} and deleted_at is null order by created_at desc limit $2`,
     [userId, limit],
   );
 }
@@ -193,7 +196,7 @@ export async function listRecentNotes(limit = 10): Promise<Note[]> {
 export async function listAllNotes(): Promise<Note[]> {
   const userId = await requireUserId();
   return query<Note>(
-    `select * from notes where ${mineOrOrg("$1")} and deleted_at is null order by pinned_at desc nulls last, created_at desc limit 200`,
+    `select ${NOTE_COLUMNS} from notes where ${mineOrOrg("$1")} and deleted_at is null order by pinned_at desc nulls last, created_at desc limit 200`,
     [userId],
   );
 }
@@ -201,7 +204,7 @@ export async function listAllNotes(): Promise<Note[]> {
 export async function listStandaloneNotes(): Promise<Note[]> {
   const userId = await requireUserId();
   return query<Note>(
-    `select * from notes where ${mineOrOrg("$1")} and person_id is null and deleted_at is null order by created_at desc`,
+    `select ${NOTE_COLUMNS} from notes where ${mineOrOrg("$1")} and person_id is null and deleted_at is null order by created_at desc`,
     [userId],
   );
 }
@@ -209,7 +212,7 @@ export async function listStandaloneNotes(): Promise<Note[]> {
 export async function listNotesForPerson(personId: string): Promise<Note[]> {
   const userId = await requireUserId();
   return query<Note>(
-    `select * from notes where ${mineOrOrg("$1")} and person_id = $2 and deleted_at is null order by pinned_at desc nulls last, created_at desc`,
+    `select ${NOTE_COLUMNS} from notes where ${mineOrOrg("$1")} and person_id = $2 and deleted_at is null order by pinned_at desc nulls last, created_at desc`,
     [userId, personId],
   );
 }
@@ -219,7 +222,7 @@ export async function updateNote(id: string, content: string): Promise<Note> {
   await assertCanWrite();
   const params = validate(updateNoteSchema, { content });
   const note = await actorQueryOne<Note>(userId, 
-    `update notes set content = $1 where ${mineOrOrg("$2")} and id = $3 and deleted_at is null returning *`,
+    `update notes set content = $1 where ${mineOrOrg("$2")} and id = $3 and deleted_at is null returning ${NOTE_COLUMNS}`,
     [params.content, userId, id],
   );
 
@@ -244,7 +247,7 @@ export async function setNotePinned(id: string, pinned: boolean): Promise<void> 
   const note = await actorQueryOne<Note>(userId,
     `update notes set pinned_at = ${pinned ? "now()" : "null"}
      where ${mineOrOrg("$1")} and id = $2 and deleted_at is null
-     returning *`,
+     returning ${NOTE_COLUMNS}`,
     [userId, id],
   );
   if (!note) throw new Error("Note not found");
@@ -268,7 +271,7 @@ async function setNoteDeleted(id: string, deleted: boolean): Promise<void> {
   const note = await actorQueryOne<Note>(userId, 
     `update notes set deleted_at = ${deleted ? "now()" : "null"}
      where ${mineOrOrg("$1")} and id = $2 and deleted_at is ${deleted ? "null" : "not null"}
-     returning *`,
+     returning ${NOTE_COLUMNS}`,
     [userId, id],
   );
   revalidatePath("/notes");
@@ -280,7 +283,7 @@ export async function searchNotes(searchQuery: string): Promise<Note[]> {
   const userId = await requireUserId();
   // Typo-tolerant ranking in JS over the most recent notes.
   const notes = await query<Note>(
-    `select * from notes where ${mineOrOrg("$1")} and deleted_at is null order by created_at desc limit 1000`,
+    `select ${NOTE_COLUMNS} from notes where ${mineOrOrg("$1")} and deleted_at is null order by created_at desc limit 1000`,
     [userId],
   );
   return fuzzyFilter(notes, searchQuery, (n) => [n.content], 20);
