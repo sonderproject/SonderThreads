@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { ChatMessage } from "@/lib/messages";
 import { activeTrigger, encodeTags, type Segment, type TagOption } from "@/lib/message-tags";
 import { deleteMessage, editMessage, pollMessages, searchTags, sendMessage } from "@/lib/actions/messages";
@@ -76,6 +76,14 @@ export function Composer({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const ref = useRef<HTMLTextAreaElement>(null);
+  // Where the cursor goes after a tag is picked, applied as soon as the new text is on screen.
+  const caretTo = useRef<number | null>(null);
+  useLayoutEffect(() => {
+    if (caretTo.current === null || !ref.current) return;
+    ref.current.focus();
+    ref.current.setSelectionRange(caretTo.current, caretTo.current);
+    caretTo.current = null;
+  }, [text]);
 
   useEffect(() => {
     if (!trigger) {
@@ -99,11 +107,7 @@ export function Composer({
     setText(next);
     setPicked((p) => (p.some((x) => x.id === o.id) ? p : [...p, o]));
     setTrigger(null);
-    requestAnimationFrame(() => {
-      const pos = trigger.start + label.length;
-      ref.current?.focus();
-      ref.current?.setSelectionRange(pos, pos);
-    });
+    caretTo.current = trigger.start + label.length;
   }
 
   async function submit() {
@@ -263,7 +267,11 @@ export function ChatView({
     }
   }, [msgs.length]);
 
-  useEffect(() => bottom.current?.scrollIntoView({ block: "end" }), []);
+  // Braces matter: newer browsers return a Promise from scrollIntoView, and an effect must
+  // return nothing or a cleanup function (returning the Promise crashed the page on leaving).
+  useEffect(() => {
+    bottom.current?.scrollIntoView({ block: "end" });
+  }, []);
 
   async function send(encoded: string): Promise<string | null> {
     const r = await sendMessage(conversationId, encoded, sinceRef.current);
