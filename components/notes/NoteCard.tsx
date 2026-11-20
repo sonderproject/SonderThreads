@@ -57,7 +57,7 @@ export function NoteCard({
   }
 
   return (
-    <Card id={note.id} className="scroll-mt-20 p-3">
+    <Card id={note.id} className="min-w-0 scroll-mt-20 p-3">
       {editing ? (
         <div className="space-y-1.5">
           {error && <p className="text-xs text-red-400">{error}</p>}
@@ -111,7 +111,7 @@ export function NoteCard({
               ✎
             </button>
           )}
-          <p className="pr-6 text-sm text-text">{note.content}</p>
+          <p className="pr-6 text-sm text-text [overflow-wrap:anywhere]">{note.content}</p>
         </div>
       )}
       <div className="mt-1.5 flex items-center justify-between gap-2">
