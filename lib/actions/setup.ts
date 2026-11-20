@@ -1,7 +1,7 @@
 "use server";
 
 import { randomUUID } from "crypto";
-import { redirect } from "next/navigation";
+import { redirect, unstable_rethrow } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { query } from "@/lib/db/client";
 import { requireUserId } from "@/lib/current-user";
@@ -169,6 +169,7 @@ export async function finishSoloSetup(formData: FormData): Promise<void> {
     try {
       personId = (await createPersonRecord({ fullName: name })).id;
     } catch (err) {
+      unstable_rethrow(err);
       console.error("[setup] first person failed", err);
     }
   }

@@ -1,3 +1,4 @@
+import { unstable_rethrow } from "next/navigation";
 import { z, ZodError, type ZodType } from "zod";
 import { ETHNICITIES, GENDERS, INCOME_LEVELS } from "@/lib/demographics";
 
@@ -142,6 +143,8 @@ export async function toActionResult<T>(fn: () => Promise<T>): Promise<ActionRes
   try {
     return { ok: true, data: await fn() };
   } catch (err) {
+    // Next's redirect()/notFound() (e.g. requireUserId() sending a signed-out person to /login) must propagate.
+    unstable_rethrow(err);
     // Database and code errors (not messages written for people) are logged for the owner's
     // command center, and the person gets a plain message instead of the technical one.
     if (isSystemError(err)) {

@@ -1,5 +1,6 @@
 "use server";
 
+import { unstable_rethrow } from "next/navigation";
 import { listOutcomes } from "@/lib/outcomes";
 import { matchOutcome } from "@/lib/outcome-match";
 import { takeQuota } from "@/lib/usage";
@@ -315,6 +316,7 @@ async function executeOne(trimmed: string, tzOffset: number): Promise<CommandRes
       }
     }
   } catch (err) {
+    unstable_rethrow(err);
     console.error("[command] execution failed", err);
     const message = err instanceof Error ? err.message : "Something went wrong running that command.";
     return { kind: "error", message };
