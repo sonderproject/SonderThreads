@@ -9,6 +9,7 @@ import { Dictate } from "@/components/voice/Dictate";
 import { createNoteSafe } from "@/lib/actions/notes";
 import type { Note } from "@/lib/types";
 import { PROSE_INPUT } from "@/lib/input-props";
+import { autoGrow } from "@/lib/auto-grow";
 
 export function PersonNotes({
   personId,
@@ -51,7 +52,10 @@ export function PersonNotes({
           <textarea
             {...PROSE_INPUT}
             value={content}
-            onChange={(e) => setContent(e.target.value)}
+            onChange={(e) => {
+              setContent(e.target.value);
+              autoGrow(e.currentTarget);
+            }}
             onKeyDown={(e) => {
               if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleAdd(e);
             }}

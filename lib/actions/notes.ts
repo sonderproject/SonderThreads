@@ -142,7 +142,7 @@ export async function listRecentNotes(limit = 10): Promise<Note[]> {
 export async function listAllNotes(): Promise<Note[]> {
   const userId = await requireUserId();
   return query<Note>(
-    `select * from notes where ${mineOrOrg("$1")} and deleted_at is null order by created_at desc limit 200`,
+    `select * from notes where ${mineOrOrg("$1")} and deleted_at is null order by pinned_at desc nulls last, created_at desc limit 200`,
     [userId],
   );
 }
@@ -158,7 +158,7 @@ export async function listStandaloneNotes(): Promise<Note[]> {
 export async function listNotesForPerson(personId: string): Promise<Note[]> {
   const userId = await requireUserId();
   return query<Note>(
-    `select * from notes where ${mineOrOrg("$1")} and person_id = $2 and deleted_at is null order by created_at desc`,
+    `select * from notes where ${mineOrOrg("$1")} and person_id = $2 and deleted_at is null order by pinned_at desc nulls last, created_at desc`,
     [userId, personId],
   );
 }
@@ -184,6 +184,21 @@ export async function updateNote(id: string, content: string): Promise<Note> {
 /** Client-form-safe wrapper: returns a result instead of throwing, since Next.js redacts thrown Server Action errors before they reach the client in production. */
 export async function updateNoteSafe(id: string, content: string): Promise<ActionResult<Note>> {
   return toActionResult(() => updateNote(id, content));
+}
+
+/** Pins a note to the top of the Notes page (and the person's notes), or unpins it. */
+export async function setNotePinned(id: string, pinned: boolean): Promise<void> {
+  const userId = await requireUserId();
+  await assertCanWrite();
+  const note = await actorQueryOne<Note>(userId,
+    `update notes set pinned_at = ${pinned ? "now()" : "null"}
+     where ${mineOrOrg("$1")} and id = $2 and deleted_at is null
+     returning *`,
+    [userId, id],
+  );
+  if (!note) throw new Error("Note not found");
+  revalidatePath("/notes");
+  if (note.person_id) revalidatePath(`/people/${note.person_id}`);
 }
 
 /** Soft-deletes a note — the row stays in the database (recoverable) but disappears from every view. */
