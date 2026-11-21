@@ -7,7 +7,11 @@ import { activeTrigger, encodeTags, type Segment, type TagOption } from "@/lib/m
 import { deleteMessage, editMessage, pollMessages, searchTags, sendMessage } from "@/lib/actions/messages";
 import { PROSE_INPUT } from "@/lib/input-props";
 
-const POLL_MS = 5000;
+// Refresh quickly while a conversation is active, slower once it's been quiet for a minute
+// (keeps the server load low with hundreds of people online). Never while the tab is hidden.
+const POLL_ACTIVE_MS = 4000;
+const POLL_QUIET_MS = 15000;
+const QUIET_AFTER_MS = 60000;
 
 function latest(msgs: ChatMessage[]): string | null {
   return msgs.reduce<string | null>((a, m) => (!a || m.updatedAt > a ? m.updatedAt : a), null);
@@ -237,25 +241,48 @@ export function ChatView({
   const bottom = useRef<HTMLDivElement>(null);
   const count = useRef(initial.length);
 
+  const lastActivity = useRef(Date.now());
+  const inFlight = useRef(false);
+
   const apply = useCallback((incoming: ChatMessage[]) => {
     if (!incoming.length) return;
+    lastActivity.current = Date.now();
     setMsgs((prev) => merge(prev, incoming));
     const l = latest(incoming);
     if (l && (!sinceRef.current || l > sinceRef.current)) sinceRef.current = l;
   }, []);
 
   const poll = useCallback(async () => {
-    if (document.visibilityState !== "visible") return;
-    const fresh = await pollMessages(conversationId, sinceRef.current).catch(() => null);
-    if (fresh) apply(fresh);
+    if (document.visibilityState !== "visible" || inFlight.current) return;
+    inFlight.current = true;
+    try {
+      const fresh = await pollMessages(conversationId, sinceRef.current).catch(() => null);
+      if (fresh) apply(fresh);
+    } finally {
+      inFlight.current = false;
+    }
   }, [conversationId, apply]);
 
   useEffect(() => {
-    const t = setInterval(poll, POLL_MS);
-    const onVis = () => document.visibilityState === "visible" && poll();
+    let timer: ReturnType<typeof setTimeout>;
+    let stopped = false;
+    const loop = async () => {
+      await poll();
+      if (stopped) return;
+      const quiet = Date.now() - lastActivity.current > QUIET_AFTER_MS;
+      timer = setTimeout(loop, quiet ? POLL_QUIET_MS : POLL_ACTIVE_MS);
+    };
+    timer = setTimeout(loop, POLL_ACTIVE_MS);
+    // Coming back to the tab: check right away and treat it as activity.
+    const onVis = () => {
+      if (document.visibilityState !== "visible") return;
+      lastActivity.current = Date.now();
+      poll();
+    };
     document.addEventListener("visibilitychange", onVis);
     return () => {
-      clearInterval(t);
+      stopped = true;
+      clearTimeout(timer);
       document.removeEventListener("visibilitychange", onVis);
     };
   }, [poll]);
@@ -274,6 +301,7 @@ export function ChatView({
   }, []);
 
   async function send(encoded: string): Promise<string | null> {
+    lastActivity.current = Date.now();
     const r = await sendMessage(conversationId, encoded, sinceRef.current);
     if (!r.ok) return r.error;
     apply(r.messages);
