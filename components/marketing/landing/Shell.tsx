@@ -63,7 +63,7 @@ export function LandingShell({
 
   return (
     <div className="min-h-screen bg-bg text-text">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
       <CampaignLinks />
       <MarketingAnalytics />
       <header className="glass pt-safe sticky top-0 z-20 border-b">

@@ -111,7 +111,7 @@ export default function WelcomePage() {
       primary={{ href: START, label: "Get Started Free", short: "Get started" }}
       after={<StickyCta page={PAGE} href={START} />}
     >
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD).replace(/</g, "\\u003c") }} />
       {/* 1. Hero: color glows and dot texture on sand, the promise, then the product, big. */}
       <section className="relative overflow-hidden">
         <Aurora />

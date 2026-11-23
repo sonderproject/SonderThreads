@@ -4,6 +4,9 @@ import Link from "next/link";
 import { Analytics } from "@vercel/analytics/next";
 import { track } from "@vercel/analytics";
 
+/** Public marketing pages. Anything else (the app, sign-in, sign-up) is never sent, even if the script stays loaded. */
+const MARKETING = /^\/(?:$|welcome$|individuals$|business$|nonprofits$|features$|(?:for|compare|templates)\/[a-z0-9-]+$)/;
+
 /**
  * Vercel Web Analytics for public marketing pages only (never mounted inside the app,
  * so no client records or account pages are ever sent). Query strings are trimmed to
@@ -15,10 +18,11 @@ export function MarketingAnalytics() {
       beforeSend={(event) => {
         try {
           const url = new URL(event.url);
+          if (!MARKETING.test(url.pathname.replace(/\/$/, "") || "/")) return null;
           for (const key of [...url.searchParams.keys()]) if (!key.startsWith("utm_")) url.searchParams.delete(key);
           return { ...event, url: url.toString() };
         } catch {
-          return event;
+          return null;
         }
       }}
     />
