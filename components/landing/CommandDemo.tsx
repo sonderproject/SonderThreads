@@ -4,10 +4,10 @@ import { useEffect, useState } from "react";
 
 /** What a person types, and what Surfdesk makes of it. */
 const EXAMPLES = [
-  { said: "Remind me to call Sarah Friday at 3", kind: "Task", detail: "Fri 3:00 PM · linked to Sarah" },
-  { said: "Marcus got the job at Amazon", kind: "Note", detail: "Added to Marcus's profile" },
-  { said: "Ana – haircut $45", kind: "Service", detail: "Haircut · $45 · today" },
-  { said: "Call Jo every Monday", kind: "Repeating task", detail: "Every Monday · linked to Jo" },
+  { said: "Remind me to call Sarah Friday", kind: "Task", detail: "Friday · linked to Sarah" },
+  { said: "Add groceries to my shopping list", kind: "List item", detail: "Added to your Shopping list" },
+  { said: "Make a note about my meeting with John", kind: "Note", detail: "Saved to John's profile" },
+  { said: "Follow up with Jessica next Tuesday", kind: "Follow-up", detail: "Next Tuesday · linked to Jessica" },
 ];
 
 /**

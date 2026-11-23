@@ -13,7 +13,7 @@ import { ALL_SEO_PAGES } from "@/lib/seo-pages";
 // Signed-out visitors to "/" are shown this page (middleware rewrites to it),
 // so "/" is the canonical address search engines should index.
 export const metadata: Metadata = {
-  title: "Surfdesk: client tracker, tasks and notes in one app",
+  title: { absolute: "Surfdesk | Tasks, Notes, Clients & Teams in One App" },
   description: SITE_DESCRIPTION,
   alternates: { canonical: "/" },
   openGraph: {
@@ -52,6 +52,31 @@ const COMPARE: [string, boolean][] = [
   ["Front-desk check-in kiosk", false],
   ["Client reassignment and manager comments", false],
   ["Onboarding help and data import", false],
+];
+
+/** "Built around you": one card per audience. Links go to existing pages until /individuals, /business and /nonprofits are built. */
+const AUDIENCE_CARDS = [
+  {
+    eyebrow: "Individuals",
+    title: "Less to remember. More room to live.",
+    body: "Keep your tasks, reminders, notes, lists, and calendar organized without making organization another chore.",
+    cta: "Explore for Individuals",
+    href: "/get-started/solo",
+  },
+  {
+    eyebrow: "Businesses",
+    title: "Better organization. Better business decisions.",
+    body: "Manage customers, bookings, services, follow-ups, and your team. See how your business is performing, all from one place.",
+    cta: "Explore for Business",
+    href: "/for/small-business",
+  },
+  {
+    eyebrow: "Nonprofits",
+    title: "Your people, programs, and progress. Connected.",
+    body: "Coordinate staff, manage participants, track services, and measure your organization's impact in one organized workspace.",
+    cta: "Explore for Nonprofits",
+    href: "/for/nonprofits",
+  },
 ];
 
 /** Every sign-up goes through a guided set-up (lib/setup.ts): organizations and individuals each have their own. */
@@ -172,21 +197,30 @@ function Marker({ n, children }: { n: string; children: React.ReactNode }) {
   );
 }
 
-function Cta({ className = "" }: { className?: string }) {
+function Cta({
+  className = "",
+  label = "Start your free trial",
+  secondary = { href: "/login", label: "Sign in" },
+}: {
+  className?: string;
+  label?: string;
+  secondary?: { href: string; label: string };
+}) {
   return (
     <div className={`flex flex-wrap gap-3 ${className}`}>
       <Link
         href={START}
         className="rounded-full bg-accent px-6 py-3 text-sm font-semibold text-bg shadow-sm ring-1 ring-inset ring-white/15 transition-colors hover:bg-accent-dim"
       >
-        Start your free trial
+        {label}
       </Link>
       <Link
-        href="/login"
+        href={secondary.href}
         className="rounded-full border border-border bg-bg-raised px-6 py-3 text-sm font-semibold text-text transition-colors hover:bg-bg-hover"
       >
-        Sign in
+        {secondary.label}
       </Link>
+      <p className="w-full text-sm text-text-muted">7-day free trial · No card needed · Cancel any time</p>
       <p className="w-full text-sm text-text-muted">
         Ready now?{" "}
         <Link href={`${START}?offer=skip`} className="font-medium text-accent hover:underline">
@@ -208,7 +242,7 @@ const JSON_LD = {
       url: SITE_URL,
       description: SITE_DESCRIPTION,
       applicationCategory: "BusinessApplication",
-      applicationSubCategory: "Client tracker / CRM / Case management",
+      applicationSubCategory: "Productivity / CRM",
       operatingSystem: "Web, iOS, Android",
       image: `${SITE_URL}/opengraph-image.png`,
       publisher: { "@id": "https://www.sonderproject.co/#organization" },
@@ -248,14 +282,15 @@ export default function WelcomePage() {
             <a href="#pricing" className="hidden rounded-full px-4 py-2 text-sm text-text-muted transition-colors hover:text-text sm:inline-block">
               Pricing
             </a>
-            <Link href="/login" className="rounded-full px-4 py-2 text-sm text-text-muted transition-colors hover:text-text">
+            <Link href="/login" className="whitespace-nowrap rounded-full px-4 py-2 text-sm text-text-muted transition-colors hover:text-text">
               Sign in
             </Link>
             <Link
               href={START}
-              className="rounded-full bg-accent px-4 py-2 text-sm font-semibold text-bg transition-colors hover:bg-accent-dim"
+              className="whitespace-nowrap rounded-full bg-accent px-4 py-2 text-sm font-semibold text-bg transition-colors hover:bg-accent-dim"
             >
-              Get started
+              <span className="sm:hidden">Get started</span>
+              <span className="hidden sm:inline">Get Started Free</span>
             </Link>
           </nav>
         </div>
@@ -266,16 +301,20 @@ export default function WelcomePage() {
       <main className="mx-auto max-w-6xl px-4 sm:px-8">
         <section className="grid gap-10 py-16 sm:py-24 lg:grid-cols-[1.2fr_1fr] lg:items-center">
           <div className="space-y-6">
-            <Marker n="01">Tasks · To-dos · Notes · Clients</Marker>
-            <h1 className="font-display text-4xl font-light leading-[1.05] tracking-[-0.02em] sm:text-6xl">
-              Every client. Every follow-up. <span className="text-accent">Everything organized.</span>
+            <Marker n="01">Tasks · Notes · Clients · Teams</Marker>
+            <h1 className="font-display text-4xl font-light leading-[1.05] tracking-[-0.02em] sm:text-6xl lg:text-[3.6rem]">
+              <span className="whitespace-nowrap">Your day.</span> <span className="whitespace-nowrap">Your people.</span>{" "}
+              <br className="hidden sm:block" />
+              <span className="whitespace-nowrap">Your work.</span> <span className="block text-accent">All in one place.</span>
             </h1>
             <p className="max-w-xl text-base leading-relaxed text-text-muted sm:text-lg">
-              Your clients, follow-ups, tasks and notes in one app. Type it or say it once, and Surfdesk files it, reminds
-              you and keeps it all together. No more juggling five apps.
+              Tasks, notes, reminders, calendars, clients, and teams. Everything connected in one simple workspace.
             </p>
-            <Cta />
-            <p className="text-xs text-text-muted">7-day free trial · Works on any phone or computer</p>
+            <p className="font-display text-lg font-normal text-text sm:text-xl">
+              Just type it or say it. Surfdesk keeps it organized.
+            </p>
+            <Cta label="Get Started Free" secondary={{ href: "#in-action", label: "See Surfdesk in Action" }} />
+            <p className="text-xs text-text-muted">Works on any phone or computer</p>
             <div className="flex flex-wrap items-center gap-2 pt-2">
               <span className="text-xs text-text-muted">Made for</span>
               {AUDIENCES.map((a) => (
@@ -305,27 +344,55 @@ export default function WelcomePage() {
           </div>
         </section>
 
+        <section className="space-y-6 border-t border-border py-16 sm:py-20">
+          <Marker n="02">Why Surfdesk</Marker>
+          <h2 className="max-w-3xl font-display text-3xl font-light leading-tight tracking-[-0.02em] sm:text-5xl">
+            Life moves fast. <span className="text-accent">Keep everything together.</span>
+          </h2>
+          <div className="max-w-2xl space-y-4 text-base leading-relaxed text-text-muted sm:text-lg">
+            <p>
+              The things you need to remember. The people you need to follow up with. The work that needs to get done.
+            </p>
+            <p>
+              Surfdesk brings it all together, so you can spend less time managing the details and more time moving
+              forward.
+            </p>
+          </div>
+        </section>
+
+        <section id="in-action" className="scroll-mt-20 grid gap-10 border-t border-border py-16 lg:grid-cols-[1fr_1.2fr] lg:items-center">
+          <div className="space-y-5">
+            <Marker n="03">Smart command box</Marker>
+            <h2 className="font-display text-3xl font-light leading-tight tracking-[-0.02em] sm:text-4xl">
+              Say it. Save it. <span className="text-accent">Done.</span>
+            </h2>
+            <p className="max-w-lg text-text-muted">
+              Need to remember something? Add a task? Make a note about someone? Just type or speak naturally. Surfdesk
+              helps put everything where it belongs.
+            </p>
+            <p className="flex items-center gap-2 text-sm text-text-muted">
+              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-accent-soft text-accent">
+                <MicIcon className="h-4 w-4" />
+              </span>
+              Type it, or tap the mic and say it.
+            </p>
+          </div>
+          <div className="card p-5 sm:p-6">
+            <CommandDemo />
+          </div>
+        </section>
+
         <section className="space-y-8 border-t border-border py-16">
-          <Marker n="02">One app instead of five</Marker>
+          <Marker n="04">Everything in one place</Marker>
           <h2 className="max-w-2xl font-display text-3xl font-light leading-tight tracking-[-0.02em] sm:text-4xl">
             Your to-do app, notes app, reminders and client list. Finally in one place.
           </h2>
-          <div className="grid gap-4 lg:grid-cols-3">
-            {/* 1. Say it once: the live command bar */}
-            <Feature
-              className="lg:col-span-2"
-              icon={<MicIcon className="h-5 w-5" />}
-              title="Just say it. Surfdesk files it."
-              body="Type or speak one sentence. It becomes a task, a note, a reminder or a sale, linked to the right person. No forms."
-            >
-              <CommandDemo />
-            </Feature>
-
-            {/* 2. Tasks */}
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {/* 1. Capture */}
             <Feature
               icon={<TasksIcon className="h-5 w-5" />}
-              title="Nothing slips"
-              body="Due dates, repeats and reminders. Notes that mention a to-do suggest the task for you."
+              title="Capture anything"
+              body="Tasks, notes, reminders, and ideas. Type it or say it, and keep everything organized."
             >
               <ul className="space-y-1.5 text-sm" aria-hidden>
                 <li className="flex items-center gap-2">
@@ -347,11 +414,11 @@ export default function WelcomePage() {
               </ul>
             </Feature>
 
-            {/* 3. People */}
+            {/* 2. People */}
             <Feature
               icon={<PeopleIcon className="h-5 w-5" />}
-              title="Everyone's story, in one place"
-              body="A profile for every client or customer: notes, visits, tasks and follow-ups on one timeline."
+              title="Keep your people close"
+              body="Every client, conversation, visit, and follow-up connected in one place."
             >
               <div className="space-y-2" aria-hidden>
                 <div className="flex items-center gap-2">
@@ -370,11 +437,11 @@ export default function WelcomePage() {
               </div>
             </Feature>
 
-            {/* 4. Calendar */}
+            {/* 3. Calendar */}
             <Feature
               icon={<CalendarIcon className="h-5 w-5" />}
-              title="Your whole week, one calendar"
-              body="Tasks and birthdays, plus your Google, Apple or Outlook calendar. Calendly bookings too."
+              title="Stay ahead of your day"
+              body="Appointments, deadlines, recurring tasks, and reminders. Know what's next without keeping everything in your head."
             >
               <div className="space-y-2" aria-hidden>
                 <div className="grid grid-cols-7 gap-1 text-center text-[10px] text-text-muted">
@@ -395,6 +462,55 @@ export default function WelcomePage() {
                     </span>
                   ))}
                 </div>
+              </div>
+            </Feature>
+
+            {/* 4. Team (team plans only) */}
+            <Feature
+              icon={
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5" aria-hidden>
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                </svg>
+              }
+              title="Keep your team connected"
+              body="Shared client records, assignments, team chat, and the information everyone needs to stay coordinated."
+            >
+              <div className="space-y-2" aria-hidden>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xs font-semibold text-text"># general</span>
+                  <span className="tag tag-v">Team plans</span>
+                </div>
+                <div className="space-y-1.5 text-xs">
+                  <p className="rounded-xl bg-bg px-3 py-2 text-text-muted">
+                    <strong className="text-text">Dana:</strong> Can someone cover Ana Ortiz at 3?
+                  </p>
+                  <p className="rounded-xl bg-accent-soft px-3 py-2 text-text">
+                    <strong>Leo:</strong> Got it, she&apos;s on my list.
+                  </p>
+                </div>
+              </div>
+            </Feature>
+
+            {/* 5. Search */}
+            <Feature
+              icon={
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5" aria-hidden>
+                  <circle cx="11" cy="11" r="7" />
+                  <path d="m20 20-3.5-3.5" />
+                </svg>
+              }
+              title="Find what matters"
+              body="Search your people, notes, tasks, and lists without digging through different apps."
+            >
+              <div className="space-y-2" aria-hidden>
+                <div className="rounded-full border border-border bg-bg px-3 py-1.5 text-sm text-text">
+                  ana<span className="ml-0.5 inline-block h-3.5 w-[2px] translate-y-0.5 bg-accent" />
+                </div>
+                <ul className="space-y-1 text-xs text-text-muted">
+                  <li><span className="font-semibold text-text">Person</span> · Ana Ortiz</li>
+                  <li><span className="font-semibold text-text">Note</span> · Ana is moving in December</li>
+                  <li><span className="font-semibold text-text">Task</span> · Follow up with Ana</li>
+                </ul>
               </div>
             </Feature>
 
@@ -419,14 +535,14 @@ export default function WelcomePage() {
             </Feature>
             {/* 5. Insights */}
             <Feature
-              className="lg:col-span-3"
+              className="sm:col-span-2 lg:col-span-3"
               icon={
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5" aria-hidden>
                   <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" />
                 </svg>
               }
-              title="Insights for smarter decisions"
-              body="Personal and business insights: your best services, busiest days and hours, and what's growing or slipping. Decide with real numbers, then share them as a polished PDF report in one click."
+              title="See the bigger picture"
+              body="Understand your progress, customer activity, revenue, and organizational impact with meaningful insights. Share them as a polished report in one click."
             >
               <div className="grid gap-4 sm:grid-cols-2 sm:items-end" aria-hidden>
                 <div className="space-y-2">
@@ -469,9 +585,28 @@ export default function WelcomePage() {
           </div>
         </section>
 
+        <section className="space-y-8 border-t border-border py-16">
+          <Marker n="05">Who it&apos;s for</Marker>
+          <h2 className="max-w-2xl font-display text-3xl font-light leading-tight tracking-[-0.02em] sm:text-4xl">
+            One workspace. <span className="text-accent">Built around you.</span>
+          </h2>
+          <div className="grid gap-4 lg:grid-cols-3">
+            {AUDIENCE_CARDS.map((c) => (
+              <div key={c.eyebrow} className="card flex flex-col gap-3 p-6 transition-transform duration-200 motion-safe:hover:-translate-y-1">
+                <p className="section-label">{c.eyebrow}</p>
+                <h3 className="font-display text-xl font-normal leading-snug">{c.title}</h3>
+                <p className="flex-1 text-sm leading-relaxed text-text-muted">{c.body}</p>
+                <Link href={c.href} className="text-sm font-semibold text-accent hover:underline">
+                  {c.cta} →
+                </Link>
+              </div>
+            ))}
+          </div>
+        </section>
+
         <section className="grid gap-10 border-t border-border py-16 lg:grid-cols-2">
           <div className="space-y-5">
-            <Marker n="03">For teams and agencies</Marker>
+            <Marker n="06">For teams and agencies</Marker>
             <h2 className="font-display text-3xl font-light leading-tight tracking-[-0.02em] sm:text-4xl">
               Even better together.
             </h2>
@@ -507,7 +642,7 @@ export default function WelcomePage() {
         </section>
 
         <section className="space-y-8 border-t border-border py-16">
-          <Marker n="04">Your data</Marker>
+          <Marker n="07">Your data</Marker>
           <h2 className="max-w-2xl font-display text-3xl font-light leading-tight tracking-[-0.02em] sm:text-4xl">
             Your data is yours. Full stop.
           </h2>
@@ -522,7 +657,7 @@ export default function WelcomePage() {
         </section>
 
         <section id="pricing" className="scroll-mt-20 space-y-8 border-t border-border py-16">
-          <Marker n="05">Pricing</Marker>
+          <Marker n="08">Pricing</Marker>
           <h2 className="max-w-2xl font-display text-3xl font-light leading-tight tracking-[-0.02em] sm:text-4xl">
             Simple pricing that gets cheaper as your team grows.
           </h2>
@@ -654,7 +789,7 @@ export default function WelcomePage() {
         </section>
 
         <section className="space-y-6 border-t border-border py-16">
-          <Marker n="06">Put it on your phone</Marker>
+          <Marker n="09">Put it on your phone</Marker>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="card space-y-1 p-5">
               <h2 className="font-display text-lg font-normal">iPhone</h2>
@@ -671,7 +806,20 @@ export default function WelcomePage() {
               </p>
             </div>
           </div>
-          <Cta className="pt-4" />
+        </section>
+
+        <section className="space-y-6 border-t border-border py-20 text-center sm:py-24">
+          <h2 className="mx-auto max-w-2xl font-display text-4xl font-light leading-tight tracking-[-0.02em] sm:text-5xl">
+            Make space for <span className="text-accent">what matters.</span>
+          </h2>
+          <div className="mx-auto max-w-xl space-y-2 text-base leading-relaxed text-text-muted sm:text-lg">
+            <p>Your day is already full. Keeping everything organized shouldn&apos;t make it harder.</p>
+            <p>Bring it all together with Surfdesk.</p>
+          </div>
+          <Cta className="justify-center [&>p]:text-center" label="Start Your Free Trial" />
+          <p className="pt-6 font-display text-sm font-light uppercase tracking-[0.25em] text-text-muted">
+            Surfdesk. <span className="text-accent">Keep everything moving.</span>
+          </p>
         </section>
       </main>
 
