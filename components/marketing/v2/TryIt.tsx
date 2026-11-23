@@ -84,12 +84,12 @@ export function TryIt({ page, signupHref }: { page: string; signupHref: string }
       </form>
 
       <div className="flex flex-wrap gap-2" aria-label="Examples">
-        {EXAMPLES.map((ex) => (
+        {EXAMPLES.map((ex, i) => (
           <button
             key={ex}
             type="button"
             onClick={() => void run(ex)}
-            className="rounded-full border px-3 py-1.5 text-xs transition-colors hover:border-[var(--band-accent)]"
+            className={`min-h-9 rounded-full border px-3.5 py-2 text-sm transition-colors hover:border-[var(--band-accent)] ${i > 3 ? "hidden sm:inline-block" : ""}`}
             style={{ borderColor: "var(--band-line)", color: "var(--band-muted)" }}
           >
             {ex}

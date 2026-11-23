@@ -220,7 +220,7 @@ export const TEMPLATE_PAGES: SeoPageData[] = [
     title: "Free Funder Impact Report Template (CSV) | Surfdesk",
     description:
       "Free impact report template for nonprofits: track people served, services and outcomes by month, ready for funders and boards. Download the CSV free.",
-    eyebrow: "Free template",
+    eyebrow: "Free impact report template",
     h1: "Free funder impact report template.",
     h1Accent: "impact report template.",
     lede:
@@ -255,7 +255,7 @@ export const TEMPLATE_PAGES: SeoPageData[] = [
     title: "Free Client Follow-Up Tracker Template (CSV) | Surfdesk",
     description:
       "Free client follow-up tracker template: every client, last contact, next follow-up date and notes in one sheet. Download the CSV for Excel or Google Sheets.",
-    eyebrow: "Free template",
+    eyebrow: "Free follow-up tracker template",
     h1: "Free client follow-up tracker template.",
     h1Accent: "follow-up tracker template.",
     lede:

@@ -48,6 +48,7 @@ export function PlanCards({
   featured,
   calculator = false,
   note = true,
+  swipe = false,
 }: {
   page: string;
   plans: PlanKey[];
@@ -56,18 +57,32 @@ export function PlanCards({
   calculator?: boolean;
   /** The "skip the trial" line under the cards. */
   note?: boolean;
+  /** Phones: plans scroll sideways instead of stacking (homepage). */
+  swipe?: boolean;
 }) {
   const cols = plans.length === 1 ? "max-w-md" : plans.length === 3 ? "sm:grid-cols-2 lg:grid-cols-3" : "sm:grid-cols-2 lg:grid-cols-4";
   return (
     <div className="space-y-6">
-      <div className={`grid gap-4 ${cols}`}>
+      {swipe && <p className="text-xs text-text-muted sm:hidden">Swipe to compare plans →</p>}
+      <div
+        className={
+          swipe
+            ? `-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:mx-0 sm:grid sm:gap-4 sm:overflow-visible sm:px-0 sm:pb-0 ${cols}`
+            : `grid gap-4 ${cols}`
+        }
+      >
         {plans.map((key) => {
           const p = PLANS[key];
           const link = hrefs[key];
           if (!link) return null;
           const on = key === featured;
           return (
-            <div key={key} className="card flex flex-col gap-4 p-6" style={on ? { borderColor: "var(--accent)" } : undefined}>
+            <div
+              key={key}
+              data-plan={key}
+              className={`card flex flex-col gap-4 p-6 ${swipe ? "w-[82%] shrink-0 snap-center sm:w-auto" : ""}`}
+              style={on ? { borderColor: "var(--accent)" } : undefined}
+            >
               <div className="space-y-1">
                 <div className="flex items-start justify-between gap-2">
                   <h3 className="font-display text-2xl font-light">{p.name}</h3>

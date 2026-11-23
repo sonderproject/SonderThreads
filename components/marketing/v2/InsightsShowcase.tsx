@@ -169,13 +169,17 @@ export function InsightsShowcase({ page }: { page: string }) {
             <BarList data={points(d.list.data)} unit={d.list.unit} />
           </Card>
           {d.third === "busiest" ? (
-            <Card title="Busiest times" subtitle="Visits by day and time">
-              <BusiestTimes grid={DATA.business.heat} />
-            </Card>
+            <div className="hidden sm:block">
+              <Card title="Busiest times" subtitle="Visits by day and time">
+                <BusiestTimes grid={DATA.business.heat} />
+              </Card>
+            </div>
           ) : (
-            <Card title="Who we serve" subtitle="People served by income level">
-              <BarList data={points(DATA.nonprofit.who)} unit="people" />
-            </Card>
+            <div className="hidden sm:block">
+              <Card title="Who we serve" subtitle="People served by income level">
+                <BarList data={points(DATA.nonprofit.who)} unit="people" />
+              </Card>
+            </div>
           )}
         </div>
       </Reveal>

@@ -26,6 +26,8 @@ const nextConfig = {
       // The audience landing pages replaced these two search pages (Nov 23, 2026); search ranking follows the redirect.
       { source: "/for/nonprofits", destination: "/nonprofits", permanent: true },
       { source: "/for/small-business", destination: "/business", permanent: true },
+      // Preview address of the homepage before it went live (Nov 23, 2026).
+      { source: "/welcome-v2", destination: "/", permanent: true },
     ];
   },
   // Browser security headers on every response.
