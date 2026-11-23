@@ -16,6 +16,7 @@ Surfdesk runs in the browser on any phone or computer and can be added to the ho
 
 ## Who it's for
 
+- [All features](https://thesurfdesk.app/features): Everything Surfdesk does, with an Individual vs Teams comparison
 - [Individuals](https://thesurfdesk.app/individuals): Tasks, notes, reminders, lists and calendar in one place
 - [Small businesses](https://thesurfdesk.app/business): Customer history, reminders to reach out and revenue by service
 - [Coaches and consultants](https://thesurfdesk.app/for/coaches): Session notes, next steps and revenue by client
@@ -27,11 +28,17 @@ Surfdesk runs in the browser on any phone or computer and can be added to the ho
 
 - [Surfdesk vs spreadsheets](https://thesurfdesk.app/compare/spreadsheets)
 - [Surfdesk vs HubSpot CRM](https://thesurfdesk.app/compare/hubspot)
+- [Surfdesk vs Todoist](https://thesurfdesk.app/compare/todoist)
+- [Surfdesk vs Notion](https://thesurfdesk.app/compare/notion)
+- [Surfdesk vs Trello](https://thesurfdesk.app/compare/trello)
+- [Surfdesk vs Apple Reminders](https://thesurfdesk.app/compare/apple-reminders)
+- [Surfdesk vs Google Keep](https://thesurfdesk.app/compare/google-keep)
 
 ## Free templates
 
 - [Client follow-up tracker (CSV)](https://thesurfdesk.app/templates/client-follow-up-tracker)
 - [Funder impact report (CSV)](https://thesurfdesk.app/templates/funder-impact-report)
+- [Service price list (CSV)](https://thesurfdesk.app/templates/service-price-list)
 
 ## Policies
 

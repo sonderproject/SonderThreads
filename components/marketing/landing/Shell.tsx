@@ -75,7 +75,10 @@ export function LandingShell({
             <span className="hidden text-[11px] uppercase tracking-[0.25em] text-text-muted sm:block">by Sonder Project</span>
           </Link>
           <nav className="flex items-center gap-2">
-            <a href="#pricing" className="hidden rounded-full px-4 py-2 text-sm text-text-muted transition-colors hover:text-text sm:inline-block">
+            <Link href="/features" className="hidden rounded-full px-4 py-2 text-sm text-text-muted transition-colors hover:text-text md:inline-block">
+              Features
+            </Link>
+            <a href={page === "home" || page === "business" || page === "nonprofits" || page === "individuals" ? "#pricing" : "/#pricing"} className="hidden rounded-full px-4 py-2 text-sm text-text-muted transition-colors hover:text-text sm:inline-block">
               Pricing
             </a>
             <Link href="/login" className="whitespace-nowrap rounded-full px-4 py-2 text-sm text-text-muted transition-colors hover:text-text">
@@ -119,7 +122,7 @@ export function LandingShell({
           <LegalLinks />
         </div>
         <nav aria-label="Surfdesk for" className="mx-auto flex max-w-6xl flex-wrap gap-x-5 gap-y-2 px-4 pb-8 text-xs text-text-muted sm:px-8">
-          {[...LANDING_LINKS.map((l) => ({ path: l.path, label: l.label })), ...ALL_SEO_PAGES.map((p) => ({ path: p.path, label: p.eyebrow }))].map((p) => (
+          {[{ path: "/features", label: "Features" }, ...LANDING_LINKS.map((l) => ({ path: l.path, label: l.label })), ...ALL_SEO_PAGES.map((p) => ({ path: p.path, label: p.eyebrow }))].map((p) => (
             <Link key={p.path} href={p.path} className="hover:text-text">
               {p.label}
             </Link>

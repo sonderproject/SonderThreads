@@ -34,6 +34,7 @@ export function SeoPage({ page, path }: { page: SeoPageData; path: string }) {
   const accent = page.h1Accent && page.h1.endsWith(page.h1Accent) ? page.h1Accent : "";
   const h1Lead = accent ? page.h1.slice(0, -accent.length) : page.h1;
   const related = [
+    { path: "/features", eyebrow: "All features" },
     ...LANDING_LINKS.map((l) => ({ path: l.path, eyebrow: l.label })),
     ...ALL_SEO_PAGES.filter((p) => p.path !== path).slice(0, 5),
   ];

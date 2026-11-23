@@ -17,6 +17,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "monthly",
       priority: 0.5,
     },
+    { url: `${SITE_URL}/features`, lastModified: new Date(), changeFrequency: "monthly" as const, priority: 0.8 },
     ...LANDING_LINKS.map((p) => ({
       url: `${SITE_URL}${p.path}`,
       lastModified: new Date(),

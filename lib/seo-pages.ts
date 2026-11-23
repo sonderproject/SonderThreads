@@ -212,6 +212,203 @@ export const COMPARE_PAGES: SeoPageData[] = [
     ],
     cta: "any",
   },
+  {
+    slug: "todoist",
+    title: "Surfdesk vs Todoist: Tasks Plus Your Clients",
+    description:
+      "Todoist is a great task manager. Surfdesk keeps tasks, notes, reminders and your clients together, with visits, follow-ups and reports. Compare them.",
+    eyebrow: "Surfdesk vs Todoist",
+    h1: "Todoist manages tasks. Surfdesk manages your whole day.",
+    h1Accent: "Surfdesk manages your whole day.",
+    lede:
+      "Todoist is one of the best to-do apps around. If your tasks are tied to people (clients, customers, the folks you follow up with), Surfdesk keeps the tasks, notes and the people in one place.",
+    painTitle: "When a to-do app isn't enough",
+    pains: [
+      "Your tasks mention clients, but their notes and history live somewhere else.",
+      "You keep a separate spreadsheet or CRM just to remember who's who.",
+      "Reporting on visits or revenue means exporting and counting by hand.",
+    ],
+    featuresTitle: "What Surfdesk adds",
+    features: [
+      { title: "People, not just tasks", body: "Every client or customer gets a profile with notes, visits and follow-ups on one timeline." },
+      { title: "Say it once", body: "“Follow up with Ana next Tuesday” becomes a task linked to Ana." },
+      { title: "Reports built in", body: "Visits, revenue by service, people served and busiest times, counted for you." },
+      { title: "Team chat", body: "Channels and direct chats on team plans, with clients tagged right in the message." },
+    ],
+    table: {
+      other: "Todoist",
+      rows: [
+        ["Built for", "Tasks, notes and the people they're about", "Tasks and projects"],
+        ["Client profiles with history", "Built in", "Not a core feature"],
+        ["Visits, revenue and impact reports", "Built in", "Not a core feature"],
+        ["Team chat", "Channels and direct chats (team plans)", "Comments on tasks"],
+        ["Price", "Individual $9/month", "Pro $7/month billed monthly"],
+      ],
+    },
+    faqs: [
+      { q: "Should I switch if I only manage my own to-dos?", a: "If your list has nothing to do with clients or customers, Todoist is an excellent choice. Surfdesk pays off when your tasks, notes and the people they're about need to live together." },
+      { q: "Can I bring my client list?", a: "Yes. Import your clients from Excel or CSV in minutes." },
+      PRICING_FAQ,
+    ],
+    cta: "solo",
+  },
+  {
+    slug: "notion",
+    title: "Surfdesk vs Notion: Ready-Made, No Setup",
+    description:
+      "Notion lets you build almost anything. Surfdesk gives you tasks, notes, reminders, clients and reports ready to use, with no setup. Compare the two.",
+    eyebrow: "Surfdesk vs Notion",
+    h1: "Notion is a blank canvas. Surfdesk is ready on day one.",
+    h1Accent: "Surfdesk is ready on day one.",
+    lede:
+      "Notion is incredibly flexible: you design your own pages and databases. If you'd rather not build and maintain your own system, Surfdesk comes with tasks, notes, clients, reminders and reports already working together.",
+    painTitle: "When building your own system gets old",
+    pains: [
+      "You spent a weekend setting up databases and still tweak them every week.",
+      "Reminders, follow-ups and reports need templates, formulas or workarounds.",
+      "Your team uses the setup differently than you meant it to.",
+    ],
+    featuresTitle: "What you get without building it",
+    features: [
+      { title: "Works in minutes", body: "Tasks, notes, lists, calendar and clients are ready the moment you sign up." },
+      { title: "Type it or say it", body: "One sentence becomes a task, a note or a visit, filed in the right place." },
+      { title: "Reports in one click", body: "Insights or Impact reports as a polished PDF, no formulas." },
+      { title: "Built for phones", body: "Capture on the go with voice and the command box." },
+    ],
+    table: {
+      other: "Notion",
+      rows: [
+        ["Built for", "Your day, your clients and your team, ready to use", "Docs and databases you design"],
+        ["Client tracking", "Ready to use", "Build it yourself with databases or templates"],
+        ["Visit and revenue reports", "One-click PDF", "Build with views and formulas"],
+        ["Setup time", "Minutes", "Depends on what you build"],
+        ["Price", "Individual $9/month", "Plus $12/member/month billed monthly"],
+      ],
+    },
+    faqs: [
+      { q: "Is Surfdesk a replacement for Notion's docs and wikis?", a: "No. If you write long documents and team wikis, keep Notion for that. Surfdesk is for the daily work: tasks, notes, reminders, clients and reports." },
+      { q: "Can I import my clients from Notion?", a: "Export your Notion database as CSV, then import it into Surfdesk in minutes." },
+      PRICING_FAQ,
+    ],
+    cta: "any",
+  },
+  {
+    slug: "trello",
+    title: "Surfdesk vs Trello: Boards vs Your Clients",
+    description:
+      "Trello is great for moving cards across boards. Surfdesk is built around people: clients, visits, follow-ups, notes and reports in one app. Compare them.",
+    eyebrow: "Surfdesk vs Trello",
+    h1: "Trello moves cards. Surfdesk keeps track of people.",
+    h1Accent: "Surfdesk keeps track of people.",
+    lede:
+      "Trello is a simple, visual way to run projects on boards. If your work is ongoing relationships with clients or customers rather than projects with stages, Surfdesk is the better fit.",
+    painTitle: "When boards stop fitting the work",
+    pains: [
+      "A client isn't a card that moves to “done”. You see them again and again.",
+      "Notes, visits and follow-ups end up scattered across cards and boards.",
+      "You can't see how many people you served or what you earned this month.",
+    ],
+    featuresTitle: "What Surfdesk does differently",
+    features: [
+      { title: "A page for every person", body: "Notes, visits, tasks and follow-ups on one timeline per client." },
+      { title: "Follow-ups that come back", body: "Reminders land on your Today list on the right day." },
+      { title: "Numbers you can use", body: "Visits, revenue by service and busiest times, counted automatically." },
+      { title: "Team chat built in", body: "Channels and direct chats on team plans, linked to your clients." },
+    ],
+    table: {
+      other: "Trello",
+      rows: [
+        ["Built for", "Clients, customers and your daily work", "Projects on boards and cards"],
+        ["Client history over time", "Built in", "Not a core feature"],
+        ["Visit, revenue and impact reports", "Built in", "Not a core feature"],
+        ["Team chat", "Channels and direct chats (team plans)", "Comments on cards"],
+        ["Price", "Individual $9/month; teams $19/person", "Free plan; Standard $6/user/month billed monthly"],
+      ],
+    },
+    faqs: [
+      { q: "Can I still use boards for projects?", a: "Yes. Many people keep Trello for project boards and use Surfdesk for clients, follow-ups and their daily list." },
+      PRICING_FAQ,
+    ],
+    cta: "any",
+  },
+  {
+    slug: "apple-reminders",
+    title: "Surfdesk vs Apple Reminders: Beyond Reminders",
+    description:
+      "Apple Reminders is free and simple. Surfdesk adds notes, clients, visits, follow-ups and reports, on any phone or computer. See when it's worth switching.",
+    eyebrow: "Surfdesk vs Apple Reminders",
+    h1: "Apple Reminders reminds you. Surfdesk remembers everything else.",
+    h1Accent: "Surfdesk remembers everything else.",
+    lede:
+      "Apple Reminders is free, built into your iPhone and great for simple lists. When your reminders are about clients, customers or work you need to report on, Surfdesk keeps the whole story together.",
+    painTitle: "When reminders alone aren't enough",
+    pains: [
+      "The reminder says “call Ana”, but what you discussed last time is somewhere else.",
+      "You need it on an Android phone or a work PC too.",
+      "There's no way to see how many visits or follow-ups you did this month.",
+    ],
+    featuresTitle: "What Surfdesk adds",
+    features: [
+      { title: "Reminders with context", body: "Each follow-up links to the person, with their notes and history." },
+      { title: "Any phone or computer", body: "Works in any browser on iPhone, Android, Mac and Windows." },
+      { title: "Notes and lists too", body: "Shopping lists, notes and ideas live next to your tasks." },
+      { title: "Reports", body: "See visits, revenue or people served without counting by hand." },
+    ],
+    table: {
+      other: "Apple Reminders",
+      rows: [
+        ["Built for", "Your day, your notes and your clients", "Personal and shared reminder lists"],
+        ["Client profiles and history", "Built in", "Not a core feature"],
+        ["Works on Android and Windows", "Yes, in any browser", "Best on Apple devices"],
+        ["Reports", "Built in", "Not a core feature"],
+        ["Price", "Individual $9/month", "Free"],
+      ],
+    },
+    faqs: [
+      { q: "Is Surfdesk worth paying for if Reminders is free?", a: "If you only need simple personal reminders, Apple Reminders is hard to beat. Surfdesk is worth it when your reminders are about people you work with and you want notes, history and reports in one place." },
+      PRICING_FAQ,
+    ],
+    cta: "solo",
+  },
+  {
+    slug: "google-keep",
+    title: "Surfdesk vs Google Keep: Notes That Get Things Done",
+    description:
+      "Google Keep is a free, fast notes app. Surfdesk turns notes into tasks and follow-ups, linked to your clients, with reports. Compare the two.",
+    eyebrow: "Surfdesk vs Google Keep",
+    h1: "Google Keep holds notes. Surfdesk turns them into action.",
+    h1Accent: "Surfdesk turns them into action.",
+    lede:
+      "Google Keep is free and perfect for quick notes and lists. When notes need to become follow-ups, live on a client's history and show up in your reports, Surfdesk does that automatically.",
+    painTitle: "When sticky notes pile up",
+    pains: [
+      "Notes about clients end up in a long, unsorted stream.",
+      "A note says “call back Thursday”, but nothing reminds you on Thursday.",
+      "Finding what you wrote about someone last month takes a while.",
+    ],
+    featuresTitle: "What Surfdesk adds",
+    features: [
+      { title: "Notes on the right person", body: "Mention someone and the note lands on their profile." },
+      { title: "Notes become tasks", body: "A note that mentions a to-do suggests the task for you." },
+      { title: "Search everything", body: "People, notes, tasks and lists in one search." },
+      { title: "Reports", body: "Visits, revenue or people served, counted from what you log." },
+    ],
+    table: {
+      other: "Google Keep",
+      rows: [
+        ["Built for", "Your day, your notes and your clients", "Quick notes and lists"],
+        ["Notes linked to a person's history", "Built in", "Not a core feature"],
+        ["Follow-ups on a Today list", "Built in", "Reminders on individual notes"],
+        ["Reports", "Built in", "Not a core feature"],
+        ["Price", "Individual $9/month", "Free"],
+      ],
+    },
+    faqs: [
+      { q: "Can I keep using Google Keep?", a: "Sure. Many people keep Keep for quick personal notes and use Surfdesk for clients, follow-ups and anything they need to act on or report." },
+      PRICING_FAQ,
+    ],
+    cta: "solo",
+  },
 ];
 
 export const TEMPLATE_PAGES: SeoPageData[] = [
@@ -282,6 +479,41 @@ export const TEMPLATE_PAGES: SeoPageData[] = [
       { q: "How often should I follow up with clients?", a: "It depends on the relationship, but the key is that every client always has a next date. Weekly for active cases or deals, monthly or quarterly for past clients is a common starting point." },
     ],
     cta: "solo",
+  },
+  {
+    slug: "service-price-list",
+    title: "Free Service Price List Template (CSV) | Surfdesk",
+    description:
+      "Free service price list template for salons, trainers, coaches, contractors and any service business: services, durations and prices in one sheet. Download free.",
+    eyebrow: "Free price list template",
+    h1: "Free service price list template.",
+    h1Accent: "price list template.",
+    lede:
+      "One clean sheet for every service you offer, with how long it takes and what it costs. Share it with customers, print it for the front desk, or use it to set your prices. Download it free, no sign-up.",
+    painTitle: "What a good price list does",
+    pains: [
+      "Customers see exactly what you offer and what it costs.",
+      "Staff quote the same price every time.",
+      "You can spot services that take long but earn little.",
+      "Add-ons and packages are easy to offer at checkout.",
+    ],
+    featuresTitle: "How to use the template",
+    features: [
+      { title: "1. List your services", body: "One row per service, grouped by category, with duration and price." },
+      { title: "2. Add packages", body: "Bundle services in the package rows and set a package price." },
+      { title: "3. Share it", body: "Print it, post it, or save it as a PDF from Excel or Google Sheets." },
+      { title: "Or put it to work", body: "Add your services to Surfdesk once and log a sale in one line: “Ana – haircut”. Revenue by service is counted for you." },
+    ],
+    download: {
+      href: "/downloads/service-price-list-template.csv",
+      label: "Download the template (CSV)",
+      what: ["Service, category, duration and price columns", "Sample rows you can rename", "Add-on and package rows", "A price-per-hour column to check your pricing"],
+    },
+    faqs: [
+      { q: "Does it open in Excel and Google Sheets?", a: "Yes. It's a standard CSV file that opens in Excel, Google Sheets and Numbers." },
+      { q: "How do I know if a service is priced right?", a: "Compare the price per hour across services. A service that takes long but earns little per hour is a candidate for a price change or a package." },
+    ],
+    cta: "any",
   },
 ];
 

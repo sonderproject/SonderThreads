@@ -1,0 +1,13 @@
+Service,Category,Duration (minutes),Price ($),Price per hour ($),Notes
+Haircut,Hair,45,45,=ROUND(D2/(C2/60),2),Includes wash and style
+Color,Hair,120,120,=ROUND(D3/(C3/60),2),Single process
+Consultation,Consulting,60,150,=ROUND(D4/(C4/60),2),First visit
+Personal training session,Fitness,60,70,=ROUND(D5/(C5/60),2),
+Coaching call,Coaching,50,90,=ROUND(D6/(C6/60),2),Video or phone
+Service call,Home services,60,95,=ROUND(D7/(C7/60),2),Plus parts
+Add-on: deep conditioning,Add-ons,15,20,=ROUND(D8/(C8/60),2),
+Add-on: rush fee,Add-ons,0,25,,Same-day jobs
+Package: 4 training sessions,Packages,240,250,=ROUND(D10/(C10/60),2),Save $30 vs single sessions
+Package: cut + color,Packages,165,150,=ROUND(D11/(C11/60),2),Save $15
+
+Made with the free template from https://thesurfdesk.app/templates/service-price-list — Surfdesk logs each sale in one line and counts revenue by service for you.
