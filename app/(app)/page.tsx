@@ -10,6 +10,7 @@ import { SkyCard } from "@/components/home/SkyCard";
 import { ImpactTeaser } from "@/components/impact/ImpactTeaser";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { WelcomeChecklist } from "@/components/home/WelcomeChecklist";
+import { FromLanding } from "@/components/home/FromLanding";
 import { SampleData } from "@/components/home/SampleData";
 import { canLoadSampleData, hasSampleData } from "@/lib/actions/sample";
 import { getWelcome } from "@/lib/onboarding";
@@ -58,6 +59,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   return (
     <div className="space-y-8">
       <PendingInvites invites={invites} error={inviteError} />
+      <FromLanding />
       {welcome && <WelcomeChecklist steps={welcome} />}
       {sampleIn ? <SampleData mode="loaded" /> : sampleOffer && <SampleData mode="offer" />}
       <section>

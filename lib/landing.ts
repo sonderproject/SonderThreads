@@ -4,7 +4,7 @@
  * show in the owner command center (Growth: sign-ups by campaign). Tags from an ad
  * link win: CampaignLinks overwrites these when the visitor arrived with their own.
  */
-export type LandingKey = "individuals" | "business" | "nonprofits";
+export type LandingKey = "individuals" | "business" | "nonprofits" | "home";
 
 export const LANDING_LINKS: { key: LandingKey; path: string; label: string }[] = [
   { key: "individuals", path: "/individuals", label: "Surfdesk for individuals" },

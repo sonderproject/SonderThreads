@@ -18,16 +18,20 @@ export function LandingShell({
   primary,
   faqs,
   children,
+  after,
 }: {
   page: LandingKey;
   title: string;
   description: string;
-  crumb: string;
+  /** Breadcrumb label; omit on the homepage. */
+  crumb?: string;
   primary: { href: string; label: string; short: string };
-  faqs: { q: string; a: string }[];
+  faqs?: { q: string; a: string }[];
   children: React.ReactNode;
+  /** Rendered after the page, e.g. a sticky mobile call to action. */
+  after?: React.ReactNode;
 }) {
-  const path = `/${page}`;
+  const path = page === "home" ? "/" : `/${page}`;
   const jsonLd = {
     "@context": "https://schema.org",
     "@graph": [
@@ -40,18 +44,18 @@ export function LandingShell({
         isPartOf: { "@id": `${SITE_URL}/#website` },
         about: { "@id": `${SITE_URL}/#app` },
       },
-      {
+      crumb && {
         "@type": "BreadcrumbList",
         itemListElement: [
           { "@type": "ListItem", position: 1, name: "Surfdesk", item: `${SITE_URL}/` },
           { "@type": "ListItem", position: 2, name: crumb, item: `${SITE_URL}${path}` },
         ],
       },
-      {
+      faqs?.length && {
         "@type": "FAQPage",
         mainEntity: faqs.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
       },
-    ],
+    ].filter(Boolean),
   };
 
   return (
@@ -90,12 +94,14 @@ export function LandingShell({
       </header>
 
       <main className="mx-auto max-w-6xl px-4 sm:px-8">
-        <nav aria-label="Breadcrumb" className="pt-6 text-xs text-text-muted">
-          <Link href="/" className="hover:text-text">
-            Surfdesk
-          </Link>{" "}
-          / <span>{crumb}</span>
-        </nav>
+        {crumb && (
+          <nav aria-label="Breadcrumb" className="pt-6 text-xs text-text-muted">
+            <Link href="/" className="hover:text-text">
+              Surfdesk
+            </Link>{" "}
+            / <span>{crumb}</span>
+          </nav>
+        )}
         {children}
       </main>
 
@@ -117,6 +123,7 @@ export function LandingShell({
           ))}
         </nav>
       </footer>
+      {after}
     </div>
   );
 }

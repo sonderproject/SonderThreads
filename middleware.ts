@@ -98,8 +98,8 @@ export const config = {
   // including Vercel's prefixed variable names.
   runtime: "nodejs",
   // Everything except sign-in/up/password pages, the calendar subscribe feed (its link carries its own secret), the public legal pages, the email-link handler (/auth/...), the landing pages (/welcome, /individuals, /business, /nonprofits) and the guided set-up questions (/get-started; nothing is saved before sign-up), the sitemap, the AI-agent guides (llms.txt, .well-known/ard.json)
-  // and static assets (icons and the manifest must load before sign-in so "Add to Home Screen" works).
+  // Vercel Web Analytics (/_vercel/insights), and static assets (icons and the manifest must load before sign-in so "Add to Home Screen" works).
   matcher: [
-    "/((?!login|signup|refer/|book/|api/stripe/webhook|api/calendar/feed/|api/email/unsubscribe|privacy|terms|account-deletion|brand/|forgot-password|reset-password|auth/|api/auth/status|welcome|get-started|sitemap.xml|sw.js|_next/static|_next/image|favicon.ico|robots.txt|llms.txt|\\.well-known/|manifest.webmanifest|opengraph-image.*|for/|compare/|templates/|individuals|business|nonprofits|downloads/|icon-.*\\.png|apple-touch-icon.*\\.png).*)",
+    "/((?!login|signup|refer/|book/|api/stripe/webhook|api/calendar/feed/|api/email/unsubscribe|privacy|terms|account-deletion|brand/|forgot-password|reset-password|auth/|api/auth/status|welcome|get-started|sitemap.xml|sw.js|_next/static|_next/image|_vercel/|favicon.ico|robots.txt|llms.txt|\\.well-known/|manifest.webmanifest|opengraph-image.*|for/|compare/|templates/|individuals|business|nonprofits|downloads/|icon-.*\\.png|apple-touch-icon.*\\.png).*)",
   ],
 };
