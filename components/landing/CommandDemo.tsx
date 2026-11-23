@@ -3,7 +3,9 @@
 import { useEffect, useState } from "react";
 
 /** What a person types, and what Surfdesk makes of it. */
-const EXAMPLES = [
+export type CommandExample = { said: string; kind: string; detail: string };
+
+const EXAMPLES: CommandExample[] = [
   { said: "Remind me to call Sarah Friday", kind: "Task", detail: "Friday · linked to Sarah" },
   { said: "Add groceries to my shopping list", kind: "List item", detail: "Added to your Shopping list" },
   { said: "Make a note about my meeting with John", kind: "Note", detail: "Saved to John's profile" },
@@ -15,7 +17,7 @@ const EXAMPLES = [
  * Surfdesk did with it. Cycles through a few examples; with reduced motion it
  * shows them all, still.
  */
-export function CommandDemo() {
+export function CommandDemo({ examples = EXAMPLES }: { examples?: CommandExample[] } = {}) {
   const [i, setI] = useState(0);
   const [typed, setTyped] = useState(0);
   const [still, setStill] = useState(false);
@@ -26,22 +28,22 @@ export function CommandDemo() {
 
   useEffect(() => {
     if (still) return;
-    const text = EXAMPLES[i].said;
+    const text = examples[i].said;
     if (typed < text.length) {
       const t = setTimeout(() => setTyped((n) => n + 1), 45);
       return () => clearTimeout(t);
     }
     const t = setTimeout(() => {
       setTyped(0);
-      setI((n) => (n + 1) % EXAMPLES.length);
+      setI((n) => (n + 1) % examples.length);
     }, 2400);
     return () => clearTimeout(t);
-  }, [i, typed, still]);
+  }, [i, typed, still, examples]);
 
   if (still) {
     return (
       <ul className="space-y-2">
-        {EXAMPLES.map((e) => (
+        {examples.map((e) => (
           <li key={e.said} className="rounded-xl border border-border bg-bg px-3 py-2 text-sm">
             <span className="text-text">“{e.said}”</span>
             <span className="block text-xs text-text-muted">
@@ -53,7 +55,7 @@ export function CommandDemo() {
     );
   }
 
-  const e = EXAMPLES[i];
+  const e = examples[i];
   const done = typed >= e.said.length;
   return (
     <div className="space-y-3" aria-hidden>

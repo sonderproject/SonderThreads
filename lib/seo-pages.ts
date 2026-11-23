@@ -41,40 +41,6 @@ const PRICING_FAQ: SeoFaq = {
 
 export const AUDIENCE_PAGES: SeoPageData[] = [
   {
-    slug: "nonprofits",
-    title: "Case Management Software for Small Nonprofits | Surfdesk",
-    description:
-      "Simple case management software for small nonprofits: shared caseload, check-ins, outcomes and funder-ready Impact reports in one click. Free 14-day trial.",
-    eyebrow: "Surfdesk for nonprofits",
-    h1: "Case management software small nonprofits actually use.",
-    h1Accent: "actually use.",
-    lede:
-      "Surfdesk gives your team one shared caseload, check-ins that never slip and outcomes counted as you work — so the funder report builds itself instead of eating the last week of every quarter.",
-    painTitle: "Sound familiar?",
-    pains: [
-      "Case notes live in five places: a spreadsheet, a shared drive, sticky notes and someone's head.",
-      "Reporting week means hand-counting people served and outcomes from old notes.",
-      "Big case management systems cost too much and take months to set up.",
-      "When a staff member leaves, their caseload history goes with them.",
-    ],
-    featuresTitle: "Everything a small program needs, nothing it doesn't",
-    features: [
-      { title: "Shared caseload", body: "Everyone works from one client list, with roles so managers see what they need and nothing more." },
-      { title: "Check-ins that don't slip", body: "Every follow-up on one Today list, with reminders on your phone." },
-      { title: "Outcomes as you work", body: "Mark “got a job” or “found housing” in a sentence. Surfdesk counts it." },
-      { title: "Impact report in one click", body: "People served, outcomes reached and demographics as a polished PDF with your logo." },
-      { title: "Front-desk check-in", body: "A kiosk mode lets clients sign in themselves when they arrive." },
-      { title: "Set up in an afternoon", body: "Import your existing list from a spreadsheet and start the same day." },
-    ],
-    faqs: [
-      { q: "Is Surfdesk HIPAA compliant?", a: "Surfdesk encrypts data in transit and at rest and separates every organization with database-level access rules. It is not marketed as a HIPAA-covered system; if you handle protected health information, talk to us about your requirements before you start." },
-      { q: "Can we import our current client list?", a: "Yes. Import from Excel or CSV, and Organization plans include onboarding help and data import." },
-      { q: "Does it work for small teams with no IT staff?", a: "Yes. Surfdesk runs in the browser on any phone or computer, with nothing to install or maintain." },
-      PRICING_FAQ,
-    ],
-    cta: "team",
-  },
-  {
     slug: "case-managers",
     title: "Case Management App for Case Managers | Surfdesk",
     description:
@@ -162,35 +128,6 @@ export const AUDIENCE_PAGES: SeoPageData[] = [
       PRICING_FAQ,
     ],
     cta: "solo",
-  },
-  {
-    slug: "small-business",
-    title: "Simple Customer Tracker for Small Businesses | Surfdesk",
-    description:
-      "A simple customer tracker for small businesses: every regular, service and follow-up in one app, plus revenue by service. Free trial, from $9 a month.",
-    eyebrow: "Surfdesk for small businesses",
-    h1: "Know every regular. Keep every customer.",
-    h1Accent: "Keep every customer.",
-    lede:
-      "Surfdesk keeps each customer's history, the services they bought and when to reach out next — so regulars stay regulars and you can see what actually makes money.",
-    painTitle: "Running on memory doesn't scale",
-    pains: [
-      "Customer details live in your texts, your notebook and your head.",
-      "Regulars drift away and you only notice months later.",
-      "You can't tell which services are worth your time.",
-    ],
-    featuresTitle: "A customer list that works for you",
-    features: [
-      { title: "Customer history", body: "Visits, notes and purchases for every customer on one page." },
-      { title: "Reminders to reach out", body: "Get nudged when a regular hasn't been back." },
-      { title: "Revenue by service", body: "See which services bring in the money each month." },
-      { title: "Team ready", body: "Add staff on the Small Team plan with one shared list." },
-    ],
-    faqs: [
-      { q: "Is this a point-of-sale system?", a: "No. Surfdesk tracks customers, visits and follow-ups. Keep your POS for payments." },
-      PRICING_FAQ,
-    ],
-    cta: "any",
   },
 ];
 

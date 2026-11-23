@@ -553,3 +553,15 @@ button[data-loading]::after {
     animation-duration: 2s;
   }
 }
+
+/* Landing pages: a workflow demo step fading in (components/marketing/landing/WorkflowDemo.tsx). */
+@keyframes step-in {
+  from {
+    transform: translateY(6px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}

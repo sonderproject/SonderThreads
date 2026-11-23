@@ -16,11 +16,12 @@ Surfdesk runs in the browser on any phone or computer and can be added to the ho
 
 ## Who it's for
 
-- [Small businesses](https://thesurfdesk.app/for/small-business): Customer history, reminders to reach out and revenue by service
+- [Individuals](https://thesurfdesk.app/individuals): Tasks, notes, reminders, lists and calendar in one place
+- [Small businesses](https://thesurfdesk.app/business): Customer history, reminders to reach out and revenue by service
 - [Coaches and consultants](https://thesurfdesk.app/for/coaches): Session notes, next steps and revenue by client
 - [Realtors](https://thesurfdesk.app/for/realtors): Contacts, follow-ups and voice notes between showings
 - [Case managers](https://thesurfdesk.app/for/case-managers): Voice notes, a Today list and full client history
-- [Nonprofits](https://thesurfdesk.app/for/nonprofits): Shared client list, check-ins and one-click impact reports
+- [Nonprofits](https://thesurfdesk.app/nonprofits): Shared client list, check-ins and one-click impact reports
 
 ## Comparisons
 

@@ -9,6 +9,8 @@ import { LegalLinks } from "@/components/legal/LegalPage";
 import { SUPPORT_EMAIL } from "@/lib/settings-options";
 import { SeatCalculator } from "@/components/billing/SeatCalculator";
 import { ALL_SEO_PAGES } from "@/lib/seo-pages";
+import { LANDING_LINKS } from "@/lib/landing";
+import { MarketingAnalytics } from "@/components/marketing/landing/Track";
 
 // Signed-out visitors to "/" are shown this page (middleware rewrites to it),
 // so "/" is the canonical address search engines should index.
@@ -54,28 +56,28 @@ const COMPARE: [string, boolean][] = [
   ["Onboarding help and data import", false],
 ];
 
-/** "Built around you": one card per audience. Links go to existing pages until /individuals, /business and /nonprofits are built. */
+/** "Built around you": one card per audience, each linking to its landing page. */
 const AUDIENCE_CARDS = [
   {
     eyebrow: "Individuals",
     title: "Less to remember. More room to live.",
     body: "Keep your tasks, reminders, notes, lists, and calendar organized without making organization another chore.",
     cta: "Explore for Individuals",
-    href: "/get-started/solo",
+    href: "/individuals",
   },
   {
     eyebrow: "Businesses",
     title: "Better organization. Better business decisions.",
     body: "Manage customers, bookings, services, follow-ups, and your team. See how your business is performing, all from one place.",
     cta: "Explore for Business",
-    href: "/for/small-business",
+    href: "/business",
   },
   {
     eyebrow: "Nonprofits",
     title: "Your people, programs, and progress. Connected.",
     body: "Coordinate staff, manage participants, track services, and measure your organization's impact in one organized workspace.",
     cta: "Explore for Nonprofits",
-    href: "/for/nonprofits",
+    href: "/nonprofits",
   },
 ];
 
@@ -270,6 +272,7 @@ export default function WelcomePage() {
     <div className="min-h-screen bg-bg text-text">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }} />
       <CampaignLinks />
+      <MarketingAnalytics />
       <header className="glass pt-safe sticky top-0 z-20 border-b">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-8">
           <Link href="/" className="flex items-center gap-3" aria-label="Surfdesk">
@@ -834,9 +837,9 @@ export default function WelcomePage() {
           <LegalLinks />
         </div>
         <nav aria-label="Surfdesk for" className="mx-auto flex max-w-6xl flex-wrap gap-x-5 gap-y-2 px-4 pb-8 text-xs text-text-muted sm:px-8">
-          {ALL_SEO_PAGES.map((p) => (
+          {[...LANDING_LINKS.map((l) => ({ path: l.path, label: l.label })), ...ALL_SEO_PAGES.map((p) => ({ path: p.path, label: p.eyebrow }))].map((p) => (
             <Link key={p.path} href={p.path} className="hover:text-text">
-              {p.eyebrow}
+              {p.label}
             </Link>
           ))}
         </nav>

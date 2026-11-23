@@ -4,6 +4,8 @@ import { BrandLockup } from "@/components/BrandLockup";
 import { LegalLinks } from "@/components/legal/LegalPage";
 import { ALL_SEO_PAGES, COMPARE_NOTE, type SeoPageData } from "@/lib/seo-pages";
 import { SITE_URL } from "@/lib/site";
+import { LANDING_LINKS } from "@/lib/landing";
+import { MarketingAnalytics } from "@/components/marketing/landing/Track";
 
 const SIGNUP: Record<SeoPageData["cta"], string> = {
   solo: "/get-started/solo",
@@ -31,7 +33,10 @@ export function SeoPage({ page, path }: { page: SeoPageData; path: string }) {
   const signup = SIGNUP[page.cta];
   const accent = page.h1Accent && page.h1.endsWith(page.h1Accent) ? page.h1Accent : "";
   const h1Lead = accent ? page.h1.slice(0, -accent.length) : page.h1;
-  const related = ALL_SEO_PAGES.filter((p) => p.path !== path).slice(0, 6);
+  const related = [
+    ...LANDING_LINKS.map((l) => ({ path: l.path, eyebrow: l.label })),
+    ...ALL_SEO_PAGES.filter((p) => p.path !== path).slice(0, 5),
+  ];
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -66,6 +71,7 @@ export function SeoPage({ page, path }: { page: SeoPageData; path: string }) {
   return (
     <div className="min-h-screen bg-bg text-text">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <MarketingAnalytics />
       <header className="glass pt-safe sticky top-0 z-20 border-b">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-8">
           <BrandLockup />

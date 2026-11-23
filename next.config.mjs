@@ -23,6 +23,9 @@ const nextConfig = {
         destination: "https://thesurfdesk.app/:path*",
         permanent: true,
       },
+      // The audience landing pages replaced these two search pages (Nov 23, 2026); search ranking follows the redirect.
+      { source: "/for/nonprofits", destination: "/nonprofits", permanent: true },
+      { source: "/for/small-business", destination: "/business", permanent: true },
     ];
   },
   // Browser security headers on every response.
