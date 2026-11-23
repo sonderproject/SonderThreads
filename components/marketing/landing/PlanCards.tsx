@@ -71,7 +71,7 @@ export function PlanCards({
               <div className="space-y-1">
                 <div className="flex items-start justify-between gap-2">
                   <h3 className="font-display text-2xl font-light">{p.name}</h3>
-                  {on && plans.length > 1 && <span className="tag tag-v whitespace-nowrap">{key === "organization" ? "Best value" : "Recommended"}</span>}
+                  {on && plans.length > 1 && <span className="tag tag-v whitespace-nowrap">Most popular</span>}
                 </div>
                 <p className="text-sm text-text-muted">{p.who}</p>
               </div>
