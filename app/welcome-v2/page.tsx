@@ -16,7 +16,7 @@ import { SUPPORT_EMAIL } from "@/lib/settings-options";
 /**
  * Homepage candidate (Nov 23, 2026): full-width sections that alternate sand, white, dark,
  * soft blue and a surf-blue close; product hero; a working "try it now" command box; the
- * five-apps fold; the app's real Insights/Impact charts; team chat; audience calculators.
+ * five-apps fold; the app's real Insights/Impact charts; team chat; a day without and with Surfdesk per audience.
  * Hidden from search and unlinked until the owner decides whether it replaces /welcome.
  */
 export const metadata: Metadata = {
@@ -184,14 +184,14 @@ export default function HomeV2() {
         </div>
       </section>
 
-      {/* 6. Built around you: audience switch with calculators (white). */}
+      {/* 6. Built around you: audience switch, a day without and with Surfdesk (white). */}
       <section className="bg-bg-raised">
         <div className={`${WRAP} space-y-8 py-20 sm:py-24`}>
           <div className="space-y-5">
             <Eyebrow>Built around you</Eyebrow>
-            <H2 accent="See what it's worth to you.">One workspace.</H2>
+            <H2 accent="Here's what changes.">One workspace.</H2>
           </div>
-          <AudienceExplorer page={PAGE} />
+          <AudienceExplorer page={PAGE} startHref={START} />
         </div>
       </section>
 
