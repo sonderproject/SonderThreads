@@ -6,7 +6,7 @@ export const SETTINGS_SECTIONS: { slug: SettingsSlug; title: string; hint: strin
   { slug: "subscription", title: "Subscription", hint: "Your plan, card, invoices and canceling" },
   { slug: "notifications", title: "Notifications", hint: "When and how Surfdesk reminds you" },
   { slug: "services", title: "Services", hint: "What you offer, for quick logging and reports" },
-  { slug: "outcomes", title: "Outcomes", hint: "Results your clients reach, counted in your reports" },
+  { slug: "outcomes", title: "Outcomes & exits", hint: "Results people reach and why they leave, counted in your reports" },
   { slug: "fields", title: "Custom fields", hint: "Extra details you track on each person" },
   { slug: "automations", title: "Automations", hint: "Follow-up tasks Surfdesk makes for you" },
   { slug: "booking", title: "Booking link", hint: "Let people book a time with you" },

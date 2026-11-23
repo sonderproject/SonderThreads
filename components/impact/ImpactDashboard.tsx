@@ -1,7 +1,8 @@
 "use client";
 
 import { formatMoney } from "@/lib/money";
-import type { MonthRow, OutcomeStat, ServiceStat } from "@/lib/metrics-shared";
+import type { ExitStat, MonthRow, OutcomeStat, ServiceStat } from "@/lib/metrics-shared";
+import { EXIT_KINDS, exitKindLabel, kindShares, type ExitKind } from "@/lib/exit-kinds";
 import { useTerms } from "@/components/TermsProvider";
 
 import { useCallback, useEffect, useState } from "react";
@@ -282,8 +283,9 @@ export function ImpactDashboard({ orgName }: { orgName: string | null }) {
             </div>
           </Chapter>
 
-          <Chapter n="02" title="Outcomes" lead="Results people reached, each person counted once per outcome.">
+          <Chapter n="02" title="Outcomes and exits" lead="Results people reached, and where people went when they left.">
             <OutcomesSummary data={data} periodName={periodName} />
+            <ExitsSummary data={data} periodName={periodName} />
           </Chapter>
 
           <Chapter n="03" title="When people come" lead="Plan staffing around your busiest hours.">
@@ -461,6 +463,99 @@ export function OutcomesSummary({ data, periodName }: { data: Metrics; periodNam
       </section>
       <OutcomesTable outcomes={data.outcomes} />
     </div>
+  );
+}
+
+/** Positive, neutral, unplanned: each group's mark color. Text never uses these. */
+const EXIT_FILL: Record<ExitKind, string> = { positive: "var(--chart-1)", neutral: "var(--chart-3)", unplanned: "var(--chart-2)" };
+
+/** Exits: how many left, the split by group as one stacked bar, then each reason. */
+export function ExitsSummary({ data, periodName }: { data: Metrics; periodName: string }) {
+  const k = data.exitKinds;
+  const total = k.positive + k.neutral + k.unplanned;
+  const prevTotal = data.prevExitKinds.positive + data.prevExitKinds.neutral + data.prevExitKinds.unplanned;
+  if (total === 0 && prevTotal === 0) {
+    return (
+      <section className="card mt-3 space-y-1 p-4 text-sm">
+        <p className="text-text">No exits recorded in this period.</p>
+        <p className="text-xs text-text-muted">
+          When someone leaves, use the exit button on their profile and pick a reason. Your reasons are in{" "}
+          <a href="/settings/outcomes" className="text-accent hover:underline">
+            Settings → Outcomes &amp; exits
+          </a>
+          .
+        </p>
+      </section>
+    );
+  }
+  const shares = kindShares(k);
+  const shown = EXIT_KINDS.filter((x) => k[x.kind] > 0);
+  return (
+    <div className="mt-3 grid gap-3 lg:grid-cols-[1fr_2fr]">
+      <section className="card space-y-3 p-4">
+        <div className="space-y-1">
+          <p className="eyebrow text-text-faint">Exits</p>
+          <p className="font-display text-4xl font-light tabular-nums">{total.toLocaleString("en-US")}</p>
+          <p className="text-xs text-text-muted">
+            vs {periodName} ({prevTotal.toLocaleString("en-US")})
+          </p>
+        </div>
+        {total > 0 && (
+          <>
+            <div className="flex h-3 w-full gap-[2px] overflow-hidden rounded" role="img" aria-label={shown.map((x) => `${x.label} ${shares[x.kind]}%`).join(", ")}>
+              {shown.map((x) => (
+                <span key={x.kind} style={{ width: `${(k[x.kind] / total) * 100}%`, background: EXIT_FILL[x.kind] }} title={`${x.label}: ${k[x.kind]}`} />
+              ))}
+            </div>
+            <ul className="space-y-1 text-sm">
+              {EXIT_KINDS.map((x) => (
+                <li key={x.kind} className="flex items-center gap-2" title={x.hint}>
+                  <span className="h-2.5 w-2.5 shrink-0 rounded-sm" style={{ background: EXIT_FILL[x.kind] }} aria-hidden />
+                  <span className="flex-1 text-text">{x.label}</span>
+                  <span className="tabular-nums font-semibold text-text">{shares[x.kind]}%</span>
+                  <span className="w-10 text-right tabular-nums text-text-muted">{k[x.kind]}</span>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+      </section>
+      <ExitsTable exits={data.exits} />
+    </div>
+  );
+}
+
+function ExitsTable({ exits }: { exits: ExitStat[] }) {
+  return (
+    <section className="card space-y-2 p-4">
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[20rem] text-sm">
+          <thead>
+            <tr className="eyebrow text-left">
+              <th className="py-1.5 pr-3 font-medium">Exited to</th>
+              <th className="py-1.5 pr-3 font-medium">Group</th>
+              <th className="py-1.5 pr-3 text-right font-medium">Exits</th>
+              <th className="py-1.5 text-right font-medium">Previous period</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border-subtle">
+            {exits.map((e) => (
+              <tr key={`${e.name}-${e.kind}`}>
+                <td className="py-2 pr-3 text-text">{e.name}</td>
+                <td className="py-2 pr-3">
+                  <span className="flex items-center gap-1.5 text-xs text-text-muted">
+                    <span className="h-2 w-2 rounded-sm" style={{ background: EXIT_FILL[e.kind] }} aria-hidden />
+                    {exitKindLabel(e.kind)}
+                  </span>
+                </td>
+                <td className="py-2 pr-3 text-right tabular-nums">{e.count.toLocaleString("en-US")}</td>
+                <td className="py-2 text-right tabular-nums text-text-muted">{e.prevCount.toLocaleString("en-US")}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
   );
 }
 

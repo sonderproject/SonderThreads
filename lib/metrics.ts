@@ -1,4 +1,5 @@
 import { query } from "@/lib/db/client";
+import type { ExitKind } from "@/lib/exit-kinds";
 import { asUser, type UserQuery } from "@/lib/db/as-user";
 import { ETHNICITIES, GENDERS, INCOME_LEVELS, NOT_RECORDED } from "@/lib/demographics";
 
@@ -143,6 +144,12 @@ export async function computeMetrics(
   // database never shows them to admins; the report only ever gets counts. Callers check the viewer may see org reports.
   if (org) return asUser(userId, (q: UserQuery) => compute(q as Run, query as Run, "org_id", org.id, tz, from, to, "org", org.name));
   return compute(query as Run, query as Run, "user_id", userId, tz, from, to, "me", null);
+}
+
+function byKind(rows: { kind: ExitKind; n: number; prev: number }[], key: "n" | "prev"): Record<ExitKind, number> {
+  const out: Record<ExitKind, number> = { positive: 0, neutral: 0, unplanned: 0 };
+  for (const r of rows) out[r.kind] += r[key];
+  return out;
 }
 
 async function compute(
@@ -327,6 +334,19 @@ async function compute(
     ),
   ]);
 
+  // Exits: each exit once, by reason and by the group it had when recorded (exited_on is a local date).
+  const exitRows = await run<{ name: string; kind: ExitKind; n: number; prev: number }>(
+    `select r.name, pe.kind,
+            count(*) filter (where pe.exited_on between $3::date and $4::date)::int as n,
+            count(*) filter (where pe.exited_on between $5::date and $6::date)::int as prev
+       from person_exits pe join exit_reasons r on r.id = pe.reason_id
+      where pe.${col} = $1 and pe.deleted_at is null and pe.exited_on between $5::date and $4::date
+        and $2::text is not null
+      group by r.id, r.name, pe.kind
+      order by n desc, prev desc, r.name`,
+    [...range, prevFrom, prevTo],
+  );
+
   // Every category in the standard order (zeros included) so exports are complete tables.
   const tally = (values: (string | null)[], categories: readonly string[]): Point[] => {
     const counts = new Map<string, number>();
@@ -394,6 +414,9 @@ async function compute(
       busiestTime: r.block === null ? null : HEATMAP_BLOCKS[r.block],
     })),
     outcomes: outcomeRows.filter((r) => r.people > 0 || r.prev > 0).map((r) => ({ name: r.name, people: r.people, prevPeople: r.prev })),
+    exits: exitRows.filter((r) => r.n > 0 || r.prev > 0).map((r) => ({ name: r.name, kind: r.kind, count: r.n, prevCount: r.prev })),
+    exitKinds: byKind(exitRows, "n"),
+    prevExitKinds: byKind(exitRows, "prev"),
     outcomePeople: outcomeTotals[0]?.now ?? 0,
     prevOutcomePeople: outcomeTotals[0]?.prev ?? 0,
     extra,

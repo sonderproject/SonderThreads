@@ -16,6 +16,8 @@ import { ContactSupportCard } from "@/components/settings/ContactSupportCard";
 import { ServicesSettings } from "@/components/settings/ServicesSettings";
 import { OutcomesSettings } from "@/components/settings/OutcomesSettings";
 import { listOutcomes } from "@/lib/outcomes";
+import { ExitReasonsSettings } from "@/components/settings/ExitReasonsSettings";
+import { listExitReasons } from "@/lib/exits";
 import { listCustomFields } from "@/lib/custom-fields";
 import { CustomFieldsSettings } from "@/components/settings/CustomFieldsSettings";
 import { AutomationsSection } from "@/components/settings/AutomationsSection";
@@ -109,8 +111,19 @@ async function ServicesSection() {
 }
 
 async function OutcomesSection() {
-  const [outcomes, scope, membership] = await Promise.all([listOutcomes({ includeArchived: true }), serviceScope(), getMembership()]);
-  return <OutcomesSettings outcomes={outcomes} canManage={scope.canManage} orgName={membership?.active ? membership.orgName : null} />;
+  const [outcomes, reasons, scope, membership] = await Promise.all([
+    listOutcomes({ includeArchived: true }),
+    listExitReasons({ includeArchived: true }),
+    serviceScope(),
+    getMembership(),
+  ]);
+  const orgName = membership?.active ? membership.orgName : null;
+  return (
+    <>
+      <OutcomesSettings outcomes={outcomes} canManage={scope.canManage} orgName={orgName} />
+      <ExitReasonsSettings reasons={reasons} canManage={scope.canManage} orgName={orgName} />
+    </>
+  );
 }
 
 async function FieldsSection() {
@@ -454,6 +467,7 @@ async function DataSection({ q }: { q: SettingsQuery }) {
     { table: "tasks", label: "Tasks" },
     { table: "check_ins", label: terms.checkIns },
     { table: "outcomes", label: "Outcomes" },
+    { table: "exits", label: "Exits" },
     { table: "lists", label: "Lists" },
     { table: "list_items", label: "List entries" },
     { table: "activity", label: "Activity history" },

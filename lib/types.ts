@@ -27,6 +27,8 @@ export type Person = {
   updated_at: string;
   last_activity_at: string;
   deleted_at: string | null;
+  /** Date of the current exit (left the program / no longer a customer); null while active. */
+  exited_on?: string | null;
 };
 
 export type Note = {
@@ -111,7 +113,8 @@ export type ActivityType =
   | "summary_updated"
   | "list_created"
   | "check_in"
-  | "outcome";
+  | "outcome"
+  | "exit";
 
 export type Activity = {
   id: string;

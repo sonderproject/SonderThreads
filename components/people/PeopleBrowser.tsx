@@ -15,6 +15,7 @@ import type { Person } from "@/lib/types";
 import { Dictate } from "@/components/voice/Dictate";
 import { NAME_INPUT, SEARCH_INPUT } from "@/lib/input-props";
 import { fuzzyFilter } from "@/lib/fuzzy";
+import { useTerms } from "@/components/TermsProvider";
 
 export function PeopleBrowser({
   people,
@@ -30,6 +31,10 @@ export function PeopleBrowser({
 }) {
   const [query, setQuery] = useState("");
   const [serviceFilter, setServiceFilter] = useState("");
+  const terms = useTerms();
+  const anyExited = people.some((p) => p.exited_on);
+  /** Exited people stay in Surfdesk but are hidden from the list unless asked for. */
+  const [show, setShow] = useState<"active" | "exited" | "all">("active");
   const [modalOpen, setModalOpen] = useState(false);
   usePageAdd(() => setModalOpen(true));
   const [selecting, setSelecting] = useState(false);
@@ -40,13 +45,20 @@ export function PeopleBrowser({
 
   const filtered = useMemo(
     () =>
-      fuzzyFilter(serviceFilter ? people.filter((p) => serviceUse[p.id]?.includes(serviceFilter)) : people, query, (c) => [
+      fuzzyFilter(
+        people.filter(
+          (p) =>
+            (!serviceFilter || serviceUse[p.id]?.includes(serviceFilter)) &&
+            (show === "all" || (show === "exited" ? Boolean(p.exited_on) : !p.exited_on)),
+        ),
+        query,
+        (c) => [
         { text: c.display_name, weight: 1 },
         { text: c.current_status, weight: 0.8 },
         { text: c.next_action, weight: 0.8 },
         { text: c.summary, weight: 0.7 },
       ]),
-    [people, query, serviceFilter, serviceUse],
+    [people, query, serviceFilter, serviceUse, show],
   );
 
   function toggle(id: string) {
@@ -113,6 +125,18 @@ export function PeopleBrowser({
                 {s.name}
               </option>
             ))}
+          </select>
+        )}
+        {anyExited && (
+          <select
+            value={show}
+            onChange={(e) => setShow(e.target.value as typeof show)}
+            className="input w-auto max-w-[11rem] shrink-0"
+            aria-label="Show active or exited"
+          >
+            <option value="active">Active</option>
+            <option value="exited">{terms.exitedLabel}</option>
+            <option value="all">Everyone</option>
           </select>
         )}
         <ImportPeopleButton />
@@ -183,7 +207,7 @@ export function PeopleBrowser({
       )}
 
       {filtered.length === 0 ? (
-        <EmptyState message={people.length === 0 ? "No people yet." : "No matches."} />
+        <EmptyState message={people.length === 0 ? "No people yet." : show === "exited" && !query ? `No ${terms.exitedLabel.toLowerCase()} people.` : "No matches."} />
       ) : (
         <div className="grid gap-2 sm:grid-cols-2">
           {filtered.map((person) =>
@@ -203,7 +227,7 @@ export function PeopleBrowser({
                 <span className="font-medium text-text">{person.display_name}</span>
               </label>
             ) : (
-              <PersonCard key={person.id} person={person} />
+              <PersonCard key={person.id} person={person} exitedWord={terms.audience === "nonprofit" ? "exited" : "former"} />
             ),
           )}
         </div>

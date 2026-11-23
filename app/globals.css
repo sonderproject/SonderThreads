@@ -40,6 +40,7 @@
      1 = brand blue, 2 = orange. */
   --chart-1: #1c77b5;
   --chart-2: #eb6834;
+  --chart-3: #1baf7a;
   /* Calendar (docs/DESIGN.md "Calendar"): birthdays, and the four colors people
      can give linked outside calendars. Meetings use --accent, tasks --fg. */
   --cal-birthday: #b0306f;
@@ -74,6 +75,7 @@
     --shadow-card: inset 0 1px 0 rgba(255, 255, 255, 0.03), 0 10px 30px -18px rgba(0, 0, 0, 0.6);
     --chart-1: #3e9bd4;
     --chart-2: #d95926;
+    --chart-3: #199e70;
     --cal-birthday: #f08cbf;
     --cal-ext-1: #4cc2b6;
     --cal-ext-2: #d2a679;
@@ -106,6 +108,7 @@
   --shadow-card: inset 0 1px 0 rgba(255, 255, 255, 0.03), 0 10px 30px -18px rgba(0, 0, 0, 0.6);
   --chart-1: #3e9bd4;
   --chart-2: #d95926;
+  --chart-3: #199e70;
   --cal-birthday: #f08cbf;
   --cal-ext-1: #4cc2b6;
   --cal-ext-2: #d2a679;

@@ -1,5 +1,6 @@
 import path from "path";
 import PDFDocument from "pdfkit";
+import { EXIT_KINDS, exitKindLabel, kindShares } from "@/lib/exit-kinds";
 import { buildStory, HEATMAP_BLOCKS, WEEKDAY_NAMES, type Kpis, type Metrics, type Point, type ReachPoint } from "@/lib/metrics-shared";
 
 /**
@@ -26,6 +27,7 @@ const C = {
   warmWhite: "#f3f0eb",
   blue: "#1c77b5",
   orange: "#eb6834",
+  aqua: "#1baf7a",
   warn: "#9a5b00",
 };
 const RAINBOW = ["#ff6b6b", "#feca57", "#48dbfb", "#9f7aea", "#54a0ff"];
@@ -535,6 +537,49 @@ export function impactPdf(
         .text(`reached an outcome (${m.prevOutcomePeople.toLocaleString("en-US")} in the previous period)`, PAGE.m + bigW + 10, y + 27, { lineBreak: false });
       y += 60;
       y = hbars(PAGE.m, y, CONTENT_W, m.outcomes.map((o) => ({ key: o.name, label: o.name, value: o.people })), C.blue, 170, false) + 34;
+    }
+
+    // ── Exits (when any were recorded in either period) ────────────────
+    const exitTotal = m.exitKinds.positive + m.exitKinds.neutral + m.exitKinds.unplanned;
+    const prevExitTotal = m.prevExitKinds.positive + m.prevExitKinds.neutral + m.prevExitKinds.unplanned;
+    if (exitTotal || prevExitTotal) {
+      ensure(230 + m.exits.length * 19);
+      marker(num(), "Exits");
+      heading("Where people went when they left", "Each exit counted once, grouped as positive, neutral or unplanned.");
+      const big = exitTotal.toLocaleString("en-US");
+      doc.font("display").fontSize(40).fillColor(C.ink).text(big, PAGE.m, y, { lineBreak: false });
+      const bigW = doc.widthOfString(big);
+      doc
+        .font("body")
+        .fontSize(11)
+        .fillColor(C.muted)
+        .text(`exits (${prevExitTotal.toLocaleString("en-US")} in the previous period)`, PAGE.m + bigW + 10, y + 27, { lineBreak: false });
+      y += 60;
+      if (exitTotal) {
+        // One stacked bar (2pt gaps), then a legend line with each group's share.
+        const fill = { positive: C.blue, neutral: C.aqua, unplanned: C.orange } as const;
+        const shares = kindShares(m.exitKinds);
+        let x = PAGE.m;
+        const groups = EXIT_KINDS.filter((g) => m.exitKinds[g.kind] > 0);
+        const gaps = (groups.length - 1) * 2;
+        for (const g of groups) {
+          const w = ((CONTENT_W - gaps) * m.exitKinds[g.kind]) / exitTotal;
+          doc.rect(x, y, w, 12).fill(fill[g.kind]);
+          x += w + 2;
+        }
+        y += 22;
+        let lx = PAGE.m;
+        for (const g of EXIT_KINDS) {
+          doc.rect(lx, y + 2, 8, 8).fill(fill[g.kind]);
+          const label = `${g.label} ${shares[g.kind]}% (${m.exitKinds[g.kind]})`;
+          doc.font("body").fontSize(10).fillColor(C.ink).text(label, lx + 12, y, { lineBreak: false });
+          lx += doc.widthOfString(label) + 32;
+        }
+        y += 26;
+      }
+      if (m.exits.length) {
+        y = hbars(PAGE.m, y, CONTENT_W, m.exits.map((e) => ({ key: `${e.name}-${e.kind}`, label: `${e.name} (${exitKindLabel(e.kind)})`, value: e.count })), C.blue, 200, false) + 34;
+      }
     }
 
     // ── When people come ─────────────────────────────────────────────────

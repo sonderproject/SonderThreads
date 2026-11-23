@@ -1,3 +1,4 @@
+import type { ExitKind } from "@/lib/exit-kinds";
 /**
  * Metrics types and date-range helpers with no database access, safe to
  * import from client components (lib/metrics.ts does the queries).
@@ -62,6 +63,9 @@ export type ServiceStat = {
   busiestTime: string | null;
 };
 
+/** One exit reason in a report period. */
+export type ExitStat = { name: string; kind: ExitKind; count: number; prevCount: number };
+
 export type Metrics = {
   from: string;
   to: string;
@@ -95,6 +99,11 @@ export type Metrics = {
   /** Different people who reached at least one outcome in the period, and in the previous period. */
   outcomePeople: number;
   prevOutcomePeople: number;
+  /** Exits in the period by reason (with the group each exit had when recorded), most first. */
+  exits: ExitStat[];
+  /** Exits in the period and the previous period, by group. */
+  exitKinds: Record<ExitKind, number>;
+  prevExitKinds: Record<ExitKind, number>;
   extra: ExtraTotals;
   prevExtra: ExtraTotals;
   allTime: AllTime;

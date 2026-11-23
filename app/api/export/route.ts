@@ -6,7 +6,7 @@ import type { Activity, CheckIn, Person, List, ListItem, Note, Task } from "@/li
 
 const COLUMNS = {
   people:
-    "id, first_name, last_name, display_name, phone, email, birthday, gender, ethnicity, income_level, status, current_status, next_action, summary, needs_followup, client_since, created_at, updated_at, last_activity_at",
+    "id, first_name, last_name, display_name, phone, email, birthday, gender, ethnicity, income_level, status, current_status, next_action, summary, needs_followup, client_since, exited_on, created_at, updated_at, last_activity_at",
   notes: "id, person_id, content, category, created_at, updated_at",
   lists: "id, name, description, is_group, created_at, updated_at",
   list_items: "id, list_id, person_id, label, note, checked, position, created_at, updated_at",
@@ -32,7 +32,7 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const format = searchParams.get("format") === "csv" ? "csv" : "json";
 
-  const [people, notes, lists, listItems, tasks, activity, checkIns, outcomes] = await Promise.all([
+  const [people, notes, lists, listItems, tasks, activity, checkIns, outcomes, exits] = await Promise.all([
     query<Person>(`select ${COLUMNS.people} from people where user_id = $1 and deleted_at is null order by display_name`, [userId]),
     query<Note>(`select ${COLUMNS.notes} from notes where user_id = $1 and deleted_at is null order by created_at`, [userId]),
     query<List>(`select ${COLUMNS.lists} from lists where user_id = $1 and deleted_at is null order by name`, [userId]),
@@ -45,6 +45,14 @@ export async function GET(request: Request) {
       `select po.id, po.person_id, o.name as outcome, to_char(po.achieved_on, 'YYYY-MM-DD') as achieved_on, po.note, po.created_at
          from person_outcomes po join outcomes o on o.id = po.outcome_id
         where po.user_id = $1 and po.deleted_at is null order by po.achieved_on`,
+      [userId],
+    ),
+    // Exits this person recorded (Settings → Outcomes & exits), with the reason and its group at the time.
+    query<Record<string, unknown>>(
+      `select pe.id, pe.person_id, r.name as reason, pe.kind as "group", to_char(pe.exited_on, 'YYYY-MM-DD') as exited_on, pe.note,
+              pe.reopened_at as came_back_at, pe.created_at
+         from person_exits pe join exit_reasons r on r.id = pe.reason_id
+        where pe.user_id = $1 and pe.deleted_at is null order by pe.exited_on`,
       [userId],
     ),
   ]);
@@ -61,6 +69,7 @@ export async function GET(request: Request) {
       list_items: listItems,
       check_ins: checkIns,
       outcomes,
+      exits,
       activity,
     };
     const name = searchParams.get("table") ?? "people";
@@ -85,6 +94,7 @@ export async function GET(request: Request) {
     activity,
     check_ins: checkIns,
     outcomes,
+    exits,
   };
 
   return new NextResponse(JSON.stringify(payload, null, 2), {

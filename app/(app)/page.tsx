@@ -47,7 +47,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const peopleById = new Map(people.map((c) => [c.id, c]));
   const openTasks = tasks.filter((t) => !t.completed);
   const todayTasks = openTasks.filter((t) => t.due_at && dayKey(t.due_at, timeZone) <= todayKey);
-  const recentPeople = people.slice(0, 5);
+  const recentPeople = people.filter((p) => !p.exited_on).slice(0, 5);
 
   const eventDays = new Set<number>();
   for (const task of monthTasks) {

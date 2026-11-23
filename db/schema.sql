@@ -234,3 +234,79 @@ alter table list_items add column if not exists note text;
 
 -- Supabase Auth: whether a session must pass 2FA, set server-side.
 alter table users add column if not exists mfa_enabled boolean not null default false;
+
+-- Exits (Nov 2026): a client or customer leaves a program or stops being a customer.
+-- Each organization (or solo account) keeps its own list of exit reasons, each in one of
+-- three groups: positive, neutral or unplanned. Exiting keeps the person and all their
+-- history; people.exited_on marks the current exit (null = active). Every exit is kept in
+-- person_exits (someone can leave, come back and leave again). Each exit stores the
+-- reason's group at the time, so re-grouping a reason later doesn't rewrite past reports.
+create table if not exists exit_reasons (
+  id uuid primary key default gen_random_uuid(),
+  org_id uuid references organizations(id) on delete cascade,
+  user_id uuid references users(id) on delete cascade,
+  name text not null check (length(name) between 1 and 80),
+  kind text not null default 'neutral' check (kind in ('positive', 'neutral', 'unplanned')),
+  position int not null default 0,
+  archived_at timestamptz,
+  created_at timestamptz not null default now(),
+  check (org_id is not null or user_id is not null)
+);
+create unique index if not exists exit_reasons_name_idx on exit_reasons (coalesce(org_id, user_id), lower(name)) where archived_at is null;
+create index if not exists exit_reasons_scope_idx on exit_reasons (org_id, user_id, position);
+create index if not exists exit_reasons_user_id_idx on exit_reasons (user_id);
+alter table exit_reasons enable row level security;
+
+create table if not exists person_exits (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references users(id) on delete cascade,
+  person_id uuid not null references people(id) on delete cascade,
+  reason_id uuid not null references exit_reasons(id) on delete cascade,
+  kind text not null check (kind in ('positive', 'neutral', 'unplanned')),
+  exited_on date not null,
+  note text check (length(note) <= 500),
+  org_id uuid references organizations(id) on delete set null,
+  created_at timestamptz not null default now(),
+  reopened_at timestamptz,
+  deleted_at timestamptz
+);
+create index if not exists person_exits_person_idx on person_exits (person_id, exited_on desc);
+create index if not exists person_exits_org_idx on person_exits (org_id, exited_on) where org_id is not null;
+create index if not exists person_exits_user_idx on person_exits (user_id, exited_on);
+create index if not exists person_exits_reason_idx on person_exits (reason_id);
+alter table person_exits enable row level security;
+drop trigger if exists person_exits_inherit_org on person_exits;
+create trigger person_exits_inherit_org before insert or update of person_id on person_exits for each row execute function inherit_person_org();
+drop trigger if exists person_exits_audit on person_exits;
+create trigger person_exits_audit after insert or update or delete on person_exits for each row execute function audit_client_change();
+
+alter table people add column if not exists exited_on date;
+create index if not exists people_exited_idx on people (exited_on) where exited_on is not null;
+
+-- Exits follow a client who joins or leaves an organization, like everything else attached.
+create or replace function people_cascade_org_exits() returns trigger language plpgsql set search_path = public as $$
+begin
+  if new.org_id is distinct from old.org_id then
+    update person_exits set org_id = new.org_id where person_id = new.id;
+  end if;
+  return new;
+end $$;
+drop trigger if exists people_cascade_org_exits on people;
+create trigger people_cascade_org_exits after update of org_id on people for each row execute function people_cascade_org_exits();
+
+do $$
+begin
+  if not exists (select 1 from pg_policies where tablename = 'exit_reasons' and policyname = 'owner') then
+    create policy "owner" on exit_reasons for all to authenticated
+      using (org_id is null and user_id = (select auth.uid())) with check (org_id is null and user_id = (select auth.uid()));
+  end if;
+  if not exists (select 1 from pg_policies where tablename = 'exit_reasons' and policyname = 'org read') then
+    create policy "org read" on exit_reasons for select to authenticated using (app_private.app_org_viewer(org_id));
+  end if;
+  if not exists (select 1 from pg_policies where tablename = 'person_exits' and policyname = 'owner') then
+    create policy "owner" on person_exits for all to authenticated using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()));
+  end if;
+  if not exists (select 1 from pg_policies where tablename = 'person_exits' and policyname = 'org read') then
+    create policy "org read" on person_exits for select to authenticated using (app_private.app_org_viewer(org_id));
+  end if;
+end $$;

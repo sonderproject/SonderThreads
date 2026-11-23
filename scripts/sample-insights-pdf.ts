@@ -53,6 +53,13 @@ const m: Metrics = {
     { name: "Joined membership", people: 8, prevPeople: 5 },
     { name: "Referred a friend", people: 6, prevPeople: 7 },
   ],
+  exits: [
+    { name: "Reached their goal", kind: "positive", count: 4, prevCount: 2 },
+    { name: "Moved away", kind: "neutral", count: 3, prevCount: 2 },
+    { name: "Chose another company", kind: "unplanned", count: 2, prevCount: 3 },
+  ],
+  exitKinds: { positive: 4, neutral: 3, unplanned: 2 },
+  prevExitKinds: { positive: 2, neutral: 2, unplanned: 3 },
   outcomePeople: 31,
   prevOutcomePeople: 24,
   extra: { servicesProvided: 214, valueCents: 1284000, referrals: 37, bookings: 12 },

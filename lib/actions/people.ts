@@ -27,7 +27,7 @@ const listPeopleCached = cache(async (): Promise<Person[]> => {
   return query<Person>(
     `select id, user_id, first_name, last_name, display_name, phone, email, birthday, status,
             current_status, next_action, summary, needs_followup, ethnicity, income_level, gender, created_at, updated_at,
-            last_activity_at, deleted_at
+            last_activity_at, deleted_at, to_char(exited_on, 'YYYY-MM-DD') as exited_on
        from people where ${mineOrOrg("$1")} and deleted_at is null order by last_activity_at desc`,
     [userId],
   );
@@ -313,6 +313,7 @@ export async function getPeopleNeedingAttention(): Promise<Person[]> {
        and t.deleted_at is null
      where ${mineOrOrg("$1", "c.")}
        and c.deleted_at is null
+       and c.exited_on is null
        and (c.needs_followup = true or c.last_activity_at < $2 or t.id is not null)
      order by c.last_activity_at asc
      limit 10`,

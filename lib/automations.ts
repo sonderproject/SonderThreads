@@ -45,7 +45,7 @@ export async function runAutomations(): Promise<number> {
     {
       kind: "quiet",
       // People they own, active, with no activity for the rule's days; one task per quiet spell.
-      candidates: `p.status is distinct from 'inactive' and p.status is distinct from 'alumni'
+      candidates: `p.status is distinct from 'inactive' and p.status is distinct from 'alumni' and p.exited_on is null
                    and p.last_activity_at < now() - make_interval(days => r.days)`,
       title: `'Check in with ' || p.display_name || ' (no activity in ' || r.days || ' days)'`,
       ref: `to_char(p.last_activity_at, 'YYYY-MM-DD')`,
@@ -73,7 +73,7 @@ export async function runAutomations(): Promise<number> {
              from automation_rules r
              join users u on u.id = r.user_id and u.suspended_at is null
              join people p on p.user_id = r.user_id and p.deleted_at is null and not p.is_sample
-            where r.kind = $1 and r.enabled and ${s.candidates}
+            where r.kind = $1 and r.enabled and p.exited_on is null and ${s.candidates}
               and not exists (select 1 from automation_runs ar where ar.user_id = r.user_id and ar.kind = $1 and ar.person_id = p.id and ar.ref = ${s.ref})
               and (select count(*) from automation_runs ar2 where ar2.user_id = r.user_id and ar2.kind = $1 and ar2.created_at > now() - interval '1 day') < ${DAILY_CAP}
             order by p.last_activity_at

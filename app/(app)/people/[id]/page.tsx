@@ -36,6 +36,8 @@ import { ShareToggle } from "@/components/people/ShareToggle";
 import { getMembership } from "@/lib/org";
 import { listOutcomes, listPersonOutcomes } from "@/lib/outcomes";
 import { PersonOutcomes } from "@/components/people/PersonOutcomes";
+import { listExitReasons, listPersonExits } from "@/lib/exits";
+import { PersonExit } from "@/components/people/PersonExit";
 import { ContactActions } from "@/components/people/ContactActions";
 import { PersonCustomFields } from "@/components/people/PersonCustomFields";
 import { listCustomFields } from "@/lib/custom-fields";
@@ -99,6 +101,7 @@ export default async function PersonProfilePage({
     listOutcomes(),
     listPersonOutcomes(id),
   ]);
+  const [exitReasons, exits] = await Promise.all([listExitReasons(), listPersonExits(id)]);
   const customFields = await listCustomFields();
   if (!person) notFound();
 
@@ -120,7 +123,7 @@ export default async function PersonProfilePage({
               required
             />
           </h1>
-          {isNew(person.created_at) && <Badge tone="new">new</Badge>}
+          {person.exited_on ? <Badge>{terms.exitedLabel.toLowerCase()}</Badge> : isNew(person.created_at) && <Badge tone="new">new</Badge>}
           {person.needs_followup && <Badge tone="attention">follow up</Badge>}
           {isStale(person) && (
             <span title={`No activity in ${STALE_DAYS}+ days`}>
@@ -144,6 +147,17 @@ export default async function PersonProfilePage({
           </div>
         )}
       </div>
+
+      <PersonExit
+        personId={person.id}
+        personName={person.first_name || person.display_name}
+        exits={exits}
+        reasons={exitReasons}
+        me={me}
+        isAdmin={Boolean(membership?.active && membership.role === "admin")}
+        today={dayKey(new Date(), tz)}
+        dateLabel={Object.fromEntries(exits.map((e) => [e.exitedOn, shortDate(`${e.exitedOn}T12:00:00Z`, "UTC")]))}
+      />
 
       <Section title="Details">
         <div className="grid gap-2 sm:grid-cols-3">

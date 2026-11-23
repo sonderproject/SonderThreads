@@ -19,19 +19,20 @@ function relativeTime(iso: string): string {
   return weeks === 1 ? "1w ago" : `${weeks}w ago`;
 }
 
-export function PersonCard({ person }: { person: Person }) {
+/** `exitedWord`: the badge on an exited person ("exited" for nonprofits, "former" otherwise). */
+export function PersonCard({ person, exitedWord = "exited" }: { person: Person; exitedWord?: string }) {
   const fresh = isNew(person.created_at);
   const stale = isStale(person);
-  const flag = person.needs_followup || stale ? "flag-attention" : fresh ? "flag-new" : "";
+  const flag = person.exited_on ? "" : person.needs_followup || stale ? "flag-attention" : fresh ? "flag-new" : "";
   return (
     <Link href={`/people/${person.id}`}>
       <Card className={`p-4 transition-colors hover:border-accent/50 ${flag}`}>
         <div className="flex items-start justify-between gap-2">
           <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
             <p className="truncate font-medium text-text">{person.display_name}</p>
-            {fresh && <Badge tone="new">new</Badge>}
-            {person.needs_followup && <Badge tone="attention">follow up</Badge>}
-            {stale && <Badge tone="attention">stale</Badge>}
+            {person.exited_on ? <Badge>{exitedWord}</Badge> : fresh && <Badge tone="new">new</Badge>}
+            {!person.exited_on && person.needs_followup && <Badge tone="attention">follow up</Badge>}
+            {!person.exited_on && stale && <Badge tone="attention">stale</Badge>}
           </div>
           <span className="shrink-0 tabular-nums text-[11px] text-text-faint">
             {relativeTime(person.last_activity_at)}
