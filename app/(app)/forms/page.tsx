@@ -21,7 +21,7 @@ const ERRORS: Record<string, string> = {
 export const metadata = { title: "Forms" };
 
 /** Smart forms: every form in the account, plus starting a new one from a template. */
-export default async function FormsPage({ searchParams }: { searchParams: Promise<{ error?: string; saved?: string; new?: string }> }) {
+export default async function FormsPage({ searchParams }: { searchParams: Promise<{ error?: string; saved?: string; start?: string }> }) {
   const sp = await searchParams;
   const [scope, forms, m, tz] = await Promise.all([formScope(), listForms(), getMembership(), getTimeZone()]);
   const audience = m?.active ? (m.orgKind === "business" ? "business" : "nonprofit") : "individual";
@@ -29,7 +29,7 @@ export default async function FormsPage({ searchParams }: { searchParams: Promis
   const templates = [...FORM_TEMPLATES].sort((a, b) => Number(b.audience === audience) - Number(a.audience === audience));
   const mine = templates.filter((t) => t.audience === audience);
   const more = templates.filter((t) => t.audience !== audience);
-  const showPicker = scope.canManage && (forms.length === 0 || sp.new === "1");
+  const showPicker = scope.canManage && (forms.length === 0 || sp.start === "1");
 
   return (
     <div className="space-y-6">
@@ -40,11 +40,14 @@ export default async function FormsPage({ searchParams }: { searchParams: Promis
           <p className="text-sm text-text-muted">Share a link or QR code. Answers come back here, and new people can be added for you.</p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <Link href="/automations" className="rounded-full border border-border px-4 py-2 text-sm font-medium text-text hover:bg-bg-hover">
+            Automate responses
+          </Link>
           <Link href="/forms/submissions" className="rounded-full border border-border px-4 py-2 text-sm font-medium text-text hover:bg-bg-hover">
             Responses{toReview > 0 && <span className="tag tag-e ml-2">{toReview} to review</span>}
           </Link>
           {scope.canManage && !showPicker && (
-            <Link href="/forms?new=1" className="rounded-full bg-accent px-4 py-2 text-sm font-semibold text-bg hover:bg-accent-dim">
+            <Link href="/forms?start=1" className="rounded-full bg-accent px-4 py-2 text-sm font-semibold text-bg hover:bg-accent-dim">
               New form
             </Link>
           )}

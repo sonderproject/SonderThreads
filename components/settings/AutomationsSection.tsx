@@ -16,6 +16,13 @@ export async function AutomationsSection({ q }: { q: { saved?: string } }) {
       <div className="space-y-1">
         <h3 className="text-sm font-semibold text-text">Follow-ups Surfdesk adds for you</h3>
         <p className="text-xs text-text-muted">
+          Want more?{" "}
+          <a href="/automations" className="text-accent hover:underline">
+            Build your own automations →
+          </a>{" "}
+          (When this happens, if that's true, then do this.)
+        </p>
+        <p className="text-xs text-text-muted">
           Each one adds a task to your Tasks (and your reminders) for the people assigned to you, so nobody slips through the cracks. At most{" "}
           {DAILY_CAP} a day per rule. {made > 0 ? `${made} added in the last 7 days.` : ""}
         </p>

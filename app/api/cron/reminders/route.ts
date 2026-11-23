@@ -8,6 +8,7 @@ import { alertOwner, isLikelyBot, logEvent } from "@/lib/events";
 import { runLifecycleEmails } from "@/lib/lifecycle";
 import { runAutomations } from "@/lib/automations";
 import { purgeExpiredSubmissions } from "@/lib/forms-intake";
+import { runWorkflows } from "@/lib/workflows-run";
 
 export const dynamic = "force-dynamic";
 
@@ -75,13 +76,18 @@ export async function GET(request: NextRequest) {
   });
   // Follow-up tasks from Settings → Automations (lib/automations.ts).
   const automated = await runAutomations();
+  // Custom automations (When → If → Then, lib/workflows-run.ts).
+  const workflows = await runWorkflows().catch((err) => {
+    console.error("[cron/reminders] automations failed", err);
+    return 0;
+  });
   // Form responses past their form's "Keep responses" setting are erased.
   const purged = await purgeExpiredSubmissions().catch((err) => {
     console.error("[cron/reminders] form retention failed", err);
     return 0;
   });
   await heartbeat("cron_reminders_at");
-  return NextResponse.json({ reminded: due.length, summaries, stuck, emails, automated, purged });
+  return NextResponse.json({ reminded: due.length, summaries, stuck, emails, automated, workflows, purged });
 }
 
 /**

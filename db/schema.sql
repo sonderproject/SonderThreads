@@ -388,3 +388,117 @@ begin
     create policy "owner" on form_submissions for select to authenticated using (user_id = (select auth.uid()));
   end if;
 end $$;
+
+-- Automations (Nov 2026): When → If → Then rules, no AI (lib/workflows-shared.ts,
+-- lib/workflows-run.ts). An organization shares its automations (Admins and Managers
+-- build them); a solo account has its own. Actions stay inside the app: tasks, in-app
+-- alerts, notes, lists, fields, assignment. Nothing is sent outside, nothing is deleted.
+create table if not exists workflows (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references users(id) on delete cascade,
+  org_id uuid references organizations(id) on delete cascade,
+  name text not null check (length(name) between 1 and 80),
+  enabled boolean not null default false,
+  trigger jsonb not null,
+  conditions jsonb not null default '[]'::jsonb,
+  actions jsonb not null default '[]'::jsonb,
+  template text check (length(template) <= 60),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  -- Rules only act on events after this moment (set each time it's turned on).
+  enabled_at timestamptz,
+  deleted_at timestamptz
+);
+create index if not exists workflows_scope_idx on workflows (org_id, user_id) where deleted_at is null;
+create index if not exists workflows_trigger_idx on workflows ((trigger->>'type')) where enabled and deleted_at is null;
+create index if not exists workflows_user_id_idx on workflows (user_id);
+alter table workflows enable row level security;
+
+-- One row per run (the run log). ref makes each run happen once: "e:<event id>" for an
+-- event, "<person id>:<date>" for a time trigger. detail never holds client data.
+create table if not exists workflow_runs (
+  id uuid primary key default gen_random_uuid(),
+  workflow_id uuid not null references workflows(id) on delete cascade,
+  org_id uuid references organizations(id) on delete cascade,
+  user_id uuid not null references users(id) on delete cascade,
+  person_id uuid references people(id) on delete set null,
+  ref text not null,
+  status text not null check (status in ('done', 'skipped', 'failed', 'capped')),
+  detail text check (length(detail) <= 500),
+  actions int not null default 0,
+  created_at timestamptz not null default now(),
+  unique (workflow_id, ref)
+);
+create index if not exists workflow_runs_wf_idx on workflow_runs (workflow_id, created_at desc);
+create index if not exists workflow_runs_scope_idx on workflow_runs (org_id, user_id, created_at desc);
+create index if not exists workflow_runs_person_idx on workflow_runs (person_id) where person_id is not null;
+create index if not exists workflow_runs_user_id_idx on workflow_runs (user_id);
+alter table workflow_runs enable row level security;
+
+-- Things that happened, waiting for the 5-minute job. Written by triggers below, only
+-- when an enabled automation in the same account listens for that kind. Server-only.
+create table if not exists automation_events (
+  id uuid primary key default gen_random_uuid(),
+  kind text not null check (kind in ('form_submitted', 'person_added', 'person_exited', 'check_in')),
+  user_id uuid not null references users(id) on delete cascade,
+  org_id uuid references organizations(id) on delete cascade,
+  person_id uuid references people(id) on delete cascade,
+  ref_id uuid not null,
+  created_at timestamptz not null default now(),
+  processed_at timestamptz
+);
+create index if not exists automation_events_todo_idx on automation_events (created_at) where processed_at is null;
+create index if not exists automation_events_user_id_idx on automation_events (user_id);
+create index if not exists automation_events_person_idx on automation_events (person_id) where person_id is not null;
+alter table automation_events enable row level security;
+
+create or replace function queue_automation_event(k text, u uuid, o uuid, p uuid, r uuid) returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  if exists (select 1 from workflows w
+              where w.enabled and w.deleted_at is null and w.trigger->>'type' = k
+                and ((o is not null and w.org_id = o) or (o is null and w.org_id is null and w.user_id = u))) then
+    insert into automation_events (kind, user_id, org_id, person_id, ref_id) values (k, u, o, p, r);
+  end if;
+end $$;
+
+create or replace function automation_event_trigger() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  if tg_table_name = 'people' then
+    -- Imports, restores (old created_at) and sample data never start automations.
+    if not new.is_sample and new.import_batch is null and new.deleted_at is null and new.created_at > now() - interval '1 hour' then
+      perform queue_automation_event('person_added', new.user_id, new.org_id, new.id, new.id);
+    end if;
+  elsif tg_table_name = 'person_exits' then
+    perform queue_automation_event('person_exited', new.user_id, new.org_id, new.person_id, new.id);
+  elsif tg_table_name = 'check_ins' then
+    if new.deleted_at is null and new.checked_in_at > now() - interval '2 days' then
+      perform queue_automation_event('check_in', new.user_id, new.org_id, new.person_id, new.id);
+    end if;
+  elsif tg_table_name = 'form_submissions' then
+    perform queue_automation_event('form_submitted', new.user_id, new.org_id, null, new.id);
+  end if;
+  return null;
+end $$;
+drop trigger if exists people_automation_event on people;
+create trigger people_automation_event after insert on people for each row execute function automation_event_trigger();
+drop trigger if exists person_exits_automation_event on person_exits;
+create trigger person_exits_automation_event after insert on person_exits for each row execute function automation_event_trigger();
+drop trigger if exists check_ins_automation_event on check_ins;
+create trigger check_ins_automation_event after insert on check_ins for each row execute function automation_event_trigger();
+drop trigger if exists form_submissions_automation_event on form_submissions;
+create trigger form_submissions_automation_event after insert on form_submissions for each row execute function automation_event_trigger();
+
+do $$
+begin
+  if not exists (select 1 from pg_policies where tablename = 'workflows' and policyname = 'owner') then
+    create policy "owner" on workflows for select to authenticated using (org_id is null and user_id = (select auth.uid()));
+  end if;
+  if not exists (select 1 from pg_policies where tablename = 'workflows' and policyname = 'org read') then
+    create policy "org read" on workflows for select to authenticated using (app_private.app_org_viewer(org_id));
+  end if;
+  revoke execute on function queue_automation_event(text, uuid, uuid, uuid, uuid), automation_event_trigger() from public, anon, authenticated;
+exception when undefined_object or invalid_schema_name or undefined_function then
+  null;
+end $$;
