@@ -8,6 +8,8 @@ import { transaction } from "@/lib/db/client";
 export async function clearUserData(userId: string): Promise<void> {
   await transaction(async (q) => {
     const personal = `(select id from people where user_id = $1 and org_id is null)`;
+    await q(`delete from form_submissions where user_id = $1 and org_id is null`, [userId]);
+    await q(`delete from forms where user_id = $1 and org_id is null`, [userId]);
     await q(`delete from notifications where user_id = $1`, [userId]);
     await q(`delete from activity where user_id = $1 and org_id is null`, [userId]);
     await q(`delete from person_summaries where user_id = $1 and org_id is null`, [userId]);

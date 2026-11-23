@@ -7,6 +7,7 @@ import { inQuietHoursSql } from "@/lib/notify/quiet-hours";
 import { alertOwner, isLikelyBot, logEvent } from "@/lib/events";
 import { runLifecycleEmails } from "@/lib/lifecycle";
 import { runAutomations } from "@/lib/automations";
+import { purgeExpiredSubmissions } from "@/lib/forms-intake";
 
 export const dynamic = "force-dynamic";
 
@@ -74,8 +75,13 @@ export async function GET(request: NextRequest) {
   });
   // Follow-up tasks from Settings → Automations (lib/automations.ts).
   const automated = await runAutomations();
+  // Form responses past their form's "Keep responses" setting are erased.
+  const purged = await purgeExpiredSubmissions().catch((err) => {
+    console.error("[cron/reminders] form retention failed", err);
+    return 0;
+  });
   await heartbeat("cron_reminders_at");
-  return NextResponse.json({ reminded: due.length, summaries, stuck, emails, automated });
+  return NextResponse.json({ reminded: due.length, summaries, stuck, emails, automated, purged });
 }
 
 /**

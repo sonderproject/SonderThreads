@@ -24,6 +24,7 @@ const NAV_ITEMS = [
   { href: "/notes", label: "Notes" },
   { href: "/check-ins", label: "Check-ins" },
   { href: "/calendar", label: "Calendar" },
+  { href: "/forms", label: "Forms" },
   { href: "/impact", label: "Impact" },
 ];
 

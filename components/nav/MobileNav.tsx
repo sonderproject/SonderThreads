@@ -26,6 +26,7 @@ const MORE_LINKS = [
   { href: "/lists", label: "Lists" },
   { href: "/notes", label: "Notes" },
   { href: "/calendar", label: "Calendar" },
+  { href: "/forms", label: "Forms" },
   { href: "/impact", label: "Impact" },
   { href: "/settings", label: "Settings" },
 ];

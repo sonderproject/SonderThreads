@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 /** A read-only value with a Copy button (falls back to selecting the text). */
-export function CopyText({ value, label = "Copy link" }: { value: string; label?: string }) {
+export function CopyText({ value, label = "Copy link", ariaLabel = "Referral link" }: { value: string; label?: string; ariaLabel?: string }) {
   const [copied, setCopied] = useState(false);
   return (
     <div className="flex flex-wrap items-center gap-2">
@@ -12,7 +12,7 @@ export function CopyText({ value, label = "Copy link" }: { value: string; label?
         value={value}
         onFocus={(e) => e.currentTarget.select()}
         className="input min-w-0 flex-1 font-mono text-xs"
-        aria-label="Referral link"
+        aria-label={ariaLabel}
       />
       <button
         type="button"

@@ -1395,4 +1395,81 @@ begin
     create policy "org read" on person_exits for select to authenticated using (app_private.app_org_viewer(org_id));
   end if;
 end $$;
+-- Smart forms (Nov 2026): shareable forms (public link + QR code) and the submissions
+-- they collect. An organization shares its forms (Admins and Managers build them); a solo
+-- account has its own. Submissions hold client answers: never public, never in URLs,
+-- analytics or logs. Staff review each one (or intake creates the profile when there's
+-- no possible duplicate); nothing ever overwrites an existing profile.
+create table if not exists forms (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references users(id) on delete cascade,
+  org_id uuid references organizations(id) on delete cascade,
+  name text not null check (length(name) between 1 and 120),
+  description text check (length(description) <= 1000),
+  code text not null unique check (length(code) between 8 and 40),
+  status text not null default 'draft' check (status in ('draft', 'published', 'paused', 'archived')),
+  fields jsonb not null default '[]'::jsonb,
+  settings jsonb not null default '{}'::jsonb,
+  template text check (length(template) <= 60),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  published_at timestamptz,
+  deleted_at timestamptz
+);
+create index if not exists forms_scope_idx on forms (org_id, user_id, updated_at desc) where deleted_at is null;
+create index if not exists forms_user_id_idx on forms (user_id);
+alter table forms enable row level security;
+
+create table if not exists form_submissions (
+  id uuid primary key default gen_random_uuid(),
+  form_id uuid not null references forms(id) on delete cascade,
+  user_id uuid not null references users(id) on delete cascade,
+  org_id uuid references organizations(id) on delete cascade,
+  answers jsonb not null default '{}'::jsonb,
+  -- The form's fields when this was sent, so later edits never change what a submission meant.
+  fields jsonb not null default '[]'::jsonb,
+  status text not null default 'new' check (status in ('new', 'needs_review', 'approved', 'processed', 'rejected')),
+  person_id uuid references people(id) on delete set null,
+  duplicate_ids uuid[] not null default '{}',
+  assigned_to uuid references users(id) on delete set null,
+  reviewed_by uuid references users(id) on delete set null,
+  reviewed_at timestamptz,
+  ip_hash text,
+  seconds_to_complete int,
+  created_at timestamptz not null default now(),
+  deleted_at timestamptz
+);
+create index if not exists form_submissions_form_idx on form_submissions (form_id, created_at desc) where deleted_at is null;
+create index if not exists form_submissions_scope_idx on form_submissions (org_id, user_id, created_at desc) where deleted_at is null;
+create index if not exists form_submissions_ip_idx on form_submissions (ip_hash, created_at desc);
+create index if not exists form_submissions_user_id_idx on form_submissions (user_id);
+create index if not exists form_submissions_person_idx on form_submissions (person_id) where person_id is not null;
+create index if not exists form_submissions_assigned_idx on form_submissions (assigned_to) where assigned_to is not null;
+alter table form_submissions enable row level security;
+-- Form views (counts only, no answers or visitor details) for the completion rate.
+create table if not exists form_views (
+  form_id uuid not null references forms(id) on delete cascade,
+  day date not null default current_date,
+  views int not null default 0,
+  primary key (form_id, day)
+);
+alter table form_views enable row level security;
+drop trigger if exists form_submissions_audit on form_submissions;
+create trigger form_submissions_audit after insert or update or delete on form_submissions for each row execute function audit_client_change();
+
+do $$
+begin
+  if not exists (select 1 from pg_policies where tablename = 'forms' and policyname = 'owner') then
+    create policy "owner" on forms for all to authenticated
+      using (org_id is null and user_id = (select auth.uid())) with check (org_id is null and user_id = (select auth.uid()));
+  end if;
+  if not exists (select 1 from pg_policies where tablename = 'forms' and policyname = 'org read') then
+    create policy "org read" on forms for select to authenticated using (app_private.app_org_viewer(org_id));
+  end if;
+  -- Submissions: no "org read" for every member. The app shows them to Admins, Managers
+  -- and the member they're assigned to; through Supabase's API only the owner sees them.
+  if not exists (select 1 from pg_policies where tablename = 'form_submissions' and policyname = 'owner') then
+    create policy "owner" on form_submissions for select to authenticated using (user_id = (select auth.uid()));
+  end if;
+end $$;
 `;
