@@ -19,6 +19,7 @@ export function LandingShell({
   faqs,
   children,
   after,
+  wide = false,
 }: {
   page: LandingKey;
   title: string;
@@ -30,6 +31,8 @@ export function LandingShell({
   children: React.ReactNode;
   /** Rendered after the page, e.g. a sticky mobile call to action. */
   after?: React.ReactNode;
+  /** Full-width page: sections set their own width and background. */
+  wide?: boolean;
 }) {
   const path = page === "home" ? "/" : `/${page}`;
   const jsonLd = {
@@ -93,7 +96,7 @@ export function LandingShell({
         <div className="nav-glow-line" aria-hidden />
       </header>
 
-      <main className="mx-auto max-w-6xl px-4 sm:px-8">
+      <main className={wide ? "" : "mx-auto max-w-6xl px-4 sm:px-8"}>
         {crumb && (
           <nav aria-label="Breadcrumb" className="pt-6 text-xs text-text-muted">
             <Link href="/" className="hover:text-text">

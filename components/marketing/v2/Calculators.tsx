@@ -72,7 +72,7 @@ function Slider({ value, onChange, min, max, step = 1, format }: { value: number
   );
 }
 
-function Result({ big, label, lines }: { big: string; label: string; lines: React.ReactNode[] }) {
+function Result({ big, label, lines, chart }: { big: string; label: string; lines: React.ReactNode[]; chart?: React.ReactNode }) {
   return (
     <div className="space-y-2 rounded-2xl bg-accent-soft p-5" aria-live="polite">
       <p className="text-sm text-text-muted">{label}</p>
@@ -82,7 +82,30 @@ function Result({ big, label, lines }: { big: string; label: string; lines: Reac
           {l}
         </p>
       ))}
+      {chart}
     </div>
+  );
+}
+
+/** Comparison bars under a result. Surfdesk wears chart-1; "lost" wears chart-2; the rest stay neutral. Text never wears the bar color. */
+function CompareBars({ rows }: { rows: { label: string; value: number; display: string; tone: "brand" | "lost" | "muted" }[] }) {
+  const max = Math.max(1, ...rows.map((r) => r.value));
+  const fill = { brand: "var(--chart-1)", lost: "var(--chart-2)", muted: "var(--line)" };
+  return (
+    <ul className="space-y-2 pt-1" aria-label="Comparison">
+      {rows.map((r) => (
+        <li key={r.label} className="grid grid-cols-[minmax(0,8.5rem)_1fr] items-center gap-3 text-xs">
+          <span className="leading-tight text-text-muted">{r.label}</span>
+          <span className="flex items-center gap-2">
+            <span
+              className="h-3 rounded-r transition-[width] duration-500"
+              style={{ width: `calc(${(Math.max(0, r.value) / max) * 100}% - 3.5rem)`, minWidth: 3, background: fill[r.tone] }}
+            />
+            <span className="whitespace-nowrap tabular-nums font-semibold text-text">{r.display}</span>
+          </span>
+        </li>
+      ))}
+    </ul>
   );
 }
 
@@ -127,6 +150,14 @@ export function AppStackCalc({ page }: { page: string }) {
               {usd(total)}/mo for separate apps vs <strong>{usd(ours)}/mo</strong> for Surfdesk, all in one place.
             </>,
           ]}
+          chart={
+            <CompareBars
+              rows={[
+                { label: "Separate apps", value: total, display: `${usd(total)}/mo`, tone: "muted" },
+                { label: "Surfdesk", value: ours, display: `${usd(ours)}/mo`, tone: "brand" },
+              ]}
+            />
+          }
         />
       ) : (
         <Result
@@ -186,6 +217,15 @@ export function FollowUpCalc({ page }: { page: string }) {
             {multiple >= 1 ? <>: about {multiple >= 10 ? Math.round(multiple) : multiple.toFixed(1)}× back.</> : "."}
           </>,
         ]}
+        chart={
+          <CompareBars
+            rows={[
+              { label: "Walking out a year", value: atRisk, display: usd(atRisk), tone: "lost" },
+              { label: "Won back", value: won, display: usd(won), tone: "brand" },
+              { label: "Surfdesk a year", value: cost, display: usd(cost), tone: "muted" },
+            ]}
+          />
+        }
       />
       <p className="text-[11px] text-text-faint">An estimate from the numbers you enter, not a promise. Surfdesk prices from our pricing below.</p>
     </div>
@@ -230,6 +270,14 @@ export function HoursBackCalc({ page }: { page: string }) {
             <strong>{usd(cost)} a year</strong>.
           </>,
         ]}
+        chart={
+          <CompareBars
+            rows={[
+              { label: "Staff time back", value: value, display: usd(value), tone: "brand" },
+              { label: "Surfdesk a year", value: cost, display: usd(cost), tone: "muted" },
+            ]}
+          />
+        }
       />
       <p className="text-[11px] text-text-faint">An estimate from the numbers you enter (50 working weeks), not a promise.</p>
     </div>

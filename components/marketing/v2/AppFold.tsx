@@ -113,7 +113,7 @@ export function AppFold() {
 
   if (still) {
     return (
-      <section className="space-y-10 border-t border-border py-16 text-center">
+      <section className="space-y-10 bg-bg-raised px-4 py-16 text-center">
         <div className="mx-auto max-w-3xl space-y-3">{heading}</div>
         <div className="flex flex-wrap items-center justify-center gap-6">
           {APPS.map((a) => (
@@ -135,7 +135,7 @@ export function AppFold() {
   const after = ease(clamp((p - 0.55) / 0.2));
 
   return (
-    <section ref={section} className="relative border-t border-border" style={{ height: "170vh" }}>
+    <section ref={section} className="relative bg-bg-raised" style={{ height: "145vh" }}>
       <div className="sticky top-0 flex h-screen flex-col items-center justify-center gap-6 overflow-hidden px-4 py-16 text-center">
         <div className="relative h-24 w-full max-w-3xl sm:h-28">
           <div className="absolute inset-0 space-y-3" style={{ opacity: 1 - after, transform: `translateY(${-after * 16}px)` }}>

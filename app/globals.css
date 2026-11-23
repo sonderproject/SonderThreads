@@ -32,6 +32,10 @@
   --band-muted: #aea08d;
   --band-line: #2a2926;
   --band-accent: #62b4e6;
+  /* Closing call-to-action band: deep surf blue in both themes, white text. */
+  --cta-from: #0f4a73;
+  --cta-to: #1c77b5;
+  --cta-fg: #ffffff;
   /* Chart series (validated with the dataviz palette checker on --surface, light and dark):
      1 = brand blue, 2 = orange. */
   --chart-1: #1c77b5;
@@ -588,4 +592,62 @@ button[data-loading]::after {
   50% {
     transform: translateY(-8px);
   }
+}
+
+/* Landing pages: a faint dot texture that fades out toward the edges. */
+.dots {
+  background-image: radial-gradient(color-mix(in srgb, var(--fg) 11%, transparent) 1px, transparent 1.3px);
+  background-size: 22px 22px;
+  -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, #000 30%, transparent 75%);
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, #000 30%, transparent 75%);
+}
+
+/* Landing pages: slow drifting color glows behind a section. */
+@keyframes aurora {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  100% {
+    transform: translate3d(4%, -6%, 0) scale(1.12);
+  }
+}
+
+/* Landing pages: the app's charts grow in when scrolled into view (components/marketing/v2/Decor.tsx). */
+.chart-reveal [fill*="chart"] {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+.chart-reveal span[style*="chart-1"] {
+  transform-origin: 0 50%;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .chart-reveal [fill*="chart"],
+  .chart-reveal span[style*="chart-1"],
+  .chart-reveal td[style*="chart"] {
+    transition:
+      transform 0.9s cubic-bezier(0.2, 0.7, 0.2, 1),
+      opacity 0.9s ease-out;
+  }
+  .chart-reveal:not(.is-in) [fill*="chart"] {
+    transform: scaleY(0);
+  }
+  .chart-reveal:not(.is-in) span[style*="chart-1"] {
+    transform: scaleX(0);
+  }
+  .chart-reveal:not(.is-in) td[style*="chart"] {
+    opacity: 0;
+  }
+}
+
+/* Landing pages: the closing call-to-action band. */
+.cta-band {
+  background: linear-gradient(135deg, var(--cta-from), var(--cta-to));
+  color: var(--cta-fg);
+}
+.cta-band .cta-muted {
+  color: color-mix(in srgb, var(--cta-fg) 80%, transparent);
+}
+.cta-band .cta-button {
+  background: var(--cta-fg);
+  color: var(--cta-from);
 }
