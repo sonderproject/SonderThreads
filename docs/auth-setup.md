@@ -136,6 +136,16 @@ There's no dashboard setting for this. It's `IDLE_TIMEOUT_MINUTES` in `lib/auth.
 
 ---
 
+## J. Google and Apple sign-in
+
+Code: `components/auth/OAuthButtons.tsx` (buttons on /login and /signup), `app/auth/oauth/actions.ts` (start), `app/auth/callback/route.ts` (finish: account row, Terms agreement from the notice under the buttons, friends link, guided-setup answers, `auth.signup` event with `provider`). Google/Apple verify the email, so no confirmation email. Email/password sign-ups keep confirmation on (prevents pre-account takeover through Supabase's same-email account linking). A button shows only when its Vercel flag is on.
+
+1. Supabase → Auth → URL Configuration: add `https://thesurfdesk.app/auth/callback` to Redirect URLs.
+2. Google: Google Cloud → APIs & Services → Credentials → Create OAuth client (Web). Authorized redirect URI: `https://tktlqwcjfcvanhfcvfyk.supabase.co/auth/v1/callback`. OAuth consent screen: app name Surfdesk, logo, `thesurfdesk.app` as authorized domain, privacy and terms links; publish it. Paste client ID and secret into Supabase → Auth → Providers → Google.
+3. Apple (needs the Apple Developer Program): create an App ID with Sign in with Apple, a Services ID (identifier e.g. `app.thesurfdesk.web`) with domain `thesurfdesk.app` and return URL `https://tktlqwcjfcvanhfcvfyk.supabase.co/auth/v1/callback`, and a Sign in with Apple key (.p8). Supabase → Providers → Apple: Services ID plus the secret generated from the key. **The Apple secret expires every 6 months: regenerate it before then or Apple sign-in stops.**
+4. Vercel: `AUTH_GOOGLE=on` and/or `AUTH_APPLE=on`, then redeploy.
+5. Test: new account with each provider lands in the app with no email step; signing in with Google on an existing email account opens the same account; Cancel at Google returns to the page with a message.
+
 ## What users will notice
 
 - **Everyone signs in again once** after this ships, because old sessions aren't carried over.
