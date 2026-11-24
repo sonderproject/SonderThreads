@@ -267,7 +267,7 @@ export function ImpactDashboard({ orgName }: { orgName: string | null }) {
             </div>
           </section>
 
-          <Totals data={data} checkInsWord={terms.checkIns} showChange={showChange} periodName={periodName} business={terms.audience === "business"} followUps={followUps} />
+          <Totals data={data} checkInsWord={terms.checkIns} showChange={showChange} periodName={periodName} business={terms.audience === "business"} followUps={followUps} individual={terms.audience === "individual"} />
 
           <Chapter n="01" title="Reach" lead="How many people came in, and how many were new.">
             <div className="grid gap-3 lg:grid-cols-2">
@@ -283,10 +283,17 @@ export function ImpactDashboard({ orgName }: { orgName: string | null }) {
             </div>
           </Chapter>
 
-          <Chapter n="02" title="Outcomes and exits" lead="Results people reached, and where people went when they left.">
-            <OutcomesSummary data={data} periodName={periodName} />
-            <ExitsSummary data={data} periodName={periodName} />
-          </Chapter>
+          {terms.audience === "individual" ? (
+            // Outcomes are a Business feature (lib/plan.ts); individuals see their exits only.
+            <Chapter n="02" title="Exits" lead="Who stopped working with you, and why.">
+              <ExitsSummary data={data} periodName={periodName} canEditReasons={false} />
+            </Chapter>
+          ) : (
+            <Chapter n="02" title="Outcomes and exits" lead="Results people reached, and where people went when they left.">
+              <OutcomesSummary data={data} periodName={periodName} />
+              <ExitsSummary data={data} periodName={periodName} />
+            </Chapter>
+          )}
 
           <Chapter n="03" title="When people come" lead="Plan staffing around your busiest hours.">
             <div className="grid gap-3 lg:grid-cols-[2fr_1fr]">
@@ -331,7 +338,7 @@ export function ImpactDashboard({ orgName }: { orgName: string | null }) {
 
           {data.monthly.length > 1 && (
             <Chapter n={followUps ? "07" : "06"} title="Month by month" lead="Totals for each month in this period.">
-              <MonthlyTable rows={data.monthly} checkInsWord={terms.checkIns} showValue={data.monthly.some((r) => r.valueCents > 0)} />
+              <MonthlyTable rows={data.monthly} checkInsWord={terms.checkIns} showValue={data.monthly.some((r) => r.valueCents > 0)} showOutcomes={terms.audience !== "individual"} />
             </Chapter>
           )}
 
@@ -470,7 +477,7 @@ export function OutcomesSummary({ data, periodName }: { data: Metrics; periodNam
 const EXIT_FILL: Record<ExitKind, string> = { positive: "var(--chart-1)", neutral: "var(--chart-3)", unplanned: "var(--chart-2)" };
 
 /** Exits: how many left, the split by group as one stacked bar, then each reason. */
-export function ExitsSummary({ data, periodName }: { data: Metrics; periodName: string }) {
+export function ExitsSummary({ data, periodName, canEditReasons = true }: { data: Metrics; periodName: string; canEditReasons?: boolean }) {
   const k = data.exitKinds;
   const total = k.positive + k.neutral + k.unplanned;
   const prevTotal = data.prevExitKinds.positive + data.prevExitKinds.neutral + data.prevExitKinds.unplanned;
@@ -479,11 +486,17 @@ export function ExitsSummary({ data, periodName }: { data: Metrics; periodName: 
       <section className="card mt-3 space-y-1 p-4 text-sm">
         <p className="text-text">No exits recorded in this period.</p>
         <p className="text-xs text-text-muted">
-          When someone leaves, use the exit button on their profile and pick a reason. Your reasons are in{" "}
-          <a href="/settings/outcomes" className="text-accent hover:underline">
-            Settings → Outcomes &amp; exits
-          </a>
-          .
+          When someone leaves, use the exit button on their profile and pick a reason.
+          {canEditReasons && (
+            <>
+              {" "}
+              Your reasons are in{" "}
+              <a href="/settings/outcomes" className="text-accent hover:underline">
+                Settings → Outcomes &amp; exits
+              </a>
+              .
+            </>
+          )}
         </p>
       </section>
     );
@@ -685,7 +698,7 @@ function Total({ label, value, display, prev, hint, showChange, periodName }: { 
 }
 
 /** The headline numbers: activity, then results, then everything since recording started. */
-function Totals({ data, checkInsWord, showChange, periodName, business, followUps }: { data: Metrics; checkInsWord: string; showChange: boolean; periodName: string; business: boolean; followUps: boolean }) {
+function Totals({ data, checkInsWord, showChange, periodName, business, followUps, individual = false }: { data: Metrics; checkInsWord: string; showChange: boolean; periodName: string; business: boolean; followUps: boolean; individual?: boolean }) {
   const k = data.kpis;
   const p = data.prev;
   const firsts = data.reach.reduce((n, r) => n + r.first, 0);
@@ -713,7 +726,7 @@ function Totals({ data, checkInsWord, showChange, periodName, business, followUp
         </div>
         <p className="eyebrow pt-2 text-text-faint">Results</p>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-          <Total label="Reached an outcome" value={data.outcomePeople} prev={data.prevOutcomePeople} hint="People, each counted once" {...t} />
+          {!individual && <Total label="Reached an outcome" value={data.outcomePeople} prev={data.prevOutcomePeople} hint="People, each counted once" {...t} />}
           <Total label="Services provided" value={data.extra.servicesProvided} prev={data.prevExtra.servicesProvided} {...t} />
           <Total
             label={business ? "Revenue" : "Value of services"}
@@ -743,7 +756,7 @@ function Totals({ data, checkInsWord, showChange, periodName, business, followUp
 }
 
 /** One row per month in the period, with a totals row. */
-function MonthlyTable({ rows, checkInsWord, showValue }: { rows: MonthRow[]; checkInsWord: string; showValue: boolean }) {
+function MonthlyTable({ rows, checkInsWord, showValue, showOutcomes = true }: { rows: MonthRow[]; checkInsWord: string; showValue: boolean; showOutcomes?: boolean }) {
   const sum = (k: keyof Omit<MonthRow, "key" | "label">) => rows.reduce((n, r) => n + (r[k] as number), 0);
   return (
     <div className="card overflow-x-auto">
@@ -754,7 +767,7 @@ function MonthlyTable({ rows, checkInsWord, showValue }: { rows: MonthRow[]; che
             <th className="px-3 py-2 text-right font-semibold">People served</th>
             <th className="px-3 py-2 text-right font-semibold">{checkInsWord}</th>
             <th className="px-3 py-2 text-right font-semibold">New people</th>
-            <th className="px-3 py-2 text-right font-semibold">Outcomes</th>
+            {showOutcomes && <th className="px-3 py-2 text-right font-semibold">Outcomes</th>}
             {showValue && <th className="px-4 py-2 text-right font-semibold">Value</th>}
           </tr>
         </thead>
@@ -765,7 +778,7 @@ function MonthlyTable({ rows, checkInsWord, showValue }: { rows: MonthRow[]; che
               <td className="px-3 py-2 text-right tabular-nums">{r.peopleServed.toLocaleString()}</td>
               <td className="px-3 py-2 text-right tabular-nums">{r.checkIns.toLocaleString()}</td>
               <td className="px-3 py-2 text-right tabular-nums">{r.newPeople.toLocaleString()}</td>
-              <td className="px-3 py-2 text-right tabular-nums">{r.outcomes.toLocaleString()}</td>
+              {showOutcomes && <td className="px-3 py-2 text-right tabular-nums">{r.outcomes.toLocaleString()}</td>}
               {showValue && <td className="px-4 py-2 text-right tabular-nums">{formatMoney(r.valueCents)}</td>}
             </tr>
           ))}
@@ -778,7 +791,7 @@ function MonthlyTable({ rows, checkInsWord, showValue }: { rows: MonthRow[]; che
             </td>
             <td className="px-3 py-2 text-right tabular-nums">{sum("checkIns").toLocaleString()}</td>
             <td className="px-3 py-2 text-right tabular-nums">{sum("newPeople").toLocaleString()}</td>
-            <td className="px-3 py-2 text-right tabular-nums">{sum("outcomes").toLocaleString()}</td>
+            {showOutcomes && <td className="px-3 py-2 text-right tabular-nums">{sum("outcomes").toLocaleString()}</td>}
             {showValue && <td className="px-4 py-2 text-right tabular-nums">{formatMoney(sum("valueCents"))}</td>}
           </tr>
         </tfoot>

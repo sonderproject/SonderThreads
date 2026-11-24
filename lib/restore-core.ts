@@ -1,7 +1,9 @@
-import { createHash } from "crypto";
+import { createHash, randomBytes } from "crypto";
 import { z } from "zod";
 import { query, transaction } from "@/lib/db/client";
 import { ETHNICITIES, GENDERS, INCOME_LEVELS } from "@/lib/demographics";
+import { cleanDefinition, cleanSettings, type FormField } from "@/lib/forms-shared";
+import { cleanSchedule } from "@/lib/dashboard-shared";
 
 /**
  * Core of Settings → Data → Import backup: restores a full backup file (the JSON
@@ -41,6 +43,7 @@ const backupSchema = z.object({
         next_action: text(5000),
         summary: text(20000),
         needs_followup: z.boolean().optional(),
+        custom_fields: z.record(z.string(), z.unknown()).nullable().optional(),
         created_at: date,
         updated_at: date,
         last_activity_at: date,
@@ -112,6 +115,50 @@ const backupSchema = z.object({
       }),
     )
     .default([]),
+  // Added Nov 2026; older backup files simply don't have these.
+  custom_fields: z.array(z.object({ id, label: z.string().max(60) })).default([]),
+  exits: z
+    .array(
+      z.object({
+        id,
+        person_id: id,
+        reason: z.string().min(1).max(80),
+        group: z.enum(["positive", "neutral", "unplanned"]),
+        exited_on: date,
+        note: text(500),
+        came_back_at: date,
+        created_at: date,
+      }),
+    )
+    .default([]),
+  outcomes: z
+    .array(z.object({ id, person_id: id, outcome: z.string().min(1).max(80), achieved_on: date, note: text(500), created_at: date }))
+    .default([]),
+  forms: z
+    .array(
+      z.object({ id, name: z.string().min(1).max(120), description: text(1000), fields: z.array(z.unknown()).max(60), settings: z.unknown().optional(), created_at: date }),
+    )
+    .max(50)
+    .default([]),
+  form_responses: z
+    .array(
+      z.object({
+        id,
+        form_id: id,
+        answers: z.record(z.string(), z.unknown()),
+        fields: z.array(z.unknown()).max(60),
+        status: text(20),
+        person_id: optId,
+        created_at: date,
+      }),
+    )
+    .max(20000)
+    .default([]),
+  automations: z
+    .array(z.object({ id, name: z.string().min(1).max(80), trigger: z.record(z.string(), z.unknown()), conditions: z.array(z.unknown()).max(10), actions: z.array(z.unknown()).max(5) }))
+    .max(25)
+    .default([]),
+  report_schedules: z.array(z.record(z.string(), z.unknown()).and(z.object({ id }))).max(10).default([]),
 });
 
 export type Backup = z.infer<typeof backupSchema>;
@@ -123,6 +170,12 @@ export type RestoreCounts = {
   lists: number;
   list_items: number;
   activity: number;
+  exits: number;
+  outcomes: number;
+  forms: number;
+  form_responses: number;
+  automations: number;
+  report_schedules: number;
 };
 
 const TABLES = ["people", "notes", "lists", "list_items", "tasks", "check_ins", "activity"] as const;
@@ -167,7 +220,27 @@ export function countsOf(b: Backup): RestoreCounts {
     lists: b.lists.length,
     list_items: b.list_items.length,
     activity: b.activity.length,
+    exits: b.exits.length,
+    outcomes: b.outcomes.length,
+    forms: b.forms.length,
+    form_responses: b.form_responses.length,
+    automations: b.automations.length,
+    report_schedules: b.report_schedules.length,
   };
+}
+
+/** Where ids land in this account: kept if free or already ours, else a stable new one. Returns old → new, and which are already ours. */
+async function mapIds(table: string, userId: string, ids: string[]): Promise<{ map: Map<string, string>; ours: Set<string> }> {
+  const rows = ids.length ? await query<{ id: string; user_id: string }>(`select id, user_id from ${table} where id = any($1::uuid[])`, [ids]) : [];
+  const owner = new Map(rows.map((r) => [r.id, r.user_id]));
+  const map = new Map<string, string>();
+  const ours = new Set<string>();
+  for (const old of ids) {
+    const o = owner.get(old);
+    if (o === userId) ours.add(old);
+    map.set(old, !o || o === userId ? old : derivedId(userId, old));
+  }
+  return { map, ours };
 }
 
 /**
@@ -222,8 +295,58 @@ export async function restoreInto(userId: string, b: Backup): Promise<RestoreCou
       return ownIds.get(t)!.has(oldId) ? oldId : null;
     };
 
-    const added: RestoreCounts = { people: 0, notes: 0, tasks: 0, check_ins: 0, lists: 0, list_items: 0, activity: 0 };
+    const added: RestoreCounts = {
+      people: 0,
+      notes: 0,
+      tasks: 0,
+      check_ins: 0,
+      lists: 0,
+      list_items: 0,
+      activity: 0,
+      exits: 0,
+      outcomes: 0,
+      forms: 0,
+      form_responses: 0,
+      automations: 0,
+      report_schedules: 0,
+    };
+
+    // The account's scope: an organization (Business) or a solo account.
+    const membership = await query<{ org_id: string; kind: string }>(
+      `select m.org_id, o.kind from memberships m join organizations o on o.id = m.org_id where m.user_id = $1 and m.active`,
+      [userId],
+    );
+    const orgId = membership[0]?.org_id ?? null;
+    const scopeSql = orgId ? "org_id = $1" : "org_id is null and user_id = $1";
+    const scopeParam = orgId ?? userId;
+
+    // Custom field values: matched to this account's fields by id, else by the field's name in the file.
+    const accountFields = await query<{ id: string; label: string; kind: string }>(
+      `select id, label, kind from custom_fields where ${scopeSql} and archived_at is null`,
+      [scopeParam],
+    );
+    const fieldById = new Map(accountFields.map((f) => [f.id, f.id]));
+    const fieldByLabel = new Map(accountFields.map((f) => [f.label.toLowerCase(), f.id]));
+    const fileLabel = new Map(b.custom_fields.map((f) => [f.id, f.label.toLowerCase()]));
+    const customFor = (raw: Record<string, unknown> | null | undefined): Record<string, string> => {
+      const out: Record<string, string> = {};
+      for (const [k, v] of Object.entries(raw ?? {})) {
+        if (v === null || v === undefined || v === "") continue;
+        const target = fieldById.get(k) ?? fieldByLabel.get(fileLabel.get(k) ?? "");
+        if (target) out[target] = String(v).slice(0, 200);
+      }
+      return out;
+    };
     const now = Date.now();
+
+    const [exitIds, outcomeIds, formIds, responseIds, workflowIds, scheduleIds] = await Promise.all([
+      mapIds("person_exits", userId, b.exits.map((r) => r.id)),
+      mapIds("person_outcomes", userId, b.outcomes.map((r) => r.id)),
+      mapIds("forms", userId, b.forms.map((r) => r.id)),
+      mapIds("form_submissions", userId, b.form_responses.map((r) => r.id)),
+      mapIds("workflows", userId, b.automations.map((r) => r.id)),
+      mapIds("report_schedules", userId, b.report_schedules.map((r) => r.id)),
+    ]);
 
     await transaction(async (q) => {
       const insert = async (sql: string, params: unknown[]) => {
@@ -234,8 +357,8 @@ export async function restoreInto(userId: string, b: Backup): Promise<RestoreCou
       for (const p of b.people) {
         added.people += await insert(
           `insert into people (id, user_id, first_name, last_name, display_name, phone, email, birthday, gender, ethnicity,
-             income_level, status, current_status, next_action, summary, needs_followup, created_at, updated_at, last_activity_at, client_since)
-           values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,coalesce($17,now()),coalesce($18,now()),coalesce($19,now()),$20)
+             income_level, status, current_status, next_action, summary, needs_followup, created_at, updated_at, last_activity_at, client_since, custom_fields)
+           values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,coalesce($17,now()),coalesce($18,now()),coalesce($19,now()),$20,$21)
            on conflict (id) do nothing`,
           [
             map.get("people")!.get(p.id),
@@ -258,6 +381,7 @@ export async function restoreInto(userId: string, b: Backup): Promise<RestoreCou
             ts(p.updated_at),
             ts(p.last_activity_at),
             day(p.client_since),
+            JSON.stringify(customFor(p.custom_fields as Record<string, unknown> | null | undefined)),
           ],
         );
       }
@@ -360,6 +484,143 @@ export async function restoreInto(userId: string, b: Backup): Promise<RestoreCou
             ts(a.created_at),
           ],
         );
+      }
+
+      // Exits and outcomes: matched to this account's reasons/outcomes by name (added if missing).
+      const named = async (table: "exit_reasons" | "outcomes", name: string, kind?: string): Promise<string> => {
+        const found = (await q(`select id from ${table} where ${scopeSql} and lower(name) = lower($2) and archived_at is null limit 1`, [scopeParam, name])) as unknown as {
+          rows: { id: string }[];
+        };
+        if (found.rows[0]) return found.rows[0].id;
+        const made = (await q(
+          table === "exit_reasons"
+            ? `insert into exit_reasons (org_id, user_id, name, kind, position) values ($1, $2, $3, $4, 99) returning id`
+            : `insert into outcomes (org_id, user_id, name, position) values ($1, $2, $3, 99) returning id`,
+          table === "exit_reasons" ? [orgId, orgId ? null : userId, name, kind] : [orgId, orgId ? null : userId, name],
+        )) as unknown as { rows: { id: string }[] };
+        return made.rows[0].id;
+      };
+      const exited = new Set<string>();
+      for (const e of b.exits) {
+        const personId = ref("people", e.person_id);
+        if (!personId || exitIds.ours.has(e.id) || !day(e.exited_on)) continue;
+        const reasonId = await named("exit_reasons", e.reason, e.group);
+        const n = await insert(
+          `insert into person_exits (id, user_id, person_id, reason_id, kind, exited_on, note, reopened_at, created_at)
+           values ($1,$2,$3,$4,$5,$6,$7,$8,coalesce($9,now())) on conflict (id) do nothing`,
+          [exitIds.map.get(e.id), userId, personId, reasonId, e.group, day(e.exited_on), e.note ?? null, ts(e.came_back_at), ts(e.created_at)],
+        );
+        added.exits += n;
+        if (n) exited.add(personId);
+      }
+      if (exited.size) {
+        await q(
+          `update people p set exited_on = (select max(x.exited_on) from person_exits x where x.person_id = p.id and x.deleted_at is null and x.reopened_at is null)
+            where p.id = any($1::uuid[])`,
+          [[...exited]],
+        );
+      }
+      for (const o of b.outcomes) {
+        const personId = ref("people", o.person_id);
+        if (!personId || outcomeIds.ours.has(o.id) || !day(o.achieved_on)) continue;
+        const outcomeId = await named("outcomes", o.outcome);
+        added.outcomes += await insert(
+          `insert into person_outcomes (id, user_id, person_id, outcome_id, achieved_on, note, created_at)
+           values ($1,$2,$3,$4,$5,$6,coalesce($7,now())) on conflict (id) do nothing`,
+          [outcomeIds.map.get(o.id), userId, personId, outcomeId, day(o.achieved_on), o.note ?? null, ts(o.created_at)],
+        );
+      }
+
+      // Business setup (forms, responses, automations, report schedules) only goes into a Business account,
+      // and always comes back switched off: forms as drafts with a new link, rules and schedules off.
+      if (orgId) {
+        const room = async (table: string, max: number) => {
+          const r = (await q(`select count(*)::int as n from ${table} where org_id = $1 and deleted_at is null`, [orgId])) as unknown as { rows: { n: number }[] };
+          return Math.max(0, max - (r.rows[0]?.n ?? 0));
+        };
+        const kinds = Object.fromEntries(accountFields.map((f) => [f.id, f.kind]));
+        const formsHere = new Set<string>([...formIds.ours]);
+        let formRoom = await room("forms", 50);
+        for (const f of b.forms) {
+          if (formIds.ours.has(f.id) || formRoom <= 0) continue;
+          let fields: FormField[] | null = null;
+          try {
+            fields = cleanDefinition(f.fields, kinds);
+          } catch {
+            try {
+              // Custom fields from another account don't exist here: keep the question, drop the mapping.
+              fields = cleanDefinition(
+                f.fields.map((x) => (x && typeof x === "object" && String((x as { mapTo?: unknown }).mapTo ?? "").startsWith("custom:") ? { ...x, mapTo: null } : x)),
+                kinds,
+              );
+            } catch {
+              fields = null;
+            }
+          }
+          if (!fields) continue;
+          const newId = formIds.map.get(f.id)!;
+          const settings = { ...cleanSettings(f.settings), assignTo: null };
+          const n = await insert(
+            `insert into forms (id, user_id, org_id, name, description, code, status, fields, settings, created_at)
+             values ($1,$2,$3,$4,$5,$6,'draft',$7,$8,coalesce($9,now())) on conflict (id) do nothing`,
+            [newId, userId, orgId, f.name, f.description ?? null, randomBytes(12).toString("base64url"), JSON.stringify(fields), JSON.stringify(settings), ts(f.created_at)],
+          );
+          if (n) {
+            added.forms += n;
+            formRoom--;
+            formsHere.add(newId);
+          }
+        }
+        const STATUSES = ["new", "needs_review", "approved", "processed", "rejected"] as const;
+        for (const r of b.form_responses) {
+          const formId = formIds.map.get(r.form_id);
+          if (!formId || !formsHere.has(formId) || responseIds.ours.has(r.id)) continue;
+          added.form_responses += await insert(
+            `insert into form_submissions (id, form_id, user_id, org_id, answers, fields, status, person_id, created_at)
+             values ($1,$2,$3,$4,$5,$6,$7,$8,coalesce($9,now())) on conflict (id) do nothing`,
+            [
+              responseIds.map.get(r.id),
+              formId,
+              userId,
+              orgId,
+              JSON.stringify(r.answers),
+              JSON.stringify(r.fields),
+              oneOf(r.status, STATUSES) ?? "new",
+              ref("people", r.person_id),
+              ts(r.created_at),
+            ],
+          );
+        }
+        let ruleRoom = await room("workflows", 25);
+        for (const w of b.automations) {
+          if (workflowIds.ours.has(w.id) || ruleRoom <= 0) continue;
+          // A rule for a restored form follows it to the form's new id; everything is checked again when it's turned on.
+          const trigger = { ...w.trigger };
+          if (typeof trigger.formId === "string") trigger.formId = formIds.map.get(trigger.formId) ?? trigger.formId;
+          const n = await insert(
+            `insert into workflows (id, user_id, org_id, name, enabled, trigger, conditions, actions) values ($1,$2,$3,$4,false,$5,$6,$7) on conflict (id) do nothing`,
+            [workflowIds.map.get(w.id), userId, orgId, w.name, JSON.stringify(trigger), JSON.stringify(w.conditions), JSON.stringify(w.actions)],
+          );
+          added.automations += n;
+          ruleRoom -= n;
+        }
+        let scheduleRoom = await room("report_schedules", 10);
+        const audience = membership[0]?.kind === "business" ? "business" : "nonprofit";
+        for (const s of b.report_schedules) {
+          if (scheduleIds.ours.has(s.id) || scheduleRoom <= 0) continue;
+          const c = cleanSchedule(
+            { name: s.name, frequency: s.frequency, weekday: s.weekday, monthDay: s.month_day, hour: s.hour, recipients: s.recipients, attachPdf: s.attach_pdf === true, tiles: s.tiles },
+            audience,
+            true,
+          );
+          const n = await insert(
+            `insert into report_schedules (id, user_id, org_id, name, frequency, weekday, month_day, hour, recipients, attach_pdf, tiles, enabled)
+             values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,false) on conflict (id) do nothing`,
+            [scheduleIds.map.get(s.id), userId, orgId, c.name, c.frequency, c.weekday, c.monthDay, c.hour, c.recipients, c.attachPdf, c.tiles],
+          );
+          added.report_schedules += n;
+          scheduleRoom -= n;
+        }
       }
     });
 

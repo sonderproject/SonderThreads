@@ -170,7 +170,7 @@ export function buildStory(m: Metrics, opts: { followUps?: boolean; audience?: "
   const total = m.byReason.reduce((s, r) => s + r.value, 0);
   if (reasons.length) out.push(`${w.need} ${reasons[0].label.toLowerCase()} (${pct(reasons[0].value, total)}% of ${w.events}).`);
   // Outcomes: results, not just activity ("41 people reached an outcome in November. Most often: got a job (18).").
-  if (m.outcomePeople > 0) {
+  if (m.outcomePeople > 0 && opts.audience !== "individual") {
     const top = m.outcomes[0];
     out.push(
       `${m.outcomePeople.toLocaleString()} ${m.outcomePeople === 1 ? w.one : w.many} reached an outcome ${periodWord(m)}${changePhrase(m.outcomePeople, m.prevOutcomePeople)}.` +

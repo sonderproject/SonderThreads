@@ -16,6 +16,12 @@ const LABELS: [keyof RestoreCounts, string][] = [
   ["lists", "lists"],
   ["list_items", "list entries"],
   ["activity", "activity records"],
+  ["exits", "exits"],
+  ["outcomes", "outcomes"],
+  ["forms", "forms (as drafts)"],
+  ["form_responses", "form responses"],
+  ["automations", "automations (off)"],
+  ["report_schedules", "report schedules (paused)"],
 ];
 
 function summary(c: RestoreCounts): string {

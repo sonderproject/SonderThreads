@@ -60,10 +60,10 @@ async function main() {
   const before = await counts(A);
   const file = await exportOf(A);
   const backup = parseBackup(file);
-  check("preview counts", JSON.stringify(countsOf(backup)) === JSON.stringify({ people: 2, notes: 2, tasks: 2, check_ins: 1, lists: 2, list_items: 2, activity: 1 }), countsOf(backup));
+  check("preview counts", JSON.stringify(countsOf(backup)) === JSON.stringify({ people: 2, notes: 2, tasks: 2, check_ins: 1, lists: 2, list_items: 2, activity: 1, exits: 0, outcomes: 0, forms: 0, form_responses: 0, automations: 0, report_schedules: 0 }), countsOf(backup));
 
   const added = await restoreInto(B, backup);
-  check("restore into another account adds everything (Groceries merged)", JSON.stringify(added) === JSON.stringify({ people: 2, notes: 2, tasks: 2, check_ins: 1, lists: 1, list_items: 2, activity: 1 }), added);
+  check("restore into another account adds everything (Groceries merged)", JSON.stringify(added) === JSON.stringify({ people: 2, notes: 2, tasks: 2, check_ins: 1, lists: 1, list_items: 2, activity: 1, exits: 0, outcomes: 0, forms: 0, form_responses: 0, automations: 0, report_schedules: 0 }), added);
   const bc = await counts(B);
   check("B totals", bc?.people === 3 && bc?.lists === 2 && bc?.list_items === 2, bc);
 
