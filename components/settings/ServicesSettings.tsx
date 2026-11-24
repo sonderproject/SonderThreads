@@ -82,7 +82,7 @@ export function ServicesSettings({ services, canManage, orgName }: { services: S
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="input min-w-0 flex-[2_1_10rem]"
-              placeholder="Service, e.g. Haircut or Consultation"
+              placeholder="Service, e.g. Consultation or Workshop"
               maxLength={80}
               aria-label="New service name"
             />

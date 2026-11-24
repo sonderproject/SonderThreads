@@ -39,7 +39,7 @@ KEY LINES
 - CTA: "Try it free" / "Start your free trial" → thesurfdesk.app
 
 FACTS
-Website thesurfdesk.app. Plans: Individual $9/mo (7-day free trial, no card), Small Team $19/user/mo (2–18 people), Organization $349/mo (20 seats included, extra seats $15), Enterprise custom. Teams get a 14-day free trial. Skipping the trial gives 30% off the first month. Works on any phone or computer; installs to the home screen.
+Website thesurfdesk.app. Plans: Individual $9/mo (7-day free trial, no card), Small Team $19/user/mo (1–18 people), Organization $349/mo (20 seats included, extra seats $15), Enterprise custom. Teams get a 14-day free trial. Skipping the trial gives 30% off the first month. Works on any phone or computer; installs to the home screen.
 ```
 
 ---
@@ -145,7 +145,7 @@ Surfdesk replaces a stack: to-do app (Todoist, Apple Reminders) + notes (Notion,
 | Plan | Price | Who | Trial |
 |---|---|---|---|
 | Individual | **$9 / month** | One person | 7 days, no card |
-| Small Team | **$19 / user / month** | 2–18 people | 14 days (card, one trial per card) |
+| Small Team | **$19 / user / month** | 1–18 people | 14 days (card, one trial per card) |
 | Organization | **$349 / month**, 20 seats included ($17.45 a person); extra seats $15 | 19+ people | 14 days |
 | Enterprise | Custom | Large organizations | Contact sales |
 

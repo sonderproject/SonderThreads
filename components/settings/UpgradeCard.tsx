@@ -23,7 +23,7 @@ export function UpgradeCard() {
           </li>
         ))}
       </ul>
-      <Link href="/organization/new" className="inline-block rounded-full bg-accent px-4 py-2 text-sm font-semibold text-bg hover:bg-accent-dim">
+      <Link href="/organization/new?kind=business" className="inline-block rounded-full bg-accent px-4 py-2 text-sm font-semibold text-bg hover:bg-accent-dim">
         Set up my business
       </Link>
     </section>

@@ -47,7 +47,7 @@ const JSON_LD = {
       publisher: { "@id": "https://www.sonderproject.co/#organization" },
       offers: [
         { name: "Individual", price: INDIVIDUAL_CENTS / 100, description: "Per month. 7-day free trial, no card needed." },
-        { name: "Small Team", price: SEAT_CENTS / 100, description: "Per user per month, 2-18 people. 14-day free trial." },
+        { name: "Small Team", price: SEAT_CENTS / 100, description: "Per user per month, 1-18 people. 14-day free trial." },
         { name: "Organization", price: ORG_BASE_CENTS / 100, description: "Per month, 20 seats included. 14-day free trial." },
       ].map((o) => ({ "@type": "Offer", priceCurrency: "USD", url: SITE_URL, ...o })),
     },

@@ -6,9 +6,9 @@ import { ORG_KINDS, ORG_KINDS_SAME } from "@/lib/terms";
 import { OrgKindText } from "@/components/org/OrgKindText";
 
 /** Set up an organization (agency or team). The creator becomes its admin. */
-export default async function NewOrganizationPage({ searchParams }: { searchParams: Promise<{ error?: string; offer?: string }> }) {
+export default async function NewOrganizationPage({ searchParams }: { searchParams: Promise<{ error?: string; offer?: string; kind?: string }> }) {
   if (await getMembership()) redirect("/organization");
-  const { error, offer } = await searchParams;
+  const { error, offer, kind } = await searchParams;
   return (
     <div className="max-w-md space-y-6">
       <div className="space-y-1">
@@ -29,7 +29,7 @@ export default async function NewOrganizationPage({ searchParams }: { searchPara
           <legend className="text-xs text-text-muted">What kind of organization?</legend>
           {ORG_KINDS.map((k, i) => (
             <label key={k.value} className="flex items-start gap-2 rounded-xl border border-border-subtle p-2.5 text-sm">
-              <input type="radio" name="kind" value={k.value} defaultChecked={i === 0} required className="mt-1 accent-[var(--accent)]" />
+              <input type="radio" name="kind" value={k.value} defaultChecked={kind === "business" ? k.value === "business" : i === 0} required className="mt-1 accent-[var(--accent)]" />
               <OrgKindText {...k} />
             </label>
           ))}

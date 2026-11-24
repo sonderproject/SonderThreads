@@ -12,7 +12,7 @@ Surfdesk runs in the browser on any phone or computer and can be added to the ho
 ## Pricing
 
 - Individual: $9 a month after a 7-day free trial, no card needed to start.
-- Organization (teams of 2 or more, includes team chat with channels and direct messages): a 14-day free trial, then $19 a seat a month for 2 to 18 seats, $349 a month for 19 to 20 seats, and $15 for each seat over 20.
+- Organization (a business of one or a team, adds forms, automations, scheduled reports and team chat): a 14-day free trial, then $19 a seat a month for 1 to 18 seats, $349 a month for 19 to 20 seats, and $15 for each seat over 20.
 
 ## Who it's for
 

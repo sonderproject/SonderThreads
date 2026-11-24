@@ -444,13 +444,14 @@ async function OrganizationSection({ q }: { q: SettingsQuery }) {
       {membership ? null : (
         <div className="card flex flex-wrap items-center justify-between gap-3 p-4">
           <div className="min-w-0">
-            <h3 className="text-sm font-semibold text-text">Run a team or agency?</h3>
+            <h3 className="text-sm font-semibold text-text">Need more for your business?</h3>
             <p className="text-xs text-text-muted">
-              Invite your staff and give managers a view of your clients. Personal tasks and notes stay private.
+              A Business account adds forms, automations and reports from $19 a month, even just for you. Add your team whenever you grow; personal tasks
+              and notes stay private.
             </p>
           </div>
-          <Link href="/organization/new" className={`shrink-0 ${buttonClass}`}>
-            Set up an organization
+          <Link href="/organization/new?kind=business" className={`shrink-0 ${buttonClass}`}>
+            Set up my business
           </Link>
         </div>
       )}
@@ -466,7 +467,8 @@ async function DataSection({ q }: { q: SettingsQuery }) {
     { table: "notes", label: "Notes" },
     { table: "tasks", label: "Tasks" },
     { table: "check_ins", label: terms.checkIns },
-    { table: "outcomes", label: "Outcomes" },
+    // Outcomes are a Business feature (lib/plan.ts).
+    ...(membership?.active ? [{ table: "outcomes", label: "Outcomes" }] : []),
     { table: "exits", label: "Exits" },
     { table: "lists", label: "Lists" },
     { table: "list_items", label: "List entries" },

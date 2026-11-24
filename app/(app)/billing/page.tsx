@@ -269,7 +269,7 @@ export default async function BillingPage({
                     </p>
                   )}
                   <p className="mt-1 text-sm text-text-muted">
-                    $19 a seat for 2–18 people. At 19 or more, the $349 Organization rate (20 seats included, $15 for each
+                    $19 a seat for 1–18 people. At 19 or more, the $349 Organization rate (20 seats included, $15 for each
                     extra seat) applies automatically, whichever is cheaper.
                   </p>
                 </div>

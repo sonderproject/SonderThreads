@@ -36,7 +36,7 @@ export const COMPARE_NOTE =
 
 const PRICING_FAQ: SeoFaq = {
   q: "How much does Surfdesk cost?",
-  a: "Individual is $9 a month with a 7-day free trial and no card needed. Small Team is $19 per user per month for 2–18 people. Organization is $349 a month for 19 or more, with 20 seats included and extra seats at $15. Team plans include a 14-day free trial, and skipping the trial gets you 30% off your first month.",
+  a: "Individual is $9 a month with a 7-day free trial and no card needed. Small Team is $19 per user per month for 1–18 people. Organization is $349 a month for 19 or more, with 20 seats included and extra seats at $15. Team plans include a 14-day free trial, and skipping the trial gets you 30% off your first month.",
 };
 
 export const AUDIENCE_PAGES: SeoPageData[] = [

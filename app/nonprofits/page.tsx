@@ -49,7 +49,7 @@ const FAQS = [
   },
   {
     q: "How much does it cost?",
-    a: "Small Team is $19 per person per month for 2–18 people. Organization is $349 a month with 20 seats included and $15 for each extra seat. Both start with a 14-day free trial. Larger organizations can ask about Enterprise pricing.",
+    a: "Small Team is $19 per person per month, from 1 to 18 people. Organization is $349 a month with 20 seats included and $15 for each extra seat. Both start with a 14-day free trial. Larger organizations can ask about Enterprise pricing.",
   },
 ];
 

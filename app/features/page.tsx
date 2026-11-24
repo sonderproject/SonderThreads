@@ -170,7 +170,7 @@ export default function FeaturesPage() {
           </table>
         </div>
         <p className="text-sm text-text-muted">
-          Individual is $9/month. Small Team is $19/person/month for 2–18 people. Organization is $349/month with 20 seats included.{" "}
+          Individual is $9/month. Small Team is $19/person/month for 1–18 people. Organization is $349/month with 20 seats included.{" "}
           <a href="/#pricing" className="font-medium text-accent hover:underline">
             See pricing
           </a>
