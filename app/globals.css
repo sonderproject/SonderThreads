@@ -41,6 +41,8 @@
   --chart-1: #1c77b5;
   --chart-2: #eb6834;
   --chart-3: #1baf7a;
+  /* Review stars only (components/marketing/landing/Testimonials.tsx). */
+  --star: #c08a00;
   /* Calendar (docs/DESIGN.md "Calendar"): birthdays, and the four colors people
      can give linked outside calendars. Meetings use --accent, tasks --fg. */
   --cal-birthday: #b0306f;
@@ -76,6 +78,8 @@
     --chart-1: #3e9bd4;
     --chart-2: #d95926;
     --chart-3: #199e70;
+  --star: #f2c14e;
+    --star: #f2c14e;
     --cal-birthday: #f08cbf;
     --cal-ext-1: #4cc2b6;
     --cal-ext-2: #d2a679;

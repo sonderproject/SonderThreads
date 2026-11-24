@@ -57,7 +57,7 @@ export function SeatCalculator({ min = 2, initial = 5, name }: { min?: number; i
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1" aria-live="polite">
         <span className="font-display text-4xl font-light tabular-nums text-text">{formatCents(total)}</span>
         <span className="text-sm text-text-muted">/ month</span>
-        <span className={`tag ${tier === "small_team" ? "tag-n" : "tag-v"}`}>{tier === "small_team" ? "Small Team" : "Organization"}</span>
+        <span className={`tag ${tier === "small_team" ? "tag-n" : "tag-v"}`}>{tier === "small_team" ? "Business" : "Organization"}</span>
       </div>
       <p className="text-xs text-text-muted">
         {tier === "small_team"

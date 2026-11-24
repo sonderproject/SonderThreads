@@ -47,7 +47,7 @@ const FAQS = [
   },
   {
     q: "How much does a team plan cost?",
-    a: "Small Team is $19 per person per month, from 1 to 18 people (a business of one included). Organization is $349 a month with 20 seats included and $15 for each extra seat. Both start with a 14-day free trial.",
+    a: "Business is $19 per person per month, from 1 to 18 people (a business of one included). Organization is $349 a month with 20 seats included and $15 for each extra seat. Both start with a 14-day free trial.",
   },
 ];
 
@@ -225,7 +225,7 @@ export default function BusinessPage() {
 
       <Section id="features" n="05" marker="Features" title="Everything your business runs on.">
         <Features
-          teamNote="Team plans = Small Team and Organization."
+          teamNote="Team plans = Business and Organization."
           items={[
             { title: "Customer profiles", body: "Contact details, notes, visits and follow-ups for every customer, on one timeline." },
             { title: "Visits and services", body: "Log a visit and the service in one line. Set prices once and they fill in." },

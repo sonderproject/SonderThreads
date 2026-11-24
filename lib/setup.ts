@@ -10,7 +10,7 @@ import { isValidTimeZone } from "@/lib/tz";
  * 3 Email code → 4 Start (trial or 30% off) → 5 Team → 6 Clients.
  * The line of work loads a starter list of services (no prices); prices are
  * asked for later, the first time a visit is logged for a service.
- * Individuals:   1 About you → 2 Account → 3 Email code → 4 First person.
+ * Individuals:   1 Account → 2 Email code → 3 First person ("Just me" asks nothing first).
  *
  * Steps before the account exists live under /get-started (public). Their
  * answers are kept in a short-lived cookie in this browser (nothing is saved
@@ -24,7 +24,7 @@ export const DRAFT_COOKIE = "setup_draft";
 const DRAFT_MAX_AGE = 60 * 60 * 24 * 3; // three days: long enough to come back to the email code
 
 export const ORG_STEPS = ["Organization", "Account", "Verify email", "Start", "Team", "Clients"] as const;
-export const SOLO_STEPS = ["About you", "Account", "Verify email", "First person"] as const;
+export const SOLO_STEPS = ["Account", "Verify email", "First person"] as const;
 
 /** Team-size choices and the seats each suggests on the Start step. */
 export const TEAM_SIZES = [

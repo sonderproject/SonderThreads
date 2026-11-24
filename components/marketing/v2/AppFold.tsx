@@ -1,11 +1,7 @@
-"use client";
-
-import { useEffect, useRef, useState } from "react";
 
 /**
- * "Not five different apps", as a picture: five generic app tiles drift together and
- * fold into Surfdesk as you scroll. Generic glyphs only, no other company's logos.
- * With reduced motion it shows the before and after side by side, still.
+ * "Not five different apps", as a picture: five generic app tiles, then Surfdesk.
+ * Generic glyphs only, no other company's logos.
  */
 
 const APPS: { label: string; tone: string; at: [number, number]; icon: React.ReactNode }[] = [
@@ -69,109 +65,35 @@ function SurfdeskTile({ size = 112 }: { size?: number }) {
   );
 }
 
-const clamp = (n: number, a = 0, b = 1) => Math.min(b, Math.max(a, n));
-const ease = (t: number) => t * t * (3 - 2 * t);
-
+/**
+ * Compact before/after strip (Nov 24, 2026): the scroll-driven fold left a near-empty
+ * screen on phones and with reduced motion, so it's now one static band for everyone.
+ */
 export function AppFold() {
-  const section = useRef<HTMLDivElement>(null);
-  const [p, setP] = useState(0);
-  const [still, setStill] = useState(false);
-  const [spread, setSpread] = useState(200);
-
-  useEffect(() => {
-    setStill(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
-    let frame = 0;
-    const update = () => {
-      frame = 0;
-      const el = section.current;
-      if (!el) return;
-      const r = el.getBoundingClientRect();
-      setP(clamp(-r.top / Math.max(1, r.height - window.innerHeight)));
-      setSpread(Math.min(230, window.innerWidth * 0.27));
-    };
-    const onScroll = () => {
-      if (!frame) frame = requestAnimationFrame(update);
-    };
-    update();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
-      if (frame) cancelAnimationFrame(frame);
-    };
-  }, []);
-
-  const heading = (
-    <>
-      <p className="eyebrow text-text-faint">One app instead of five</p>
-      <h2 className="font-display text-3xl font-light leading-tight tracking-[-0.02em] sm:text-5xl">
-        Notes here. Reminders there. Clients in a spreadsheet.
-      </h2>
-    </>
-  );
-
-  if (still) {
-    return (
-      <section className="space-y-10 bg-bg-raised px-4 py-16 text-center">
-        <div className="mx-auto max-w-3xl space-y-3">{heading}</div>
-        <div className="flex flex-wrap items-center justify-center gap-6">
-          {APPS.map((a) => (
-            <Tile key={a.label} app={a} size={56} />
-          ))}
-          <span className="text-2xl text-text-muted" aria-hidden>
-            →
-          </span>
-          <SurfdeskTile size={96} />
-        </div>
-        <p className="font-display text-3xl font-light text-accent">Now it&apos;s one place.</p>
-      </section>
-    );
-  }
-
-  const gather = ease(clamp(p / 0.5));
-  const labels = 1 - ease(clamp(p / 0.25));
-  const fold = ease(clamp((p - 0.3) / 0.3));
-  const after = ease(clamp((p - 0.55) / 0.2));
-
   return (
-    <section ref={section} className="relative h-[105vh] bg-bg-raised sm:h-[120vh]">
-      <div className="sticky top-0 flex h-screen flex-col items-center justify-center gap-6 overflow-hidden px-4 py-16 text-center">
-        <div className="relative h-24 w-full max-w-3xl sm:h-28">
-          <div className="absolute inset-0 space-y-3" style={{ opacity: 1 - after, transform: `translateY(${-after * 16}px)` }}>
-            {heading}
-          </div>
-          <div className="absolute inset-0 flex flex-col items-center justify-center space-y-3" style={{ opacity: after, transform: `translateY(${(1 - after) * 16}px)` }}>
-            <p className="eyebrow text-text-faint">Surfdesk</p>
-            <h2 className="font-display text-3xl font-light leading-tight tracking-[-0.02em] sm:text-5xl">
-              Now it&apos;s <span className="text-accent">one place.</span>
-            </h2>
-          </div>
+    <section className="bg-bg-raised px-4 py-14 sm:py-16">
+      <div className="mx-auto max-w-5xl space-y-8 text-center">
+        <div className="mx-auto max-w-3xl space-y-3">
+          <p className="eyebrow text-text-faint">One app instead of five</p>
+          <h2 className="font-display text-3xl font-light leading-tight tracking-[-0.02em] sm:text-5xl">
+            Notes here. Reminders there. Clients in a spreadsheet. <span className="text-accent">Now it&apos;s one place.</span>
+          </h2>
         </div>
-        <div className="relative h-[300px] w-full max-w-xl sm:h-[360px]" aria-label="Five apps fold into Surfdesk" role="img">
-          {APPS.map((a) => {
-            const x = a.at[0] * spread * (1 - gather);
-            const y = a.at[1] * 140 * (1 - gather);
-            return (
-              <div
-                key={a.label}
-                className="absolute left-1/2 top-1/2 will-change-transform"
-                style={{ transform: `translate(-50%, -50%) translate(${x}px, ${y}px) scale(${1 - 0.45 * fold})`, opacity: 1 - fold }}
-              >
-                <Tile app={a} labelOpacity={labels} />
-              </div>
-            );
-          })}
-          <div
-            className="absolute left-1/2 top-1/2 will-change-transform"
-            style={{ transform: `translate(-50%, -50%) scale(${0.5 + 0.5 * fold})`, opacity: fold }}
-          >
-            <SurfdeskTile />
+        <div className="flex flex-col items-center justify-center gap-5 sm:flex-row sm:gap-8" role="img" aria-label="Five separate apps become Surfdesk">
+          <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
+            {APPS.map((a) => (
+              <Tile key={a.label} app={a} size={52} />
+            ))}
           </div>
+          <span className="text-2xl text-text-muted sm:rotate-0" aria-hidden>
+            <span className="hidden sm:inline">→</span>
+            <span className="sm:hidden">↓</span>
+          </span>
+          <SurfdeskTile size={88} />
         </div>
-        <div className="flex max-w-xl flex-wrap justify-center gap-2" style={{ opacity: after }}>
+        <div className="mx-auto flex max-w-xl flex-wrap justify-center gap-2">
           {ONE.map((x) => (
-            <span key={x} className="rounded-full border border-border bg-bg-raised px-3 py-1 text-xs text-text">
+            <span key={x} className="rounded-full border border-border bg-bg px-3 py-1 text-xs text-text">
               {x}
             </span>
           ))}

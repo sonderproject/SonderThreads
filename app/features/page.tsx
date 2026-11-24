@@ -42,7 +42,7 @@ const COMPARE: [string, boolean][] = [
 const FAQS = [
   {
     q: "What's the difference between Individual and team plans?",
-    a: "Individual is your own private workspace. Team plans (Small Team and Organization) add a shared client list, team chat, roles, a team dashboard, an activity log, branded reports, referrals and a check-in kiosk.",
+    a: "Individual is your own private workspace. Team plans (Business and Organization) add a shared client list, team chat, roles, a team dashboard, an activity log, branded reports, referrals and a check-in kiosk.",
   },
   {
     q: "Is there an app to download?",
@@ -122,7 +122,7 @@ export default function FeaturesPage() {
         lede={<p>Everything on team plans, while each person&apos;s own tasks and notes stay private.</p>}
       >
         <Features
-          teamNote="Team plans = Small Team and Organization."
+          teamNote="Team plans = Business and Organization."
           items={[
             { title: "Shared client list", body: "Everyone works from one list, with Admin, Manager and Member roles.", team: true },
             { title: "Team chat", body: "Channels, group and direct chats. Tag a client or share a note. Admins can't read chats they're not in.", team: true },
@@ -170,7 +170,7 @@ export default function FeaturesPage() {
           </table>
         </div>
         <p className="text-sm text-text-muted">
-          Individual is $9/month. Small Team is $19/person/month for 1–18 people. Organization is $349/month with 20 seats included.{" "}
+          Individual is $9/month. Business is $19/person/month for 1–18 people. Organization is $349/month with 20 seats included.{" "}
           <a href="/#pricing" className="font-medium text-accent hover:underline">
             See pricing
           </a>

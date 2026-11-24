@@ -95,25 +95,6 @@ export async function markOrgAgreed(): Promise<void> {
   if (d?.flow === "org" && !d.agreed) await writeDraft({ ...d, agreed: true });
 }
 
-/** Individual step 1: what they'll use it for, and services if it's a business. */
-export async function saveSoloBasics(formData: FormData): Promise<void> {
-  const prev = await readDraft();
-  const base: SoloDraft = prev?.flow === "solo" ? prev : { flow: "solo" };
-  const use = formData.get("use");
-  const next: SoloDraft = {
-    ...base,
-    use: isSoloUse(use) ? use : undefined,
-    services: isSoloUse(use) && use === "business" ? servicesFrom(formData) : [],
-    offer: formData.get("offer") === "skip" || base.offer,
-    utm: utmFrom(formData) ?? base.utm,
-    fid: base.fid ?? randomUUID(),
-  };
-  await writeDraft(next);
-  if (!next.use) redirect("/get-started/solo?error=use");
-  await funnel(next, "funnel.solo.basics", { use: next.use });
-  redirect(signupHref("solo", next.utm));
-}
-
 /**
  * One row per step reached, for the owner's sign-up drop-off view. Logged
  * once per browser (draft.seen), so resubmitting a step can't flood app_events.

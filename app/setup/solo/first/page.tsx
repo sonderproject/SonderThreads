@@ -6,14 +6,14 @@ import { SetupFrame } from "@/components/setup/SetupFrame";
 export const metadata = { title: "Your first person · Surfdesk" };
 export const dynamic = "force-dynamic";
 
-/** Individual set-up, step 4 of 4 (last): add the first person, or skip. */
+/** Individual set-up, step 3 of 3 (last): add the first person, or skip. */
 export default async function SoloFirstPage({ searchParams }: { searchParams: Promise<{ offer?: string }> }) {
   await requireUserId();
   const { offer } = await searchParams;
   return (
     <SetupFrame
       flow="solo"
-      step={4}
+      step={3}
       signedIn
       title="Who's the first person you want to keep track of?"
       intro="A client, a customer, a friend. Add notes, reminders and visits to them once you're in."

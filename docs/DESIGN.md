@@ -22,6 +22,7 @@ Every color is a CSS variable in `app/globals.css` on `:root`, redefined for dar
 | `--warn` / `--warn-soft` | `#9a5b00` / `#fbf0de` | `#e8b25c` / `#33281a` | Attention: due today, follow up |
 | `--urgent` / `--urgent-soft` | `#b93815` / `#fdebe4` | `#ff8f6b` / `#3a1f17` | Overdue, unread count |
 | `--new` / `--new-soft` | `#6a45b8` / `#f1ecfa` | `#b79cf0` / `#241d38` | Added in the last 2 days, unread |
+| `--star` | `#c08a00` | `#f2c14e` | Review stars on marketing quotes only |
 | `--danger` | `#b42318` | `#f28b82` | Destructive actions |
 | `--glass` / `--glass-line` | translucent white | translucent charcoal | Frosted header, tab bar, sheets |
 

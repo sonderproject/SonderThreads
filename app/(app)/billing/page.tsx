@@ -160,7 +160,7 @@ export default async function BillingPage({
             </div>
             <p className="text-text-muted">
               {formatCents(calculateMonthlyPriceCents("organization", purchased))} / month ·{" "}
-              {orgTier(purchased) === "small_team" ? "Small Team: $19 a seat" : "Organization rate: $349 for 20 seats, $15 each after"}
+              {orgTier(purchased) === "small_team" ? "Business: $19 a seat" : "Organization rate: $349 for 20 seats, $15 each after"}
             </p>
           </div>
         )}

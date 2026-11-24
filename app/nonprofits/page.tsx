@@ -50,7 +50,7 @@ const FAQS = [
   },
   {
     q: "How much does it cost?",
-    a: "Small Team is $19 per person per month, from 1 to 18 people. Organization is $349 a month with 20 seats included and $15 for each extra seat. Both start with a 14-day free trial. Larger organizations can ask about Enterprise pricing.",
+    a: "Business is $19 per person per month, from 1 to 18 people. Organization is $349 a month with 20 seats included and $15 for each extra seat. Both start with a 14-day free trial. Larger organizations can ask about Enterprise pricing.",
   },
 ];
 
@@ -256,7 +256,7 @@ export default function NonprofitsPage() {
 
       <Section id="features" n="05" marker="Features" title="Everything your programs run on.">
         <Features
-          teamNote="Everything here is included on Small Team and Organization."
+          teamNote="Everything here is included on Business and Organization."
           items={[
             { title: "Participant profiles", body: "Contact details, notes, check-ins and follow-ups for every participant, on one timeline." },
             { title: "Check-ins and services", body: "Log a check-in and the service in one line." },

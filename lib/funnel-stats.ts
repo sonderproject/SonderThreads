@@ -33,7 +33,7 @@ export async function setupFunnel(days: number): Promise<{ org: FunnelStep[]; so
       { label: "Finished set-up", count: n("org6") },
     ],
     solo: [
-      { label: "Answered \"what will you use it for\"", count: n("solo1") },
+      { label: "Started individual sign-up", count: n("solo1") },
       { label: "Created account", count: n("solo2") },
       { label: "Verified email", count: n("solo3") },
       { label: "Finished set-up", count: n("solo4") },

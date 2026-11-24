@@ -104,7 +104,7 @@ export default async function SignupPage({
       <div className={`w-full space-y-3 ${flow ? "max-w-sm" : "max-w-xs"}`}>
         {flow ? (
           <div className="mb-4 space-y-4">
-            <SetupProgress flow={flow} step={2} />
+            <SetupProgress flow={flow} step={flow === "org" ? 2 : 1} />
             <div className="space-y-1">
               <h1 className="page-title">Create your account</h1>
               <p className="text-sm text-text-muted">

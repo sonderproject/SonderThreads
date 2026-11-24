@@ -17,7 +17,7 @@ const PLANS: Record<PlanKey, { name: string; who: string; price: string; unit?: 
     features: ["Your own private workspace", "Tasks, notes, lists and calendar", "Smart command box and voice", "Clients and follow-ups if you need them"],
   },
   team: {
-    name: "Small Team",
+    name: "Business",
     who: `For a business of one, or a team of up to ${SMALL_TEAM_MAX_SEATS}.`,
     price: usd(SEAT_CENTS),
     unit: "/ person / month",
@@ -30,7 +30,7 @@ const PLANS: Record<PlanKey, { name: string; who: string; price: string; unit?: 
     price: usd(ORG_BASE_CENTS),
     unit: "/ month",
     fine: `${ORG_INCLUDED_SEATS} seats included. Each extra seat ${usd(EXTRA_SEAT_CENTS)}/month. 14-day free team trial.`,
-    features: ["Everything in Small Team", "Team dashboard and activity log", "Branded PDF reports", "Onboarding help and data import"],
+    features: ["Everything in Business", "Team dashboard and activity log", "Branded PDF reports", "Onboarding help and data import"],
   },
   enterprise: {
     name: "Enterprise",

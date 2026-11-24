@@ -48,7 +48,7 @@ const JSON_LD = {
       publisher: { "@id": "https://www.sonderproject.co/#organization" },
       offers: [
         { name: "Individual", price: INDIVIDUAL_CENTS / 100, description: "Per month. 7-day free trial, no card needed." },
-        { name: "Small Team", price: SEAT_CENTS / 100, description: "Per user per month, 1-18 people. 14-day free trial." },
+        { name: "Business", price: SEAT_CENTS / 100, description: "Per user per month, 1-18 people. 14-day free trial." },
         { name: "Organization", price: ORG_BASE_CENTS / 100, description: "Per month, 20 seats included. 14-day free trial." },
       ].map((o) => ({ "@type": "Offer", priceCurrency: "USD", url: SITE_URL, ...o })),
     },
@@ -76,7 +76,7 @@ const PRIMARY =
   "rounded-full bg-accent px-7 py-3.5 text-sm font-semibold text-bg shadow-sm ring-1 ring-inset ring-white/15 transition-colors hover:bg-accent-dim";
 const SECONDARY = "rounded-full border border-border bg-bg-raised px-7 py-3.5 text-sm font-semibold text-text transition-colors hover:bg-bg-hover";
 
-const TRUST = ["Encrypted in transit and at rest", "Two-step sign-in", "Roles and permissions", "Every account walled off", "Export everything, any time", "Never sold"];
+const TRUST = ["Encrypted in transit and at rest", "Two-step sign-in", "Your data is never sold"];
 
 const CHAT_POINTS = [
   "Channels for the whole team, plus private group and direct chats.",
@@ -119,15 +119,14 @@ export default function WelcomePage() {
         <div className="dots pointer-events-none absolute inset-0" aria-hidden />
         <div className={`${WRAP} space-y-10 pb-12 pt-12 text-center sm:pt-16`}>
           <div className="mx-auto max-w-4xl space-y-6">
-            <p className="eyebrow text-text-faint">Tasks · Notes · Clients · Teams</p>
             <h1 className="font-display text-[2.6rem] font-light leading-[1.03] tracking-[-0.03em] sm:text-7xl">
               <span className="whitespace-nowrap">Your day.</span> <span className="whitespace-nowrap">Your people.</span>{" "}
               <span className="whitespace-nowrap">Your work.</span>
               <span className="block text-accent">All in one place.</span>
             </h1>
             <p className="mx-auto max-w-2xl text-lg leading-relaxed text-text-muted sm:text-xl">
-              Tasks, notes, reminders, calendars, clients, and teams. Everything connected in one simple workspace.{" "}
-              <span className="text-text">Just type it or say it. Surfdesk keeps it organized.</span>
+              <span className="text-text">Type it or say it. Surfdesk files it.</span> Tasks, notes, reminders, your calendar, clients and
+              team, connected in one simple workspace.
             </p>
             <div className="flex flex-wrap justify-center gap-3">
               <TrackedLink page={PAGE} cta="hero_primary" href={START} className={PRIMARY}>
@@ -257,13 +256,6 @@ export default function WelcomePage() {
           <div className="space-y-5">
             <Eyebrow>Pricing</Eyebrow>
             <H2 accent="Try it free first.">Simple pricing.</H2>
-            <ul className="flex flex-wrap gap-2" aria-label="How we protect your data">
-              {TRUST.map((t) => (
-                <li key={t} className="rounded-full border border-border bg-bg-raised px-3 py-1.5 text-xs text-text">
-                  <span className="text-accent">✓</span> {t}
-                </li>
-              ))}
-            </ul>
           </div>
           <PlanCards
             page={PAGE}
@@ -277,6 +269,16 @@ export default function WelcomePage() {
               enterprise: { href: SALES, label: "Talk to us" },
             }}
           />
+          <ul className="flex flex-wrap justify-center gap-x-5 gap-y-1 text-xs text-text-muted" aria-label="How we protect your data">
+            {TRUST.map((t) => (
+              <li key={t}>
+                <span className="text-accent" aria-hidden>
+                  ✓
+                </span>{" "}
+                {t}
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
 

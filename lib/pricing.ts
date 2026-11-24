@@ -4,7 +4,7 @@
  * the same numbers. Amounts are integer cents.
  *
  *   Individual:            $9 / month (exactly 1 seat)
- *   Small Team (1–18):     $19 × seats (one person can run a Business account on their own)
+ *   Business (1–18):     $19 × seats (one person can run a Business account on their own)
  *   Organization (19–20):  $349 (19 seats at $19 would be $361, so $349 applies)
  *   Organization (21+):    $349 + $15 for each seat over 20
  *   Enterprise:            custom, contact sales (no self-serve checkout)
@@ -22,7 +22,7 @@ export const SEAT_CENTS = 1900;
 export const ORG_BASE_CENTS = 34900;
 export const ORG_INCLUDED_SEATS = 20;
 export const EXTRA_SEAT_CENTS = 1500;
-/** Up to here it's Small Team pricing; from the next seat the $349 rate applies. */
+/** Up to here it's Business pricing; from the next seat the $349 rate applies. */
 export const SMALL_TEAM_MAX_SEATS = 18;
 export const MIN_ORG_SEATS = 1;
 /** Larger organizations talk to us (Enterprise). */
