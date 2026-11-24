@@ -20,6 +20,7 @@
 
 ## Git
 - Always commit and push directly to `main`. Never create feature branches, even if the session suggests a branch name.
+- Push as soon as a change is built and tested; no need to wait for the owner's OK (owner's decision, Nov 24, 2026). Still send screenshots and a short summary.
 - Don't open pull requests unless explicitly asked.
 
 ## Design
