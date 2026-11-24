@@ -5,6 +5,8 @@ import { SeatSummary } from "@/components/org/SeatSummary";
 import { redirect } from "next/navigation";
 import { asUser } from "@/lib/db/as-user";
 import { queryOne } from "@/lib/db/client";
+import { ORG_EXPORT_TABLES } from "@/lib/export/org-export";
+import { getTerms } from "@/lib/terms-server";
 import { requireUserId } from "@/lib/current-user";
 import { getMembership, ORG_ROLES, ROLE_LABELS, type OrgRole } from "@/lib/org";
 import {
@@ -98,6 +100,7 @@ export default async function OrganizationPage({ searchParams }: { searchParams:
   if (!m) redirect("/organization/new");
   if (!m.active || m.role !== "admin") redirect("/settings#organization");
   const { error, saved, link: newTeamLink } = await searchParams;
+  const terms = await getTerms();
   const [seats, referralSettings, memberRules] = await Promise.all([
     seatUsage(m.orgId),
     loadReferralSettings(m.orgId),
@@ -442,6 +445,34 @@ export default async function OrganizationPage({ searchParams }: { searchParams:
               )}
             </div>
           </form>
+        </div>
+      </section>
+
+      <section id="export" className="scroll-mt-20 space-y-3">
+        <h2 className="section-label">Export everything</h2>
+        <div className="card space-y-3 p-4">
+          <p className="text-sm text-text-muted">
+            Download every client, {terms.checkInLower}, note, outcome, exit and form response that belongs to {m.orgName}, with who on staff it&apos;s assigned
+            to. Members&apos; private contacts, tasks and team chats are never included. Each download is recorded in the activity log.
+          </p>
+          <a href="/api/org/export" className="inline-block rounded-full bg-accent px-4 py-1.5 text-sm font-semibold text-bg hover:bg-accent-dim">
+            Download everything (JSON)
+          </a>
+          <div className="space-y-1.5">
+            <p className="text-xs text-text-muted">Or one spreadsheet (CSV) at a time:</p>
+            <ul className="flex flex-wrap gap-2">
+              {ORG_EXPORT_TABLES.map((t) => (
+                <li key={t.table}>
+                  <a
+                    href={`/api/org/export?format=csv&table=${t.table}`}
+                    className="inline-block rounded-full border border-border px-3 py-1 text-xs font-medium text-text hover:bg-bg-hover"
+                  >
+                    {t.table === "visits" ? terms.checkIns : t.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       </section>
 

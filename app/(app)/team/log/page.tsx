@@ -22,6 +22,7 @@ const WHAT: Record<string, string> = {
   check_ins: "check-in",
   client_comments: "comment",
   messages: "client in a team message",
+  organization: "the organization's data",
 };
 const VERB: Record<string, string> = {
   create: "added a",
@@ -31,6 +32,7 @@ const VERB: Record<string, string> = {
   reassign: "reassigned a",
   view: "viewed the",
   mention: "tagged the",
+  export: "downloaded",
 };
 
 /** Admins: who did what to the organization's client records, newest first. */
@@ -87,6 +89,8 @@ export default async function AuditLogPage() {
                 )}
                 {e.action === "update" && e.fields?.includes("personal") ? (
                   <span className="text-text-muted"> (changed who can see it)</span>
+                ) : e.action === "export" && e.fields?.length ? (
+                  <span className="text-text-muted"> ({e.fields.join(", ").replaceAll("_", " ")})</span>
                 ) : e.action === "update" && e.fields?.length ? (
                   <span className="text-text-muted"> ({e.fields.join(", ").replaceAll("_", " ")})</span>
                 ) : null}
