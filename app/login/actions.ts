@@ -5,6 +5,7 @@ import { isEmailSendError, sendAuthEmail } from "@/lib/auth-emails";
 
 import { isEmail } from "@/lib/email-check";
 import { readDraft, saveDraftToAccount, setupFlowFor } from "@/lib/setup";
+import { markOrgAgreed } from "@/lib/actions/setup";
 import { recordAcceptance } from "@/lib/legal-server";
 import { cookies, headers } from "next/headers";
 import { FRIEND_COOKIE, applyFriendsCode, checkFriendsCode } from "@/lib/friends";
@@ -315,6 +316,8 @@ export async function signup(formData: FormData): Promise<void> {
   };
 
   if (!agreed) back("/signup", "agree", email, next, rawPhone);
+  // Organization set-up: the sign-up checkbox carries the organization agreement too (app/signup/page.tsx).
+  if (setupFlowFor(next) === "org") await markOrgAgreed();
   if (!isEmail(email) || email.length > 254) back("/signup", "email", email, next, rawPhone);
   if (rawPhone && !phone) back("/signup", "phone", email, next, rawPhone);
   if (phone && (await phoneTaken(phone))) back("/signup", "phone-used", email, next, rawPhone);

@@ -13,11 +13,14 @@ export function OAuthButtons({
   next,
   utm = {},
   friend,
+  extraConsent,
 }: {
   from: "login" | "signup";
   next?: string;
   utm?: Record<string, string | undefined>;
   friend?: string | null;
+  /** Extra agreement text after the Terms line (the organization set-up adds the organization agreement). */
+  extraConsent?: string;
 }) {
   const providers = enabledProviders();
   if (providers.length === 0) return null;
@@ -54,7 +57,7 @@ export function OAuthButtons({
           <Link href="/terms#disputes" target="_blank" className="underline hover:text-accent">
             individual arbitration
           </Link>
-          , and confirm you&apos;re 18 or older.
+          , and confirm you&apos;re 18 or older.{extraConsent ? ` ${extraConsent}` : ""}
         </p>
       </form>
       <div className="flex items-center gap-3 text-xs text-text-faint" aria-hidden>

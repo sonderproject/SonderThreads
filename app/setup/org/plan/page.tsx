@@ -15,7 +15,7 @@ const ERRORS: Record<string, string> = {
   seats: `Choose between ${MIN_ORG_SEATS} and ${MAX_SELF_SERVE_SEATS} seats. For more, contact us about Enterprise.`,
 };
 
-/** Organization set-up, step 5 of 7: the 14-day free trial (card on file), or 30% off and start today. */
+/** Organization set-up, step 4 of 6: the 14-day free trial (card on file), or 30% off and start today. */
 export default async function SetupPlanPage({ searchParams }: { searchParams: Promise<{ offer?: string; error?: string }> }) {
   await requireUserId();
   const m = await getMembership();
@@ -44,7 +44,7 @@ export default async function SetupPlanPage({ searchParams }: { searchParams: Pr
   return (
     <SetupFrame
       flow="org"
-      step={5}
+      step={4}
       signedIn
       title={`Start ${m.orgName}`}
       intro={`Pick your seats (one per staff member), then try it free for ${ORG_TRIAL_DAYS} days or start today with ${SKIP_TRIAL_OFFER.percentOff}% off.`}

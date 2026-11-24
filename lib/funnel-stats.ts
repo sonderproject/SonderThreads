@@ -13,7 +13,6 @@ export async function setupFunnel(days: number): Promise<{ org: FunnelStep[]; so
     `with e as (select kind, message, meta from app_events where created_at > now() - make_interval(days => $1))
      select
        (select count(distinct meta->>'fid') from e where kind = 'funnel.org.basics')::int as org1,
-       (select count(distinct meta->>'fid') from e where kind = 'funnel.org.services')::int as org2,
        (select count(*) from e where kind = 'auth.signup' and meta->>'flow' = 'org' and message not ilike '%bot%')::int as org3,
        (select count(*) from e where kind = 'setup.org_created')::int as org4,
        (select count(distinct meta->>'user') from e where kind = 'funnel.org.started')::int as org5,
@@ -28,7 +27,6 @@ export async function setupFunnel(days: number): Promise<{ org: FunnelStep[]; so
   return {
     org: [
       { label: "Answered organization questions", count: n("org1") },
-      { label: "Picked services", count: n("org2") },
       { label: "Created account", count: n("org3") },
       { label: "Verified email (organization created)", count: n("org4") },
       { label: "Started trial or paid", count: n("org5") },

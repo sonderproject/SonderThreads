@@ -22,7 +22,7 @@ export default async function CheckEmailPage({
   return (
     <div className={`flex min-h-screen items-start justify-center bg-bg px-4 ${flow ? "pb-16 pt-16 sm:pt-24" : "pt-32"}`}>
       <div className={`w-full space-y-3 ${flow ? "max-w-sm" : "max-w-xs"}`}>
-        {flow ? <div className="mb-4"><SetupProgress flow={flow} step={flow === "org" ? 4 : 3} /></div> : <BrandLockup className="mb-2" />}
+        {flow ? <div className="mb-4"><SetupProgress flow={flow} step={3} /></div> : <BrandLockup className="mb-2" />}
         <h1 className={flow ? "page-title" : "section-title"}>Check your email</h1>
         <p className="text-sm text-text-muted">
           We sent an email to {email ? <strong className="text-text">{email}</strong> : "your email"}. Tap{" "}

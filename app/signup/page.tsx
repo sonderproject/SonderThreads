@@ -28,6 +28,10 @@ export async function generateMetadata({
     : {};
 }
 
+/** The organization agreement, shown with the sign-up consent in the organization set-up (recorded at /setup/org/finish). */
+const ORG_CONSENT =
+  "I'm also authorized to accept them for my organization, and it has its clients' permission (or another lawful basis) to keep their information in Surfdesk.";
+
 const ERRORS: Record<string, string> = {
   email: "Enter a valid email address.",
   phone: "Enter a valid mobile number.",
@@ -88,7 +92,8 @@ export default async function SignupPage({
   const loginHref = next ? `/login?next=${encodeURIComponent(next)}` : "/login";
   // Part of the guided set-up (lib/setup.ts): show where they are in it.
   const flow = setupFlowFor(next);
-  const quick = enabledProviders().length > 0;
+  const providers = enabledProviders().map((p) => (p === "google" ? "Google" : "Apple"));
+  const quick = providers.length > 0;
   // Text reminders aren't live until Twilio is set up: don't ask for a phone number before then.
   const askPhone = smsConfigured();
 
@@ -99,13 +104,13 @@ export default async function SignupPage({
       <div className={`w-full space-y-3 ${flow ? "max-w-sm" : "max-w-xs"}`}>
         {flow ? (
           <div className="mb-4 space-y-4">
-            <SetupProgress flow={flow} step={flow === "org" ? 3 : 2} />
+            <SetupProgress flow={flow} step={2} />
             <div className="space-y-1">
               <h1 className="page-title">Create your account</h1>
               <p className="text-sm text-text-muted">
                 {flow === "org" ? "You'll be your organization's admin. " : ""}
                 {quick
-                  ? "One tap with Google or Apple, or use your email."
+                  ? `One tap with ${providers.join(" or ")}, or use your email.`
                   : "We'll email you a 6-digit code to confirm it's you."}
               </p>
             </div>
@@ -129,7 +134,7 @@ export default async function SignupPage({
             {ERRORS[error] ?? "Something went wrong."}
           </p>
         )}
-        <OAuthButtons from="signup" next={next} utm={utm} friend={friend} />
+        <OAuthButtons from="signup" next={next} utm={utm} friend={friend} extraConsent={flow === "org" ? ORG_CONSENT : undefined} />
         <form action={signup} className="space-y-3">
           <input type="hidden" name="next" value={next ?? ""} />
           {/* Friends & family: only through the owner's private link, never a visible box (referral discounts will be separate). */}
@@ -222,6 +227,7 @@ export default async function SignupPage({
                 individual arbitration
               </Link>
               , and I&apos;m at least 18.
+            {flow === "org" && <> {ORG_CONSENT}</>}
             </span>
           </label>
           <label className="flex items-start gap-2 text-xs text-text-muted">

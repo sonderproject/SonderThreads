@@ -13,7 +13,7 @@ import { logEvent } from "@/lib/events";
 export const metadata = { title: "Your team · Surfdesk" };
 export const dynamic = "force-dynamic";
 
-/** Organization set-up, step 6 of 7: invite staff (each invite holds a seat), or later. */
+/** Organization set-up, step 5 of 6: invite staff (each invite holds a seat), or later. */
 export default async function SetupTeamPage({
   searchParams,
 }: {
@@ -34,7 +34,7 @@ export default async function SetupTeamPage({
   return (
     <SetupFrame
       flow="org"
-      step={6}
+      step={5}
       signedIn
       title="Invite your team"
       intro="Each person gets an email to join. You can invite more people any time from the Organization page."
@@ -75,8 +75,8 @@ export default async function SetupTeamPage({
           <SubmitButton pendingLabel="Sending…" className="rounded-full bg-accent px-5 py-2 text-sm font-semibold text-bg hover:bg-accent-dim">
             Send invites
           </SubmitButton>
-          <button formAction={skipTeamStep} formNoValidate className="text-sm text-text-muted hover:text-text">
-            I&apos;ll do this later
+          <button formAction={skipTeamStep} formNoValidate className="rounded-full border border-border px-4 py-2 text-sm font-medium text-text hover:bg-bg-hover">
+            Skip for now
           </button>
         </div>
       </form>

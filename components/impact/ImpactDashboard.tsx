@@ -739,7 +739,7 @@ function Totals({ data, checkInsWord, showChange, periodName, business, followUp
             value={data.extra.valueCents}
             display={formatMoney(data.extra.valueCents)}
             prev={data.prevExtra.valueCents}
-            hint="From the prices in Settings → Services"
+            hint={data.extra.valueCents > 0 ? "From the prices in Settings → Services" : "Add prices in Settings → Services to see this"}
             {...t}
           />
           {data.extra.referrals !== null ? (

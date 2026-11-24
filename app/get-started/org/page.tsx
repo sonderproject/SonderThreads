@@ -5,7 +5,7 @@ import { TimeZoneInput } from "@/components/notifications/TimeZoneInput";
 import { saveOrgBasics } from "@/lib/actions/setup";
 import { ORG_KINDS, ORG_KINDS_SAME } from "@/lib/terms";
 import { OrgKindText } from "@/components/org/OrgKindText";
-import { TEAM_SIZES, readDraft } from "@/lib/setup";
+import { INDUSTRIES, TEAM_SIZES, readDraft } from "@/lib/setup";
 
 export const metadata = { title: "Set up your organization · Surfdesk" };
 export const dynamic = "force-dynamic";
@@ -18,14 +18,14 @@ const ERRORS: Record<string, string> = {
 
 type Params = { error?: string; offer?: string; utm_source?: string; utm_medium?: string; utm_campaign?: string; utm_content?: string };
 
-/** Organization set-up, step 1 of 7: name, type, team size (time zone comes from the browser). */
+/** Organization set-up, step 1 of 6: name, type, line of work, team size (time zone comes from the browser). */
 export default async function OrgBasicsPage({ searchParams }: { searchParams: Promise<Params> }) {
   const { error, offer, ...utm } = await searchParams;
   const d = await readDraft();
   const draft = d?.flow === "org" ? d : null;
   return (
-    <SetupFrame flow="org" step={1} title="Tell us about your organization" intro="This sets up Surfdesk's words, reports and seats for your team. You can change it later.">
-      <form action={saveOrgBasics} className="space-y-5">
+    <SetupFrame flow="org" step={1} title="Tell us about your organization" intro="A few taps and your workspace is ready, with services already set up. You can change anything later.">
+      <form action={saveOrgBasics} className="group space-y-5">
         {error && ERRORS[error] && <p role="alert" className="flag text-sm">{ERRORS[error]}</p>}
         {offer === "skip" && <input type="hidden" name="offer" value="skip" />}
         {Object.entries(utm).map(([k, v]) => (v ? <input key={k} type="hidden" name={k} value={v.slice(0, 80)} /> : null))}
@@ -60,6 +60,36 @@ export default async function OrgBasicsPage({ searchParams }: { searchParams: Pr
           <p className="text-xs text-text-muted">{ORG_KINDS_SAME}</p>
         </fieldset>
 
+        {/* Shown once a type is picked (CSS only). Optional: it loads starter services you can edit in Settings → Services. */}
+        {ORG_KINDS.map((k) => (
+          <fieldset
+            key={k.value}
+            className={`hidden space-y-2 ${k.value === "business" ? "group-has-[input[name=kind][value=business]:checked]:block" : "group-has-[input[name=kind][value=nonprofit]:checked]:block"}`}
+          >
+            <legend className="mb-2 text-sm font-medium text-text">
+              What kind of work? <span className="font-normal text-text-muted">(optional)</span>
+            </legend>
+            <div className="flex flex-wrap gap-2">
+              {INDUSTRIES[k.value].map((i) => (
+                <label
+                  key={i.value}
+                  className="cursor-pointer rounded-full border border-border px-3 py-1.5 text-sm text-text transition-colors hover:bg-bg-hover has-[:checked]:border-accent has-[:checked]:bg-accent has-[:checked]:text-bg has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-accent has-[:focus-visible]:ring-offset-2"
+                >
+                  <input
+                    type="radio"
+                    name="industry"
+                    value={`${k.value}:${i.value}`}
+                    defaultChecked={draft?.kind === k.value && draft?.industry === i.value}
+                    className="sr-only"
+                  />
+                  {i.label}
+                </label>
+              ))}
+            </div>
+            <p className="text-xs text-text-muted">We&apos;ll add matching services for you. No prices needed now.</p>
+          </fieldset>
+        ))}
+
         <fieldset className="space-y-2">
           <legend className="mb-2 text-sm font-medium text-text">How many people will use Surfdesk?</legend>
           <div className="flex flex-wrap gap-2">
@@ -81,7 +111,7 @@ export default async function OrgBasicsPage({ searchParams }: { searchParams: Pr
             ← Back
           </Link>
           <SubmitButton pendingLabel="Saving…" className="rounded-full bg-accent px-5 py-2 text-sm font-semibold text-bg hover:bg-accent-dim">
-            Continue
+            Continue to your account
           </SubmitButton>
         </div>
       </form>

@@ -4,7 +4,7 @@ import { useTerms } from "@/components/TermsProvider";
 
 import Link from "next/link";
 import { useState, useTransition } from "react";
-import { dismissWelcome, markWelcomePhoneDone } from "@/lib/actions/profile";
+import { dismissWelcome } from "@/lib/actions/profile";
 import type { WelcomeStep } from "@/lib/onboarding";
 
 const COPY: Record<WelcomeStep["key"], { title: string; body: string; href?: string; cta?: string }> = {
@@ -14,14 +14,13 @@ const COPY: Record<WelcomeStep["key"], { title: string; body: string; href?: str
     title: "Write a note or a task",
     body: "Type it in the box below, like “note: Maria starts work Monday” or “remind me to call Maria Thursday”.",
   },
-  phone: { title: "Put Surfdesk on your phone", body: "It opens like an app from your home screen." },
+  team: { title: "Invite a teammate", body: "They get their own login; you choose what they can see.", href: "/team", cta: "Invite someone" },
 };
 
-/** First-run checklist on Home: a few steps that tick themselves off, dismissible. */
+/** First-run checklist on Home: three steps that tick themselves off, with a progress bar. Hideable. */
 export function WelcomeChecklist({ steps }: { steps: WelcomeStep[] }) {
   const terms = useTerms();
   const [hidden, setHidden] = useState(false);
-  const [showPhone, setShowPhone] = useState(false);
   const [, startTransition] = useTransition();
   if (hidden) return null;
   const done = steps.filter((s) => s.done).length;
@@ -33,7 +32,7 @@ export function WelcomeChecklist({ steps }: { steps: WelcomeStep[] }) {
           <p className="section-label">Getting started</p>
           <h2 className="mt-2 font-display text-xl font-light text-text">Welcome to Surfdesk</h2>
           <p className="text-sm text-text-muted">
-            {done} of {steps.length} done
+            {done} of {steps.length} done{done === 0 ? ": a couple of minutes gets you set up" : ""}
           </p>
         </div>
         <button
@@ -78,32 +77,6 @@ export function WelcomeChecklist({ steps }: { steps: WelcomeStep[] }) {
                   <Link href={c.href} className="inline-block text-xs font-medium text-accent hover:underline">
                     {c.cta} →
                   </Link>
-                )}
-                {!s.done && s.key === "phone" && (
-                  <div className="space-y-2">
-                    <button type="button" onClick={() => setShowPhone((v) => !v)} className="text-xs font-medium text-accent hover:underline">
-                      {showPhone ? "Hide steps" : "Show me how →"}
-                    </button>
-                    {showPhone && (
-                      <ul className="space-y-1 text-xs text-text-muted">
-                        <li>
-                          <strong className="text-text">iPhone:</strong> open thesurfdesk.app in Safari, tap Share, then Add to Home
-                          Screen.
-                        </li>
-                        <li>
-                          <strong className="text-text">Android:</strong> open it in Chrome, tap ⋮, then Add to Home screen (or Install
-                          app).
-                        </li>
-                      </ul>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => startTransition(() => markWelcomePhoneDone())}
-                      className="block rounded-full border border-border px-3 py-1 text-xs font-medium text-text hover:bg-bg-hover"
-                    >
-                      I did this
-                    </button>
-                  </div>
                 )}
               </div>
             </li>

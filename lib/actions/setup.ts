@@ -12,8 +12,10 @@ import { logEvent } from "@/lib/events";
 import { createInvite } from "@/lib/actions/org";
 import { createPersonRecord } from "@/lib/actions/people";
 import {
+  INDUSTRIES,
   TEAM_SIZES,
   isSoloUse,
+  servicesForIndustry,
   readDraft,
   signupHref,
   writeDraft,
@@ -49,7 +51,11 @@ function servicesFrom(formData: FormData): DraftService[] {
 
 // ---- Before the account exists (answers stay in this browser's cookie) ----
 
-/** Organization step 1: name, type, team size, time zone. */
+/**
+ * Organization step 1 (the only question page): name, type, line of work, team size, time zone.
+ * The line of work loads starter services; the organization agreement is part of the sign-up
+ * consent on the next page. Then on to the account.
+ */
 export async function saveOrgBasics(formData: FormData): Promise<void> {
   const prev = await readDraft();
   const base: OrgDraft = prev?.flow === "org" ? prev : { flow: "org" };
@@ -58,11 +64,18 @@ export async function saveOrgBasics(formData: FormData): Promise<void> {
   const size = TEAM_SIZES.find((t) => t.value === formData.get("size"))?.value;
   const tz = formData.get("timezone")?.toString() ?? "";
   const offer = formData.get("offer") === "skip" || base.offer;
+  const okKind = isOrgKind(kind) ? kind : undefined;
+  // Each type has its own list ("business:salon", "nonprofit:food"); a pick for the other type is ignored.
+  const [industryKind, industryValue] = (formData.get("industry")?.toString() ?? "").split(":");
+  const industry =
+    okKind && industryKind === okKind && INDUSTRIES[okKind].some((i) => i.value === industryValue) ? industryValue : undefined;
   const next: OrgDraft = {
     ...base,
     name: name || undefined,
-    kind: isOrgKind(kind) ? kind : undefined,
+    kind: okKind,
     size,
+    industry,
+    services: okKind ? servicesForIndustry(okKind, industry) : base.services,
     timezone: isValidTimeZone(tz) ? tz : base.timezone,
     offer,
     utm: utmFrom(formData) ?? base.utm,
@@ -72,20 +85,14 @@ export async function saveOrgBasics(formData: FormData): Promise<void> {
   if (!next.name) redirect("/get-started/org?error=name");
   if (!next.kind) redirect("/get-started/org?error=kind");
   if (!next.size) redirect("/get-started/org?error=size");
-  await funnel(next, "funnel.org.basics", { kind: next.kind, size: next.size });
-  redirect("/get-started/org/services");
+  await funnel(next, "funnel.org.basics", { kind: next.kind, size: next.size, industry: next.industry ?? null });
+  redirect(signupHref("org", next.utm));
 }
 
-/** Organization step 2: services, and the organization agreement. Then on to the account. */
-export async function saveOrgServices(formData: FormData): Promise<void> {
-  const prev = await readDraft();
-  if (prev?.flow !== "org" || !prev.name || !prev.kind) redirect("/get-started/org");
-  const agreed = formData.get("agree") === "on";
-  const next: OrgDraft = { ...prev, services: servicesFrom(formData), agreed };
-  await writeDraft(next);
-  if (!agreed) redirect("/get-started/org/services?error=agree");
-  await funnel(next, "funnel.org.services", { services: next.services?.length ?? 0 });
-  redirect(signupHref("org", next.utm));
+/** Sign-up agreed to the Terms with the organization wording (sign-up form or Google/Apple notice). */
+export async function markOrgAgreed(): Promise<void> {
+  const d = await readDraft();
+  if (d?.flow === "org" && !d.agreed) await writeDraft({ ...d, agreed: true });
 }
 
 /** Individual step 1: what they'll use it for, and services if it's a business. */

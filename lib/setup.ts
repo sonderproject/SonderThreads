@@ -6,8 +6,10 @@ import { isValidTimeZone } from "@/lib/tz";
 /**
  * The guided set-up ("funnel") that new accounts go through.
  *
- * Organizations: 1 Organization → 2 Services → 3 Account → 4 Email code →
- * 5 Start (trial or 30% off) → 6 Team → 7 Clients.
+ * Organizations: 1 Organization (name, type, line of work, size) → 2 Account →
+ * 3 Email code → 4 Start (trial or 30% off) → 5 Team → 6 Clients.
+ * The line of work loads a starter list of services (no prices); prices are
+ * asked for later, the first time a visit is logged for a service.
  * Individuals:   1 About you → 2 Account → 3 Email code → 4 First person.
  *
  * Steps before the account exists live under /get-started (public). Their
@@ -21,7 +23,7 @@ import { isValidTimeZone } from "@/lib/tz";
 export const DRAFT_COOKIE = "setup_draft";
 const DRAFT_MAX_AGE = 60 * 60 * 24 * 3; // three days: long enough to come back to the email code
 
-export const ORG_STEPS = ["Organization", "Services", "Account", "Verify email", "Start", "Team", "Clients"] as const;
+export const ORG_STEPS = ["Organization", "Account", "Verify email", "Start", "Team", "Clients"] as const;
 export const SOLO_STEPS = ["About you", "Account", "Verify email", "First person"] as const;
 
 /** Team-size choices and the seats each suggests on the Start step. */
@@ -56,11 +58,44 @@ export const SUGGESTED_SERVICES: Record<OrgKind | "solo", string[]> = {
 
 export type DraftService = { name: string; price: string | null };
 
+/**
+ * "What kind of work?" on step 1: one tap loads a starter list of services
+ * (editable any time in Settings → Services). Optional; "other" is the default.
+ */
+export const INDUSTRIES: Record<OrgKind, { value: string; label: string; services: string[] }[]> = {
+  business: [
+    { value: "salon", label: "Salon, spa or beauty", services: ["Haircut", "Color", "Styling", "Spa treatment", "Product sale"] },
+    { value: "fitness", label: "Fitness or coaching", services: ["Training session", "Group class", "Coaching session", "Consultation", "Membership"] },
+    { value: "clinic", label: "Clinic or wellness", services: ["New client visit", "Follow-up visit", "Treatment", "Consultation"] },
+    { value: "trades", label: "Contractor or trades", services: ["Estimate", "Service call", "Repair", "Installation"] },
+    { value: "consulting", label: "Consulting or professional services", services: ["Consultation", "Strategy session", "Project work", "Follow-up"] },
+    { value: "agency", label: "Agency or creative", services: ["Discovery call", "Project work", "Review meeting", "Retainer"] },
+    { value: "other", label: "Something else", services: ["Consultation", "Appointment", "Follow-up visit", "Class or session"] },
+  ],
+  nonprofit: [
+    { value: "housing", label: "Housing or homelessness", services: ["Intake", "Case management", "Housing help", "Benefits help", "Referral"] },
+    { value: "food", label: "Food or basic needs", services: ["Intake", "Food assistance", "Benefits help", "Referral"] },
+    { value: "jobs", label: "Jobs or education", services: ["Intake", "Job readiness", "Coaching session", "Referral"] },
+    { value: "youth", label: "Youth or families", services: ["Intake", "Mentoring session", "Family support", "Referral"] },
+    { value: "health", label: "Health or wellness", services: ["Intake", "Case management", "Wellness check", "Referral"] },
+    { value: "other", label: "Something else", services: ["Intake", "Case management", "Transportation", "Referral"] },
+  ],
+};
+
+/** The starter services for a type and line of work (falls back to "Something else"). */
+export function servicesForIndustry(kind: OrgKind, industry: string | undefined): DraftService[] {
+  const list = INDUSTRIES[kind];
+  const pick = list.find((i) => i.value === industry) ?? list[list.length - 1];
+  return pick.services.map((name) => ({ name, price: null }));
+}
+
 export type OrgDraft = {
   flow: "org";
   name?: string;
   kind?: OrgKind;
   size?: TeamSize;
+  /** Line of work picked on step 1 (INDUSTRIES), which chose the starter services. */
+  industry?: string;
   timezone?: string;
   services?: DraftService[];
   agreed?: boolean;
@@ -146,6 +181,7 @@ function parseDraft(raw: string | undefined): Draft | null {
         name: typeof d.name === "string" ? d.name.trim().slice(0, 200) || undefined : undefined,
         kind: isOrgKind(d.kind) ? d.kind : undefined,
         size,
+        industry: typeof d.industry === "string" && /^[a-z]{2,20}$/.test(d.industry) ? d.industry : undefined,
         timezone: typeof d.timezone === "string" && isValidTimeZone(d.timezone) ? d.timezone : undefined,
         services: cleanServices(d.services),
         agreed: d.agreed === true,

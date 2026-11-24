@@ -7,6 +7,8 @@ import { safeNextPath } from "@/lib/auth";
 import { FRIEND_COOKIE, checkFriendsCode } from "@/lib/friends";
 import { logEvent } from "@/lib/events";
 import { OAUTH_COOKIE, enabledProviders, type OAuthProvider } from "@/lib/oauth";
+import { setupFlowFor } from "@/lib/setup";
+import { markOrgAgreed } from "@/lib/actions/setup";
 
 async function origin(): Promise<string> {
   const h = await headers();
@@ -38,6 +40,8 @@ export async function startOAuth(formData: FormData): Promise<void> {
     JSON.stringify({ next, utm, timeZone: formData.get("timezone")?.toString().slice(0, 64) || null, consent: true, from }),
     { httpOnly: true, secure: true, sameSite: "lax", path: "/", maxAge: 30 * 60 },
   );
+  // Organization set-up: the notice under the buttons includes the organization agreement.
+  if (setupFlowFor(next) === "org") await markOrgAgreed();
   // Friends & family link: checked now (with its guess limits) and kept for the callback.
   const friend = formData.get("friend")?.toString().trim();
   if (friend && (await checkFriendsCode(friend))) {

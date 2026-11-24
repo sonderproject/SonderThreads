@@ -4,7 +4,8 @@ import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { createCheckInSafe } from "@/lib/actions/check-ins";
-import { addService } from "@/lib/actions/services";
+import { addService, updateService } from "@/lib/actions/services";
+import { useTerms } from "@/components/TermsProvider";
 import { createPersonRecordSafe } from "@/lib/actions/people";
 import { fromLocalInputValue, toLocalInputValue } from "./time";
 import type { Person } from "@/lib/types";
@@ -46,6 +47,10 @@ export function CheckInForm({
   const [amount, setAmount] = useState("");
   const service = services.find((s) => s.id === serviceId) ?? null;
   const showAmount = services.some((s) => s.priceCents !== null);
+  const terms = useTerms();
+  // First visit for a service with no price (businesses and individuals, people who can edit services):
+  // ask what they usually charge, and save it as the service's price. Nonprofits don't track revenue.
+  const askPrice = Boolean(service && service.priceCents === null && canAddService && terms.audience !== "nonprofit");
   function pickService(s: Service) {
     setServiceChoice(s.id);
     setServiceId(s.id);
@@ -119,6 +124,14 @@ export function CheckInForm({
         amountCents: cents,
       });
       if (!result.ok) return setError(result.error);
+      let current = service;
+      if (askPrice && service && cents !== null && cents > 0) {
+        const priced = await updateService(service.id, { name: service.name, price: amount });
+        if (priced.ok) {
+          current = { ...service, priceCents: cents };
+          setServices((list) => list.map((x) => (x.id === service.id ? { ...x, priceCents: cents } : x)));
+        }
+      }
       setPersonId("");
       setNewName("");
       setReason("");
@@ -129,7 +142,7 @@ export function CheckInForm({
       } catch {
         // storage blocked: nothing to remember
       }
-      if (service) pickService(service);
+      if (current) pickService(current);
       else {
         setServiceId(null);
         setServiceChoice("");
@@ -253,11 +266,22 @@ export function CheckInForm({
         />
       )}
 
-      {service && showAmount && (
-        <label className="block max-w-[12rem]">
-          <span className="eyebrow mb-1 block text-text-faint">Amount</span>
-          <input value={amount} onChange={(e) => setAmount(e.target.value)} inputMode="decimal" placeholder="0" className="input tabular-nums" />
+      {service && askPrice ? (
+        <label className="block space-y-1">
+          <span className="block text-sm text-text">
+            What do you usually charge for {service.name}? <span className="text-text-muted">(optional)</span>
+          </span>
+          <input value={amount} onChange={(e) => setAmount(e.target.value)} inputMode="decimal" placeholder="0" className="input max-w-[12rem] tabular-nums" />
+          <span className="block text-xs text-text-muted">Saved as its price, so your {terms.impact} shows revenue. Change it any time in Settings → Services.</span>
         </label>
+      ) : (
+        service &&
+        showAmount && (
+          <label className="block max-w-[12rem]">
+            <span className="eyebrow mb-1 block text-text-faint">Amount</span>
+            <input value={amount} onChange={(e) => setAmount(e.target.value)} inputMode="decimal" placeholder="0" className="input tabular-nums" />
+          </label>
+        )
       )}
 
       {!useServicePicker && reasons.length > 0 && (

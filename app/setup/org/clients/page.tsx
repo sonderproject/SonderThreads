@@ -8,7 +8,7 @@ import { SetupFrame } from "@/components/setup/SetupFrame";
 export const metadata = { title: "Your clients · Surfdesk" };
 export const dynamic = "force-dynamic";
 
-/** Organization set-up, step 7 of 7 (last): upload clients from a spreadsheet, or start using the app. */
+/** Organization set-up, step 6 of 6 (last): upload clients from a spreadsheet, or start using the app. */
 export default async function SetupClientsPage({ searchParams }: { searchParams: Promise<{ invited?: string }> }) {
   await requireUserId();
   const m = await getMembership();
@@ -17,7 +17,7 @@ export default async function SetupClientsPage({ searchParams }: { searchParams:
   return (
     <SetupFrame
       flow="org"
-      step={7}
+      step={6}
       signedIn
       title="Bring in your clients"
       intro="Upload your client list from Excel or a CSV file (name, phone, email and notes columns are picked up automatically), or add them as you go."
@@ -33,8 +33,8 @@ export default async function SetupClientsPage({ searchParams }: { searchParams:
           <span className="block text-xs text-text-muted">Excel or CSV. Takes about a minute.</span>
         </button>
         <button name="go" value="app" className="card space-y-1 p-5 text-left transition-colors hover:bg-bg-hover">
-          <span className="block font-semibold text-text">I&apos;ll add them as I go</span>
-          <span className="block text-xs text-text-muted">Go to your team dashboard.</span>
+          <span className="block font-semibold text-text">Skip for now</span>
+          <span className="block text-xs text-text-muted">Go to your dashboard and add clients as you go.</span>
         </button>
       </form>
       <p className="text-xs text-text-muted">
