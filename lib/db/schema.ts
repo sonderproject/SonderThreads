@@ -1585,4 +1585,51 @@ begin
 exception when undefined_object or invalid_schema_name or undefined_function then
   null;
 end $$;
+-- Dashboards and scheduled reports (Nov 2026; lib/dashboard*.ts, lib/reports-run.ts).
+-- Each person keeps their own dashboard setup. Schedules email counts only (never names
+-- or notes) to the schedule's owner or the organization's Admins and Managers: there is
+-- no way to type in an outside address. Server-only tables.
+create table if not exists dashboard_layouts (
+  user_id uuid primary key references users(id) on delete cascade,
+  tiles text[] not null default '{}',
+  updated_at timestamptz not null default now()
+);
+alter table dashboard_layouts enable row level security;
+
+create table if not exists report_schedules (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references users(id) on delete cascade,
+  org_id uuid references organizations(id) on delete cascade,
+  name text not null check (length(name) between 1 and 80),
+  frequency text not null check (frequency in ('weekly', 'monthly')),
+  weekday int not null default 1 check (weekday between 0 and 6),
+  month_day int not null default 1 check (month_day between 1 and 28),
+  hour int not null default 8 check (hour between 0 and 23),
+  recipients text not null default 'me' check (recipients in ('me', 'managers')),
+  attach_pdf boolean not null default false,
+  tiles text[] not null default '{}',
+  enabled boolean not null default true,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  deleted_at timestamptz
+);
+create index if not exists report_schedules_scope_idx on report_schedules (org_id, user_id) where deleted_at is null;
+create index if not exists report_schedules_user_id_idx on report_schedules (user_id);
+alter table report_schedules enable row level security;
+
+-- One row per period sent (the send log); unique per schedule and period so each report goes out once.
+create table if not exists report_deliveries (
+  id uuid primary key default gen_random_uuid(),
+  schedule_id uuid not null references report_schedules(id) on delete cascade,
+  period text not null check (length(period) <= 20),
+  status text not null check (status in ('sending', 'sent', 'failed', 'skipped')),
+  recipients int not null default 0,
+  attempts int not null default 0,
+  detail text check (length(detail) <= 300),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (schedule_id, period)
+);
+create index if not exists report_deliveries_schedule_idx on report_deliveries (schedule_id, created_at desc);
+alter table report_deliveries enable row level security;
 `;

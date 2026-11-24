@@ -28,6 +28,7 @@ const MORE_LINKS = [
   { href: "/calendar", label: "Calendar" },
   { href: "/forms", label: "Forms" },
   { href: "/automations", label: "Automations" },
+  { href: "/reports", label: "Reports" },
   { href: "/impact", label: "Impact" },
   { href: "/settings", label: "Settings" },
 ];
@@ -62,7 +63,7 @@ export function MobileNav({
   const [commandOpts, setCommandOpts] = useState<OpenCommandDetail & { key: number }>({ key: 0 });
   const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const holding = useRef(false);
-  const baseLinks = (showImpact ? MORE_LINKS : MORE_LINKS.filter((l) => l.href !== "/impact")).map((l) =>
+  const baseLinks = (showImpact ? MORE_LINKS : MORE_LINKS.filter((l) => l.href !== "/impact" && l.href !== "/reports")).map((l) =>
     l.href === "/impact" ? { ...l, label: terms.impact } : l,
   );
   const withReferrals =

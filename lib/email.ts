@@ -18,7 +18,16 @@ export function escapeHtml(s: string): string {
  * `fromName` shows a different sender name on the same verified address, e.g.
  * "DSDP Workforce via Surfdesk" (recipients recognize who it's from; fewer spam marks).
  */
-export async function sendEmail(params: { to: string; subject: string; text: string; html?: string; replyTo?: string; fromName?: string }): Promise<void> {
+export async function sendEmail(params: {
+  to: string;
+  subject: string;
+  text: string;
+  html?: string;
+  replyTo?: string;
+  fromName?: string;
+  /** Files to attach (e.g. a scheduled report's PDF). */
+  attachments?: { filename: string; content: Buffer }[];
+}): Promise<void> {
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.EMAIL_FROM;
   if (!apiKey || !from) {
@@ -39,6 +48,7 @@ export async function sendEmail(params: { to: string; subject: string; text: str
       text: params.text,
       ...(params.html ? { html: params.html } : {}),
       ...(params.replyTo ? { reply_to: params.replyTo } : {}),
+      ...(params.attachments?.length ? { attachments: params.attachments.map((a) => ({ filename: a.filename, content: a.content.toString("base64") })) } : {}),
     }),
   });
   if (!res.ok) {

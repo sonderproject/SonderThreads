@@ -9,6 +9,7 @@ import { runLifecycleEmails } from "@/lib/lifecycle";
 import { runAutomations } from "@/lib/automations";
 import { purgeExpiredSubmissions } from "@/lib/forms-intake";
 import { runWorkflows } from "@/lib/workflows-run";
+import { runScheduledReports } from "@/lib/reports-run";
 
 export const dynamic = "force-dynamic";
 
@@ -81,13 +82,18 @@ export async function GET(request: NextRequest) {
     console.error("[cron/reminders] automations failed", err);
     return 0;
   });
+  // Scheduled reports (lib/reports-run.ts): counts only, to people inside the account.
+  const reports = await runScheduledReports().catch((err) => {
+    console.error("[cron/reminders] scheduled reports failed", err);
+    return 0;
+  });
   // Form responses past their form's "Keep responses" setting are erased.
   const purged = await purgeExpiredSubmissions().catch((err) => {
     console.error("[cron/reminders] form retention failed", err);
     return 0;
   });
   await heartbeat("cron_reminders_at");
-  return NextResponse.json({ reminded: due.length, summaries, stuck, emails, automated, workflows, purged });
+  return NextResponse.json({ reminded: due.length, summaries, stuck, emails, automated, workflows, reports, purged });
 }
 
 /**
