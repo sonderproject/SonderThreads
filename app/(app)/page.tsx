@@ -12,7 +12,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { WelcomeChecklist } from "@/components/home/WelcomeChecklist";
 import { FromLanding } from "@/components/home/FromLanding";
 import { SampleData } from "@/components/home/SampleData";
-import { canLoadSampleData, hasSampleData } from "@/lib/actions/sample";
+import { hasSampleData } from "@/lib/actions/sample";
 import { getWelcome } from "@/lib/onboarding";
 import { getPendingInvites } from "@/lib/org";
 import { PendingInvites } from "@/components/org/PendingInvites";
@@ -32,7 +32,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const todayKey = dayKey(new Date(), timeZone);
   const { year, month } = dateParts(new Date(), timeZone);
 
-  const [people, tasks, notes, needsAttention, { tasks: monthTasks, birthdays }, welcome, invites, sampleIn, sampleOffer] = await Promise.all([
+  const [people, tasks, notes, needsAttention, { tasks: monthTasks, birthdays }, welcome, invites, sampleIn] = await Promise.all([
     listPeople(),
     listTasks(),
     listRecentNotes(6),
@@ -41,7 +41,6 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     getWelcome(),
     getPendingInvites(),
     hasSampleData(),
-    canLoadSampleData(),
   ]);
 
   const peopleById = new Map(people.map((c) => [c.id, c]));
@@ -61,7 +60,8 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       <PendingInvites invites={invites} error={inviteError} />
       <FromLanding />
       {welcome && <WelcomeChecklist steps={welcome} />}
-      {sampleIn ? <SampleData mode="loaded" /> : sampleOffer && <SampleData mode="offer" />}
+      {/* The sample-data offer is on People and Team, not Home; Home shows just the "remove sample data" note when it is loaded. */}
+      {sampleIn && <SampleData mode="loaded" />}
       <section>
         <CommandBar />
         <QuickActions people={people.map((c) => ({ id: c.id, display_name: c.display_name }))} />
