@@ -24,7 +24,7 @@ import {
   type PaidPlan,
 } from "@/lib/billing";
 
-/** Seats asked for, checked on the server: whole number, at least 2 and at least what's in use, at most the self-serve limit. */
+/** Seats asked for, checked on the server: whole number, at least 1 and at least what's in use, at most the self-serve limit. */
 function validSeats(raw: FormDataEntryValue | null | undefined, inUse: number): number | null {
   const n = Number(raw);
   if (!Number.isInteger(n) || n < minimumSeats(inUse, 0) || n > MAX_SELF_SERVE_SEATS) return null;

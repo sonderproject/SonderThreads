@@ -1,6 +1,8 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { SETTINGS_SECTIONS, isSettingsSlug } from "@/lib/settings-sections";
+import { getMembership } from "@/lib/org";
+import { settingsSectionVisible } from "@/lib/plan";
 import { SettingsSection, type SettingsQuery } from "@/components/settings/SettingsSections";
 
 /** One Settings section on its own page, with a way back to the menu. */
@@ -13,6 +15,10 @@ export default async function SettingsSectionPage({
 }) {
   const { section } = await params;
   if (!isSettingsSlug(section)) notFound();
+  const membership = await getMembership();
+  // Business accounts manage follow-ups on the Automations page; individuals don't get outcomes or custom fields.
+  if (section === "automations" && membership?.active) redirect("/automations");
+  if (!settingsSectionVisible(section, Boolean(membership?.active))) notFound();
   const q = await searchParams;
   const meta = SETTINGS_SECTIONS.find((s) => s.slug === section)!;
 

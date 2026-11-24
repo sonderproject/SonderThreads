@@ -60,6 +60,7 @@ async function loadByCode(code: string): Promise<FormRow | null> {
        join users u on u.id = f.user_id
        left join organizations o on o.id = f.org_id
       where f.code = $1 and f.deleted_at is null
+        and f.org_id is not null -- forms are a Business feature (lib/plan.ts)
         and f.status in ('published', 'paused')
         and u.suspended_at is null and (o.id is null or o.suspended_at is null)`,
     [code],

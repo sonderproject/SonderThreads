@@ -20,7 +20,8 @@ export async function reportAccess(): Promise<ReportAccess | null> {
     if (m.role === "case_manager") return null;
     return { userId, scope: { orgId: m.orgId, userId }, tz: await getOrgTimeZone(m.orgId), audience: m.orgKind, orgName: m.orgName };
   }
-  return { userId, scope: { orgId: null, userId }, tz: await getTimeZone(), audience: "individual", orgName: null };
+  // The reports dashboard and scheduled emails are Business features (lib/plan.ts).
+  return null;
 }
 
 export async function dashboardTiles(a: ReportAccess): Promise<TileKey[]> {

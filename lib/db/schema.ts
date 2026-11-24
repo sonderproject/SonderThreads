@@ -1540,7 +1540,7 @@ language plpgsql security definer set search_path = public as $$
 begin
   if exists (select 1 from workflows w
               where w.enabled and w.deleted_at is null and w.trigger->>'type' = k
-                and ((o is not null and w.org_id = o) or (o is null and w.org_id is null and w.user_id = u))) then
+                and o is not null and w.org_id = o) then -- automations are a Business feature
     insert into automation_events (kind, user_id, org_id, person_id, ref_id) values (k, u, o, p, r);
   end if;
 end $$;

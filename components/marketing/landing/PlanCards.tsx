@@ -1,5 +1,5 @@
 import { SeatCalculator } from "@/components/billing/SeatCalculator";
-import { EXTRA_SEAT_CENTS, INDIVIDUAL_CENTS, MIN_ORG_SEATS, ORG_BASE_CENTS, ORG_INCLUDED_SEATS, SEAT_CENTS, SMALL_TEAM_MAX_SEATS } from "@/lib/pricing";
+import { EXTRA_SEAT_CENTS, INDIVIDUAL_CENTS, ORG_BASE_CENTS, ORG_INCLUDED_SEATS, SEAT_CENTS, SMALL_TEAM_MAX_SEATS } from "@/lib/pricing";
 import { TrackedLink } from "./Track";
 
 export type PlanKey = "individual" | "team" | "organization" | "enterprise";
@@ -18,11 +18,11 @@ const PLANS: Record<PlanKey, { name: string; who: string; price: string; unit?: 
   },
   team: {
     name: "Small Team",
-    who: `For teams of ${MIN_ORG_SEATS}–${SMALL_TEAM_MAX_SEATS} people.`,
+    who: `For a business of one, or a team of up to ${SMALL_TEAM_MAX_SEATS}.`,
     price: usd(SEAT_CENTS),
     unit: "/ person / month",
     fine: "14-day free team trial.",
-    features: ["Everything in Individual, for everyone", "One shared client list", "Team chat, roles and permissions", "One bill for the whole team"],
+    features: ["Everything in Individual", "Smart forms, automations and scheduled reports", "Shared client list, team chat and roles", "One bill for the whole team"],
   },
   organization: {
     name: "Organization",

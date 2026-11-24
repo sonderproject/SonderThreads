@@ -172,7 +172,7 @@ async function main() {
   const soloP = await person(SOLO, "Ivy");
   const orgP = await person(M1, "Jay");
   await runWorkflows(notify);
-  check("a solo automation acts on the solo account", (await tasksFor(soloP)).some((t) => t.user_id === SOLO && t.title === "Say hi to Ivy"));
+  check("automations are Business-only: an individual's rule doesn't run", !(await tasksFor(soloP)).some((t) => t.title.startsWith("Say hi")));
   check("…and never on organization people", !(await tasksFor(orgP)).some((t) => t.title.startsWith("Say hi")));
 
   /* Supabase API rules ----------------------------------------------- */

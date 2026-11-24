@@ -201,9 +201,10 @@ async function main() {
 
   // Solo account.
   const solo = await makeForm(SOLO, null, cleanDefinition([{ id: "nm00001", type: "short_text", label: "Name", required: true, mapTo: "full_name" }]), { intake: "auto" });
-  await submit(solo.code, solo.id, { nm00001: "Iris Park" });
+  const soloResult = await submit(solo.code, solo.id, { nm00001: "Iris Park" });
+  check("forms are Business-only: an individual's form link doesn't work", (await publicForm(solo.code)) === null && !soloResult.ok, soloResult);
   const iris = await queryOne<{ org_id: string | null; user_id: string; last_name: string }>(`select org_id, user_id, last_name from people where first_name = 'Iris'`);
-  check("a solo form adds to the solo account", iris?.org_id === null && iris.user_id === SOLO && iris.last_name === "Park", iris);
+  check("…and nothing is saved from it", iris === null, iris);
 
   // Audit: organization submissions are logged (who/what, never the answers).
   const audit = await query<{ action: string }>(`select action from audit_log where table_name = 'form_submissions' and org_id = $1`, [o1.id]);

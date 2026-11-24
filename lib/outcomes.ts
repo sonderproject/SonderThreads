@@ -42,6 +42,8 @@ async function seedIfEmpty(scope: OutcomeScope): Promise<void> {
 
 export async function listOutcomes(opts: { includeArchived?: boolean } = {}): Promise<Outcome[]> {
   const scope = await outcomeScope();
+  // Outcomes are a Business feature (lib/plan.ts); individuals' saved outcomes stay, unseen.
+  if (!scope.orgId) return [];
   await seedIfEmpty(scope);
   const { where, param } = scopeFilter(scope);
   const rows = await query<Row>(

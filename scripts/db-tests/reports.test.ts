@@ -114,8 +114,7 @@ async function main() {
   // Solo schedule.
   const soloSched = await mk(SOLO, null, "managers");
   await runScheduledReports({ send, notify });
-  check("a solo report goes only to its owner", outbox.length === 1 && outbox[0].to === "r4@t.dev", outbox.map((m) => m.to));
-  check("…with the solo numbers", outbox[0]?.text.includes("Meetings: 1") ?? false, outbox[0]?.text);
+  check("scheduled reports are Business-only: an individual's schedule doesn't send", outbox.length === 0, outbox.map((m) => m.to));
   outbox = [];
   void soloSched;
 

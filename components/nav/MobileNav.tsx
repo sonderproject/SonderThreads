@@ -1,5 +1,7 @@
 "use client";
 
+import { isActive as navActive, navModel } from "@/lib/nav";
+
 import { runPageAdd } from "@/components/nav/page-add";
 import { useTerms } from "@/components/TermsProvider";
 import { useEffect, useRef, useState } from "react";
@@ -22,19 +24,10 @@ const TABS = [
   { href: "/check-ins", label: "Check-ins", Icon: CheckInIcon },
 ];
 
-const MORE_LINKS = [
-  { href: "/lists", label: "Lists" },
-  { href: "/notes", label: "Notes" },
-  { href: "/calendar", label: "Calendar" },
-  { href: "/forms", label: "Forms" },
-  { href: "/automations", label: "Automations" },
-  { href: "/reports", label: "Reports" },
-  { href: "/impact", label: "Impact" },
-  { href: "/settings", label: "Settings" },
-];
+
 
 function isActive(pathname: string, href: string) {
-  return href === "/" ? pathname === "/" : pathname.startsWith(href);
+  return navActive(pathname, { href });
 }
 
 /**
@@ -49,7 +42,9 @@ export function MobileNav({
   referralCount = null,
   messageCount = null,
   showOwner = false,
+  business = false,
 }: {
+  business?: boolean;
   messageCount?: number | null;
   showOwner?: boolean;
   referralCount?: number | null;
@@ -63,19 +58,12 @@ export function MobileNav({
   const [commandOpts, setCommandOpts] = useState<OpenCommandDetail & { key: number }>({ key: 0 });
   const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const holding = useRef(false);
-  const baseLinks = (showImpact ? MORE_LINKS : MORE_LINKS.filter((l) => l.href !== "/impact" && l.href !== "/reports")).map((l) =>
-    l.href === "/impact" ? { ...l, label: terms.impact } : l,
-  );
-  const withReferrals =
-    referralCount !== null
-      ? [{ href: "/referrals", label: referralCount ? `Referrals (${referralCount})` : "Referrals" }, ...baseLinks]
-      : baseLinks;
-  const withMessages =
-    messageCount !== null
-      ? [{ href: "/messages", label: messageCount ? `Messages (${messageCount > 99 ? "99+" : messageCount})` : "Messages" }, ...withReferrals]
-      : withReferrals;
-  const teamLinks = showTeam ? [{ href: "/team", label: "Team" }, ...withMessages] : withMessages;
-  const moreLinks = showOwner ? [{ href: "/owner", label: "Command center" }, ...teamLinks] : teamLinks;
+  // Everything not on the bottom bar (Home, People, Tasks, check-ins), from the same model as the top bar.
+  const nav = navModel({ business, showImpact, showTeam, messageCount, referralCount, showOwner, terms: { checkIns: terms.checkIns, impact: terms.impact } });
+  const moreLinks = [...nav.primary, ...nav.menu.items]
+    .filter((l) => !["/", "/people", "/tasks", "/check-ins"].includes(l.href))
+    .map((l) => ({ href: l.href, label: l.badge ? `${l.label} (${l.badge > 99 ? "99+" : l.badge})` : l.label }))
+    .concat({ href: "/settings", label: "Settings" });
   const moreActive = moreLinks.some((l) => isActive(pathname, l.href));
 
   function openCommand(opts: OpenCommandDetail = {}) {

@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { InsightsTabs } from "@/components/reports/InsightsTabs";
 import { notFound } from "next/navigation";
 import { reportableOrg } from "@/lib/actions/metrics";
 import { getMembership } from "@/lib/org";
@@ -12,11 +12,11 @@ export default async function ImpactPage() {
   const org = await reportableOrg();
   return (
     <>
-      <p className="mb-3 text-right text-sm">
-        <Link href="/reports" className="text-accent hover:underline">
-          Your dashboard and scheduled reports →
-        </Link>
-      </p>
+      {m?.active && (
+        <div className="mb-4">
+          <InsightsTabs current="overview" />
+        </div>
+      )}
       <ImpactDashboard orgName={org?.name ?? null} />
     </>
   );

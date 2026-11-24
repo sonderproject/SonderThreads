@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ActionForm } from "@/components/reports/ActionForm";
+import { InsightsTabs } from "@/components/reports/InsightsTabs";
 import { TileCard } from "@/components/reports/TileCard";
 import { TilePicker } from "@/components/reports/TilePicker";
 import { ConfirmSubmit } from "@/components/ui/ConfirmSubmit";
@@ -11,7 +12,7 @@ import { deleteSchedule, saveSchedule, sendScheduleNow, setScheduleEnabled } fro
 import { termsFor } from "@/lib/terms";
 import { dayKey } from "@/lib/tz";
 
-export const metadata = { title: "Reports" };
+export const metadata = { title: "Insights" };
 
 const SAVED: Record<string, string> = {
   schedule: "Schedule saved.",
@@ -44,28 +45,13 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
   return (
     <div className="space-y-5">
       <div className="space-y-1">
-        <p className="eyebrow text-text-faint">{a.orgName ?? "Your numbers"}</p>
-        <h1 className="page-title">Reports</h1>
+        <p className="eyebrow text-text-faint">{a.orgName}</p>
+        <h1 className="page-title">{terms.impact}</h1>
         <p className="text-sm text-text-muted">
-          Your numbers at a glance, and emailed to you on schedule. For the full story with charts and the PDF, open{" "}
-          <Link href="/impact" className="text-accent hover:underline">
-            {terms.impact}
-          </Link>
-          .
+          {tab === "scheduled" ? "Your numbers, emailed on a schedule." : "Your numbers at a glance, the way you want to see them."}
         </p>
       </div>
-      <nav className="inline-flex rounded-full border border-border bg-bg-raised p-0.5 text-sm" aria-label="Reports sections">
-        {(
-          [
-            ["dashboard", "Dashboard"],
-            ["scheduled", "Scheduled"],
-          ] as const
-        ).map(([k, label]) => (
-          <Link key={k} href={`/reports${k === "scheduled" ? "?tab=scheduled" : ""}`} aria-current={tab === k ? "page" : undefined} className={`rounded-full px-4 py-1.5 ${tab === k ? "bg-accent text-bg" : "text-text-muted hover:text-text"}`}>
-            {label}
-          </Link>
-        ))}
-      </nav>
+      <InsightsTabs current={tab === "scheduled" ? "scheduled" : "dashboard"} />
       {sp.saved && SAVED[sp.saved] && <p className="rounded-xl bg-accent-soft p-3 text-sm text-accent">{SAVED[sp.saved]}</p>}
       {sp.error && ERRORS[sp.error] && <p className="flag rounded-xl p-3 text-sm">{ERRORS[sp.error]}</p>}
       {tab === "dashboard" ? <Dashboard a={a} sp={sp} options={options} checkIns={terms.checkIns} /> : <Scheduled a={a} options={options} />}

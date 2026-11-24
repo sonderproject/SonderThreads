@@ -16,6 +16,8 @@ const toField = (r: Row): CustomField => ({ id: r.id, label: r.label, kind: r.ki
 
 export async function listCustomFields(opts: { includeArchived?: boolean } = {}): Promise<CustomField[]> {
   const scope = await customFieldScope();
+  // Custom fields are a Business feature (lib/plan.ts); an individual's saved fields stay, unseen.
+  if (!scope.orgId) return [];
   const { where, param } = scopeFilter(scope);
   const rows = await query<Row>(
     `select id, label, kind, options, archived_at from custom_fields
@@ -30,6 +32,7 @@ export async function listCustomFields(opts: { includeArchived?: boolean } = {})
 export async function findCustomField(id: string): Promise<CustomField | null> {
   if (!/^[0-9a-f-]{36}$/i.test(id)) return null;
   const scope = await customFieldScope();
+  if (!scope.orgId) return null;
   const { where, param } = scopeFilter(scope);
   const r = await queryOne<Row>(`select id, label, kind, options, archived_at from custom_fields where ${where} and id = $2 and archived_at is null`, [param, id]);
   return r ? toField(r) : null;

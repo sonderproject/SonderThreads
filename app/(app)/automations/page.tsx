@@ -4,6 +4,7 @@ import { createWorkflow } from "@/lib/actions/workflows";
 import { WORKFLOW_TEMPLATES, ACTIONS, TRIGGERS } from "@/lib/workflows-shared";
 import { shortDate } from "@/lib/team";
 import { getTimeZone } from "@/lib/timezone";
+import { AutomationsSection } from "@/components/settings/AutomationsSection";
 
 export const metadata = { title: "Automations" };
 
@@ -95,13 +96,11 @@ export default async function AutomationsPage({ searchParams }: { searchParams: 
       {rows.length === 0 && !s.canManage && (
         <p className="rounded-xl border border-dashed border-border p-6 text-center text-sm text-text-muted">No automations yet. An Admin or Manager can set them up.</p>
       )}
-      <p className="text-xs text-text-faint">
-        Looking for the simple follow-ups (gone quiet, new person, birthdays)?{" "}
-        <Link href="/settings/automations" className="text-accent hover:underline">
-          They&apos;re in Settings
-        </Link>
-        .
-      </p>
+      <section className="space-y-2" aria-label="Your follow-ups">
+        {sp.saved === "followups" && <p className="rounded-xl bg-accent-soft p-3 text-sm text-accent">Follow-ups saved.</p>}
+        <p className="text-xs text-text-faint">Quick switches just for you: tasks for the people assigned to you.</p>
+        <AutomationsSection q={{}} back="/automations" />
+      </section>
     </div>
   );
 }

@@ -15,18 +15,10 @@ import type { Person } from "@/lib/types";
 import { DirectoryProvider } from "@/components/command/Directory";
 import { TeamProvider } from "@/components/messages/TeamContext";
 import { BellIcon, DownloadIcon, SignOutIcon, UserIcon } from "@/components/ui/icons";
+import { NavMenu } from "@/components/nav/NavMenu";
+import { isActive, navModel } from "@/lib/nav";
 
-const NAV_ITEMS = [
-  { href: "/", label: "Command" },
-  { href: "/people", label: "People" },
-  { href: "/lists", label: "Lists" },
-  { href: "/tasks", label: "Tasks" },
-  { href: "/notes", label: "Notes" },
-  { href: "/check-ins", label: "Check-ins" },
-  { href: "/calendar", label: "Calendar" },
-  { href: "/forms", label: "Forms" },
-  { href: "/impact", label: "Impact" },
-];
+
 
 export function AppShell({
   children,
@@ -39,7 +31,10 @@ export function AppShell({
   referralCount = null,
   messageCount = null,
   showOwner = false,
+  business = false,
 }: {
+  /** Organization accounts (Business): Workspace menu with forms, automations and team tools (lib/plan.ts). */
+  business?: boolean;
   /** Members of an organization get a Messages tab; the unread count (null = no tab). */
   messageCount?: number | null;
   /** The owner's master account gets a Command center tab (/owner). */
@@ -59,6 +54,7 @@ export function AppShell({
 }) {
   const terms = useTerms();
   const pathname = usePathname();
+  const nav = navModel({ business, showImpact, showTeam, messageCount, referralCount, showOwner, terms: { checkIns: terms.checkIns, impact: terms.impact } });
 
   return (
     <DirectoryProvider value={{ people, lists }}>
@@ -74,24 +70,23 @@ export function AppShell({
               </Link>
               <div className="flex items-center">
                 <div className="hidden items-center gap-2 sm:flex">
-                  <nav className="flex gap-1">
-                    {[...NAV_ITEMS.filter((i) => showImpact || i.href !== "/impact").map((i) => ({ ...i, label: i.href === "/check-ins" ? terms.checkIns : i.href === "/impact" ? terms.impact : i.label })), ...(messageCount !== null ? [{ href: "/messages", label: messageCount ? `Messages (${messageCount > 99 ? "99+" : messageCount})` : "Messages" }] : []), ...(showTeam ? [{ href: "/team", label: "Team" }] : []), ...(referralCount !== null ? [{ href: "/referrals", label: referralCount ? `Referrals (${referralCount})` : "Referrals" }] : []), ...(showOwner ? [{ href: "/owner", label: "Command center" }] : [])].map((item) => {
-                      const isActive =
-                        item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
+                  <nav className="flex items-center gap-1" aria-label="Main">
+                    {nav.primary.map((item) => {
+                      const on = isActive(pathname, item);
                       return (
                         <Link
                           key={item.href}
                           href={item.href}
+                          aria-current={on ? "page" : undefined}
                           className={`whitespace-nowrap rounded-full px-3 py-1.5 text-sm transition-colors ${
-                            isActive
-                              ? "bg-accent-soft font-medium text-accent"
-                              : "text-text-muted hover:bg-bg-hover hover:text-text"
+                            on ? "bg-accent-soft font-medium text-accent" : "text-text-muted hover:bg-bg-hover hover:text-text"
                           }`}
                         >
                           {item.label}
                         </Link>
                       );
                     })}
+                    <NavMenu label={nav.menu.label} items={nav.menu.items} badge={nav.menu.badge} />
                   </nav>
                   <button
                     onClick={() => window.dispatchEvent(new Event(OPEN_SEARCH_EVENT))}
@@ -150,7 +145,7 @@ export function AppShell({
             <div className="nav-glow-line" aria-hidden />
           </header>
           <main className="pb-tabbar mx-auto max-w-4xl px-4 pt-5 sm:px-6 sm:py-6">{children}</main>
-          <MobileNav people={people} showTeam={showTeam} showImpact={showImpact} referralCount={referralCount} messageCount={messageCount} showOwner={showOwner} />
+          <MobileNav people={people} showTeam={showTeam} showImpact={showImpact} referralCount={referralCount} messageCount={messageCount} showOwner={showOwner} business={business} />
           <SearchPalette />
         </div>
       </UndoProvider>

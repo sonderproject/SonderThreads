@@ -332,7 +332,7 @@ async function runEvents(notify: Notify): Promise<number> {
     try {
       const wfs = await query<WorkflowRow>(
         `select ${WF_COLS} from workflows w
-          where w.enabled and w.deleted_at is null and w.trigger->>'type' = $1 and w.enabled_at <= $4
+          where w.enabled and w.deleted_at is null and w.org_id is not null and w.trigger->>'type' = $1 and w.enabled_at <= $4
             and (($2::uuid is not null and w.org_id = $2) or ($2::uuid is null and w.org_id is null and w.user_id = $3))`,
         [ev.kind, ev.org_id, ev.user_id, ev.created_at],
       );
@@ -388,7 +388,7 @@ export function timeCandidates(t: Trigger): { where: string; ref: string; params
 async function runTime(notify: Notify): Promise<number> {
   const wfs = await query<WorkflowRow>(
     `select ${WF_COLS} from workflows w join users u on u.id = w.user_id and u.suspended_at is null
-      where w.enabled and w.deleted_at is null and w.trigger->>'type' in ('no_contact', 'birthday', 'date_field')`,
+      where w.enabled and w.deleted_at is null and w.org_id is not null and w.trigger->>'type' in ('no_contact', 'birthday', 'date_field')`,
   );
   let runs = 0;
   for (const wf of wfs) {

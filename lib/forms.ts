@@ -1,5 +1,6 @@
 import { query, queryOne } from "@/lib/db/client";
 import { requireUserId } from "@/lib/current-user";
+import { notFound } from "next/navigation";
 import { getMembership } from "@/lib/org";
 import { formFilter, submissionVisibility, type FormScope } from "@/lib/forms-scope";
 
@@ -26,8 +27,9 @@ import {
 export async function formScope(): Promise<FormScope> {
   const userId = await requireUserId();
   const m = await getMembership();
-  if (m?.active) return { userId, orgId: m.orgId, canManage: m.role === "admin" || m.role === "supervisor" };
-  return { userId, orgId: null, canManage: true };
+  // Forms and automations are Business features (lib/plan.ts): individuals never reach them.
+  if (!m?.active) notFound();
+  return { userId, orgId: m!.orgId, canManage: m!.role === "admin" || m!.role === "supervisor" };
 }
 
 export type FormSummary = {

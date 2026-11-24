@@ -40,10 +40,14 @@ test("the $349 rate applies at 19 seats instead of $361", () => {
 
 test("invalid seat counts are refused", () => {
   assert.throws(() => calculateMonthlyPrice("individual", 2));
-  assert.throws(() => calculateMonthlyPrice("organization", 1));
   assert.throws(() => calculateMonthlyPrice("organization", 0));
   assert.throws(() => calculateMonthlyPrice("organization", 2.5));
   assert.throws(() => calculateMonthlyPrice("organization", Number.NaN));
+});
+
+test("a one-person Business account costs $19", () => {
+  assert.equal(calculateMonthlyPrice("organization", 1), 19);
+  assert.equal(graduatedTotalCents(ORG_PRICE_TIERS, 1), 1900);
 });
 
 test("the Stripe graduated tiers charge exactly the formula for every seat count", () => {
@@ -72,8 +76,9 @@ test("seat cap: accepting a pending invite uses the seat it already holds", () =
   assert.equal(seatsAfterAdding(4, 1, { fromPendingInvite: true }) <= 5, true);
 });
 
-test("seat downgrade: never below 2 or below members + pending invites", () => {
-  assert.equal(minimumSeats(0, 0), 2);
-  assert.equal(minimumSeats(1, 0), 2);
+test("seat downgrade: never below 1 or below members + pending invites", () => {
+  assert.equal(minimumSeats(0, 0), 1);
+  assert.equal(minimumSeats(1, 0), 1);
+  assert.equal(minimumSeats(2, 0), 2);
   assert.equal(minimumSeats(7, 3), 10);
 });

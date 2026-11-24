@@ -7,7 +7,7 @@ import { MIN_ORG_SEATS, orgPriceTiersMatch, seatsAfterAdding } from "@/lib/prici
 
 /**
  * Billing. Individuals: $9/month after a 7-day free trial. Organizations buy
- * a number of seats (at least 2) after a 14-day free trial: $19 a seat up to
+ * a number of seats (at least 1) after a 14-day free trial: $19 a seat up to
  * 18, $349 for 19–20, then $15 for each seat over 20 (lib/pricing.ts). The
  * older "seat" and "team" plans are kept only for any subscription already on
  * them. Accounts that existed before billing

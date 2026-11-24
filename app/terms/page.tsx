@@ -221,7 +221,7 @@ export default function TermsPage() {
             are limited (up to 25 people, and no backup restores). Free trials are limited to one per person and card.
           </li>
           <li>
-            <strong>Teams and organizations:</strong> billed for the number of seats the organization buys (at least 2):
+            <strong>Teams and organizations:</strong> billed for the number of seats the organization buys (at least 1):
             $19 per seat a month for up to 18 seats, $349 a month for 19 or 20 seats, and $15 a month for each seat over 20,
             after a 14-day free trial. Starting the trial needs a payment card; the organization is charged for its seats
             when the trial ends unless an admin cancels first (organizations created before November 12, 2026 keep the

@@ -17,7 +17,7 @@ const ERRORS: Record<string, string> = {
   "not-set-up":
     "Billing isn't switched on yet. Nothing is charged until it is.",
   admin: "Only an organization admin can change the plan.",
-  seats: "Choose at least 2 seats, and at least as many as your members and pending invites. Over 500? Contact us about Enterprise.",
+  seats: "Choose at least 1 seat, and at least as many as your members and pending invites. Over 500? Contact us about Enterprise.",
 };
 
 const primary =

@@ -25,5 +25,8 @@ export async function saveAutomations(formData: FormData): Promise<void> {
     );
   }
   revalidatePath("/settings/automations");
+  revalidatePath("/automations");
+  // Business accounts save these on the Automations page; individuals in Settings.
+  if (formData.get("back") === "/automations") redirect("/automations?saved=followups");
   redirect("/settings/automations?saved=automations");
 }

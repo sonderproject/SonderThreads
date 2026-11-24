@@ -145,6 +145,7 @@ export default async function AppGroupLayout({ children }: { children: React.Rea
       messageCount={messageCount}
       showImpact={!(membership?.active && membership.role === "case_manager")}
       showOwner={showOwner}
+      business={Boolean(membership?.active)}
     >
       {access && billingEnabled() && <BillingBanner access={access} />}
       {showOwner && app.maintenanceOn && (

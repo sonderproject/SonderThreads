@@ -4,7 +4,7 @@
  * the same numbers. Amounts are integer cents.
  *
  *   Individual:            $9 / month (exactly 1 seat)
- *   Small Team (2–18):     $19 × seats
+ *   Small Team (1–18):     $19 × seats (one person can run a Business account on their own)
  *   Organization (19–20):  $349 (19 seats at $19 would be $361, so $349 applies)
  *   Organization (21+):    $349 + $15 for each seat over 20
  *   Enterprise:            custom, contact sales (no self-serve checkout)
@@ -24,7 +24,7 @@ export const ORG_INCLUDED_SEATS = 20;
 export const EXTRA_SEAT_CENTS = 1500;
 /** Up to here it's Small Team pricing; from the next seat the $349 rate applies. */
 export const SMALL_TEAM_MAX_SEATS = 18;
-export const MIN_ORG_SEATS = 2;
+export const MIN_ORG_SEATS = 1;
 /** Larger organizations talk to us (Enterprise). */
 export const MAX_SELF_SERVE_SEATS = 500;
 
@@ -33,7 +33,7 @@ export function calculateMonthlyPriceCents(accountType: AccountType, seats: numb
     if (seats !== 1) throw new Error("Individual plans require exactly one seat.");
     return INDIVIDUAL_CENTS;
   }
-  if (!Number.isInteger(seats) || seats < MIN_ORG_SEATS) throw new Error("Organizations require at least two seats.");
+  if (!Number.isInteger(seats) || seats < MIN_ORG_SEATS) throw new Error("Organizations require at least one seat.");
   if (seats <= SMALL_TEAM_MAX_SEATS) return seats * SEAT_CENTS;
   if (seats <= ORG_INCLUDED_SEATS) return ORG_BASE_CENTS;
   return ORG_BASE_CENTS + (seats - ORG_INCLUDED_SEATS) * EXTRA_SEAT_CENTS;

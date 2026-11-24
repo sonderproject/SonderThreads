@@ -4,6 +4,9 @@ import { requireUserId } from "@/lib/current-user";
 import { queryOne } from "@/lib/db/client";
 import { isOwner } from "@/lib/owner";
 import { SETTINGS_SECTIONS, sectionForQuery } from "@/lib/settings-sections";
+import { getMembership } from "@/lib/org";
+import { settingsSectionVisible } from "@/lib/plan";
+import { UpgradeCard } from "@/components/settings/UpgradeCard";
 import { SettingsHashRedirect } from "@/components/settings/SettingsHashRedirect";
 import { SignOutButton } from "@/components/settings/SettingsSections";
 
@@ -21,10 +24,12 @@ export default async function SettingsPage({
     redirect(`/settings/${target}?${qs}`);
   }
   const userId = await requireUserId();
-  const [user, owner] = await Promise.all([
+  const [user, owner, membership] = await Promise.all([
     queryOne<{ email: string }>(`select email from users where id = $1`, [userId]),
     isOwner().catch(() => false),
+    getMembership(),
   ]);
+  const business = Boolean(membership?.active);
 
   return (
     <div className="max-w-md space-y-6">
@@ -42,7 +47,7 @@ export default async function SettingsPage({
       )}
 
       <nav aria-label="Settings sections" className="card divide-y divide-border-subtle overflow-hidden">
-        {SETTINGS_SECTIONS.map((s) => (
+        {SETTINGS_SECTIONS.filter((s) => settingsSectionVisible(s.slug, business)).map((s) => (
           <Link key={s.slug} href={`/settings/${s.slug}`} className="flex items-center justify-between gap-3 p-4 hover:bg-bg-hover">
             <span className="min-w-0">
               <span className="block text-base text-text">{s.title}</span>
@@ -54,6 +59,8 @@ export default async function SettingsPage({
           </Link>
         ))}
       </nav>
+
+      {!business && !owner && <UpgradeCard />}
 
       <SignOutButton />
     </div>

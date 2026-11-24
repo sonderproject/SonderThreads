@@ -14,8 +14,8 @@ export default async function NewOrganizationPage({ searchParams }: { searchPara
       <div className="space-y-1">
         <h1 className="page-title">Set up an organization</h1>
         <p className="text-sm text-text-muted">
-          For nonprofits, agencies and businesses with a team: invite your staff, give managers a read-only view of every client, and keep each
-          person&apos;s personal tasks and notes private.
+          For businesses of one or more, agencies and nonprofits: smart forms, automations and reports, and when you grow, invite your team,
+          give managers a read-only view of every client, and keep each person&apos;s personal tasks and notes private.
         </p>
       </div>
       <form action={createOrganization} className="card space-y-3 p-4">

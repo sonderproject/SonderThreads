@@ -101,7 +101,7 @@ export function reportEmail(opts: { name: string; audience: Audience; orgName: s
     "",
     `See the full dashboard: ${opts.link}`,
     "",
-    "You get this because of a scheduled report in Surfdesk. Change or pause it under Reports → Scheduled.",
+    `You get this because of a scheduled report in Surfdesk. Change or pause it under ${terms.impact} → Scheduled.`,
   ]
     .filter((l, i, a) => !(l === "" && a[i - 1] === ""))
     .join("\n");
@@ -122,7 +122,7 @@ ${rows
 </table></td></tr>
 <tr><td style="padding:16px 22px 22px;font-family:Arial,sans-serif">
 <a href="${escapeHtml(opts.link)}" style="display:inline-block;background:#1c77b5;color:#ffffff;text-decoration:none;font-weight:bold;font-size:14px;padding:10px 18px;border-radius:999px">Open the dashboard</a>
-<p style="font-size:12px;color:#8a8984;margin:16px 0 0">You get this because of a scheduled report in Surfdesk. Change or pause it under Reports → Scheduled. Counts only: no client names or notes are ever included.</p>
+<p style="font-size:12px;color:#8a8984;margin:16px 0 0">You get this because of a scheduled report in Surfdesk. Change or pause it under ${escapeHtml(terms.impact)} → Scheduled. Counts only: no client names or notes are ever included.</p>
 </td></tr></table></body></html>`;
   return { subject: heading.slice(0, 150), text, html };
 }
@@ -176,7 +176,7 @@ export async function runScheduledReports(opts: { send?: Send; notify?: Notify; 
       `select s.id, s.user_id, s.org_id, s.name, s.frequency, s.weekday, s.month_day, s.hour, s.recipients, s.attach_pdf, s.tiles
          from report_schedules s join users u on u.id = s.user_id and u.suspended_at is null
          left join organizations o on o.id = s.org_id
-        where s.enabled and s.deleted_at is null and (o.id is null or o.suspended_at is null)`,
+        where s.enabled and s.deleted_at is null and s.org_id is not null and o.suspended_at is null`,
     );
   } catch (err) {
     console.error("[reports] couldn't load schedules", err instanceof Error ? err.message : err);
@@ -224,7 +224,7 @@ export async function runScheduledReports(opts: { send?: Send; notify?: Notify; 
         console.error("[reports] send failed", s.id, err instanceof Error ? err.message : err);
         await done("failed", "Couldn't send");
         if (claim.attempts >= 2) {
-          await notify(s.user_id, { type: "report_failed", title: `"${s.name}" couldn't be sent`, body: "We tried twice. Check the schedule under Reports.", href: "/reports?tab=scheduled" }).catch(() => {});
+          await notify(s.user_id, { type: "report_failed", title: `"${s.name}" couldn't be sent`, body: "We tried twice. Check it under Scheduled reports.", href: "/reports?tab=scheduled" }).catch(() => {});
         }
       }
     } catch (err) {

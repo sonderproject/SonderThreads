@@ -4,7 +4,7 @@ import { AUTOMATIONS, DAILY_CAP } from "@/lib/automations";
 import { saveAutomations } from "@/lib/actions/automations";
 
 /** Settings → Automations. */
-export async function AutomationsSection({ q }: { q: { saved?: string } }) {
+export async function AutomationsSection({ q, back }: { q: { saved?: string }; back?: string }) {
   const userId = await requireUserId();
   const [rules, recent] = await Promise.all([
     query<{ kind: string; enabled: boolean; days: number }>(`select kind, enabled, days from automation_rules where user_id = $1`, [userId]),
@@ -13,15 +13,18 @@ export async function AutomationsSection({ q }: { q: { saved?: string } }) {
   const made = recent[0]?.n ?? 0;
   return (
     <form action={saveAutomations} className="card space-y-5 p-4">
+      {back && <input type="hidden" name="back" value={back} />}
       <div className="space-y-1">
-        <h3 className="text-sm font-semibold text-text">Follow-ups Surfdesk adds for you</h3>
-        <p className="text-xs text-text-muted">
-          Want more?{" "}
-          <a href="/automations" className="text-accent hover:underline">
-            Build your own automations →
-          </a>{" "}
-          (When this happens, if that's true, then do this.)
-        </p>
+        <h3 className="text-sm font-semibold text-text">{back ? "Your follow-ups" : "Follow-ups Surfdesk adds for you"}</h3>
+        {!back && (
+          <p className="text-xs text-text-muted">
+            Custom automations (when this happens, if that&apos;s true, then do this) come with a{" "}
+            <a href="/settings" className="text-accent hover:underline">
+              Business account
+            </a>
+            .
+          </p>
+        )}
         <p className="text-xs text-text-muted">
           Each one adds a task to your Tasks (and your reminders) for the people assigned to you, so nobody slips through the cracks. At most{" "}
           {DAILY_CAP} a day per rule. {made > 0 ? `${made} added in the last 7 days.` : ""}

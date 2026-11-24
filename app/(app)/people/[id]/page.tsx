@@ -248,6 +248,7 @@ export default async function PersonProfilePage({
         </div>
       </Section>
 
+      {membership?.active && (
       <Section title={`Outcomes${recordedOutcomes.length ? ` · ${recordedOutcomes.length}` : ""}`}>
         <PersonOutcomes
           personId={person.id}
@@ -258,6 +259,7 @@ export default async function PersonProfilePage({
           today={dayKey(new Date(), tz)}
         />
       </Section>
+      )}
 
       <Section title="Timeline">
         <PersonTimeline activity={activity as Activity[]} />
