@@ -153,7 +153,7 @@ export default function WelcomePage() {
       {/* 2. Try it now: full-width dark band; the visitor uses the real command box before signing up. */}
       <section id="try" className="band relative scroll-mt-16 overflow-hidden">
         <Aurora tones={["var(--band-accent)", "var(--band-accent)", "var(--new)"]} strength={1.1} />
-        <div className={`${WRAP} grid gap-10 py-20 sm:py-24 lg:grid-cols-[0.9fr_1.1fr] lg:items-start`}>
+        <div className={`${WRAP} grid gap-10 py-14 sm:py-16 lg:grid-cols-[0.9fr_1.1fr] lg:items-start`}>
           <div className="space-y-5">
             <p className="flex items-center gap-3 text-[11px] font-medium uppercase tracking-[0.25em]" style={{ color: "var(--band-muted)" }}>
               <span className="flex items-center gap-1.5" style={{ color: "var(--band-accent)" }}>
@@ -181,30 +181,26 @@ export default function WelcomePage() {
       {/* 3. Five apps fold into one (white). */}
       <AppFold />
 
-      {/* 3b. Why Surfdesk: what's different, without naming anyone (sand). */}
+      {/* 3b. Why Surfdesk: what's different, without naming anyone (sand). Kept compact. */}
       <section className="relative overflow-hidden">
-        <div className={`${WRAP} space-y-10 py-20 sm:py-24`}>
-          <div className="space-y-5">
-            <Eyebrow>Why Surfdesk</Eyebrow>
-            <H2 accent="It works the way you do.">Not another tool to manage.</H2>
-            <p className="max-w-2xl text-lg leading-relaxed text-text-muted">
-              Most tools hand you a blank page and a weekend of setup. Surfdesk comes ready for your work, and keeps up with you.
-            </p>
+        <div className={`${WRAP} space-y-6 py-14 sm:py-16`}>
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div className="space-y-4">
+              <Eyebrow>Why Surfdesk</Eyebrow>
+              <H2 accent="It works the way you do.">Not another tool to manage.</H2>
+            </div>
+            <TrackedLink page={PAGE} cta="why_talk" href={SALES} className="text-sm font-medium text-accent hover:underline">
+              See it with your own workflow →
+            </TrackedLink>
           </div>
           <WhySurfdesk />
-          <p className="text-sm text-text-muted">
-            Want to see it with your own workflow?{" "}
-            <TrackedLink page={PAGE} cta="why_talk" href={SALES} className="font-medium text-accent hover:underline">
-              Talk to us →
-            </TrackedLink>
-          </p>
         </div>
       </section>
 
       {/* 4. Graphs: the app's real Insights / Impact charts (sand, with color). */}
       <section className="relative overflow-hidden">
         <Aurora tones={["var(--accent)", "var(--new)", "var(--warn)"]} strength={0.8} />
-        <div className={`${WRAP} space-y-10 py-20 sm:py-24`}>
+        <div className={`${WRAP} space-y-10 py-14 sm:py-16`}>
           <div className="space-y-5">
             <Eyebrow>Insights and Impact</Eyebrow>
             <H2 accent="At a glance.">See how you&apos;re doing.</H2>
@@ -219,7 +215,7 @@ export default function WelcomePage() {
 
       {/* 5. Team chat (soft blue). */}
       <section className="relative overflow-hidden bg-accent-soft">
-        <div className={`${WRAP} grid gap-10 py-20 sm:py-24 lg:grid-cols-[0.85fr_1.15fr] lg:items-center`}>
+        <div className={`${WRAP} grid gap-10 py-14 sm:py-16 lg:grid-cols-[0.85fr_1.15fr] lg:items-center`}>
           <div className="space-y-6">
             <div className="flex flex-wrap items-center gap-3">
               <Eyebrow>Team chat</Eyebrow>
@@ -250,7 +246,7 @@ export default function WelcomePage() {
 
       {/* 6. Built around you: audience switch, a day without and with Surfdesk (white). */}
       <section className="bg-bg-raised">
-        <div className={`${WRAP} space-y-8 py-20 sm:py-24`}>
+        <div className={`${WRAP} space-y-8 py-14 sm:py-16`}>
           <div className="space-y-5">
             <Eyebrow>Built around you</Eyebrow>
             <H2 accent="Here's what changes.">One workspace.</H2>
@@ -269,7 +265,7 @@ export default function WelcomePage() {
       {/* 7. Trust and pricing (sand, dot texture). */}
       <section id="pricing" className="relative scroll-mt-20 overflow-hidden">
         <div className="dots pointer-events-none absolute inset-0" aria-hidden />
-        <div className={`${WRAP} space-y-8 py-20 sm:py-24`}>
+        <div className={`${WRAP} space-y-8 py-14 sm:py-16`}>
           <div className="space-y-5">
             <Eyebrow>Pricing</Eyebrow>
             <H2 accent="Try it free first.">Simple pricing.</H2>
@@ -299,7 +295,7 @@ export default function WelcomePage() {
       {/* 8. Close: deep surf-blue band, white text. */}
       <section className="cta-band relative overflow-hidden">
         <Aurora tones={["var(--cta-fg)", "var(--band-accent)", "var(--new)"]} strength={0.9} />
-        <div className={`${WRAP} space-y-6 py-24 text-center sm:py-28`}>
+        <div className={`${WRAP} space-y-6 py-16 text-center sm:py-20`}>
           <h2 className="mx-auto max-w-3xl font-display text-5xl font-light leading-tight tracking-[-0.02em] sm:text-6xl">
             Make space for what matters.
           </h2>

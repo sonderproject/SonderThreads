@@ -135,7 +135,7 @@ export function AppFold() {
   const after = ease(clamp((p - 0.55) / 0.2));
 
   return (
-    <section ref={section} className="relative h-[120vh] bg-bg-raised sm:h-[145vh]">
+    <section ref={section} className="relative h-[105vh] bg-bg-raised sm:h-[120vh]">
       <div className="sticky top-0 flex h-screen flex-col items-center justify-center gap-6 overflow-hidden px-4 py-16 text-center">
         <div className="relative h-24 w-full max-w-3xl sm:h-28">
           <div className="absolute inset-0 space-y-3" style={{ opacity: 1 - after, transform: `translateY(${-after * 16}px)` }}>

@@ -17,12 +17,13 @@ export function Testimonials({ audience, title = "What people are saying" }: { a
   const list = audience ? TESTIMONIALS.filter((t) => t.audience === audience) : TESTIMONIALS;
   if (list.length === 0) return null;
   const cols = list.length >= 4 ? "sm:grid-cols-2 lg:grid-cols-4" : list.length > 1 ? "sm:grid-cols-2" : "";
+  // Phones: one swipeable row instead of a tall stack.
   return (
     <section aria-label="What people say about Surfdesk" className="space-y-4">
       <p className="eyebrow text-center text-text-faint">{title}</p>
-      <div className={`grid gap-3 ${cols}`}>
+      <div className={`-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-1 sm:mx-0 sm:grid sm:overflow-visible sm:px-0 sm:pb-0 ${cols}`}>
         {list.map((t) => (
-          <figure key={t.quote} className="card flex flex-col gap-3 p-4">
+          <figure key={t.quote} className="card flex w-[82%] shrink-0 snap-start flex-col gap-3 p-4 sm:w-auto">
             <Stars />
             <blockquote className="flex-1 text-sm leading-relaxed text-text">&ldquo;{t.quote}&rdquo;</blockquote>
             <figcaption className="text-xs text-text-muted">{t.who}</figcaption>
