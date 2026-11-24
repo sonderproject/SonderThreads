@@ -3,7 +3,6 @@ import { PlanCards } from "@/components/marketing/landing/PlanCards";
 import { LandingShell } from "@/components/marketing/landing/Shell";
 import { TrackedLink } from "@/components/marketing/landing/Track";
 import { AppFold } from "@/components/marketing/v2/AppFold";
-import { AudienceExplorer } from "@/components/marketing/v2/AudienceExplorer";
 import { Aurora } from "@/components/marketing/v2/Decor";
 import { InsightsShowcase } from "@/components/marketing/v2/InsightsShowcase";
 import { ProductHero } from "@/components/marketing/v2/ProductHero";
@@ -244,20 +243,9 @@ export default function WelcomePage() {
         </div>
       </section>
 
-      {/* 6. Built around you: audience switch, a day without and with Surfdesk (white). */}
+      {/* 6. Proof: real quotes (lib/testimonials.ts), just before pricing (white). */}
       <section className="bg-bg-raised">
-        <div className={`${WRAP} space-y-8 py-14 sm:py-16`}>
-          <div className="space-y-5">
-            <Eyebrow>Built around you</Eyebrow>
-            <H2 accent="Here's what changes.">One workspace.</H2>
-          </div>
-          <AudienceExplorer page={PAGE} startHref={START} />
-        </div>
-      </section>
-
-      {/* 6b. Proof: real quotes (lib/testimonials.ts), just before pricing (white). */}
-      <section className="bg-bg-raised">
-        <div className={`${WRAP} pb-16 sm:pb-20`}>
+        <div className={`${WRAP} py-14 sm:py-16`}>
           <Testimonials />
         </div>
       </section>

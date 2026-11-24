@@ -8,7 +8,7 @@
 ## Landing pages
 - Audience pages: `/individuals`, `/business`, `/nonprofits` (`app/<page>/page.tsx`, shared pieces in `components/marketing/landing/`). They replaced `/for/nonprofits` and `/for/small-business` (permanent redirects in `next.config.mjs`). Start-trial is the main button everywhere; "Book a demo" is a small option for large organizations only (owner wants self-serve sales, Nov 23, 2026).
 - Sign-up links on them go through `landingHref()` (`lib/landing.ts`) so sign-ups and paid conversions show per page in the owner command center. Vercel Web Analytics (`MarketingAnalytics` in `components/marketing/landing/Track.tsx`) is mounted on public marketing pages only, never inside the app.
-- Homepage (`app/welcome/page.tsx`, live Nov 23, 2026; `/welcome-v2` redirects to `/`): try-it-now box (`lib/try-it.ts`, carried into the dashboard by `components/home/FromLanding.tsx`), the app's real Insights/Impact chart components with sample data, team chat, a day without vs with Surfdesk per audience (`components/marketing/v2/`).
+- Homepage (`app/welcome/page.tsx`, live Nov 23, 2026; `/welcome-v2` redirects to `/`): try-it-now box (`lib/try-it.ts`, carried into the dashboard by `components/home/FromLanding.tsx`), the app's real Insights/Impact chart components with sample data, team chat, "Why Surfdesk", real quotes (`lib/testimonials.ts`) and pricing (`components/marketing/v2/`). Organizations can ask for a call at `/talk` (saved to the owner Inbox and emailed).
 - Demos are drawings with sample data of real features; real recordings go in `public/videos/` (shot list: `docs/marketing/landing-demo-shots.md`). Never show a feature that isn't live (phone reminders need the VAPID keys below).
 
 ## Dashboard steps for the owner
