@@ -1,28 +1,31 @@
 import { TESTIMONIALS, type Testimonial } from "@/lib/testimonials";
 
-/** "What people are saying": real quotes from lib/testimonials.ts. Renders nothing if there are none. */
-export function Testimonials({ audience, title = "From the people using it" }: { audience?: Testimonial["audience"]; title?: string }) {
+function Stars() {
+  return (
+    <span className="flex gap-0.5 text-warn" aria-label="5 stars">
+      {Array.from({ length: 5 }, (_, i) => (
+        <svg key={i} viewBox="0 0 20 20" className="h-4 w-4 fill-current" aria-hidden>
+          <path d="M10 1.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L10 14.9l-5.2 2.7 1-5.8L1.5 7.7l5.9-.9z" />
+        </svg>
+      ))}
+    </span>
+  );
+}
+
+/** Real quotes from lib/testimonials.ts, as small cards with stars. Renders nothing if there are none. */
+export function Testimonials({ audience, title = "What people are saying" }: { audience?: Testimonial["audience"]; title?: string }) {
   const list = audience ? TESTIMONIALS.filter((t) => t.audience === audience) : TESTIMONIALS;
   if (list.length === 0) return null;
+  const cols = list.length >= 4 ? "sm:grid-cols-2 lg:grid-cols-4" : list.length > 1 ? "sm:grid-cols-2" : "";
   return (
-    <section aria-label="What people say about Surfdesk" className="space-y-5">
-      <p className="eyebrow text-text-faint">{title}</p>
-      <div className={`grid gap-4 ${list.length > 1 ? "md:grid-cols-2" : ""}`}>
+    <section aria-label="What people say about Surfdesk" className="space-y-4">
+      <p className="eyebrow text-center text-text-faint">{title}</p>
+      <div className={`grid gap-3 ${cols}`}>
         {list.map((t) => (
-          <figure key={t.quote} className="card flex flex-col justify-between gap-5 p-6 sm:p-7">
-            <blockquote className="font-display text-xl font-light leading-snug text-text sm:text-2xl">
-              <span className="text-accent" aria-hidden>
-                “
-              </span>
-              {t.quote}
-              <span className="text-accent" aria-hidden>
-                ”
-              </span>
-            </blockquote>
-            <figcaption className="flex items-center gap-3 text-sm text-text-muted">
-              <span className="h-px w-8 bg-accent" aria-hidden />
-              {t.who}
-            </figcaption>
+          <figure key={t.quote} className="card flex flex-col gap-3 p-4">
+            <Stars />
+            <blockquote className="flex-1 text-sm leading-relaxed text-text">&ldquo;{t.quote}&rdquo;</blockquote>
+            <figcaption className="text-xs text-text-muted">{t.who}</figcaption>
           </figure>
         ))}
       </div>

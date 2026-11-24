@@ -100,9 +100,6 @@ export default function NonprofitsPage() {
         }
       />
 
-      <div className="py-10">
-        <Testimonials audience="nonprofit" />
-      </div>
 
       <Section n="02" marker="Sound familiar?" title="Your team does great work." accent="The details are everywhere.">
         <Pains
@@ -320,6 +317,10 @@ export default function NonprofitsPage() {
           ]}
         />
       </Section>
+
+      <div className="py-12">
+        <Testimonials audience="nonprofit" />
+      </div>
 
       <Section id="pricing" n="08" marker="Pricing" title="Simple team pricing" accent="that gets cheaper as you grow.">
         <PlanCards

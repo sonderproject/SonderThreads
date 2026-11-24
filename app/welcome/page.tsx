@@ -147,10 +147,6 @@ export default function WelcomePage() {
             </p>
           </div>
           <ProductHero />
-          {/* Proof: real quotes (lib/testimonials.ts). */}
-          <div className="pt-6 text-left">
-            <Testimonials />
-          </div>
         </div>
       </section>
 
@@ -260,6 +256,13 @@ export default function WelcomePage() {
             <H2 accent="Here's what changes.">One workspace.</H2>
           </div>
           <AudienceExplorer page={PAGE} startHref={START} />
+        </div>
+      </section>
+
+      {/* 6b. Proof: real quotes (lib/testimonials.ts), just before pricing (white). */}
+      <section className="bg-bg-raised">
+        <div className={`${WRAP} pb-16 sm:pb-20`}>
+          <Testimonials />
         </div>
       </section>
 

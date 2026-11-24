@@ -203,9 +203,6 @@ export default function BusinessPage() {
         <VideoSlot page={PAGE} video={VIDEO} />
       </Section>
 
-      <div className="py-10">
-        <Testimonials audience="business" />
-      </div>
 
       <Section n="04" marker="Why it helps" title="Know your customers. Know your numbers." accent="Know what's next.">
         <Benefits
@@ -329,6 +326,10 @@ export default function BusinessPage() {
           ]}
         />
       </Section>
+
+      <div className="py-12">
+        <Testimonials audience="business" />
+      </div>
 
       <Section id="pricing" n="08" marker="Pricing" title="Simple pricing that gets cheaper" accent="as your team grows.">
         <PlanCards
