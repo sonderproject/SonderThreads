@@ -1,4 +1,5 @@
 import { CheckInsBrowser } from "@/components/check-ins/CheckInsBrowser";
+import { getMemberPolicy } from "@/lib/member-policy";
 import { listServices, serviceScope } from "@/lib/services";
 import { getTerms } from "@/lib/terms-server";
 import { listCheckIns, listCheckInReasons } from "@/lib/actions/check-ins";
@@ -24,12 +25,13 @@ export default async function CheckInsPage({
 
   // One extra day on each side covers every time zone; the browser trims to exact local days.
   const membership = await getMembership();
-  const [checkIns, people, reasons, services, scope] = await Promise.all([
+  const [checkIns, people, reasons, services, scope, policy] = await Promise.all([
     listCheckIns(all ? {} : { from: `${addDays(from, -1)}T00:00:00Z`, to: `${addDays(to, 2)}T00:00:00Z` }),
     listPeople(),
     listCheckInReasons(),
     listServices(),
     serviceScope(),
+    getMemberPolicy(),
   ]);
   const sortedPeople = people
     .map((p) => ({ id: p.id, display_name: p.display_name }))
@@ -53,6 +55,7 @@ export default async function CheckInsPage({
         canAddService={scope.canManage}
         range={all ? null : { from, to }}
         hasParams={Boolean(sp.from || sp.to || all)}
+        canExport={policy.canExport}
       />
     </div>
   );

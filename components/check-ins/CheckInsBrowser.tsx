@@ -41,7 +41,10 @@ export function CheckInsBrowser({
   canAddService = false,
   range,
   hasParams,
+  canExport = true,
 }: {
+  /** Organization Members download only if an Admin allows it (lib/member-policy.ts). */
+  canExport?: boolean;
   services?: Service[];
   canAddService?: boolean;
   checkIns: CheckInWithPerson[];
@@ -153,6 +156,7 @@ export function CheckInsBrowser({
           <span>
             Showing <strong className="tabular-nums text-text">{filtered.length}</strong>
           </span>
+          {canExport && (
           <details className="relative ml-auto">
             <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-sm font-medium text-text transition-colors hover:bg-bg-hover [&::-webkit-details-marker]:hidden">
               Export ▾
@@ -175,6 +179,7 @@ export function CheckInsBrowser({
               ))}
             </div>
           </details>
+          )}
         </div>
 
         <div className="flex flex-wrap gap-1.5">

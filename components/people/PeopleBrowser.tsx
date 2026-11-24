@@ -22,9 +22,14 @@ export function PeopleBrowser({
   orgName = null,
   services = [],
   serviceUse = {},
+  canExport = true,
+  canKeepPrivate = true,
 }: {
   people: Person[];
   orgName?: string | null;
+  /** Organization Members: downloads and "Keep private" only if an Admin allows them (lib/member-policy.ts). */
+  canExport?: boolean;
+  canKeepPrivate?: boolean;
   /** Services anyone here has had, for the "Had service" filter. */
   services?: Service[];
   serviceUse?: Record<string, string[]>;
@@ -146,6 +151,7 @@ export function PeopleBrowser({
       </div>
 
       <div className="flex items-center justify-between gap-2">
+        {canExport && (
         <details className="relative">
           <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 rounded-full border border-border bg-bg-raised px-3 py-1.5 text-sm font-medium text-text transition-colors hover:bg-bg-hover [&::-webkit-details-marker]:hidden">
             Export{query.trim() ? " results" : ""} ▾
@@ -170,6 +176,7 @@ export function PeopleBrowser({
             ))}
           </div>
         </details>
+        )}
         {people.length > 0 && !selecting && (
           <button onClick={() => setSelecting(true)} className="text-xs text-text-muted hover:text-accent">
             Select
@@ -234,13 +241,13 @@ export function PeopleBrowser({
       )}
 
       <Modal open={modalOpen} onClose={() => setModalOpen(false)} title="New person">
-        <NewPersonForm orgName={orgName} onDone={() => setModalOpen(false)} />
+        <NewPersonForm orgName={orgName} canKeepPrivate={canKeepPrivate} onDone={() => setModalOpen(false)} />
       </Modal>
     </div>
   );
 }
 
-function NewPersonForm({ onDone, orgName }: { onDone: () => void; orgName: string | null }) {
+function NewPersonForm({ onDone, orgName, canKeepPrivate }: { onDone: () => void; orgName: string | null; canKeepPrivate: boolean }) {
   const [fullName, setFullName] = useState("");
   const [keepPrivate, setKeepPrivate] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -256,7 +263,7 @@ function NewPersonForm({ onDone, orgName }: { onDone: () => void; orgName: strin
     startTransition(async () => {
       const result = await createPersonRecordSafe({
         fullName,
-        personal: orgName ? keepPrivate : undefined,
+        personal: orgName && canKeepPrivate ? keepPrivate : undefined,
       });
       setSaving(false);
       if (result.ok) {
@@ -284,7 +291,7 @@ function NewPersonForm({ onDone, orgName }: { onDone: () => void; orgName: strin
           />
         </Dictate>
       </div>
-      {orgName && (
+      {orgName && canKeepPrivate && (
         <label className="flex items-start gap-2 text-sm text-text">
           <input type="checkbox" checked={keepPrivate} onChange={(e) => setKeepPrivate(e.target.checked)} className="mt-1" />
           <span>

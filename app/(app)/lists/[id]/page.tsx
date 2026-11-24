@@ -4,6 +4,7 @@ import { getListWithItems } from "@/lib/actions/lists";
 import { ListDetail } from "@/components/lists/ListDetail";
 import { listPeople } from "@/lib/actions/people";
 import { EmailEveryone } from "@/components/lists/EmailEveryone";
+import { getMemberPolicy } from "@/lib/member-policy";
 
 export default async function ListDetailPage({
   params,
@@ -12,7 +13,7 @@ export default async function ListDetailPage({
 }) {
   const { id } = await params;
   if (!isUuid(id)) notFound();
-  const [data, people] = await Promise.all([getListWithItems(id), listPeople()]);
+  const [data, people, policy] = await Promise.all([getListWithItems(id), listPeople(), getMemberPolicy()]);
   if (!data) notFound();
 
   const roster = data.list.is_group
@@ -24,7 +25,7 @@ export default async function ListDetailPage({
   const emails = [...new Set(onList.map((pid) => byId.get(pid)?.trim().toLowerCase()).filter((e): e is string => Boolean(e && e.includes("@"))))];
   return (
     <>
-      <ListDetail list={data.list} items={data.items} people={roster} />
+      <ListDetail list={data.list} items={data.items} people={roster} canExport={!data.list.is_group || policy.canExport} />
       <EmailEveryone listName={data.list.name} emails={emails} missing={onList.length - emails.length} />
     </>
   );

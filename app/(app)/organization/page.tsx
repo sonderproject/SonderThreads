@@ -4,6 +4,7 @@ import { OrgKindText } from "@/components/org/OrgKindText";
 import { SeatSummary } from "@/components/org/SeatSummary";
 import { redirect } from "next/navigation";
 import { asUser } from "@/lib/db/as-user";
+import { queryOne } from "@/lib/db/client";
 import { requireUserId } from "@/lib/current-user";
 import { getMembership, ORG_ROLES, ROLE_LABELS, type OrgRole } from "@/lib/org";
 import {
@@ -15,6 +16,7 @@ import {
   revokeInvite,
   saveOrganizationInfo,
   setOrgKind,
+  setMemberDataRules,
   uploadOrgLogo,
 } from "@/lib/actions/org";
 import { InviteForm } from "@/components/org/InviteForm";
@@ -58,6 +60,7 @@ const SAVED: Record<string, string> = {
   name: "Name updated.",
   info: "Organization info saved.",
   kind: "Organization type updated. The app's words and reports now match it.",
+  "member-rules": "Member data rules saved.",
   logo: "Logo updated.",
   "logo-removed": "Logo removed.",
   moved: "Clients moved. The person they're now assigned to was notified.",
@@ -95,7 +98,18 @@ export default async function OrganizationPage({ searchParams }: { searchParams:
   if (!m) redirect("/organization/new");
   if (!m.active || m.role !== "admin") redirect("/settings#organization");
   const { error, saved, link: newTeamLink } = await searchParams;
-  const [seats, referralSettings] = await Promise.all([seatUsage(m.orgId), loadReferralSettings(m.orgId)]);
+  const [seats, referralSettings, memberRules] = await Promise.all([
+    seatUsage(m.orgId),
+    loadReferralSettings(m.orgId),
+    // Read by the server (after the admin check above): Member data rules and how many private contacts Members already keep.
+    queryOne<{ can_export: boolean; can_private: boolean; private_count: number }>(
+      `select o.members_can_export as can_export, o.members_can_keep_private as can_private,
+              (select count(*) from people p join memberships x on x.user_id = p.user_id and x.org_id = o.id and x.active and x.role = 'case_manager'
+                where p.org_id is null and p.deleted_at is null)::int as private_count
+         from organizations o where o.id = $1`,
+      [m.orgId],
+    ),
+  ]);
 
   const [members, invites, info] = await asUser(userId, async (q) => [
     await q<Member>(
@@ -429,6 +443,41 @@ export default async function OrganizationPage({ searchParams }: { searchParams:
             </div>
           </form>
         </div>
+      </section>
+
+      <section id="member-data" className="scroll-mt-20 space-y-3">
+        <h2 className="section-label">What Members can do with data</h2>
+        <form action={setMemberDataRules} className="card space-y-4 p-4">
+          <p className="text-sm text-text-muted">
+            Members&apos; logins belong to your organization. Both are off unless you turn them on. Admins and Managers aren&apos;t affected.
+          </p>
+          <label className="flex items-start gap-3 text-sm text-text">
+            <input type="checkbox" name="members_can_export" defaultChecked={memberRules?.can_export ?? false} className="mt-1" />
+            <span>
+              Members can download data
+              <span className="block text-xs text-text-muted">Backups and spreadsheets of the clients, notes and visits assigned to them.</span>
+            </span>
+          </label>
+          <label className="flex items-start gap-3 text-sm text-text">
+            <input type="checkbox" name="members_can_keep_private" defaultChecked={memberRules?.can_private ?? false} className="mt-1" />
+            <span>
+              Members can keep private contacts
+              <span className="block text-xs text-text-muted">
+                Contacts your organization can&apos;t see. When off, every client a Member adds belongs to the organization, and Members can&apos;t make a
+                client private.
+              </span>
+            </span>
+          </label>
+          {(memberRules?.private_count ?? 0) > 0 && (
+            <p className="text-xs text-text-muted">
+              Members already keep {memberRules!.private_count} private {memberRules!.private_count === 1 ? "contact" : "contacts"} from before. They stay
+              private; turning this off only stops new ones.
+            </p>
+          )}
+          <button type="submit" className="rounded-full bg-accent px-4 py-1.5 text-sm font-semibold text-bg hover:bg-accent-dim">
+            Save
+          </button>
+        </form>
       </section>
 
       <section id="type" className="scroll-mt-20 space-y-3">

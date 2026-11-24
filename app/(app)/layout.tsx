@@ -1,4 +1,5 @@
 import { redirect, unstable_rethrow } from "next/navigation";
+import { getMemberPolicy } from "@/lib/member-policy";
 import { TermsProvider } from "@/components/TermsProvider";
 import { headers } from "next/headers";
 import { AppShell } from "@/components/nav/AppShell";
@@ -116,6 +117,7 @@ export default async function AppGroupLayout({ children }: { children: React.Rea
     if (!open) redirect("/billing");
   }
   // Admins' referral count and members' unread team messages (lib/messages.ts), together.
+  const policy = await getMemberPolicy();
   const [referralCount, messageCount] = await Promise.all([
     membership?.active && membership.role === "admin" ? countNewReferrals(membership.orgId).catch(() => 0) : Promise.resolve(null),
     membership?.active
@@ -146,6 +148,7 @@ export default async function AppGroupLayout({ children }: { children: React.Rea
       showImpact={!(membership?.active && membership.role === "case_manager")}
       showOwner={showOwner}
       business={Boolean(membership?.active)}
+      canExport={policy.canExport}
     >
       {access && billingEnabled() && <BillingBanner access={access} />}
       {showOwner && app.maintenanceOn && (

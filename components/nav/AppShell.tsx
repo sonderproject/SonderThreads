@@ -32,7 +32,10 @@ export function AppShell({
   messageCount = null,
   showOwner = false,
   business = false,
+  canExport = true,
 }: {
+  /** Organization Members can't download data unless an Admin allows it (lib/member-policy.ts). */
+  canExport?: boolean;
   /** Organization accounts (Business): Workspace menu with forms, automations and team tools (lib/plan.ts). */
   business?: boolean;
   /** Members of an organization get a Messages tab; the unread count (null = no tab). */
@@ -95,14 +98,16 @@ export function AppShell({
                   >
                     ⌘K
                   </button>
-                  <a
-                    href="/api/export"
-                    title="Download a full backup of your data (JSON)"
-                    aria-label="Download backup"
-                    className="rounded-full p-2 text-text-muted transition-colors hover:bg-bg-hover hover:text-text"
-                  >
-                    <DownloadIcon />
-                  </a>
+                  {canExport && (
+                    <a
+                      href="/api/export"
+                      title="Download a full backup of your data (JSON)"
+                      aria-label="Download backup"
+                      className="rounded-full p-2 text-text-muted transition-colors hover:bg-bg-hover hover:text-text"
+                    >
+                      <DownloadIcon />
+                    </a>
+                  )}
                   <ThemeToggle />
                   <Link
                     href="/settings"
@@ -145,7 +150,7 @@ export function AppShell({
             <div className="nav-glow-line" aria-hidden />
           </header>
           <main className="pb-tabbar mx-auto max-w-4xl px-4 pt-5 sm:px-6 sm:py-6">{children}</main>
-          <MobileNav people={people} showTeam={showTeam} showImpact={showImpact} referralCount={referralCount} messageCount={messageCount} showOwner={showOwner} business={business} />
+          <MobileNav people={people} showTeam={showTeam} showImpact={showImpact} referralCount={referralCount} messageCount={messageCount} showOwner={showOwner} business={business} canExport={canExport} />
           <SearchPalette />
         </div>
       </UndoProvider>

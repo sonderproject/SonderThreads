@@ -43,8 +43,10 @@ export function MobileNav({
   messageCount = null,
   showOwner = false,
   business = false,
+  canExport = true,
 }: {
   business?: boolean;
+  canExport?: boolean;
   messageCount?: number | null;
   showOwner?: boolean;
   referralCount?: number | null;
@@ -220,9 +222,11 @@ export function MobileNav({
               {l.label}
             </Link>
           ))}
-          <a href="/api/export" className="flex h-12 items-center px-4 text-base text-text">
-            Download backup
-          </a>
+          {canExport && (
+            <a href="/api/export" className="flex h-12 items-center px-4 text-base text-text">
+              Download backup
+            </a>
+          )}
           <div className="flex h-12 items-center justify-between px-4 text-base text-text">
             Theme
             <ThemeToggle />

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getMemberPolicy } from "@/lib/member-policy";
 import { PeopleBrowser } from "@/components/people/PeopleBrowser";
 import { listPeople } from "@/lib/actions/people";
 import { getMembership } from "@/lib/org";
@@ -11,13 +12,14 @@ import { canLoadSampleData, hasSampleData } from "@/lib/actions/sample";
  * can delete every agency client. Personal (private) people stay with their owner.
  */
 export default async function PeoplePage() {
-  const [people, membership, services, serviceUse, sampleIn, sampleOffer] = await Promise.all([
+  const [people, membership, services, serviceUse, sampleIn, sampleOffer, policy] = await Promise.all([
     listPeople(),
     getMembership(),
     listServices({ includeArchived: true }),
     peopleServiceIds(),
     hasSampleData(),
     canLoadSampleData(),
+    getMemberPolicy(),
   ]);
   return (
     <div className="space-y-4">
@@ -33,6 +35,8 @@ export default async function PeoplePage() {
         orgName={membership?.active ? membership.orgName : null}
         services={services.filter((s) => Object.values(serviceUse).some((ids) => ids.includes(s.id)))}
         serviceUse={serviceUse}
+        canExport={policy.canExport}
+        canKeepPrivate={policy.canKeepPrivate}
       />
     </div>
   );

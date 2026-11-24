@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { MANAGED_DATA_MESSAGE, memberPolicyFor } from "@/lib/member-policy";
 import { takeQuota } from "@/lib/usage";
 import { query, queryOne } from "@/lib/db/client";
 import { getSessionUser } from "@/lib/session";
@@ -53,6 +54,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     [userId, id],
   );
   if (!list) return NextResponse.json({ error: "List not found" }, { status: 404 });
+  // Group lists hold client contact details: Members need their organization's OK to download them.
+  if (list.is_group && !(await memberPolicyFor(userId)).canExport) return NextResponse.json({ error: MANAGED_DATA_MESSAGE }, { status: 403 });
 
   const rows = await query<Row>(
     `select li.label, li.note, li.checked, p.phone, p.email,

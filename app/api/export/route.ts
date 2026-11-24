@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { MANAGED_DATA_MESSAGE, memberPolicyFor } from "@/lib/member-policy";
 import { csvCell } from "@/lib/csv";
 import { buildBackup } from "@/lib/export/backup";
 import { getSessionUser } from "@/lib/session";
@@ -16,6 +17,7 @@ function toCsv<T extends Record<string, unknown>>(rows: T[]): string {
 export async function GET(request: Request) {
   const user = await getSessionUser();
   if (!user) return NextResponse.json({ error: "Not signed in" }, { status: 401 });
+  if (!(await memberPolicyFor(user.id)).canExport) return NextResponse.json({ error: MANAGED_DATA_MESSAGE }, { status: 403 });
   const userId = user.id;
   const { searchParams } = new URL(request.url);
   const format = searchParams.get("format") === "csv" ? "csv" : "json";

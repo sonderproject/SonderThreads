@@ -264,6 +264,23 @@ export async function setOrgKind(formData: FormData): Promise<void> {
 }
 
 /**
+ * Admin: what Members may do with data (lib/member-policy.ts). Both default OFF.
+ * Changed by the server after requireAdmin(), like the organization type.
+ */
+export async function setMemberDataRules(formData: FormData): Promise<void> {
+  const { userId, orgId } = await requireAdmin();
+  const canExport = formData.get("members_can_export") === "on";
+  const canPrivate = formData.get("members_can_keep_private") === "on";
+  await query(
+    `update organizations set members_can_export = $1, members_can_keep_private = $2, updated_at = now() where id = $3`,
+    [canExport, canPrivate, orgId],
+  );
+  await logEvent("org.member_rules", "Member data rules changed", { meta: { org: orgId, by: userId, export: canExport, private: canPrivate } }).catch(() => undefined);
+  revalidatePath("/", "layout");
+  redirect("/organization?saved=member-rules#member-data");
+}
+
+/**
  * Supervisor or admin: hands one organization client (with everything
  * attached) to another active staff member, who gets a notification.
  */

@@ -35,7 +35,10 @@ export function ListDetail({
   list,
   items,
   people = [],
+  canExport = true,
 }: {
+  /** Group lists hold client details: organization Members download them only if an Admin allows it. */
+  canExport?: boolean;
   list: List;
   items: ListItem[];
   /** Everyone, for the group-list person picker. */
@@ -289,7 +292,7 @@ export function ListDetail({
           {list.is_group && <Badge>group</Badge>}
         </div>
         <div className="flex shrink-0 flex-wrap gap-2">
-          <ShareMenu list={{ ...list, name, description: description || null }} items={localItems} />
+          {canExport && <ShareMenu list={{ ...list, name, description: description || null }} items={localItems} />}
           <Button
             variant="ghost"
             onClick={handleAddToPeople}
@@ -298,6 +301,7 @@ export function ListDetail({
           >
             {toPeopleBusy ? "Adding…" : "Add to People"}
           </Button>
+          {canExport && (
           <details className="relative">
             <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-sm font-medium text-text transition-colors hover:bg-bg-hover [&::-webkit-details-marker]:hidden">
               Export ▾
@@ -319,6 +323,7 @@ export function ListDetail({
               ))}
             </div>
           </details>
+          )}
           <Button variant="ghost" onClick={handleDuplicate}>
             Duplicate
           </Button>

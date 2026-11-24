@@ -407,6 +407,11 @@ alter table organizations add column if not exists logo bytea check (octet_lengt
 alter table organizations add column if not exists logo_type text check (logo_type in ('image/png', 'image/jpeg'));
 alter table organizations add column if not exists logo_updated_at timestamptz;
 
+-- What Members (role case_manager) may do with data; Admins choose on the Organization page.
+-- Both OFF by default: a Member's login belongs to the organization (lib/member-policy.ts).
+alter table organizations add column if not exists members_can_export boolean not null default false;
+alter table organizations add column if not exists members_can_keep_private boolean not null default false;
+
 create table if not exists memberships (
   org_id uuid not null references organizations(id) on delete cascade,
   user_id uuid not null references users(id) on delete cascade,
@@ -462,6 +467,13 @@ create index if not exists people_import_batch_idx on people(import_batch) where
 -- A new client created by an active member belongs to their organization (unless kept private).
 create or replace function people_set_org() returns trigger language plpgsql set search_path = public as $$
 begin
+  -- A Member can only keep a contact private if their organization allows it (organizations.members_can_keep_private).
+  if coalesce(new.personal, false) and exists (
+    select 1 from memberships m join organizations o on o.id = m.org_id
+     where m.user_id = new.user_id and m.active and m.role = 'case_manager' and not o.members_can_keep_private
+  ) then
+    new.personal := false;
+  end if;
   if new.org_id is null and not coalesce(new.personal, false) then
     select m.org_id into new.org_id from memberships m where m.user_id = new.user_id and m.active;
   end if;
@@ -469,6 +481,20 @@ begin
 end $$;
 drop trigger if exists people_set_org on people;
 create trigger people_set_org before insert on people for each row execute function people_set_org();
+
+-- A Member can't take an organization client private unless their organization allows it.
+create or replace function people_keep_in_org() returns trigger language plpgsql set search_path = public as $$
+begin
+  if old.org_id is not null and new.org_id is null and coalesce(new.personal, false) and exists (
+    select 1 from memberships m join organizations o on o.id = m.org_id
+     where m.user_id = new.user_id and m.org_id = old.org_id and m.active and m.role = 'case_manager' and not o.members_can_keep_private
+  ) then
+    raise exception 'Your organization keeps its clients shared. Ask an Admin.' using errcode = 'P0001';
+  end if;
+  return new;
+end $$;
+drop trigger if exists people_keep_in_org on people;
+create trigger people_keep_in_org before update of org_id, personal on people for each row execute function people_keep_in_org();
 
 -- Attached records take their client's organization (null for personal ones).
 create or replace function inherit_person_org() returns trigger language plpgsql set search_path = public as $$

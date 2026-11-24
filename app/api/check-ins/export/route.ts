@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { MANAGED_DATA_MESSAGE, memberPolicyFor } from "@/lib/member-policy";
 import { takeQuota } from "@/lib/usage";
 import { exportFilter } from "@/lib/db/scope";
 import { csvCell } from "@/lib/csv";
@@ -38,6 +39,7 @@ function validInstant(value: string | null): string | null {
 export async function GET(request: Request) {
   const user = await getSessionUser();
   if (!user) return NextResponse.json({ error: "Not signed in" }, { status: 401 });
+  if (!(await memberPolicyFor(user.id)).canExport) return NextResponse.json({ error: MANAGED_DATA_MESSAGE }, { status: 403 });
   if (!(await takeQuota(user.id, "export"))) {
     return NextResponse.json({ error: "Too many exports in a short time. Try again in a little while." }, { status: 429 });
   }

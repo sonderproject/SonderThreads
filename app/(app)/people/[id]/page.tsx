@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getMemberPolicy } from "@/lib/member-policy";
 import { formatMoney } from "@/lib/money";
 import { listServices, serviceScope } from "@/lib/services";
 import { getTerms } from "@/lib/terms-server";
@@ -83,6 +84,7 @@ export default async function PersonProfilePage({
   const { id } = await params;
   if (!isUuid(id)) notFound();
   const me = await requireUserId();
+  const policy = await getMemberPolicy();
   // Everything loads at once (each query is scoped to the user, so a bad id just returns nothing).
   const [person, activity, tasks, lists, notes, checkIns, reasons, allLists, comments, tz, membership, services, scope, outcomes, recordedOutcomes] = await Promise.all([
     getPerson(id),
@@ -141,7 +143,8 @@ export default async function PersonProfilePage({
             <ContactActions personId={person.id} phone={person.phone} email={person.email} />
           </div>
         )}
-        {membership?.active && person.user_id === me && (
+        {/* Members can only make a client private if their organization allows it (lib/member-policy.ts); a private one can always be shared. */}
+        {membership?.active && person.user_id === me && (policy.canKeepPrivate || !person.org_id) && (
           <div className="mt-2">
             <ShareToggle personId={person.id} shared={Boolean(person.org_id)} orgName={membership.orgName} />
           </div>

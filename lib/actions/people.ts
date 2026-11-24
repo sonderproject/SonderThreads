@@ -1,6 +1,7 @@
 "use server";
 
 import { assertCanWrite } from "@/lib/billing";
+import { getMemberPolicy } from "@/lib/member-policy";
 import { cache } from "react";
 import { revalidatePath } from "next/cache";
 import { actorQuery, actorQueryOne, mineOrOrg } from "@/lib/db/scope";
@@ -55,6 +56,8 @@ export async function createPersonRecord(params: {
   const userId = await requireUserId();
   await assertCanWrite();
   params = validate(createPersonSchema, params);
+  // Members only keep contacts private if their organization allows it (the database enforces this too).
+  if (params.personal && !(await getMemberPolicy()).canKeepPrivate) params = { ...params, personal: false };
   const { firstName, lastName } = splitName(params.fullName);
 
   const person = await queryOne<Person>(
@@ -333,6 +336,7 @@ export async function setPersonShared(personId: string, shared: boolean): Promis
   await assertCanWrite();
     const m = await getMembership();
     if (!m?.active) throw new Error("You're not in an organization.");
+    if (!shared && !(await getMemberPolicy()).canKeepPrivate) throw new Error("Your organization keeps its clients shared. Ask an Admin.");
     await asUser(userId, (q) =>
       q(
         `update people set org_id = $1, personal = $2, updated_at = now() where id = $3 and user_id = $4`,

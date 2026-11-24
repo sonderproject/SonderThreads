@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { MANAGED_DATA_MESSAGE, getMemberPolicy } from "@/lib/member-policy";
 import { TwoFactorCard } from "@/components/settings/TwoFactorCard";
 import { DeleteAccountCard } from "@/components/settings/DeleteAccountCard";
 import { ChangePasswordCard } from "@/components/settings/ChangePasswordCard";
@@ -460,7 +461,7 @@ async function OrganizationSection({ q }: { q: SettingsQuery }) {
 }
 
 async function DataSection({ q }: { q: SettingsQuery }) {
-  const [membership, terms] = await Promise.all([getMembership(), getTerms()]);
+  const [membership, terms, policy] = await Promise.all([getMembership(), getTerms(), getMemberPolicy()]);
   const { error, saved } = q;
   const exports = [
     { table: "people", label: "People" },
@@ -477,6 +478,19 @@ async function DataSection({ q }: { q: SettingsQuery }) {
   return (
     <>
       <ImportClientsCard />
+      {!policy.canExport ? (
+        <div className="card space-y-2 p-4">
+          <h3 className="text-sm font-semibold text-text">Export my data</h3>
+          <p className="text-xs text-text-muted">{MANAGED_DATA_MESSAGE}</p>
+          <p className="text-xs text-text-muted">
+            Want a Surfdesk of your own for your personal tasks, notes and contacts? Start a separate{" "}
+            <a href="/individuals" className="text-accent hover:underline">
+              Individual account
+            </a>{" "}
+            with a different email.
+          </p>
+        </div>
+      ) : (
       <div className="card space-y-3 p-4">
         <div>
           <h3 className="text-sm font-semibold text-text">Export my data</h3>
@@ -495,6 +509,7 @@ async function DataSection({ q }: { q: SettingsQuery }) {
           Or download everything as one backup file (JSON)
         </a>
       </div>
+      )}
       <ImportBackupCard />
       <form id="clear" action={clearMyData} className="card scroll-mt-20 space-y-3 border-danger/40 p-4">
         <div>
