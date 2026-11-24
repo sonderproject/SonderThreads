@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Testimonials } from "@/components/marketing/landing/Testimonials";
 import { CommandDemo } from "@/components/landing/CommandDemo";
 import { Benefits, Faq, Features, FinalCta, Hero, OtherAudiences, Pains, Section, Trust } from "@/components/marketing/landing/Kit";
 import { PlanCards } from "@/components/marketing/landing/PlanCards";
@@ -98,6 +99,10 @@ export default function NonprofitsPage() {
           </div>
         }
       />
+
+      <div className="py-10">
+        <Testimonials audience="nonprofit" />
+      </div>
 
       <Section n="02" marker="Sound familiar?" title="Your team does great work." accent="The details are everywhere.">
         <Pains

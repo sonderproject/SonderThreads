@@ -11,6 +11,7 @@ import { StickyCta } from "@/components/marketing/v2/StickyCta";
 import { TeamChat } from "@/components/marketing/v2/TeamChat";
 import { TryIt } from "@/components/marketing/v2/TryIt";
 import { WhySurfdesk } from "@/components/marketing/v2/WhySurfdesk";
+import { Testimonials } from "@/components/marketing/landing/Testimonials";
 import { talkHref } from "@/lib/talk";
 import { landingHref } from "@/lib/landing";
 import { SITE_DESCRIPTION, SITE_URL } from "@/lib/site";
@@ -146,6 +147,10 @@ export default function WelcomePage() {
             </p>
           </div>
           <ProductHero />
+          {/* Proof: real quotes (lib/testimonials.ts). */}
+          <div className="pt-6 text-left">
+            <Testimonials />
+          </div>
         </div>
       </section>
 

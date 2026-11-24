@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Testimonials } from "@/components/marketing/landing/Testimonials";
 import Link from "next/link";
 import { CommandDemo } from "@/components/landing/CommandDemo";
 import { Benefits, Faq, Features, FinalCta, Hero, OtherAudiences, Pains, Section, Trust } from "@/components/marketing/landing/Kit";
@@ -201,6 +202,10 @@ export default function BusinessPage() {
         />
         <VideoSlot page={PAGE} video={VIDEO} />
       </Section>
+
+      <div className="py-10">
+        <Testimonials audience="business" />
+      </div>
 
       <Section n="04" marker="Why it helps" title="Know your customers. Know your numbers." accent="Know what's next.">
         <Benefits
