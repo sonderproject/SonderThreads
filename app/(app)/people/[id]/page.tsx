@@ -192,6 +192,9 @@ export default async function PersonProfilePage({
               inputType="email"
             />
           </Detail>
+          {/* Demographics are for organizations' funder reporting; individuals don't see them (their saved values stay). */}
+          {membership?.active && (
+            <>
           <Detail label="Gender">
             <DemographicSelect personId={person.id} key={`gender-${person.gender ?? ""}`}
               field="gender" value={person.gender} options={GENDERS} label="Gender" />
@@ -216,6 +219,8 @@ export default async function PersonProfilePage({
               label="Income level"
             />
           </Detail>
+            </>
+          )}
           {customFields.length > 0 && (
             <PersonCustomFields personId={person.id} fields={customFields} values={(person.custom_fields as Record<string, string> | null) ?? {}} />
           )}

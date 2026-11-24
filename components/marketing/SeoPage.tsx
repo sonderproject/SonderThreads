@@ -117,7 +117,7 @@ export function SeoPage({ page, path }: { page: SeoPageData; path: string }) {
           ) : (
             <div className="flex flex-wrap gap-3">
               <Link href={signup} className="rounded-full bg-accent px-6 py-3 text-sm font-semibold text-bg hover:bg-accent-dim">
-                Start your free trial
+                Get Started Free
               </Link>
               <Link href="/#pricing" className="rounded-full border border-border bg-bg-raised px-6 py-3 text-sm font-semibold hover:bg-bg-hover">
                 See pricing

@@ -205,7 +205,7 @@ export default function FeaturesPage() {
         title="Make space for"
         accent="what matters."
         body={["Bring your tasks, notes, clients and team together with Surfdesk."]}
-        primary={{ href: START, label: "Start Your Free Trial", cta: "final_primary" }}
+        primary={{ href: START, label: "Get Started Free", cta: "final_primary" }}
         fine="7-day free trial · No card needed · Cancel any time"
       />
 

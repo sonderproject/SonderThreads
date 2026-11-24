@@ -71,7 +71,7 @@ export default function NonprofitsPage() {
       title={TITLE}
       description={DESCRIPTION}
       crumb="Surfdesk for nonprofits"
-      primary={{ href: TEAM, label: "Start a Team Trial", short: "Start trial" }}
+      primary={{ href: TEAM, label: "Get Started Free", short: "Get started" }}
       faqs={FAQS}
     >
       <Hero
@@ -80,7 +80,7 @@ export default function NonprofitsPage() {
         lead="Focus on your mission."
         accent="Not the administrative work."
         sub="Keep your programs, participants, staff, follow-ups, and impact reporting connected in one organized workspace."
-        primary={{ href: TEAM, label: "Start a Team Trial", cta: "hero_primary" }}
+        primary={{ href: TEAM, label: "Get Started Free", cta: "hero_primary" }}
         secondary={{ href: "#features", label: "Explore the Features", cta: "hero_secondary" }}
         fine="14-day free team trial · Set up in an afternoon · Cancel any time"
         extra={<DemoLink cta="demo_hero" />}
@@ -340,7 +340,7 @@ export default function NonprofitsPage() {
         title="More time for"
         accent="the work that matters."
         body={["Keep your team organized, your programs moving, and your impact visible."]}
-        primary={{ href: TEAM, label: "Start a Team Trial", cta: "final_primary" }}
+        primary={{ href: TEAM, label: "Get Started Free", cta: "final_primary" }}
         fine="14-day free team trial · Cancel any time"
         extra={<DemoLink cta="demo_final" />}
       />

@@ -141,6 +141,10 @@ export function ImpactDashboard({ orgName }: { orgName: string | null }) {
   const bucketWord = data?.bucket === "day" ? "day" : data?.bucket === "week" ? "week" : "month";
   const story = data ? buildStory(data, { followUps, audience: terms.audience }).map((line) => line.replace(/check-ins/g, terms.checkInsLower)) : [];
 
+  // Chapter numbers follow what's shown (individuals skip demographics; follow-ups and month-by-month are optional).
+  const individual = terms.audience === "individual";
+  const chapters = ["reach", "exits", "when", "needs", ...(individual ? [] : ["who"]), ...(followUps ? ["follow"] : []), ...(data && data.monthly.length > 1 ? ["monthly"] : []), "regulars"];
+  const no = (k: string) => String(chapters.indexOf(k) + 1).padStart(2, "0");
   return (
     <div className="space-y-10">
       <div className="space-y-4">
@@ -269,7 +273,7 @@ export function ImpactDashboard({ orgName }: { orgName: string | null }) {
 
           <Totals data={data} checkInsWord={terms.checkIns} showChange={showChange} periodName={periodName} business={terms.audience === "business"} followUps={followUps} individual={terms.audience === "individual"} />
 
-          <Chapter n="01" title="Reach" lead="How many people came in, and how many were new.">
+          <Chapter n={no("reach")} title="Reach" lead="How many people came in, and how many were new.">
             <div className="grid gap-3 lg:grid-cols-2">
               <ChartCard title="People served" subtitle={`Per ${bucketWord}, returning and first visit`} table={data.reach.map((r) => ({ key: r.key, label: r.label, value: r.first + r.returning }))} unit="people" wide>
                 <ReachChart data={data.reach} />
@@ -285,17 +289,17 @@ export function ImpactDashboard({ orgName }: { orgName: string | null }) {
 
           {terms.audience === "individual" ? (
             // Outcomes are a Business feature (lib/plan.ts); individuals see their exits only.
-            <Chapter n="02" title="Exits" lead="Who stopped working with you, and why.">
+            <Chapter n={no("exits")} title="Exits" lead="Who stopped working with you, and why.">
               <ExitsSummary data={data} periodName={periodName} canEditReasons={false} />
             </Chapter>
           ) : (
-            <Chapter n="02" title="Outcomes and exits" lead="Results people reached, and where people went when they left.">
+            <Chapter n={no("exits")} title="Outcomes and exits" lead="Results people reached, and where people went when they left.">
               <OutcomesSummary data={data} periodName={periodName} />
               <ExitsSummary data={data} periodName={periodName} />
             </Chapter>
           )}
 
-          <Chapter n="03" title="When people come" lead="Plan staffing around your busiest hours.">
+          <Chapter n={no("when")} title="When people come" lead="Plan staffing around your busiest hours.">
             <div className="grid gap-3 lg:grid-cols-[2fr_1fr]">
               <section className="card space-y-3 p-4">
                 <h3 className="text-sm font-semibold text-text">Busiest times</h3>
@@ -307,14 +311,15 @@ export function ImpactDashboard({ orgName }: { orgName: string | null }) {
             </div>
           </Chapter>
 
-          <Chapter n="04" title="Needs" lead="Why people came in.">
+          <Chapter n={no("needs")} title="Needs" lead="Why people came in.">
             {data.services.length > 0 && <ServicesTable services={data.services} range={range} />}
             <ChartCard title="Reasons for visits" subtitle={`${terms.checkIns} by reason`} table={data.byReason} unit={terms.checkInsLower} wide>
               {data.byReason.length ? <BarList data={data.byReason} unit={terms.checkInsLower} /> : <Empty />}
             </ChartCard>
           </Chapter>
 
-          <Chapter n="05" title="Who we serve" lead="People served in this period, each counted once.">
+          {!individual && (
+          <Chapter n={no("who")} title="Who we serve" lead="People served in this period, each counted once.">
             <div className="grid gap-3 lg:grid-cols-3">
               <ChartCard title="Gender" subtitle="People served" table={data.byGender} unit="people">
                 <Demographic data={data.byGender} />
@@ -327,9 +332,10 @@ export function ImpactDashboard({ orgName }: { orgName: string | null }) {
               </ChartCard>
             </div>
           </Chapter>
+          )}
 
           {followUps && (
-            <Chapter n="06" title="Follow-through" lead="Follow-ups (tasks with a due date) that were due in this period.">
+            <Chapter n={no("follow")} title="Follow-through" lead="Follow-ups (tasks with a due date) that were due in this period.">
               <section className="card p-5">
                 <FollowThroughBar data={data.followThrough} />
               </section>
@@ -337,12 +343,12 @@ export function ImpactDashboard({ orgName }: { orgName: string | null }) {
           )}
 
           {data.monthly.length > 1 && (
-            <Chapter n={followUps ? "07" : "06"} title="Month by month" lead="Totals for each month in this period.">
+            <Chapter n={no("monthly")} title="Month by month" lead="Totals for each month in this period.">
               <MonthlyTable rows={data.monthly} checkInsWord={terms.checkIns} showValue={data.monthly.some((r) => r.valueCents > 0)} showOutcomes={terms.audience !== "individual"} />
             </Chapter>
           )}
 
-          <Chapter n={followUps ? (data.monthly.length > 1 ? "08" : "07") : data.monthly.length > 1 ? "07" : "06"} title="Regulars" lead="The people who came in most. Not included in exported reports.">
+          <Chapter n={no("regulars")} title="Regulars" lead="The people who came in most. Not included in exported reports.">
             {scope === "me" ? (
                 <ChartCard title="Most frequent visitors" subtitle={`Top 10 by ${terms.checkInsLower}`} table={data.topVisitors} unit={terms.checkInsLower}>
                   {data.topVisitors.length ? <BarList data={data.topVisitors} unit={terms.checkInsLower} hrefFor={(p) => `/people/${p.personId}`} /> : <Empty />}

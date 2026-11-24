@@ -54,7 +54,7 @@ export default function IndividualsPage() {
       title={TITLE}
       description={DESCRIPTION}
       crumb="Surfdesk for individuals"
-      primary={{ href: START, label: "Start Free", short: "Start Free" }}
+      primary={{ href: START, label: "Get Started Free", short: "Get started" }}
       faqs={FAQS}
     >
       <Hero
@@ -63,7 +63,7 @@ export default function IndividualsPage() {
         lead="Everything on your mind."
         accent="Finally in one place."
         sub="Your tasks, notes, reminders, lists, and calendar, all working together. Just type or say what you need, and Surfdesk keeps it organized."
-        primary={{ href: START, label: "Start Free", cta: "hero_primary" }}
+        primary={{ href: START, label: "Get Started Free", cta: "hero_primary" }}
         secondary={{ href: "#how-it-works", label: "See How It Works", cta: "hero_secondary" }}
         fine="7-day free trial · No card needed · $9/month after"
         aside={
@@ -300,7 +300,7 @@ export default function IndividualsPage() {
         title="Get organized"
         accent="without making it another task."
         body={["Start with one sentence. Surfdesk takes it from there."]}
-        primary={{ href: START, label: "Start Your Free Trial", cta: "final_primary" }}
+        primary={{ href: START, label: "Get Started Free", cta: "final_primary" }}
         fine="7-day free trial · No card needed · Cancel any time"
       />
 

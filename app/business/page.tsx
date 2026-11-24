@@ -57,7 +57,7 @@ export default function BusinessPage() {
       title={TITLE}
       description={DESCRIPTION}
       crumb="Surfdesk for business"
-      primary={{ href: TEAM, label: "Start Your Team Trial", short: "Start trial" }}
+      primary={{ href: TEAM, label: "Get Started Free", short: "Get started" }}
       faqs={FAQS}
     >
       <Hero
@@ -66,7 +66,7 @@ export default function BusinessPage() {
         lead="Run your business."
         accent="Not five different apps."
         sub="Your customers, bookings, tasks, follow-ups, team, and revenue in one connected workspace."
-        primary={{ href: TEAM, label: "Start Your Team Trial", cta: "hero_primary" }}
+        primary={{ href: TEAM, label: "Get Started Free", cta: "hero_primary" }}
         secondary={{ href: "#demo", label: "Watch the Demo", cta: "hero_secondary" }}
         fine="14-day free team trial · Set up in an afternoon · Cancel any time"
         extra={
@@ -343,7 +343,7 @@ export default function BusinessPage() {
         title="Your business has enough moving parts."
         accent="Keep them together."
         body={["Customers, visits, follow-ups, your team and your numbers, in one place."]}
-        primary={{ href: ANY, label: "Start Your Free Trial", cta: "final_primary" }}
+        primary={{ href: ANY, label: "Get Started Free", cta: "final_primary" }}
         fine="14-day free team trial · 7 days free for individuals · Cancel any time"
       />
 
