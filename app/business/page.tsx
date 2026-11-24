@@ -8,7 +8,7 @@ import { Bars, Chat, CommandLine, Done, Frame, Mention, Person, Stats, TaskRow, 
 import { VideoSlot, type LandingVideo } from "@/components/marketing/landing/VideoSlot";
 import { WorkflowDemo } from "@/components/marketing/landing/WorkflowDemo";
 import { LANDING_LINKS, landingHref } from "@/lib/landing";
-import { SUPPORT_EMAIL } from "@/lib/settings-options";
+import { talkHref } from "@/lib/talk";
 
 const PAGE = "business" as const;
 const TITLE = "Surfdesk for Business | Clients, Teams & Insights";
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
 const TEAM = landingHref("/get-started/org", PAGE);
 const SOLO = landingHref("/get-started/solo", PAGE);
 const ANY = landingHref("/get-started", PAGE);
-const SALES = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent("Surfdesk Enterprise")}`;
+const SALES = talkHref("business");
 
 /** A real screen recording goes here once it's made (docs/marketing/landing-demo-shots.md, shot B). */
 const VIDEO: LandingVideo | null = null;
@@ -74,6 +74,13 @@ export default function BusinessPage() {
             Working on your own?{" "}
             <Link href={SOLO} className="font-medium text-accent hover:underline">
               Start the $9 Individual plan →
+            </Link>
+            <span className="mx-2" aria-hidden>
+              ·
+            </span>
+            Bigger team?{" "}
+            <Link href={SALES} className="font-medium text-accent hover:underline">
+              Talk to us →
             </Link>
           </p>
         }
@@ -328,7 +335,7 @@ export default function BusinessPage() {
             individual: { href: SOLO, label: "Start your free trial" },
             team: { href: TEAM, label: "Start your team trial" },
             organization: { href: TEAM, label: "Start your team trial" },
-            enterprise: { href: SALES, label: "Contact sales" },
+            enterprise: { href: SALES, label: "Talk to us" },
           }}
         />
       </Section>

@@ -10,8 +10,9 @@ import { ProductHero } from "@/components/marketing/v2/ProductHero";
 import { StickyCta } from "@/components/marketing/v2/StickyCta";
 import { TeamChat } from "@/components/marketing/v2/TeamChat";
 import { TryIt } from "@/components/marketing/v2/TryIt";
+import { WhySurfdesk } from "@/components/marketing/v2/WhySurfdesk";
+import { talkHref } from "@/lib/talk";
 import { landingHref } from "@/lib/landing";
-import { SUPPORT_EMAIL } from "@/lib/settings-options";
 import { SITE_DESCRIPTION, SITE_URL } from "@/lib/site";
 import { INDIVIDUAL_CENTS, ORG_BASE_CENTS, SEAT_CENTS } from "@/lib/pricing";
 
@@ -19,7 +20,7 @@ import { INDIVIDUAL_CENTS, ORG_BASE_CENTS, SEAT_CENTS } from "@/lib/pricing";
  * The homepage (Nov 23, 2026). Signed-out visitors to "/" are shown this page (middleware
  * rewrites to it), so "/" is the canonical address. Full-width sections alternate sand, white,
  * dark, soft blue and a surf-blue close: product hero, a working "try it now" command box
- * (lib/try-it.ts), the five-apps fold, the app's real Insights/Impact charts with sample data,
+ * (lib/try-it.ts), the five-apps fold, "Why Surfdesk", the app's real Insights/Impact charts with sample data,
  * team chat, a day without vs with Surfdesk per audience, pricing.
  */
 export const metadata: Metadata = {
@@ -68,7 +69,7 @@ const PAGE = "home" as const;
 const START = landingHref("/get-started", PAGE);
 const SOLO = landingHref("/get-started/solo", PAGE);
 const TEAM = landingHref("/get-started/org", PAGE);
-const SALES = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent("Surfdesk Enterprise")}`;
+const SALES = talkHref("home");
 
 const WRAP = "relative mx-auto max-w-6xl px-4 sm:px-8";
 const PRIMARY =
@@ -137,6 +138,12 @@ export default function WelcomePage() {
               </TrackedLink>
             </div>
             <p className="text-sm text-text-muted">7-day free trial · No card needed · Works on any phone or computer</p>
+            <p className="text-sm text-text-muted">
+              Bringing Surfdesk to your organization?{" "}
+              <TrackedLink page={PAGE} cta="hero_talk" href={SALES} className="font-medium text-accent hover:underline">
+                Talk to us →
+              </TrackedLink>
+            </p>
           </div>
           <ProductHero />
         </div>
@@ -172,6 +179,26 @@ export default function WelcomePage() {
 
       {/* 3. Five apps fold into one (white). */}
       <AppFold />
+
+      {/* 3b. Why Surfdesk: what's different, without naming anyone (sand). */}
+      <section className="relative overflow-hidden">
+        <div className={`${WRAP} space-y-10 py-20 sm:py-24`}>
+          <div className="space-y-5">
+            <Eyebrow>Why Surfdesk</Eyebrow>
+            <H2 accent="It works the way you do.">Not another tool to manage.</H2>
+            <p className="max-w-2xl text-lg leading-relaxed text-text-muted">
+              Most tools hand you a blank page and a weekend of setup. Surfdesk comes ready for your work, and keeps up with you.
+            </p>
+          </div>
+          <WhySurfdesk />
+          <p className="text-sm text-text-muted">
+            Want to see it with your own workflow?{" "}
+            <TrackedLink page={PAGE} cta="why_talk" href={SALES} className="font-medium text-accent hover:underline">
+              Talk to us →
+            </TrackedLink>
+          </p>
+        </div>
+      </section>
 
       {/* 4. Graphs: the app's real Insights / Impact charts (sand, with color). */}
       <section className="relative overflow-hidden">
@@ -255,7 +282,7 @@ export default function WelcomePage() {
               individual: { href: SOLO, label: "Start your free trial" },
               team: { href: TEAM, label: "Start your team trial" },
               organization: { href: TEAM, label: "Start your team trial" },
-              enterprise: { href: SALES, label: "Contact sales" },
+              enterprise: { href: SALES, label: "Talk to us" },
             }}
           />
         </div>

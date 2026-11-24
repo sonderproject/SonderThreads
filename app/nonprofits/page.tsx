@@ -8,7 +8,7 @@ import { TrackedLink } from "@/components/marketing/landing/Track";
 import { VideoSlot, type LandingVideo } from "@/components/marketing/landing/VideoSlot";
 import { WorkflowDemo } from "@/components/marketing/landing/WorkflowDemo";
 import { LANDING_LINKS, landingHref } from "@/lib/landing";
-import { SUPPORT_EMAIL } from "@/lib/settings-options";
+import { talkHref } from "@/lib/talk";
 
 const PAGE = "nonprofits" as const;
 const TITLE = "Surfdesk for Nonprofits | Programs & Impact";
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
 
 const TEAM = landingHref("/get-started/org", PAGE);
 /** Demos are for large organizations; everyone else starts a trial. Swap for a booking link when there is one. */
-const DEMO = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent("Surfdesk demo for our organization")}`;
+const DEMO = talkHref("nonprofits");
 
 /** A real screen recording goes here once it's made (docs/marketing/landing-demo-shots.md, shot C). */
 const VIDEO: LandingVideo | null = null;
@@ -58,7 +58,7 @@ function DemoLink({ cta }: { cta: string }) {
     <p className="text-sm text-text-muted">
       Large organization or multiple programs?{" "}
       <TrackedLink page={PAGE} cta={cta} href={DEMO} className="font-medium text-accent hover:underline">
-        Book a demo →
+        Talk to us →
       </TrackedLink>
     </p>
   );
@@ -325,7 +325,7 @@ export default function NonprofitsPage() {
           hrefs={{
             team: { href: TEAM, label: "Start a team trial" },
             organization: { href: TEAM, label: "Start a team trial" },
-            enterprise: { href: DEMO, label: "Book a demo" },
+            enterprise: { href: DEMO, label: "Talk to us" },
           }}
         />
       </Section>
