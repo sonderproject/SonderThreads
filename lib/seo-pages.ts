@@ -502,7 +502,7 @@ export const TEMPLATE_PAGES: SeoPageData[] = [
       { title: "1. List your services", body: "One row per service, grouped by category, with duration and price." },
       { title: "2. Add packages", body: "Bundle services in the package rows and set a package price." },
       { title: "3. Share it", body: "Print it, post it, or save it as a PDF from Excel or Google Sheets." },
-      { title: "Or put it to work", body: "Add your services to Surfdesk once and log a sale in one line: “Ana – haircut”. Revenue by service is counted for you." },
+      { title: "Or put it to work", body: "Add your services to Surfdesk once and log a sale in one line: “Ana – consultation”. Revenue by service is counted for you." },
     ],
     download: {
       href: "/downloads/service-price-list-template.csv",

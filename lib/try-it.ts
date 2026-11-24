@@ -26,10 +26,10 @@ const SAMPLE_LISTS = [
 
 /** Services with the word each audience uses for logging one. */
 const SAMPLE_SERVICES: { id: string; name: string; priceCents: number | null; kind: "Visit" | "Check-in" }[] = [
-  { id: "haircut", name: "Haircut", priceCents: 4500, kind: "Visit" },
-  { id: "color", name: "Color", priceCents: 12000, kind: "Visit" },
+  { id: "consultation", name: "Consultation", priceCents: 12000, kind: "Visit" },
+  { id: "followup", name: "Follow-up session", priceCents: 9000, kind: "Visit" },
+  { id: "strategy", name: "Strategy call", priceCents: 15000, kind: "Visit" },
   { id: "session", name: "Session", priceCents: 9000, kind: "Visit" },
-  { id: "consultation", name: "Consultation", priceCents: 15000, kind: "Visit" },
   { id: "housing", name: "Housing help", priceCents: null, kind: "Check-in" },
   { id: "food", name: "Food assistance", priceCents: null, kind: "Check-in" },
   { id: "job", name: "Job readiness", priceCents: null, kind: "Check-in" },

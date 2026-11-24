@@ -83,7 +83,7 @@ export default function BusinessPage() {
             <CommandDemo
               examples={[
                 { said: "Add Ana Ortiz as a new customer", kind: "Customer", detail: "Ana Ortiz · profile ready" },
-                { said: "Ana – haircut $45", kind: "Visit", detail: "Haircut · $45 · today · on Ana's history" },
+                { said: "Ana – consultation $120", kind: "Visit", detail: "Consultation · $120 · today · on Ana's history" },
                 { said: "Follow up with Ana in 3 weeks", kind: "Follow-up", detail: "In 3 weeks · linked to Ana" },
                 { said: "Remind me to order supplies Monday", kind: "Task", detail: "Monday · on your Today list" },
               ]}
@@ -133,8 +133,8 @@ export default function BusinessPage() {
               body: "One line logs the service and the price, linked to the right customer.",
               screen: (
                 <Frame title="Command box">
-                  <CommandLine text="Ana – haircut $45" />
-                  <Done title="Visit logged" detail="Haircut · $45 · today" />
+                  <CommandLine text="Ana – consultation $120" />
+                  <Done title="Visit logged" detail="Consultation · $120 · today" />
                 </Frame>
               ),
             },
@@ -146,7 +146,7 @@ export default function BusinessPage() {
                   <Person initials="AO" name="Ana Ortiz" sub="Customer since October · 4 visits" />
                   <Timeline
                     items={[
-                      { when: "Today", text: "Visit · Haircut · $45", fresh: true },
+                      { when: "Today", text: "Visit · Consultation · $120", fresh: true },
                       { when: "Nov 3", text: "Note: prefers Saturday mornings" },
                       { when: "Oct 12", text: "Visit · Color · $120" },
                     ]}
@@ -179,13 +179,13 @@ export default function BusinessPage() {
                   />
                   <Bars
                     rows={[
-                      ["Haircut", 70, "$1,935"],
-                      ["Color", 56, "$1,560"],
-                      ["Blowout", 30, "$820"],
+                      ["Consultation", 70, "$1,935"],
+                      ["Strategy call", 56, "$1,560"],
+                      ["Follow-up session", 30, "$820"],
                     ]}
                   />
                   <p className="text-xs text-text-muted">
-                    Busiest: <strong className="text-text">Sat 10 AM</strong>
+                    Busiest: <strong className="text-text">Tue 10 AM</strong>
                   </p>
                 </Frame>
               ),

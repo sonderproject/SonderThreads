@@ -50,7 +50,7 @@ const PEOPLE = [
 const TODAY = [
   { title: "Send the proposal", tag: "10:00 AM", tone: "tag-e" },
   { title: "Follow up with Marcus", tag: "Overdue", tone: "tag-u" },
-  { title: "Ana – color appointment", tag: "2:30 PM", tone: "tag-n" },
+  { title: "Ana – strategy call", tag: "2:30 PM", tone: "tag-n" },
   { title: "Groceries: milk, eggs, coffee", tag: "List", tone: "" },
 ];
 
@@ -186,7 +186,7 @@ function Phone() {
         </span>
       </div>
       <div className="flex-1 space-y-5 px-4 py-4">
-        <CommandBox text="Ana – haircut $45" action="log service" details="Haircut · Ana Ortiz · $45" compact />
+        <CommandBox text="Ana – consultation $120" action="log service" details="Consultation · Ana Ortiz · $120" compact />
         <section>
           <Label more={false}>Today</Label>
           <TaskList rows={TODAY.slice(0, 3)} />
@@ -280,7 +280,7 @@ export function ProductHero() {
         <Check title="Reminder set" sub="Send the proposal · Fri 10:00 AM" />
       </Float>
       <Float className="right-[24%] top-[4%] hidden lg:block" delay="1.5s">
-        <Check title="Visit logged" sub="Haircut · $45 · Ana Ortiz" />
+        <Check title="Visit logged" sub="Consultation · $120 · Ana Ortiz" />
       </Float>
       <Float className="-left-2 bottom-[6%] hidden md:block lg:-left-14" delay="3s">
         <div className="flex items-center gap-3">

@@ -8,7 +8,7 @@ import { saveTried, tryCommand, type TryResult } from "@/lib/try-it";
 const EXAMPLES = [
   "Remind me to call Sarah Friday",
   "Add milk and eggs to my shopping list",
-  "Ana – haircut $45",
+  "Ana – consultation $120",
   "Marcus got the job at Amazon",
   "Follow up with Jessica next Tuesday at 3pm",
   "Jasmine – housing help",

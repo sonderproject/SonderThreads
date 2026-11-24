@@ -183,7 +183,7 @@ function tipFor(r: Who) {
     subject: "The fastest way to use Surfdesk",
     lines: [
       "Quick tip: you rarely need to open a form. Press / (or tap the mic) and say what happened:",
-      `"Ana got the job at Target" adds a note to Ana. "Call Jo every Monday" makes a repeating task. "Ana – haircut $45" logs a service.`,
+      `"Ana got the job at Target" adds a note to Ana. "Call Jo every Monday" makes a repeating task. "Ana – consultation $120" logs a service.`,
       "Surfdesk files it in the right place and reminds you when it's time.",
     ],
     cta: { label: "Try it now", path: "/" },
