@@ -5,6 +5,8 @@
 - It's for everyone with a lot to keep track of: individuals and busy people, freelancers and entrepreneurs, every kind of business with customers (salons, gyms, coaches, trainers, contractors and trades, consultants, agencies, clinics), and nonprofits. Two organization versions: business ("Visits", "Insights", revenue) and nonprofit ("Check-ins", "Impact", demographics).
 - In any copy: lead with everyday organization for professionals and entrepreneurs. The owner describes things casually for context; never quote their wording in copy, write polished marketing copy that means the same thing. Never describe Surfdesk as a case-management, nonprofit-only or client-tracker-only tool; nonprofits are one audience, never the headline.
 
+- Full product reference (every feature, safeguard, friction fix and status, written from the code): `docs/PRODUCT.md`. Update it when a feature ships or changes.
+
 ## Landing pages
 - Audience pages: `/individuals`, `/business`, `/nonprofits` (`app/<page>/page.tsx`, shared pieces in `components/marketing/landing/`). They replaced `/for/nonprofits` and `/for/small-business` (permanent redirects in `next.config.mjs`). Start-trial is the main button everywhere; "Book a demo" is a small option for large organizations only (owner wants self-serve sales, Nov 23, 2026).
 - Sign-up links on them go through `landingHref()` (`lib/landing.ts`) so sign-ups and paid conversions show per page in the owner command center. Vercel Web Analytics (`MarketingAnalytics` in `components/marketing/landing/Track.tsx`) is mounted on public marketing pages only, never inside the app.
