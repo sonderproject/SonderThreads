@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/session";
 import { queryOne } from "@/lib/db/client";
-import { IDLE_MINUTES_COOKIE, STAY_SIGNED_IN, defaultIdleMinutes, idleMinutesFrom } from "@/lib/auth";
+import { IDLE_MINUTES_COOKIE, STAY_SIGNED_IN, defaultIdleMinutes, defaultStaySignedIn, idleMinutesFrom } from "@/lib/auth";
 
 /**
  * "Still here" ping from the browser while someone is active. Middleware
@@ -20,7 +20,8 @@ export async function POST() {
     [user.id],
   );
   const minutes = row?.chosen ? idleMinutesFrom(row.idle_timeout_minutes) : defaultIdleMinutes(Boolean(row?.in_org));
-  const value = row?.stay_signed_in ? STAY_SIGNED_IN : String(minutes);
+  const stay = row?.chosen ? Boolean(row.stay_signed_in) : Boolean(row?.stay_signed_in) || defaultStaySignedIn(Boolean(row?.in_org));
+  const value = stay ? STAY_SIGNED_IN : String(minutes);
   response.cookies.set(IDLE_MINUTES_COOKIE, value, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",

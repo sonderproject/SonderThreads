@@ -219,7 +219,7 @@ Every step a new person takes was designed to remove effort without losing commi
 - Supabase Auth with **Cloudflare Turnstile** bot protection on sign-up, sign-in and password reset. A rate-limited server fallback keeps people able to sign in if the check fails.
 - Email confirmation for password sign-ups (prevents someone claiming an email they don't own). Google sign-in is provider-verified.
 - **Two-step sign-in** (authenticator app), required for the owner command center.
-- **Auto-lock** after idle time (organizations default stricter), "sign out everywhere", and a remembered-device option.
+- **Staying signed in**: individual accounts stay signed in until they sign out, for up to 30 days, then sign in again. Organization members auto-lock after 30 minutes idle by default (shared computers, client data). Anyone can change their own setting; "sign out everywhere" is one tap.
 - Rate limits on every sensitive path: sign-in tries per email and per network, sign-ups per network, invite and friends-code guessing.
 
 ### Data walls

@@ -1,5 +1,5 @@
 import { queryOne } from "@/lib/db/client";
-import { defaultIdleMinutes } from "@/lib/auth";
+import { defaultIdleMinutes, defaultStaySignedIn } from "@/lib/auth";
 import { requireUserId } from "@/lib/current-user";
 import { DEFAULT_SETTINGS, type UserSettings } from "@/lib/settings-options";
 
@@ -29,7 +29,7 @@ export async function getUserSettings(): Promise<UserSettings> {
   // Until someone picks their own, auto sign-out depends on the account (lib/auth.ts defaultIdleMinutes).
   const inOrg = Boolean(await queryOne(`select 1 from memberships where user_id = $1 and active`, [userId]));
   const idleDefault = defaultIdleMinutes(inOrg) as UserSettings["idleTimeoutMinutes"];
-  if (!row) return { ...DEFAULT_SETTINGS, idleTimeoutMinutes: idleDefault };
+  if (!row) return { ...DEFAULT_SETTINGS, idleTimeoutMinutes: idleDefault, staySignedIn: defaultStaySignedIn(inOrg) };
   return {
     reminderLeadMinutes: row.reminder_lead_minutes as UserSettings["reminderLeadMinutes"],
     dailySummaryEnabled: row.daily_summary_enabled,
@@ -38,7 +38,7 @@ export async function getUserSettings(): Promise<UserSettings> {
     quietStartHour: row.quiet_start_hour,
     quietEndHour: row.quiet_end_hour,
     idleTimeoutMinutes: row.idle_timeout_chosen ? (row.idle_timeout_minutes as UserSettings["idleTimeoutMinutes"]) : idleDefault,
-    staySignedIn: row.stay_signed_in,
+    staySignedIn: row.idle_timeout_chosen ? row.stay_signed_in : row.stay_signed_in || defaultStaySignedIn(inOrg),
     spellcheck: row.spellcheck,
     autocorrect: row.autocorrect,
   };

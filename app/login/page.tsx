@@ -55,6 +55,9 @@ export default async function LoginPage({
               You were signed out after a period of inactivity.
             </p>
           )}
+          {reason === "expired" && !error && (
+            <p className="text-xs text-text-muted">It&apos;s been 30 days, so please sign in again to keep your account safe.</p>
+          )}
           {reason === "everywhere" && !error && (
             <p className="text-xs text-text-muted">
               You were signed out on all your devices.

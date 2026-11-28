@@ -348,8 +348,11 @@ async function SecuritySection({ q }: { q: SettingsQuery }) {
         <label className="flex items-start gap-2 text-sm text-text">
           <input type="checkbox" name="stay_signed_in" defaultChecked={prefs.staySignedIn} className="mt-1" />
           <span>
-            Stay signed in
-            <span className="block text-xs text-text-muted">Turns auto-lock off. Only use this on a device nobody else uses.</span>
+            Stay signed in for 30 days
+            <span className="block text-xs text-text-muted">
+              Turns auto-lock off until you sign out (up to 30 days). On by default for individual accounts. Only use it on a device nobody
+              else uses.
+            </span>
           </span>
         </label>
         {q.saved === "security" && <p className="text-xs text-accent">Saved.</p>}

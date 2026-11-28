@@ -21,10 +21,22 @@ export const STAY_SIGNED_IN = "0";
  * The idle limit from the cookie: null = stay signed in; an allowed preset;
  * anything else (or no cookie) = the default.
  */
-/** Auto sign-out default until someone picks their own: individuals 4 hours, organization members 30 minutes (shared computers, client data). */
+/** Auto sign-out default for organization members until they pick their own: 30 minutes (shared computers, client data). */
 export function defaultIdleMinutes(inOrg: boolean): number {
   return inOrg ? 30 : 240;
 }
+
+/**
+ * Individuals stay signed in by default (owner's decision, Nov 28, 2026): no auto-lock until they
+ * sign out, up to STAY_SIGNED_IN_DAYS. Organization members keep the 30-minute auto-lock. Anyone who
+ * picked their own setting in Settings → Privacy & security keeps it.
+ */
+export function defaultStaySignedIn(inOrg: boolean): boolean {
+  return !inOrg;
+}
+
+/** "Stay signed in" lasts this long from sign-in; then sign in again (middleware). */
+export const STAY_SIGNED_IN_DAYS = 30;
 
 export function idleMinutesFrom(value: string | number | undefined | null): number | null {
   if (String(value) === STAY_SIGNED_IN) return null;

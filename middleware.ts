@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
-import { IDLE_MINUTES_COOKIE, KIOSK_COOKIE, LAST_SEEN_COOKIE, idleMinutesFrom } from "@/lib/auth";
+import { IDLE_MINUTES_COOKIE, KIOSK_COOKIE, LAST_SEEN_COOKIE, STAY_SIGNED_IN_DAYS, idleMinutesFrom } from "@/lib/auth";
 import { supabaseAnonKey, supabaseUrl } from "@/lib/supabase/env";
 
 /**
@@ -62,6 +62,13 @@ export async function middleware(request: NextRequest) {
     out.cookies.delete(LAST_SEEN_COOKIE);
     return out;
   }
+  // "Stay signed in" (the default for individuals) lasts STAY_SIGNED_IN_DAYS from sign-in, then sign in again.
+  if (!kiosk && idleLimit === null && signedInAt > 0 && now - signedInAt > STAY_SIGNED_IN_DAYS * 86_400_000) {
+    await supabase.auth.signOut();
+    const out = signedOut(request, response, "expired");
+    out.cookies.delete(LAST_SEEN_COOKIE);
+    return out;
+  }
   // Link prefetches aren't the person doing anything, so they don't count as activity.
   if (!request.headers.get("next-router-prefetch")) {
     response.cookies.set(LAST_SEEN_COOKIE, String(now), {
@@ -76,7 +83,7 @@ export async function middleware(request: NextRequest) {
 }
 
 /** Signed-out handling, carrying over any auth cookies Supabase just cleared or refreshed. */
-function signedOut(request: NextRequest, from?: NextResponse, reason?: "idle"): NextResponse {
+function signedOut(request: NextRequest, from?: NextResponse, reason?: "idle" | "expired"): NextResponse {
   const { pathname, search } = request.nextUrl;
   let out: NextResponse;
   // Signed-out visitors to the home page get the public landing page, at the
