@@ -1,7 +1,8 @@
 import { redirect, unstable_rethrow } from "next/navigation";
+import { REMEMBER_COOKIE, rememberChoice } from "@/lib/auth";
 import { getMemberPolicy } from "@/lib/member-policy";
 import { TermsProvider } from "@/components/TermsProvider";
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { AppShell } from "@/components/nav/AppShell";
 import { TimeZoneProvider } from "@/components/TimeZoneProvider";
 import { getTimeZone } from "@/lib/timezone";
@@ -118,6 +119,8 @@ export default async function AppGroupLayout({ children }: { children: React.Rea
   }
   // Admins' referral count and members' unread team messages (lib/messages.ts), together.
   const policy = await getMemberPolicy();
+  // "Keep me signed in for 30 days" chosen at sign-in on this device wins over the account's setting.
+  const deviceRemember = rememberChoice((await cookies()).get(REMEMBER_COOKIE)?.value);
   const [referralCount, messageCount] = await Promise.all([
     membership?.active && membership.role === "admin" ? countNewReferrals(membership.orgId).catch(() => 0) : Promise.resolve(null),
     membership?.active
@@ -141,7 +144,7 @@ export default async function AppGroupLayout({ children }: { children: React.Rea
       people={people.map((p) => ({ id: p.id, display_name: p.display_name }))}
       lists={lists.map((l) => ({ id: l.id, name: l.name }))}
       notificationCount={notificationCount}
-      idleMinutes={settings.staySignedIn ? null : settings.idleTimeoutMinutes}
+      idleMinutes={(deviceRemember ?? settings.staySignedIn) ? null : settings.idleTimeoutMinutes}
       showTeam={Boolean(membership?.active && membership.role !== "case_manager")}
       referralCount={referralCount}
       messageCount={messageCount}

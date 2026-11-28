@@ -13,7 +13,7 @@ import { alertOwner, isLikelyBot, logEvent } from "@/lib/events";
 import { redirect } from "next/navigation";
 import { query, queryOne, transaction } from "@/lib/db/client";
 import { LEGACY_OWNER_ID } from "@/lib/db/constants";
-import { LAST_SEEN_COOKIE, getAppPassword, safeEqual, safeNextPath } from "@/lib/auth";
+import { LAST_SEEN_COOKIE, REMEMBER_COOKIE, STAY_SIGNED_IN_DAYS, getAppPassword, safeEqual, safeNextPath } from "@/lib/auth";
 import { getAuthState, hashToken, verifyPassword } from "@/lib/session";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { createSupabaseAdmin } from "@/lib/supabase/admin";
@@ -274,6 +274,14 @@ export async function login(formData: FormData): Promise<void> {
   }
 
   if (!data.user) back("/login", "invalid", email, next);
+  // "Keep me signed in for 30 days" (this device only; lib/auth.ts REMEMBER_COOKIE).
+  (await cookies()).set(REMEMBER_COOKIE, formData.get("remember") === "on" ? "1" : "0", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    maxAge: STAY_SIGNED_IN_DAYS * 86_400,
+  });
   // Keep the server's "is 2FA on" flag in line with what Supabase says (trusted: straight from the auth server).
   const hasFactor = (data.user!.factors ?? []).some((f) => f.status === "verified");
   await query(`update users set mfa_enabled = $1 where id = $2`, [hasFactor, data.user!.id]);
@@ -476,6 +484,7 @@ export async function logout(): Promise<void> {
   const supabase = await createSupabaseServer();
   await supabase.auth.signOut();
   (await cookies()).delete(LAST_SEEN_COOKIE);
+  (await cookies()).delete(REMEMBER_COOKIE);
   redirect("/login");
 }
 
@@ -484,6 +493,7 @@ export async function signOutEverywhere(): Promise<void> {
   const supabase = await createSupabaseServer();
   await supabase.auth.signOut({ scope: "global" });
   (await cookies()).delete(LAST_SEEN_COOKIE);
+  (await cookies()).delete(REMEMBER_COOKIE);
   redirect("/login?reason=everywhere");
 }
 
@@ -518,6 +528,7 @@ export async function idleSignOut(): Promise<void> {
   const supabase = await createSupabaseServer();
   await supabase.auth.signOut();
   (await cookies()).delete(LAST_SEEN_COOKIE);
+  (await cookies()).delete(REMEMBER_COOKIE);
   redirect("/login?reason=idle");
 }
 

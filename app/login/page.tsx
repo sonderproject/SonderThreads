@@ -93,6 +93,10 @@ export default async function LoginPage({
             placeholder="Password"
             className="input tabular-nums"
           />
+          <label className="flex items-center gap-2 text-xs text-text-muted">
+            <input type="checkbox" name="remember" defaultChecked className="accent-[var(--accent)]" />
+            Keep me signed in for 30 days
+          </label>
           <Turnstile />
           <button
             type="submit"

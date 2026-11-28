@@ -38,6 +38,18 @@ export function defaultStaySignedIn(inOrg: boolean): boolean {
 /** "Stay signed in" lasts this long from sign-in; then sign in again (middleware). */
 export const STAY_SIGNED_IN_DAYS = 30;
 
+/**
+ * "Keep me signed in for 30 days" on the sign-in form, for THIS device: "1" = stay signed in
+ * (no auto-lock, up to STAY_SIGNED_IN_DAYS), "0" = auto-lock as usual even if the account's setting
+ * says stay signed in. No cookie (e.g. Google sign-in) = the account's own setting. Cleared on sign-out.
+ */
+export const REMEMBER_COOKIE = "st_remember";
+
+/** This device's sign-in choice over the account's setting: true/false, or null when there's none. */
+export function rememberChoice(value: string | undefined): boolean | null {
+  return value === "1" ? true : value === "0" ? false : null;
+}
+
 export function idleMinutesFrom(value: string | number | undefined | null): number | null {
   if (String(value) === STAY_SIGNED_IN) return null;
   const n = Number(value);

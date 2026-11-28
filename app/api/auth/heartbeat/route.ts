@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/session";
 import { queryOne } from "@/lib/db/client";
-import { IDLE_MINUTES_COOKIE, STAY_SIGNED_IN, defaultIdleMinutes, defaultStaySignedIn, idleMinutesFrom } from "@/lib/auth";
+import { cookies } from "next/headers";
+import { IDLE_MINUTES_COOKIE, REMEMBER_COOKIE, STAY_SIGNED_IN, defaultIdleMinutes, defaultStaySignedIn, idleMinutesFrom, rememberChoice } from "@/lib/auth";
 
 /**
  * "Still here" ping from the browser while someone is active. Middleware
@@ -20,7 +21,10 @@ export async function POST() {
     [user.id],
   );
   const minutes = row?.chosen ? idleMinutesFrom(row.idle_timeout_minutes) : defaultIdleMinutes(Boolean(row?.in_org));
-  const stay = row?.chosen ? Boolean(row.stay_signed_in) : Boolean(row?.stay_signed_in) || defaultStaySignedIn(Boolean(row?.in_org));
+  // This device's sign-in choice ("Keep me signed in for 30 days") wins over the account's setting.
+  const device = rememberChoice((await cookies()).get(REMEMBER_COOKIE)?.value);
+  const stay =
+    device ?? (row?.chosen ? Boolean(row.stay_signed_in) : Boolean(row?.stay_signed_in) || defaultStaySignedIn(Boolean(row?.in_org)));
   const value = stay ? STAY_SIGNED_IN : String(minutes);
   response.cookies.set(IDLE_MINUTES_COOKIE, value, {
     httpOnly: true,

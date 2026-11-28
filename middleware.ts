@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
-import { IDLE_MINUTES_COOKIE, KIOSK_COOKIE, LAST_SEEN_COOKIE, STAY_SIGNED_IN_DAYS, idleMinutesFrom } from "@/lib/auth";
+import { IDLE_MINUTES_COOKIE, KIOSK_COOKIE, LAST_SEEN_COOKIE, REMEMBER_COOKIE, STAY_SIGNED_IN_DAYS, idleMinutesFrom } from "@/lib/auth";
 import { supabaseAnonKey, supabaseUrl } from "@/lib/supabase/env";
 
 /**
@@ -55,7 +55,9 @@ export async function middleware(request: NextRequest) {
       return out;
     }
   }
-  const idleLimit = kiosk ? null : idleMinutesFrom(request.cookies.get(IDLE_MINUTES_COOKIE)?.value); // null = no idle sign-out
+  // null = no idle sign-out. "Keep me signed in for 30 days" at sign-in (REMEMBER_COOKIE "1") means none on this device.
+  const idleLimit =
+    kiosk || request.cookies.get(REMEMBER_COOKIE)?.value === "1" ? null : idleMinutesFrom(request.cookies.get(IDLE_MINUTES_COOKIE)?.value);
   if (idleLimit !== null && Number.isFinite(lastSeen) && lastSeen > 0 && now - lastSeen > idleLimit * 60_000) {
     await supabase.auth.signOut();
     const out = signedOut(request, response, "idle");
